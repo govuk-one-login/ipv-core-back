@@ -12,15 +12,15 @@ public class CoreBack {
         Spark.port(Integer.parseInt(System.getenv("PORT")));
         Spark.get("/", HomeHandler.serveHomePage);
 
-        Spark.post("/session/initialise", lambdaHandler.initialiseSession);
-        Spark.post("/journey/:event", lambdaHandler.journeyEngine);
+        Spark.post("/session/initialise", lambdaHandler.getInitialiseSession());
+        Spark.post("/journey/:event", lambdaHandler.getJourneyEngine());
         Spark.get(
                 "/journey/build-proven-user-identity-details",
-                lambdaHandler.buildProvenUserIdentityDetails);
-        Spark.post("/journey/cri/callback", lambdaHandler.criCallBack);
+                lambdaHandler.getBuildProvenUserIdentityDetails());
+        Spark.post("/journey/cri/callback", lambdaHandler.getCriCallBack());
 
-        Spark.post("/token", lambdaHandler.token);
-        Spark.get("/user-identity", lambdaHandler.userIdentity);
+        Spark.post("/token", lambdaHandler.getToken());
+        Spark.get("/user-identity", lambdaHandler.getUserIdentity());
 
         Spark.internalServerError("🤮");
     }

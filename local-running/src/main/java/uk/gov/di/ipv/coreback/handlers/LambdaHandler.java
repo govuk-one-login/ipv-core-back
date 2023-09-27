@@ -4,8 +4,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -39,10 +37,14 @@ public class LambdaHandler {
 
     private static final Gson gson = new Gson();
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
-    private static final Logger LOGGER = LoggerFactory.getLogger(LambdaHandler.class);
     public static final Type MAP_STRING_STRING_TYPE =
             new TypeToken<Map<String, String>>() {}.getType();
     public static final String APPLICATION_JSON = "application/json";
+    public static final String JOURNEY = "journey";
+    public static final String IPV_SESSION_ID = "ipv-session-id";
+    public static final String IP_ADDRESS = "ip-address";
+    public static final String CLIENT_SESSION_ID = "client-session-id";
+    public static final String FEATURE_SET = "feature-set";
 
     private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
     private ProcessJourneyEventHandler processJourneyEventHandler;
@@ -78,7 +80,7 @@ public class LambdaHandler {
         this.buildUserIdentityHandler = new BuildUserIdentityHandler();
     }
 
-    public Route initialiseSession =
+    private Route initialiseSession =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
@@ -93,11 +95,11 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    public Route journeyEngine =
+    private Route journeyEngine =
             (Request request, Response response) -> {
                 String journey = request.pathInfo();
 
-                Map<String, Object> lambdaOutput = new HashMap<>();
+                Map<String, Object> lambdaOutput;
                 Map<String, Object> processJourneyEventOutput;
                 while (true) {
                     processJourneyEventOutput =
@@ -105,65 +107,65 @@ public class LambdaHandler {
                                     buildProcessJourneyEventLambdaInput(request, journey),
                                     EMPTY_CONTEXT);
 
-                    journey = (String) processJourneyEventOutput.get("journey");
+                    journey = (String) processJourneyEventOutput.get(JOURNEY);
 
                     if ("/journey/check-existing-identity".equals(journey)) {
                         lambdaOutput =
                                 checkExistingIdentityHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else if ("/journey/reset-identity".equals(journey)) {
                         lambdaOutput =
                                 resetIdentityHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else if (journey != null
                             && journey.matches("/journey/cri/build-oauth-request/.*")) {
                         lambdaOutput =
                                 buildCriOauthRequestHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else if ("/journey/build-client-oauth-response".equals(journey)) {
                         lambdaOutput =
                                 buildClientOauthResponseHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else if ("/journey/ci-scoring".equals(journey)) {
                         lambdaOutput =
                                 checkCiScoreHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else if ("/journey/check-gpg45-score".equals(journey)) {
                         ProcessRequest processRequest =
                                 buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
                                 checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey("journey")) {
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
-                        journey = (String) lambdaOutput.get("journey");
+                        journey = (String) lambdaOutput.get(JOURNEY);
                     } else {
                         return gson.toJson(processJourneyEventOutput);
                     }
                 }
             };
 
-    public Route buildProvenUserIdentityDetails =
+    private Route buildProvenUserIdentityDetails =
             (Request request, Response response) -> {
                 Map<String, Object> lambdaOutput =
                         buildProvenUserIdentityDetailsHandler.handleRequest(
@@ -176,15 +178,14 @@ public class LambdaHandler {
                 return response;
             };
 
-    public Route criCallBack =
+    private Route criCallBack =
             (Request request, Response response) -> {
                 Map<String, Object> validateLambdaOutput =
                         validateOAuthCallbackHandler.handleRequest(
                                 buildCriCallbackRequest(request), EMPTY_CONTEXT);
 
-                if (!validateLambdaOutput.containsKey("journey")
-                        || !"/journey/cri/access-token"
-                                .equals(validateLambdaOutput.get("journey"))) {
+                if (!validateLambdaOutput.containsKey(JOURNEY)
+                        || !"/journey/cri/access-token".equals(validateLambdaOutput.get(JOURNEY))) {
                     return gson.toJson(validateLambdaOutput);
                 }
 
@@ -199,8 +200,8 @@ public class LambdaHandler {
                         retrieveCriCredentialHandler.handleRequest(
                                 buildCriReturnLambdaInput(request), EMPTY_CONTEXT);
 
-                if (!retrieveCredLambdaOutput.containsKey("journey")
-                        || !"/journey/ci-scoring".equals(retrieveCredLambdaOutput.get("journey"))) {
+                if (!retrieveCredLambdaOutput.containsKey(JOURNEY)
+                        || !"/journey/ci-scoring".equals(retrieveCredLambdaOutput.get(JOURNEY))) {
                     return gson.toJson(retrieveCredLambdaOutput);
                 }
 
@@ -208,9 +209,9 @@ public class LambdaHandler {
                         checkCiScoreHandler.handleRequest(
                                 buildJourneyRequest(request, null), EMPTY_CONTEXT);
 
-                if (!ciScoringLambdaOutput.containsKey("journey")
+                if (!ciScoringLambdaOutput.containsKey(JOURNEY)
                         || !"/journey/ci-score-not-breaching"
-                                .equals(ciScoringLambdaOutput.get("journey"))) {
+                                .equals(ciScoringLambdaOutput.get(JOURNEY))) {
                     return gson.toJson(ciScoringLambdaOutput);
                 }
 
@@ -221,7 +222,7 @@ public class LambdaHandler {
                 return gson.toJson(evaluateGpg45LambdaOutput);
             };
 
-    public Route token =
+    private Route token =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
@@ -236,7 +237,7 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    public Route userIdentity =
+    private Route userIdentity =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
@@ -251,21 +252,21 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    private static JourneyRequest buildJourneyRequest(Request request, String journey) {
+    private JourneyRequest buildJourneyRequest(Request request, String journey) {
         return JourneyRequest.builder()
-                .ipvSessionId(request.headers("ipv-session-id"))
-                .ipAddress(request.headers("ip-address"))
-                .clientOAuthSessionId(request.headers("client-session-id"))
-                .featureSet(request.headers("feature-set"))
+                .ipvSessionId(request.headers(IPV_SESSION_ID))
+                .ipAddress(request.headers(IP_ADDRESS))
+                .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
+                .featureSet(request.headers(FEATURE_SET))
                 .journey(journey)
                 .build();
     }
 
     private Map<String, String> buildCriReturnLambdaInput(Request request) {
         HashMap<String, String> nextLambdaInput = new HashMap<>();
-        nextLambdaInput.put("ipvSessionId", request.headers("ipv-session-id"));
-        nextLambdaInput.put("ipAddress", request.headers("ip-address"));
-        nextLambdaInput.put("featureSet", request.headers("feature-set"));
+        nextLambdaInput.put("ipvSessionId", request.headers(IPV_SESSION_ID));
+        nextLambdaInput.put("ipAddress", request.headers(IP_ADDRESS));
+        nextLambdaInput.put("featureSet", request.headers(FEATURE_SET));
         return nextLambdaInput;
     }
 
@@ -287,13 +288,13 @@ public class LambdaHandler {
         return CriCallbackRequest.builder()
                 .authorizationCode(requestBody.get("authorizationCode"))
                 .credentialIssuerId(requestBody.get("credentialIssuerId"))
-                .ipvSessionId(request.headers("ipv-session-id"))
+                .ipvSessionId(request.headers(IPV_SESSION_ID))
                 .redirectUri(requestBody.get("redirectUri"))
                 .state(requestBody.get("state"))
                 .error(requestBody.get("error"))
                 .errorDescription(requestBody.get("errorDescription"))
-                .ipAddress(request.headers("ip-address"))
-                .featureSet(request.headers("feature-set"))
+                .ipAddress(request.headers(IP_ADDRESS))
+                .featureSet(request.headers(FEATURE_SET))
                 .build();
     }
 
@@ -302,13 +303,37 @@ public class LambdaHandler {
         Map<String, Object> lambdaInput =
                 (Map<String, Object>) processJourneyEventOutput.get("lambdaInput");
         return ProcessRequest.processRequestBuilder()
-                .ipvSessionId(request.headers("ipv-session-id"))
-                .ipAddress(request.headers("ip-address"))
-                .clientOAuthSessionId(request.headers("client-session-id"))
-                .featureSet(request.headers("feature-set"))
-                .journey((String) processJourneyEventOutput.get("journey"))
+                .ipvSessionId(request.headers(IPV_SESSION_ID))
+                .ipAddress(request.headers(IP_ADDRESS))
+                .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
+                .featureSet(request.headers(FEATURE_SET))
+                .journey((String) processJourneyEventOutput.get(JOURNEY))
                 .scoreType((String) lambdaInput.get("scoreType"))
                 .scoreThreshold((int) lambdaInput.get("scoreThreshold"))
                 .build();
+    }
+
+    public Route getInitialiseSession() {
+        return this.initialiseSession;
+    }
+
+    public Route getJourneyEngine() {
+        return this.journeyEngine;
+    }
+
+    public Route getBuildProvenUserIdentityDetails() {
+        return this.buildProvenUserIdentityDetails;
+    }
+
+    public Route getCriCallBack() {
+        return this.criCallBack;
+    }
+
+    public Route getToken() {
+        return this.token;
+    }
+
+    public Route getUserIdentity() {
+        return this.userIdentity;
     }
 }

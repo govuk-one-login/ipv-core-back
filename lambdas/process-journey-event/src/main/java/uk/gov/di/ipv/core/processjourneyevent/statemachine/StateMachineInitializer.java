@@ -37,10 +37,9 @@ public class StateMachineInitializer {
     private final IpvJourneyTypes journeyType;
 
     public Map<String, State> initialize() throws IOException {
-        journeyStates =
-                yamlOm.readValue(getJourneyConfigFile(journeyType), new TypeReference<>() {});
+        journeyStates = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
         nestedJourneyDefinitions =
-                yamlOm.readValue(getNestedJourneyDefinitionsConfigFile(), new TypeReference<>() {});
+                yamlOm.readValue(getNestedJourneyDefinitionsConfig(), new TypeReference<>() {});
 
         initializeJourneyStates();
 
@@ -169,25 +168,26 @@ public class StateMachineInitializer {
         return String.format("%s/%s", state.getName(), nestedJourneyStateName);
     }
 
-    private String getJourneyConfigFile(IpvJourneyTypes journeyType) {
-        return getFile(journeyType.getValue());
+    private String getJourneyConfig(IpvJourneyTypes journeyType) throws IOException {
+        return readFileToString(journeyType.getValue());
     }
 
-    private String getNestedJourneyDefinitionsConfigFile() {
-        return getFile("nested-journey-definitions");
+    private String getNestedJourneyDefinitionsConfig() throws IOException {
+        return readFileToString("nested-journey-definitions");
     }
 
-    private String getFile(String filename) {
-        ClassLoader classLoader = getClass().getClassLoader();
+    private String readFileToString(String filename) throws IOException {
         InputStream inputStream =
-                classLoader.getResourceAsStream(
-                        String.format("statemachine/%s%s.yaml", mode.getPathPart(), filename));
-        String data;
-        try {
-            data = IOUtils.toString(inputStream);
-        } catch (IOException e) {
-            throw new RuntimeException("Whoops");
+                getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(
+                                String.format(
+                                        "statemachine/%s%s.yaml", mode.getPathPart(), filename));
+
+        if (inputStream == null) {
+            throw new JourneyMapDeserializationException("Could not find journey map");
         }
-        return data;
+
+        return IOUtils.toString(inputStream);
     }
 }
