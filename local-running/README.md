@@ -1,6 +1,6 @@
 # Local running of ipv-core and the CRIs
 
-This is an attempt at running core-front, core-back and the CRIs locally. They run in containers and are orchestrated
+This is an attempt at running core-front, core-back and the CRIs locally. They run in containers and are orchestrated by
 docker compose. The benefits of this are quick(er) deployments and being able to get a debugger into the lambdas.
 
 ## What it's not
