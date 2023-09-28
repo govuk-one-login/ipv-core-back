@@ -65,10 +65,13 @@
             </form>
         </div>
         <div id="diagram"></div>
-        <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.js"></script>
         <script type="module">
             import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-            import { getOptions, render } from './index.mjs';
+            import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
+            import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
+            import { expandParents, getOptions, render } from './index.mjs';
+
+            // We initialize mermaid manually
             mermaid.initialize({ startOnLoad: false });
 
             // Page elements
@@ -77,8 +80,9 @@
             const featureFlagInput = document.getElementById('featureFlagInput')
 
             // Load the journey map
-            const journeyResponse = await fetch('./journeymap.json');
-            const journeyMap = await journeyResponse.json();
+            const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
+            const journeyMap = yaml.parse(await journeyResponse.text());
+            expandParents(journeyMap);
 
             // Set up the form options
             const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);

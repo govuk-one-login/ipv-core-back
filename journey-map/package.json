@@ -7,7 +7,6 @@
   "author": "Government Digital Service",
   "license": "MIT",
   "dependencies": {
-    "express": "4.18.2",
-    "yaml": "2.3.2"
+    "express": "4.18.2"
   }
 }

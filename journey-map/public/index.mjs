@@ -2,6 +2,24 @@ const initialStates = ['INITIAL_IPV_JOURNEY'];
 const errorStates = ['ERROR'];
 const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
 
+
+// Expand out parent states for ease of consumption
+export const expandParents = (journeyMap) => {
+    const parentStates = [];
+    Object.entries(journeyMap).forEach(([state, definition]) => {
+        if (definition.parent) {
+            const parent = journeyMap[definition.parent];
+            definition.events = {
+                ...parent.events,
+                ...definition.events,
+            };
+            journeyMap[state] = { ...parent, ...definition };
+            parentStates.push(definition.parent);
+        }
+    });
+    parentStates.forEach((state) => delete journeyMap[state]);
+};
+
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMap) => {
     const disabledOptions = ['none'];
