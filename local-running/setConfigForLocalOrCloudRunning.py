@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # This script sends commands to the AWS CLI on the shell rather than using an AWS client to avoid having to install
 # dependencies and all the faff that comes with it. This script should just run. As long as you have the AWS CLI...
 Param = namedtuple("Param", "name value")
+DevAccount = namedtuple("DevAccount", "account_id number")
 
 
 def get_local_running_params(environment, dev_account):
@@ -181,16 +182,45 @@ def validate_env(environment):
 
 
 def determine_dev_account():
-    account_number = subprocess.run(
+    account_id = subprocess.run(
         ['aws', 'sts', 'get-caller-identity', '--no-cli-pager', '--query', 'Account', '--output', 'text'],
         capture_output=True,
         text=True
     ).stdout.strip()
     account_id_mapping = {"130355686670": "01", "175872367215": "02"}
-    dev_account = account_id_mapping[account_number]
-    if dev_account is None:
-        print(f"Looks like you're not authenticated against a dev account ({account_number}). Cowardly refusing to write params.")
-    return dev_account
+    account_num = account_id_mapping[account_id]
+    if account_num is None:
+        print(f"Looks like you're not authenticated against a dev account ({account_id}). Cowardly refusing to write params.")
+    return DevAccount(account_id, account_num)
+
+def set_async_lambda_event_source_mapping_enabled_state(environment, account_id, dry_run, enabled):
+    get_event_mapping_uuid_result = subprocess.run(
+        ['aws', 'lambda', 'list-event-source-mappings', '--function-name', f'arn:aws:lambda:eu-west-2:{account_id}:function:process-async-cri-credential-{environment}:live', '--query', "EventSourceMappings[0].UUID", '--output', 'text'],
+        capture_output=True,
+        text=True
+    )
+
+    if get_event_mapping_uuid_result.returncode != 0:
+        print(f"Could not get event mapping UUID. Cowardly refusing to continue.")
+        exit(1)
+
+    event_mapping_uuid = get_event_mapping_uuid_result.stdout.strip()
+    print(f"Found event mapping with UUID: {event_mapping_uuid}")
+
+    enabled_flag = "--enabled" if enabled else "--no-enabled"
+    if not dry_run:
+        update_event_mapping_return_code = subprocess.run(
+            ['aws', 'lambda', 'update-event-source-mapping', '--uuid', f'{event_mapping_uuid}', enabled_flag],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        ).returncode
+
+        if update_event_mapping_return_code != 0:
+            print(f"Could not update event mapping enabled state. Cowardly refusing to do anything else.")
+            exit(1)
+        print(f"process-async-cri-credential lambda event mapping state set to: {enabled_flag}")
+    else:
+        print(f"process-async-cri-credential lambda event mapping state would have been set to: {enabled_flag}")
 
 
 if __name__ == "__main__":
@@ -200,11 +230,14 @@ if __name__ == "__main__":
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     validate_env(args.environment)
+    devAccount = determine_dev_account()
     if args.local_or_cloud == 'local':
-        local_params = get_local_running_params(args.environment, determine_dev_account())
+        set_async_lambda_event_source_mapping_enabled_state(args.environment, devAccount.account_id, args.dry_run, enabled=False)
+        local_params = get_local_running_params(args.environment, devAccount.number)
         write_params(local_params, args.dry_run)
     elif args.local_or_cloud == 'cloud':
-        cloud_params = get_cloud_running_params(args.environment, determine_dev_account())
+        set_async_lambda_event_source_mapping_enabled_state(args.environment, devAccount.account_id, args.dry_run, enabled=True)
+        cloud_params = get_cloud_running_params(args.environment, devAccount.number)
         write_params(cloud_params, args.dry_run)
     else:
         print(f"You shouldn't be here... {args.local_or_cloud}")

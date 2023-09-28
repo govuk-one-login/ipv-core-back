@@ -25,16 +25,20 @@ You need to have the core-front and stubs repos checked out and on the same leve
 Core-front needs a very minor code change to make things stable. It's on a branch called "local-running". Pull it before
 spinning things up.
 
-You'll need to set some SSM parameters for your env. These are mostly to set up new connections for core to the locally
-running CRIs. Also one to configure the orch-stubs expected redirect URL. There is a script to set these values. You'll
-need to auth to your AWS dev account (dev01 or dev02), using your favourite method. Basically make sure your AWS creds
-are in your environment. Below is an example. Change the dev account and dev-env to match your setup.
+You'll need to update some config for your env. This is mostly to set up parameters for new connections for core to the
+locally running CRIs. Also a parameter to configure the orch-stubs expected redirect URL. We also need to stop the event
+source mapping that feeds the process-async-cri-credential lambda. This is to allow the local deployment to read
+messages from the SQS queue.
+
+There is a script to do all this for you. You'll need to auth to your AWS dev account (dev01 or dev02), using your
+favourite method. Basically make sure your AWS creds are in your environment. Below is an example. Change the dev
+account and dev-env to match your setup.
 
 You can add the `--dry-run` flag at the end to just show what params would get written. Probably worth doing the first
 time.
 
 ```
-aws-vault exec core-dev01 -- ./setSsmConfigForLocalOrCloudRunning.py dev-chrisw local
+aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw local
 ```
 
 Next, spin up the containers with Docker compose. You need to have your dev env and the number of your dev account (01
@@ -58,11 +62,9 @@ You'll need to change your SSM params to set your CRI's connections back, as wel
 URL. The script can do that.
 
 ```
-aws-vault exec core-dev01 -- ./setSsmConfigForLocalOrCloudRunning.py dev-chrisw cloud
+aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw cloud
 ```
 
 ## Known limitations
 
-The async stuff from the f2f CRI. As we're not deployed into the cloud, the process-async-cri-credential lambda isn't
-hooked up to the SQS queue. I think it might be possible to fix this my adding something that runs in a background
-thread that polls the queue and forwards messages on. But that doesn't exist yet.
+For some reason running the functional test suite against the local deployment hangs. I do not know why.

@@ -59,6 +59,7 @@ services:
       - CONFIG_SERVICE_CACHE_DURATION_MINUTES=0
       - CRI_OAUTH_SESSIONS_TABLE_NAME=cri-oauth-sessions-${ENVIRONMENT}
       - CRI_RESPONSE_TABLE_NAME=cri-response-${ENVIRONMENT}
+      - F2F_STUB_QUEUE_NAME=stubQueue_F2FQueue_${ENVIRONMENT}
       - IPV_SESSIONS_TABLE_NAME=sessions-${ENVIRONMENT}
       - IS_LOCAL=false
       - SIGNING_KEY_ID_PARAM=/${ENVIRONMENT}/core/self/signingKeyId

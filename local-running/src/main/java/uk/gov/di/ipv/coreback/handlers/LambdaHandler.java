@@ -169,13 +169,9 @@ public class LambdaHandler {
             (Request request, Response response) -> {
                 Map<String, Object> lambdaOutput =
                         buildProvenUserIdentityDetailsHandler.handleRequest(
-                                buildJourneyRequest(
-                                        gson.fromJson(request.body(), MAP_STRING_STRING_TYPE),
-                                        null),
-                                EMPTY_CONTEXT);
+                                buildJourneyRequest(request, null), EMPTY_CONTEXT);
 
-                response.body(gson.toJson(lambdaOutput));
-                return response;
+                return gson.toJson(lambdaOutput);
             };
 
     private Route criCallBack =
