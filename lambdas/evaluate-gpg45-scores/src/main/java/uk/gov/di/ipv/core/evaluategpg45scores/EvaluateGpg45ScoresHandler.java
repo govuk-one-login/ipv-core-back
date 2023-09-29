@@ -246,6 +246,7 @@ public class EvaluateGpg45ScoresHandler
                             credentials,
                             ipAddress));
             ipvSessionItem.setVot(VOT_P2);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             LOGGER.info(
                     new StringMapMessage()

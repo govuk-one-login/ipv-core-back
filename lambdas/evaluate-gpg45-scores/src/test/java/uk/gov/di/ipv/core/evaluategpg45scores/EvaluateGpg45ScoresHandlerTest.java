@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -196,7 +197,8 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
 
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        verify(ipvSessionService, atLeast(1))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
 
         List<VcStatusDto> currentVcStatuses = updatedSessionItem.getCurrentVcStatuses();
@@ -249,7 +251,8 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        verify(ipvSessionService, atLeast(1))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         assertEquals(VOT_P2, ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
@@ -481,7 +484,8 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getCode(), response.getCode());
         assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getMessage(), response.getMessage());
 
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        verify(ipvSessionService, atLeast(1))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         assertNull(ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
@@ -529,7 +533,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        verify(ipvSessionService, atLeast(1))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         assertEquals(VOT_P2, ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
