@@ -2,24 +2,6 @@ const initialStates = ['INITIAL_IPV_JOURNEY'];
 const errorStates = ['ERROR'];
 const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
 
-
-// Expand out parent states for ease of consumption
-export const expandParents = (journeyMap) => {
-    const parentStates = [];
-    Object.entries(journeyMap).forEach(([state, definition]) => {
-        if (definition.parent) {
-            const parent = journeyMap[definition.parent];
-            definition.events = {
-                ...parent.events,
-                ...definition.events,
-            };
-            journeyMap[state] = { ...parent, ...definition };
-            parentStates.push(definition.parent);
-        }
-    });
-    parentStates.forEach((state) => delete journeyMap[state]);
-};
-
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMap) => {
     const disabledOptions = ['none'];
@@ -47,6 +29,68 @@ export const getOptions = (journeyMap) => {
 
     return { disabledOptions, featureFlagOptions };
 }
+
+// Expand out parent states
+const expandParents = (journeyMap) => {
+    const parentStates = [];
+    Object.entries(journeyMap).forEach(([state, definition]) => {
+        if (definition.parent) {
+            const parent = journeyMap[definition.parent];
+            definition.events = {
+                ...parent.events,
+                ...definition.events,
+            };
+            journeyMap[state] = { ...parent, ...definition };
+            parentStates.push(definition.parent);
+        }
+    });
+    parentStates.forEach((state) => delete journeyMap[state]);
+};
+
+// Expand out nested states
+const expandNestedJourneys = (journeyMap, subjourneys) => {
+    Object.entries(journeyMap).forEach(([state, definition]) => {
+        if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
+            delete journeyMap[state];
+            const subjourney = subjourneys[definition.nestedJourney];
+
+            // Expand out each of the nested states
+            Object.entries(subjourney.nestedJourneyStates).forEach(([nestedState, nestedDefinition]) => {
+                // Copy to avoid mutating different versions of the expanded definition
+                const expandedDefinition = JSON.parse(JSON.stringify(nestedDefinition));
+
+                Object.entries(expandedDefinition.events).forEach(([evt, def]) => {
+                    // Map target states to expanded states
+                    if (def.targetState) {
+                        def.targetState = `${def.targetState}_${state}`;
+                    }
+
+                    // Map exit events to targets in the parent definition
+                    if (def.exitEventToEmit) {
+                        if (definition.exitEvents[def.exitEventToEmit]) {
+                        def.targetState = definition.exitEvents[def.exitEventToEmit].targetState;
+                        } else {
+                            console.warn(`Unhandled exit event from ${state}:`, def.exitEventToEmit)
+                            delete expandedDefinition.events[evt];
+                        }
+                        delete def.exitEventToEmit;
+                    }
+                });
+
+                journeyMap[`${nestedState}_${state}`] = expandedDefinition;
+            });
+
+            // Update entry events on other states to expanded states
+            Object.entries(subjourney.entryEvents).forEach(([entryEvent, def]) => {
+                Object.values(journeyMap).forEach((journeyDef) => {
+                    if (journeyDef.events?.[entryEvent]?.targetState === state) {
+                        journeyDef.events[entryEvent].targetState = `${def.targetState}_${state}`;
+                    }
+                });
+            });
+        }
+    });
+};
 
 // Should match logic in BasicEvent.java
 const resolveEventTarget = (definition, options) => {
@@ -88,7 +132,6 @@ const renderTransitions = (journeyMap, options) => {
             eventsByTarget[target].push(eventName);
         });
 
-        console.log(eventsByTarget);
         Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
             stateTransitions.push(`    ${state}-->|${eventNames.join('\\n')}|${target}`);
         });
@@ -109,9 +152,13 @@ const renderStates = (journeyMap, states) => {
             case 'process':
                 return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
             case 'page':
-                return `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
+                return failureStates.includes(state)
+                    ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page`
+                    : `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
             case 'cri':
                 return `    ${state}([${state}\\n${definition.response.criId}]):::cri`;
+            case 'error':
+                return `    ${state}:::error_page`
             default:
                 return `    ${state}`;
         }
@@ -120,15 +167,23 @@ const renderStates = (journeyMap, states) => {
     return { statesMermaid: mermaids.join('\n') };
 };
 
-export const render = (journeyMap, options = {}) => {
-    const { transitionsMermaid, states } = renderTransitions(journeyMap, options);
-    const { statesMermaid } = renderStates(journeyMap, states);
+export const render = (journeyMap, nestedJourneys, options = {}) => {
+    // Copy to avoid mutating the input
+    const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
+    if (options.expandNestedJourneys) {
+        expandNestedJourneys(journeyMapCopy, nestedJourneys);
+    }
+    expandParents(journeyMapCopy);
+
+    const { transitionsMermaid, states } = renderTransitions(journeyMapCopy, options);
+    const { statesMermaid } = renderStates(journeyMapCopy, states);
 
     const mermaid =
 `graph LR
-    classDef process fill:#ffa
-    classDef page fill:#afa;
-    classDef cri fill:#faf;
+    classDef process fill:#ffa,stroke:#330;
+    classDef page fill:#ae8,stroke:#050;
+    classDef error_page fill:#f99,stroke:#500;
+    classDef cri fill:#faf,stroke:#303;
 ${statesMermaid}
 ${transitionsMermaid}
 `;

@@ -62,6 +62,10 @@
                     <div>Include failures:</div>
                     <input id="includeFailuresInput" name="includeFailures" type="checkbox">
                 </label>
+                <label>
+                    <div>Expand nested journeys:</div>
+                    <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
+                </label>
             </form>
         </div>
         <div id="diagram"></div>
@@ -69,7 +73,7 @@
             import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
             import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
             import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
-            import { expandParents, getOptions, render } from './index.mjs';
+            import { getOptions, render } from './index.mjs';
 
             // We initialize mermaid manually
             mermaid.initialize({ startOnLoad: false });
@@ -82,7 +86,8 @@
             // Load the journey map
             const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
             const journeyMap = yaml.parse(await journeyResponse.text());
-            expandParents(journeyMap);
+            const nestedResponse = await fetch('./nested-journey-definitions.yaml');
+            const nestedJourneys = yaml.parse(await nestedResponse.text());
 
             // Set up the form options
             const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
@@ -101,7 +106,8 @@
 
             // Render the journey map SVG
             const renderSvg = async (formData) => {
-                const diagram = render(journeyMap, Object.fromEntries(formData || []));
+                const options = Object.fromEntries(formData || []);
+                const diagram = render(journeyMap, nestedJourneys, options);
                 const diagramElement = document.getElementById('diagram');
                 const { svg } = await mermaid.render('diagramSvg', diagram);
                 diagramElement.innerHTML = svg;
