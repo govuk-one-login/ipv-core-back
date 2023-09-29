@@ -19,7 +19,7 @@ dependencies {
 			project(":libs:cri-response-service"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
-			project(":libs:vc-helper"),
+			project(":libs:verifiable-credentials"),
 			project(":libs:user-identity-service")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
