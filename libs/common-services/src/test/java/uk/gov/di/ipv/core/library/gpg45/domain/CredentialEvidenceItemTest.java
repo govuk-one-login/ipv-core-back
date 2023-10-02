@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.gpg45.domain;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.exceptions.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 
 import java.util.Arrays;
@@ -85,6 +86,13 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
+    void testThrowsForEvidenceTypeConstructorGetTypeNotActivityIdentityFraudNorVerification() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(EvidenceType.EVIDENCE, 30, Collections.emptyList());
+        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
+    }
+
+    @Test
     void testGetTypeEvidence() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder().strengthScore(30).validityScore(30).build();
@@ -92,7 +100,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testIsDcmaw() throws UnknownEvidenceTypeException {
+    void testGetTypeDcmaw() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .strengthScore(30)
@@ -120,7 +128,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testIsF2F() throws UnknownEvidenceTypeException {
+    void testGetTypeF2F() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .strengthScore(30)
@@ -151,7 +159,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testIsFraudWithActivity() throws UnknownEvidenceTypeException {
+    void testGetTypeFraudWithActivity() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder()
                         .identityFraudScore(30)
@@ -161,7 +169,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testIsNino() throws UnknownEvidenceTypeException {
+    void testGetTypeNino() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .checkDetails(List.of(new CheckDetail()))
@@ -184,6 +192,18 @@ class CredentialEvidenceItemTest {
     void testGetTypeUnknown() {
         CredentialEvidenceItem credentialEvidenceItem = CredentialEvidenceItem.builder().build();
         assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
+    }
+
+    @Test
+    void testGetEvidenceScore() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(10)
+                        .validityScore(20)
+                        .build();
+        Gpg45Scores.Evidence evidence = credentialEvidenceItem.getEvidenceScore();
+        assertEquals(10, evidence.getStrength());
+        assertEquals(20, evidence.getValidity());
     }
 
     @Test
