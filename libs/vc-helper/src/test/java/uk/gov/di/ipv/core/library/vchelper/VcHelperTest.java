@@ -12,24 +12,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EVIDENCE_ACTIVITY_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EVIDENCE_NA_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC_WITH_CI_D02;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC_WITH_CI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1_PASSPORT_VC_MISSING_EVIDENCE;
 
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
@@ -71,115 +59,10 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnTrueOnSuccessfulPassportVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_PASSPORT_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
     void shouldReturnTrueOnSuccessfulPassportVcForWithDefaultExcludedCredentialIssues()
             throws Exception {
         mockCredentialIssuerConfig();
         assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC)));
-    }
-
-    @Test
-    void shouldReturnFalseOnFailedPassportVc() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_PASSPORT_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnPassportVcContainingCi() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnSuccessfulAddressVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_ADDRESS_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnSuccessfulFraudVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnFailedFraudVc() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_FRAUD_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnFraudVcContainingCi() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnFraudVcContainingA01Ci() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnSuccessfulKbvVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_VERIFICATION_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnSuccessfulDcmawVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1B_DCMAW_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnSuccessfulF2FVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_F2F_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnSuccessfulForEvidenceTypeUnknown() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_EVIDENCE_NA_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnSuccessfulForEvidenceTypeActivity() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_EVIDENCE_ACTIVITY_VC), EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnFalseOnVcMissingEvidenceBlock() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE),
-                        EXCLUDED_CREDENTIAL_ISSUERS));
-    }
-
-    @Test
-    void shouldReturnTrueOnPassportVcContainingCiWhenIgnoringCi() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVcIgnoringCi(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), EXCLUDED_CREDENTIAL_ISSUERS));
     }
 
     @Test
