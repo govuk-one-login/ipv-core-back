@@ -33,16 +33,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CheckCiScoreHandlerTest {
-    private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_USER_ID = "test-user-id";
@@ -103,8 +100,7 @@ class CheckCiScoreHandlerTest {
     @Test
     void shouldReturnJourneyCIScoreNotBreachingIfNoBreachingCIs() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        any(), eq(false), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
                 .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -118,10 +114,9 @@ class CheckCiScoreHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNoMatchJourneyResponseIfCiAreFoundOnVcs() throws Exception {
+    void shouldReturnCiJourneyResponseIfPresent() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        any(), eq(false), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -158,8 +153,7 @@ class CheckCiScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        any(), anyBoolean(), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -176,8 +170,7 @@ class CheckCiScoreHandlerTest {
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        any(), anyBoolean(), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
                 .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -192,24 +185,6 @@ class CheckCiScoreHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
-    }
-
-    @Test
-    void shouldReturnJourneyNoMatchJourneyResponseForSeparateSessionBreachingCIs()
-            throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        ipvSessionItem.setUserState(USER_STATE_INITIAL_CI_SCORING);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        any(), eq(true), any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        JourneyResponse response =
-                toResponseClass(
-                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
-
-        assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

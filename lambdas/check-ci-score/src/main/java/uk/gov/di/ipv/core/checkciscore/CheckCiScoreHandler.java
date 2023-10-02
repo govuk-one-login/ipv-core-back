@@ -37,7 +37,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 
 public class CheckCiScoreHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
     private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
             new JourneyResponse(JOURNEY_CI_SCORE_NOT_BREACHING_PATH);
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -95,7 +94,6 @@ public class CheckCiScoreHandler implements RequestHandler<JourneyRequest, Map<S
                                     clientOAuthSessionItem.getUserId(),
                                     govukSigninJourneyId,
                                     ipAddress),
-                            USER_STATE_INITIAL_CI_SCORING.equals(ipvSessionItem.getUserState()),
                             ipvSessionItem);
 
             if (contraIndicatorJourneyResponse.isPresent()) {
