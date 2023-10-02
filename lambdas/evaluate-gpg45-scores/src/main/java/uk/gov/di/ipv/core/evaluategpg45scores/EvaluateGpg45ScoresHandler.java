@@ -74,7 +74,6 @@ public class EvaluateGpg45ScoresHandler
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
 
-    private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
@@ -83,6 +82,7 @@ public class EvaluateGpg45ScoresHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    public static final String VOT_P2 = "P2";
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -137,16 +137,9 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            JourneyResponse journeyResponse;
-            StringMapMessage message = new StringMapMessage();
-
-            journeyResponse =
-                    checkForMatchingGpg45Profile(
-                            message,
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            credentials,
-                            ipAddress);
+            if (!checkCorrelation(userId)) {
+                return JOURNEY_PYI_NO_MATCH.toObjectMap();
+            }
 
             Optional<JourneyResponse> journeyResponseForFailWithNoCi =
                     getJourneyResponseForFailWithNoCi(ipvSessionItem, userId);
@@ -154,13 +147,9 @@ public class EvaluateGpg45ScoresHandler
                 return journeyResponseForFailWithNoCi.get().toObjectMap();
             }
 
-            if (!checkCorrelation(userId)) {
-                return JOURNEY_PYI_NO_MATCH.toObjectMap();
-            }
-
-            LOGGER.info(message);
-
-            return journeyResponse.toObjectMap();
+            return checkForMatchingGpg45Profile(
+                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                    .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
@@ -236,7 +225,6 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
-            StringMapMessage message,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
@@ -256,9 +244,12 @@ public class EvaluateGpg45ScoresHandler
                             credentials,
                             ipAddress));
             ipvSessionItem.setVot(VOT_P2);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            message.with("lambdaResult", "A GPG45 profile has been met")
-                    .with("journeyResponse", JOURNEY_END);
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("lambdaResult", "A GPG45 profile has been met")
+                            .with("journeyResponse", JOURNEY_END));
             return JOURNEY_END;
         } else {
             List<RequiredGpg45ScoresDto> requiredGpg45Scores =
@@ -274,8 +265,11 @@ public class EvaluateGpg45ScoresHandler
             ipvSessionItem.setRequiredGpg45Scores(requiredGpg45Scores);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            message.with("lambdaResult", "No GPG45 profiles have been met")
-                    .with("journeyResponse", JOURNEY_NEXT);
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("lambdaResult", "No GPG45 profiles have been met")
+                            .with("journeyResponse", JOURNEY_NEXT));
+
             return JOURNEY_NEXT;
         }
     }
