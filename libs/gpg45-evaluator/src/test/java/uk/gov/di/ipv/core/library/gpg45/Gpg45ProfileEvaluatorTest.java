@@ -9,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,14 +46,9 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
 
-    private static final String TEST_USER_ID = "test-user-id";
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH);
-    private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
-    private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
-            new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
-
     private static final String JOURNEY_PYI_CI3_FAIL_SEPARATE_SESSION =
             "/journey/pyi-ci3-fail-separate-session";
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION =
@@ -127,119 +120,6 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(
                 Optional.empty(),
                 evaluator.getFirstMatchingProfile(lowScores, List.of(M1B, M1A, Gpg45Profile.V1D)));
-    }
-
-    @Test
-    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-
-        assertTrue(
-                evaluator.getJourneyResponseForStoredCis(List.of(), mockIpvSessionItem).isEmpty());
-    }
-
-    @Test
-    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfCiScoreLessThanThreshold()
-            throws Exception {
-        ContraIndicatorItem contraIndicatorItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "Y03#hash",
-                        "issuer",
-                        "2022-09-21T07:57:14.332Z",
-                        CI2,
-                        "123456789",
-                        null);
-        setupMockContraIndicatorScoringConfig();
-
-        assertTrue(
-                evaluator
-                        .getJourneyResponseForStoredCis(
-                                List.of(contraIndicatorItem), mockIpvSessionItem)
-                        .isEmpty());
-    }
-
-    @Test
-    void
-            getJourneyResponseForStoredCisShouldReturnKbvFailIfCiScoreGreaterThanThresholdAndLastStoredCiWasIssuedByKbv()
-                    throws Exception {
-        ContraIndicatorItem otherCiItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "X98#hash",
-                        "otherIssuer",
-                        "2022-09-21T08:00:00.000Z",
-                        CI1,
-                        "123456789",
-                        null);
-        ContraIndicatorItem kbvCiItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "X99#hash",
-                        "kbvIssuer",
-                        "2022-09-21T08:01:00.000Z",
-                        CI2,
-                        "123456789",
-                        null);
-
-        setupMockContraIndicatorScoringConfig();
-        when(mockConfigService.getComponentId("kbv")).thenReturn("kbvIssuer");
-
-        assertEquals(
-                Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
-                evaluator.getJourneyResponseForStoredCis(
-                        List.of(otherCiItem, kbvCiItem), mockIpvSessionItem));
-    }
-
-    @Test
-    void
-            getJourneyResponseForStoredCisShouldReturnNoMatchIfCiScoreGreaterThanThresholdAndLastStoredCiWasNotIssuedByKbv()
-                    throws Exception {
-        ContraIndicatorItem otherCiItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "X98#hash",
-                        "otherIssuer",
-                        "2022-09-21T08:01:00.000Z",
-                        CI1,
-                        "123456789",
-                        null);
-        ContraIndicatorItem kbvCiItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "X99#hash",
-                        "kbvIssuer",
-                        "2022-09-21T08:00:00.000Z",
-                        CI2,
-                        "123456789",
-                        null);
-
-        setupMockContraIndicatorScoringConfig();
-
-        assertEquals(
-                Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
-                evaluator.getJourneyResponseForStoredCis(
-                        List.of(otherCiItem, kbvCiItem), mockIpvSessionItem));
-    }
-
-    @Test
-    void getJourneyResponseForStoredCisShouldThrowIfUnrecognisedCi() {
-        ContraIndicatorItem contraIndicatorItem =
-                new ContraIndicatorItem(
-                        TEST_USER_ID,
-                        "Y03#hash",
-                        "issuer",
-                        "2022-09-21T07:57:14.332Z",
-                        "Y03",
-                        "123456789",
-                        null);
-
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(TEST_CI_SCORES);
-
-        assertThrows(
-                UnrecognisedCiException.class,
-                () ->
-                        evaluator.getJourneyResponseForStoredCis(
-                                List.of(contraIndicatorItem), mockIpvSessionItem));
     }
 
     @Test
