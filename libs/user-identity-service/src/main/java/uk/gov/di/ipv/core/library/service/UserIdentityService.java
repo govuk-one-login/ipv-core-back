@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.Normalizer;
 import java.text.ParseException;

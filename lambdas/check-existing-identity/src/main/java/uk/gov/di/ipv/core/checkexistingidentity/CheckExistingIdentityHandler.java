@@ -41,7 +41,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
