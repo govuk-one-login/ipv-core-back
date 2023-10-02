@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -82,7 +81,7 @@ public class BuildCriOauthRequestHandler
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final CredentialIssuerConfigService criConfigService;
+    private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
@@ -92,7 +91,7 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public BuildCriOauthRequestHandler(
-            CredentialIssuerConfigService criConfigService,
+            ConfigService configService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
@@ -101,7 +100,7 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
 
-        this.criConfigService = criConfigService;
+        this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
@@ -109,37 +108,35 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        VcHelper.setConfigService(this.criConfigService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.criConfigService = new CredentialIssuerConfigService();
-        this.userIdentityService = new UserIdentityService(criConfigService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
         this.signer = new KmsEs256Signer();
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), criConfigService);
-        this.ipvSessionService = new IpvSessionService(criConfigService);
-        this.criOAuthSessionService = new CriOAuthSessionService(criConfigService);
-        this.clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(criConfigService);
-        this.gpg45ProfileEvaluator =
-                new Gpg45ProfileEvaluator(new ConfigService(), ipvSessionService);
-        VcHelper.setConfigService(this.criConfigService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        VcHelper.setConfigService(configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs(criConfigService);
+        LogHelper.attachComponentIdToLogs(configService);
         if (signer instanceof KmsEs256Signer kmsEs256Signer) {
-            kmsEs256Signer.setKeyId(criConfigService.getSigningKeyId());
+            kmsEs256Signer.setKeyId(configService.getSigningKeyId());
         }
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
             String featureSet = getFeatureSet(input);
-            criConfigService.setFeatureSet(featureSet);
+            configService.setFeatureSet(featureSet);
             String journey = getJourney(input);
 
             var errorResponse = validate(journey);
@@ -150,9 +147,9 @@ public class BuildCriOauthRequestHandler
             }
 
             String criId = getCriIdFromJourney(journey);
-            String connection = criConfigService.getActiveConnection(criId);
+            String connection = configService.getActiveConnection(criId);
             CredentialIssuerConfig criConfig =
-                    criConfigService.getCriConfigForConnection(connection, criId);
+                    configService.getCriConfigForConnection(connection, criId);
 
             if (criConfig == null) {
                 return new JourneyErrorResponse(
@@ -194,7 +191,7 @@ public class BuildCriOauthRequestHandler
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            criConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser));
 
             var message =
@@ -295,7 +292,7 @@ public class BuildCriOauthRequestHandler
                         sharedClaimsResponse,
                         signer,
                         credentialIssuerConfig,
-                        criConfigService,
+                        configService,
                         oauthState,
                         userId,
                         govukSigninJourneyId,
@@ -342,7 +339,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(criConfigService.getComponentId(ADDRESS_CRI))) {
+                    if (credentialIss.equals(configService.getComponentId(ADDRESS_CRI))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -393,7 +390,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<String> getAllowedSharedClaimAttrs(String criId) {
-        String allowedSharedAttributes = criConfigService.getAllowedSharedAttributes(criId);
+        String allowedSharedAttributes = configService.getAllowedSharedAttributes(criId);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
