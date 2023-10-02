@@ -316,14 +316,24 @@ public class ConfigService {
         }
     }
 
-    public Map<String, ContraIndicatorMitigation> getCiMitConfig() throws ConfigException {
-        final String ciMitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
+    public Map<String, ContraIndicatorMitigation> getLegacyCimitConfig() throws ConfigException {
+        final String cimitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
             return objectMapper.readValue(
-                    ciMitConfig,
+                    cimitConfig,
                     new TypeReference<HashMap<String, ContraIndicatorMitigation>>() {});
         } catch (JsonProcessingException e) {
-            throw new ConfigException("Failed to parse CIMIT configuration");
+            throw new ConfigException("Failed to parse legacy CIMit configuration");
+        }
+    }
+
+    public Map<String, String> getCimitConfig() throws ConfigException {
+        final String cimitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
+        try {
+            return objectMapper.readValue(
+                    cimitConfig, new TypeReference<HashMap<String, String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new ConfigException("Failed to parse CIMit configuration");
         }
     }
 

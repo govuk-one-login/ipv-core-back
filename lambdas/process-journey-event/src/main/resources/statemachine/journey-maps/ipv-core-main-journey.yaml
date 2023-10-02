@@ -56,6 +56,8 @@ INITIAL_CI_SCORING:
       targetState: ERROR
     mitigation01:
       targetState: MITIGATION_01
+    enhanced-verification:
+      targetState: MITIGATION_01
 
 CHECK_EXISTING_IDENTITY:
   response:
@@ -78,8 +80,6 @@ CHECK_EXISTING_IDENTITY:
       targetState: PYI_F2F_TECHNICAL
     error:
       targetState: ERROR
-    mitigation01:
-      targetState: MITIGATION_01
 
 RESET_IDENTITY:
   response:
@@ -326,6 +326,8 @@ CRI_KBV_J2:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     mitigation02:
       targetState: MITIGATION_02_OPTIONS
+    enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -385,6 +387,8 @@ CRI_KBV_J3:
     next:
       targetState: PYI_NO_MATCH
     mitigation02:
+      targetState: MITIGATION_02_OPTIONS
+    enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
 
 # F2F journey (J4)
@@ -519,6 +523,8 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     mitigation02:
       targetState: PYI_ANOTHER_WAY
+    enhanced-verification:
+      targetState: PYI_ANOTHER_WAY
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
@@ -556,4 +562,6 @@ MITIGATION_02_CRI_DCMAW:
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
     mitigation02:
+      targetState: PYI_ANOTHER_WAY
+    enhanced-verification:
       targetState: PYI_ANOTHER_WAY

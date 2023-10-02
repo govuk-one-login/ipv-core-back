@@ -787,7 +787,7 @@ class ConfigServiceTest {
     }
 
     @Test
-    void shouldFetchCiMitConfig() throws ConfigException {
+    void shouldFetchLegacyCimitConfig() throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config"))
                 .thenReturn(
@@ -805,14 +805,30 @@ class ConfigServiceTest {
                                 .separateSessionStep("/journey/j2")
                                 .mitigatingCredentialIssuers(List.of("cri1"))
                                 .build());
-        assertEquals(expectedCiMitConfig, configService.getCiMitConfig());
+        assertEquals(expectedCiMitConfig, configService.getLegacyCimitConfig());
     }
 
     @Test
-    void shouldThrowErrorOnInvalidCiMitConfig() {
+    void shouldFetchCimitConfig() throws ConfigException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config"))
+                .thenReturn("{\"X01\":\"/journey/do-a-thing\"}");
+        Map<String, String> expectedCiMitConfig = Map.of("X01", "/journey/do-a-thing");
+        assertEquals(expectedCiMitConfig, configService.getCimitConfig());
+    }
+
+    @Test
+    void shouldThrowErrorOnInvalidLegacyCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
-        assertThrows(ConfigException.class, () -> configService.getCiMitConfig());
+        assertThrows(ConfigException.class, () -> configService.getLegacyCimitConfig());
+    }
+
+    @Test
+    void shouldThrowErrorOnInvalidCimitConfig() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
+        assertThrows(ConfigException.class, () -> configService.getCimitConfig());
     }
 
     @Test

@@ -91,15 +91,25 @@ public class Gpg45ProfileEvaluator {
                 contraIndicators.getLatestContraIndicator();
         final String latestContraIndicatorCode =
                 latestContraIndicator.isPresent() ? latestContraIndicator.get().getCode() : "";
-        Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
-        if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
-            final ContraIndicatorMitigation contraIndicatorMitigation =
-                    ciMitConfig.get(latestContraIndicatorCode);
-            return Optional.of(
-                    new JourneyResponse(
-                            separateSession
-                                    ? contraIndicatorMitigation.getSeparateSessionStep()
-                                    : contraIndicatorMitigation.getSameSessionStep()));
+        try {
+            Map<String, ContraIndicatorMitigation> cimitConfig =
+                    configService.getLegacyCimitConfig();
+            if (cimitConfig.containsKey(latestContraIndicatorCode)) {
+                final ContraIndicatorMitigation contraIndicatorMitigation =
+                        cimitConfig.get(latestContraIndicatorCode);
+                return Optional.of(
+                        new JourneyResponse(
+                                separateSession
+                                        ? contraIndicatorMitigation.getSeparateSessionStep()
+                                        : contraIndicatorMitigation.getSameSessionStep()));
+            }
+        } catch (ConfigException e) {
+            LOGGER.error("Error fetching legacy cimit config, attempting new config version");
+
+            Map<String, String> cimitConfig = configService.getCimitConfig();
+            if (cimitConfig.containsKey(latestContraIndicatorCode)) {
+                return Optional.of(new JourneyResponse(cimitConfig.get(latestContraIndicatorCode)));
+            }
         }
 
         return Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH);
