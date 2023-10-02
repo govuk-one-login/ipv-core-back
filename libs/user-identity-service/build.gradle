@@ -17,6 +17,7 @@ dependencies {
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
+	implementation project(path: ':libs:gpg45-evaluator')
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.9.3",
 			"org.mockito:mockito-junit-jupiter:5.4.0",

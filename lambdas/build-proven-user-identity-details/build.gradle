@@ -18,6 +18,7 @@ dependencies {
 			project(":libs:journey-uris"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:user-identity-service")
+	implementation project(path: ':libs:gpg45-evaluator')
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"

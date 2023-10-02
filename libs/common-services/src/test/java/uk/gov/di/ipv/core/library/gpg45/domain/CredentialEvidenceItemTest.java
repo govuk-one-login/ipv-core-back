@@ -76,7 +76,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeActivity(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.ACTIVITY, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -88,19 +88,12 @@ class CredentialEvidenceItemTest {
                         .activityHistoryScore(10)
                         .identityFraudScore(10)
                         .build(),
-                CredentialEvidenceItem.builder()
-                        .activityHistoryScore(10)
-                        .strengthScore(10)
-                        .build(),
-                CredentialEvidenceItem.builder()
-                        .activityHistoryScore(10)
-                        .validityScore(10)
-                        .build(),
+                CredentialEvidenceItem.builder().activityHistoryScore(10).strengthScore(10).build(),
+                CredentialEvidenceItem.builder().activityHistoryScore(10).validityScore(10).build(),
                 CredentialEvidenceItem.builder()
                         .activityHistoryScore(10)
                         .verificationScore(10)
-                        .build()
-        );
+                        .build());
     }
 
     @Test
@@ -117,7 +110,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeIdentityFraud(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.IDENTITY_FRAUD, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -125,11 +118,16 @@ class CredentialEvidenceItemTest {
     private static Stream<CredentialEvidenceItem> provideCasesForNotIdentityFraud() {
         return Stream.of(
                 CredentialEvidenceItem.builder().build(),
-                CredentialEvidenceItem.builder().identityFraudScore(10).activityHistoryScore(10).build(),
+                CredentialEvidenceItem.builder()
+                        .identityFraudScore(10)
+                        .activityHistoryScore(10)
+                        .build(),
                 CredentialEvidenceItem.builder().identityFraudScore(10).strengthScore(10).build(),
                 CredentialEvidenceItem.builder().identityFraudScore(10).validityScore(10).build(),
-                CredentialEvidenceItem.builder().identityFraudScore(10).verificationScore(10).build()
-        );
+                CredentialEvidenceItem.builder()
+                        .identityFraudScore(10)
+                        .verificationScore(10)
+                        .build());
     }
 
     @Test
@@ -145,7 +143,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeVerification(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.VERIFICATION, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -153,11 +151,16 @@ class CredentialEvidenceItemTest {
     private static Stream<CredentialEvidenceItem> provideCasesForNotVerification() {
         return Stream.of(
                 CredentialEvidenceItem.builder().build(),
-                CredentialEvidenceItem.builder().verificationScore(10).activityHistoryScore(10).build(),
-                CredentialEvidenceItem.builder().verificationScore(10).identityFraudScore(10).build(),
+                CredentialEvidenceItem.builder()
+                        .verificationScore(10)
+                        .activityHistoryScore(10)
+                        .build(),
+                CredentialEvidenceItem.builder()
+                        .verificationScore(10)
+                        .identityFraudScore(10)
+                        .build(),
                 CredentialEvidenceItem.builder().verificationScore(10).strengthScore(10).build(),
-                CredentialEvidenceItem.builder().verificationScore(10).validityScore(10).build()
-        );
+                CredentialEvidenceItem.builder().verificationScore(10).validityScore(10).build());
     }
 
     @Test
@@ -179,7 +182,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeEvidence(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.EVIDENCE, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -190,8 +193,10 @@ class CredentialEvidenceItemTest {
                 CredentialEvidenceItem.builder().strengthScore(10).activityHistoryScore(10).build(),
                 CredentialEvidenceItem.builder().validityScore(10).identityFraudScore(10).build(),
                 CredentialEvidenceItem.builder().strengthScore(10).verificationScore(10).build(),
-                CredentialEvidenceItem.builder().validityScore(10).checkDetails(List.of(new CheckDetail())).build()
-        );
+                CredentialEvidenceItem.builder()
+                        .validityScore(10)
+                        .checkDetails(List.of(new CheckDetail()))
+                        .build());
     }
 
     @Test
@@ -227,7 +232,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeDcmaw(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.DCMAW, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -238,8 +243,7 @@ class CredentialEvidenceItemTest {
                 CredentialEvidenceItem.builder().strengthScore(10).activityHistoryScore(10).build(),
                 CredentialEvidenceItem.builder().validityScore(10).identityFraudScore(10).build(),
                 CredentialEvidenceItem.builder().strengthScore(10).verificationScore(10).build(),
-                CredentialEvidenceItem.builder().validityScore(10).build()
-        );
+                CredentialEvidenceItem.builder().validityScore(10).build());
     }
 
     @Test
@@ -278,7 +282,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeF2F(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.F2F, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -289,8 +293,7 @@ class CredentialEvidenceItemTest {
                 CredentialEvidenceItem.builder().strengthScore(10).activityHistoryScore(10).build(),
                 CredentialEvidenceItem.builder().validityScore(10).identityFraudScore(10).build(),
                 CredentialEvidenceItem.builder().verificationScore(10).build(),
-                CredentialEvidenceItem.builder().strengthScore(10).validityScore(10).build()
-        );
+                CredentialEvidenceItem.builder().strengthScore(10).validityScore(10).build());
     }
 
     @Test
@@ -308,7 +311,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeFraudWithActivity(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.FRAUD_WITH_ACTIVITY, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -317,8 +320,10 @@ class CredentialEvidenceItemTest {
         return Stream.of(
                 CredentialEvidenceItem.builder().build(),
                 CredentialEvidenceItem.builder().activityHistoryScore(10).strengthScore(10).build(),
-                CredentialEvidenceItem.builder().identityFraudScore(10).verificationScore(10).build()
-        );
+                CredentialEvidenceItem.builder()
+                        .identityFraudScore(10)
+                        .verificationScore(10)
+                        .build());
     }
 
     @Test
@@ -346,7 +351,7 @@ class CredentialEvidenceItemTest {
     void shouldNotGetTypeNino(CredentialEvidenceItem item) {
         try {
             assertNotEquals(EvidenceType.NINO, item.getType());
-        } catch(UnknownEvidenceTypeException exception) {
+        } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getType);
         }
     }
@@ -357,8 +362,7 @@ class CredentialEvidenceItemTest {
                 CredentialEvidenceItem.builder().validityScore(10).build(),
                 CredentialEvidenceItem.builder().verificationScore(10).build(),
                 CredentialEvidenceItem.builder().activityHistoryScore(10).build(),
-                CredentialEvidenceItem.builder().identityFraudScore(10).build()
-        );
+                CredentialEvidenceItem.builder().identityFraudScore(10).build());
     }
 
     @Test
