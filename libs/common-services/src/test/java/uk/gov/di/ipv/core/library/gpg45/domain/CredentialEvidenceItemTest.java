@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CredentialEvidenceItemTest {
     @Test
-    void testConstructorWithEvidenceTypeAndScore() {
+    void shouldConstructorWithEvidenceTypeAndScore() {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 new CredentialEvidenceItem(EvidenceType.ACTIVITY, 10, Collections.emptyList());
         assertEquals(10, credentialEvidenceItem1.getActivityHistoryScore());
@@ -36,7 +36,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testConstructorWithStrengthValidityCi() {
+    void shouldConstructorWithStrengthValidityCi() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(15, 25, Collections.emptyList());
         assertEquals(15, credentialEvidenceItem.getStrengthScore());
@@ -44,7 +44,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testFullArgConstructor() {
+    void shouldFullArgConstructor() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         10,
@@ -61,7 +61,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeActivity() throws UnknownEvidenceTypeException {
+    void shouldGetTypeActivity() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(EvidenceType.ACTIVITY, 30, Collections.emptyList());
         assertEquals(EvidenceType.ACTIVITY, credentialEvidenceItem.getType());
@@ -69,7 +69,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeIdentityFraud() throws UnknownEvidenceTypeException {
+    void shouldGetTypeIdentityFraud() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         EvidenceType.IDENTITY_FRAUD, 30, Collections.emptyList());
@@ -78,7 +78,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeVerification() throws UnknownEvidenceTypeException {
+    void shouldGetTypeVerification() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(EvidenceType.VERIFICATION, 30, Collections.emptyList());
         assertEquals(EvidenceType.VERIFICATION, credentialEvidenceItem.getType());
@@ -86,21 +86,21 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testThrowsForEvidenceTypeConstructorGetTypeNotActivityIdentityFraudNorVerification() {
+    void throwsForEvidenceTypeConstructorGetTypeNotActivityIdentityFraudNorVerification() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(EvidenceType.EVIDENCE, 30, Collections.emptyList());
         assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
     }
 
     @Test
-    void testGetTypeEvidence() throws UnknownEvidenceTypeException {
+    void shouldGetTypeEvidence() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder().strengthScore(30).validityScore(30).build();
         assertEquals(EvidenceType.EVIDENCE, credentialEvidenceItem.getType());
     }
 
     @Test
-    void testGetTypeDcmaw() throws UnknownEvidenceTypeException {
+    void shouldGetTypeDcmaw() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .strengthScore(30)
@@ -128,7 +128,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeF2F() throws UnknownEvidenceTypeException {
+    void shouldGetTypeF2F() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .strengthScore(30)
@@ -159,7 +159,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeFraudWithActivity() throws UnknownEvidenceTypeException {
+    void shouldGetTypeFraudWithActivity() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder()
                         .identityFraudScore(30)
@@ -169,7 +169,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeNino() throws UnknownEvidenceTypeException {
+    void shouldGetTypeNino() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem1 =
                 CredentialEvidenceItem.builder()
                         .checkDetails(List.of(new CheckDetail()))
@@ -189,25 +189,20 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testGetTypeUnknown() {
+    void throwsForGetTypeUnknown() {
         CredentialEvidenceItem credentialEvidenceItem = CredentialEvidenceItem.builder().build();
         assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
     }
 
     @Test
-    void testGetEvidenceScore() {
+    void shouldGetEvidenceScore() {
         CredentialEvidenceItem credentialEvidenceItem =
-                CredentialEvidenceItem.builder()
-                        .strengthScore(10)
-                        .validityScore(20)
-                        .build();
-        Gpg45Scores.Evidence evidence = credentialEvidenceItem.getEvidenceScore();
-        assertEquals(10, evidence.getStrength());
-        assertEquals(20, evidence.getValidity());
+                CredentialEvidenceItem.builder().strengthScore(10).validityScore(20).build();
+        assertEquals(new Gpg45Scores.Evidence(10, 20), credentialEvidenceItem.getEvidenceScore());
     }
 
     @Test
-    void testHasContraIndicators() {
+    void shouldHasContraIndicators() {
         CredentialEvidenceItem credentialEvidenceItem1 = new CredentialEvidenceItem(10, 20, null);
         assertFalse(credentialEvidenceItem1.hasContraIndicators());
 
@@ -221,7 +216,7 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void testSetCredentialIss() {
+    void shouldSetCredentialIss() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(10, 20, Collections.emptyList());
         credentialEvidenceItem.setCredentialIss("someIss");
