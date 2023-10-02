@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
+package uk.gov.di.ipv.core.library.gpg45.helpers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
