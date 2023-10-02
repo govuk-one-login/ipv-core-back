@@ -21,7 +21,7 @@ export const sendAuditEvent = async (
     const now = Date.now();
     const auditEvent: AuditEvent = {
       timestamp: Math.floor(now / 1000),
-      event_timestamp_ms: now;
+      event_timestamp_ms: now,
       component_id: componentId,
       event_name: eventName,
       user,
