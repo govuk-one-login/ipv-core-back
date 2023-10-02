@@ -1,73 +1,88 @@
 package uk.gov.di.ipv.core.library.gpg45.domain;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class CredentialEvidenceItemTest {
-
-    private CredentialEvidenceItem item;
-
     @Test
     void testConstructorWithEvidenceTypeAndScore() {
-        item = new CredentialEvidenceItem(EvidenceType.ACTIVITY, 10, Collections.emptyList());
-        assertEquals(10, item.getActivityHistoryScore());
-        assertNull(item.getIdentityFraudScore());
-        assertNull(item.getVerificationScore());
+        CredentialEvidenceItem credentialEvidenceItem1 =
+                new CredentialEvidenceItem(EvidenceType.ACTIVITY, 10, Collections.emptyList());
+        assertEquals(10, credentialEvidenceItem1.getActivityHistoryScore());
+        assertNull(credentialEvidenceItem1.getIdentityFraudScore());
+        assertNull(credentialEvidenceItem1.getVerificationScore());
 
-        item = new CredentialEvidenceItem(EvidenceType.IDENTITY_FRAUD, 20, Collections.emptyList());
-        assertNull(item.getActivityHistoryScore());
-        assertEquals(20, item.getIdentityFraudScore());
-        assertNull(item.getVerificationScore());
+        CredentialEvidenceItem credentialEvidenceItem2 =
+                new CredentialEvidenceItem(
+                        EvidenceType.IDENTITY_FRAUD, 20, Collections.emptyList());
+        assertNull(credentialEvidenceItem2.getActivityHistoryScore());
+        assertEquals(20, credentialEvidenceItem2.getIdentityFraudScore());
+        assertNull(credentialEvidenceItem2.getVerificationScore());
 
-        item = new CredentialEvidenceItem(EvidenceType.VERIFICATION, 30, Collections.emptyList());
-        assertNull(item.getActivityHistoryScore());
-        assertNull(item.getIdentityFraudScore());
-        assertEquals(30, item.getVerificationScore());
+        CredentialEvidenceItem credentialEvidenceItem3 =
+                new CredentialEvidenceItem(EvidenceType.VERIFICATION, 30, Collections.emptyList());
+        assertNull(credentialEvidenceItem3.getActivityHistoryScore());
+        assertNull(credentialEvidenceItem3.getIdentityFraudScore());
+        assertEquals(30, credentialEvidenceItem3.getVerificationScore());
     }
 
     @Test
     void testConstructorWithStrengthValidityCi() {
-        item = new CredentialEvidenceItem(15, 25, Collections.emptyList());
-        assertEquals(15, item.getStrengthScore());
-        assertEquals(25, item.getValidityScore());
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(15, 25, Collections.emptyList());
+        assertEquals(15, credentialEvidenceItem.getStrengthScore());
+        assertEquals(25, credentialEvidenceItem.getValidityScore());
     }
 
     @Test
     void testFullArgConstructor() {
-        item = new CredentialEvidenceItem(10, 20, 30, 40, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        assertEquals(10, item.getStrengthScore());
-        assertEquals(20, item.getValidityScore());
-        assertEquals(30, item.getActivityHistoryScore());
-        assertEquals(40, item.getVerificationScore());
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        10,
+                        20,
+                        30,
+                        40,
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
+        assertEquals(10, credentialEvidenceItem.getStrengthScore());
+        assertEquals(20, credentialEvidenceItem.getValidityScore());
+        assertEquals(30, credentialEvidenceItem.getActivityHistoryScore());
+        assertEquals(40, credentialEvidenceItem.getVerificationScore());
     }
 
     @Test
     void testGetEvidenceScore() {
-        item = new CredentialEvidenceItem(10, 20, Collections.emptyList());
-        assertEquals(10, item.getStrengthScore());
-        assertEquals(20, item.getValidityScore());
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(10, 20, Collections.emptyList());
+        assertEquals(10, credentialEvidenceItem.getStrengthScore());
+        assertEquals(20, credentialEvidenceItem.getValidityScore());
     }
 
     @Test
     void testHasContraIndicators() {
-        item = new CredentialEvidenceItem(10, 20, null);
-        assertFalse(item.hasContraIndicators());
+        CredentialEvidenceItem credentialEvidenceItem1 = new CredentialEvidenceItem(10, 20, null);
+        assertFalse(credentialEvidenceItem1.hasContraIndicators());
 
-        item = new CredentialEvidenceItem(10, 20, Collections.emptyList());
-        assertFalse(item.hasContraIndicators());
+        CredentialEvidenceItem credentialEvidenceItem2 =
+                new CredentialEvidenceItem(10, 20, Collections.emptyList());
+        assertFalse(credentialEvidenceItem2.hasContraIndicators());
 
-        item = new CredentialEvidenceItem(10, 20, Arrays.asList("contra1", "contra2"));
-        assertTrue(item.hasContraIndicators());
+        CredentialEvidenceItem credentialEvidenceItem3 =
+                new CredentialEvidenceItem(10, 20, Arrays.asList("contra1", "contra2"));
+        assertTrue(credentialEvidenceItem3.hasContraIndicators());
     }
 
     @Test
     void testSetCredentialIss() {
-        item = new CredentialEvidenceItem(10, 20, Collections.emptyList());
-        item.setCredentialIss("someIss");
-        assertEquals("someIss", item.getCredentialIss());
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(10, 20, Collections.emptyList());
+        credentialEvidenceItem.setCredentialIss("someIss");
+        assertEquals("someIss", credentialEvidenceItem.getCredentialIss());
     }
 }
