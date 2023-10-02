@@ -36,10 +36,12 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
-			project(":libs:credential-issuer-config-service"),
 			project(":libs:cri-response-service"),
+			project(":libs:gpg45-evaluator"),
 			project(":libs:journey-uris"),
 			project(":libs:kms-es256-signer"),
+			project(":libs:user-identity-service"),
+			project(":libs:vc-helper"),
 			project(":libs:verifiable-credentials")
 }
 
