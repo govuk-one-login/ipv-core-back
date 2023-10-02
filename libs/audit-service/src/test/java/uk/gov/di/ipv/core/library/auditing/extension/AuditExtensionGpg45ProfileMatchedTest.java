@@ -79,6 +79,8 @@ class AuditExtensionGpg45ProfileMatchedTest {
                         + "\"vcTxnIds\":[\"txn1\",\"txn2\",\"txn3\"]"
                         + "},"
                         + "\"timestamp\":1666170506"
+                        + ","
+                        + "\"event_timestamp_ms\":1666170506000"
                         + "}";
 
         assertEquals(expected, om.writeValueAsString(auditEvent));
