@@ -272,7 +272,6 @@ class EvaluateGpg45ScoresHandlerTest {
 
         evaluateGpg45ScoresHandler.handleRequest(request, context);
 
-        verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 List.of(
                         new RequiredGpg45ScoresDto(
@@ -281,9 +280,6 @@ class EvaluateGpg45ScoresHandlerTest {
                                 M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2))),
                 ipvSessionItem.getRequiredGpg45Scores());
 
-        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-        inOrder.verify(ipvSessionItem, never()).setVot(any());
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
     }
