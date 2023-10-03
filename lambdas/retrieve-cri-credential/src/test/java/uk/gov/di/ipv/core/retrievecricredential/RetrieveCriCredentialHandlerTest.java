@@ -616,7 +616,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() throws ParseException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
