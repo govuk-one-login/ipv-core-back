@@ -67,6 +67,7 @@ Parameters:
     Type: String
     Description: |
       The IP address that requests to AWS from a local core-front will come from.
+    Default: ""
 
 Conditions:
   AddProvisionedConcurrency: !Not
