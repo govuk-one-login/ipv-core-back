@@ -80,7 +80,7 @@ public class LambdaHandler {
         this.buildUserIdentityHandler = new BuildUserIdentityHandler();
     }
 
-    private Route initialiseSession =
+    private final Route initialiseSession =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
@@ -95,7 +95,7 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    private Route journeyEngine =
+    private final Route journeyEngine =
             (Request request, Response response) -> {
                 String journey = request.pathInfo();
 
@@ -165,7 +165,7 @@ public class LambdaHandler {
                 }
             };
 
-    private Route buildProvenUserIdentityDetails =
+    private final Route buildProvenUserIdentityDetails =
             (Request request, Response response) -> {
                 Map<String, Object> lambdaOutput =
                         buildProvenUserIdentityDetailsHandler.handleRequest(
@@ -174,7 +174,7 @@ public class LambdaHandler {
                 return gson.toJson(lambdaOutput);
             };
 
-    private Route criCallBack =
+    private final Route criCallBack =
             (Request request, Response response) -> {
                 Map<String, Object> validateLambdaOutput =
                         validateOAuthCallbackHandler.handleRequest(
@@ -218,7 +218,7 @@ public class LambdaHandler {
                 return gson.toJson(evaluateGpg45LambdaOutput);
             };
 
-    private Route token =
+    private final Route token =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
@@ -233,7 +233,7 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    private Route userIdentity =
+    private final Route userIdentity =
             (Request request, Response response) -> {
                 APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                         new APIGatewayProxyRequestEvent();
