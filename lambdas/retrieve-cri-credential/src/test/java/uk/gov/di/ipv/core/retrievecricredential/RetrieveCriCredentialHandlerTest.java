@@ -630,7 +630,6 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
                                 .userId(TEST_USER_ID)
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
                                 .credentialStatus(VerifiableCredentialStatus.PENDING)
                                 .build());
 
