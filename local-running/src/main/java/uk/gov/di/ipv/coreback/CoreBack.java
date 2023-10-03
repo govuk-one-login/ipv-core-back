@@ -11,7 +11,9 @@ import java.io.IOException;
 public class CoreBack {
     public CoreBack() throws IOException {
         LambdaHandler lambdaHandler = new LambdaHandler();
+
         new SqsPoller().start(new ProcessAsyncCriCredentialHandler());
+
         Spark.port(Integer.parseInt(System.getenv("PORT")));
         Spark.get("/", HomeHandler.serveHomePage);
 

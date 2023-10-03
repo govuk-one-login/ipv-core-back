@@ -41,7 +41,6 @@ dependencies {
 			project(":libs:journey-uris"),
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
-			project(":libs:vc-helper"),
 			project(":libs:verifiable-credentials")
 }
 
