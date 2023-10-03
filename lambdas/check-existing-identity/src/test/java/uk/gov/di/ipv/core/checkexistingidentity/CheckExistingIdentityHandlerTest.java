@@ -209,8 +209,6 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService, times(2)).updateIpvSession(ipvSessionItem);
-
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
         inOrder.verify(ipvSessionItem).setVot(VOT_P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
@@ -288,8 +286,6 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        verify(ipvSessionService).updateIpvSession(ipvSessionItem);
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
@@ -631,8 +627,6 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(),
                 journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        verify(ipvSessionService).updateIpvSession(ipvSessionItem);
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
