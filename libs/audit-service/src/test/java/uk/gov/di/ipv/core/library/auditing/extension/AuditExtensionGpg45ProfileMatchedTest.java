@@ -30,7 +30,7 @@ class AuditExtensionGpg45ProfileMatchedTest {
         clockMock = mockStatic(Clock.class);
         Clock spyClock = spy(Clock.class);
         clockMock.when(Clock::systemUTC).thenReturn(spyClock);
-        Instant instantValue = Instant.ofEpochSecond(1666170506);
+        Instant instantValue = Instant.ofEpochMilli(1666170506321);
         when(spyClock.instant()).thenReturn(instantValue);
         when(spyClock.instant().now()).thenReturn(instantValue);
     }
@@ -80,7 +80,7 @@ class AuditExtensionGpg45ProfileMatchedTest {
                         + "},"
                         + "\"timestamp\":1666170506"
                         + ","
-                        + "\"event_timestamp_ms\":1666170506000"
+                        + "\"event_timestamp_ms\":1666170506321"
                         + "}";
 
         assertEquals(expected, om.writeValueAsString(auditEvent));
