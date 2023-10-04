@@ -68,3 +68,9 @@ aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw clo
 ## Known limitations
 
 For some reason running the functional test suite against the local deployment hangs. I do not know why.
+
+## Future improvements
+
+* Consolidate the setting of parameters with the dev-deploy tool.
+* Integrate more fully with the dev-deploy tool to have local running as a switch within it.
+* Reformat the logs in docker-compose to make the easier to visually parse - https://docs.docker.com/config/formatting/
