@@ -6,8 +6,8 @@ Description: >-
 Globals:
   Function:
     Timeout: 40
-    SnapStart:
-      ApplyOn: !If [IsDevelopment, PublishedVersions, None]
+    # SnapStart:
+    #   ApplyOn: !If [IsDevelopment, PublishedVersions, None]
     Architectures:
       - !If [ IsDevelopment, x86_64, arm64 ]
     Environment:
@@ -19,12 +19,18 @@ Globals:
           - IsDevelopment
           - 0
           - 3
-    # DeploymentPreference:
-    #     # Testing against 10 percent of traffic: runs for 5 minutes, if no alarms fire, remaining traffic shifts.
-    #   Type: Canary10Percent5Minutes
-    #   Hooks:
-    #     BeforeAllowTraffic: "BeforeAllowTrafficHookFunctionName"
-    #     # AfterAllowTraffic: "AfterAllowTrafficHookFunctionName"
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled: true
+      Type: Canary10Percent5Minutes
+      Alarms:
+        - !Ref LambdaErrorAlarm
+        - !Ref CoreApiExternalGw5xxErrors
+        - !Ref CoreApiPrivateGw5xxErrors
+      Hooks:
+        PreTraffic: !Ref PreTrafficHook
+      # AfterAllowTraffic: "AfterAllowTrafficHookFunctionName"
+      Role: !GetAtt CodeDeployServiceRole.Arn
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
@@ -493,6 +499,8 @@ Resources:
         Name: PreTrafficHook
         # Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
         CheckovRulesToSkip: CKV_AWS_116.CKV_AWS_117
+      DeploymentPreference:
+        Enabled: false
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -557,15 +565,15 @@ Resources:
             Path: /token
             Method: POST
       AutoPublishAlias: live
-      DeploymentPreference:
+      # DeploymentPreference:
         # Testing against 10 percent of traffic: runs for 5 minutes, if no alarms fire, remaining traffic shifts.
-        Type: Canary10Percent5Minutes
+        # Type: Canary10Percent5Minutes
         # Alarms:
         #   - !Ref CoreApiPrivateGw5xxErrors
         #   - !Ref CoreApiExternalGw5xxErrors
         # Hooks: 
         #   PreTraffic: !Ref PreTrafficHook
-        Role: !GetAtt CodeDeployServiceRole.Arn
+        # Role: !GetAtt CodeDeployServiceRole.Arn
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
@@ -2745,16 +2753,67 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: lambda-error-alarm
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the Lambda
+      MetricName: LambdaFailures
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref IssueClientAccessTokenFunction
+        - Name: FunctionName
+          Value: !Ref BuildUserIdentityFunction
+
+  ZeroInvocationsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: zero-invocations-alarm
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the Lambda has zero invocations
+      MetricName: LambdaFailures
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+
+  TooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: too-many-requests-alarm
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the Lambda receives too many requests within a 
+        specified time period
+      MetricName: LambdaFailures
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   CoreApiPrivateGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsNotDevelopment
+    # Condition: IsNotDevelopment
     Properties:
         AlarmName: PrivateApiGateWay5xxAlarm
         ActionsEnabled: true
-        AlarmActions:
-          - !ImportValue sns-topics-AlarmTopic
-        OKActions:
-          - !ImportValue sns-topics-AlarmTopic
+        # AlarmActions:
+        #   - !ImportValue sns-topics-AlarmTopic
+        # OKActions:
+        #   - !ImportValue sns-topics-AlarmTopic
         InsufficientDataActions: []
         EvaluationPeriods: 3
         DatapointsToAlarm: 3
@@ -2778,16 +2837,16 @@ Resources:
                   Period: 300
                   Stat: Sum
 
-  CoreApiExternalGw5xxErrors:
+  lambdaNameCoreApiExternalGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsNotDevelopment
+    # Condition: IsNotDevelopment
     Properties:
       AlarmName: ExternalApiGateWay5xxAlarm
       ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue sns-topics-AlarmTopic
-      OKActions:
-        - !ImportValue sns-topics-AlarmTopic
+      # AlarmActions:
+      #   - !ImportValue sns-topics-AlarmTopic
+      # OKActions:
+      #   - !ImportValue sns-topics-AlarmTopic
       InsufficientDataActions: []
       EvaluationPeriods: 3
       DatapointsToAlarm: 3
