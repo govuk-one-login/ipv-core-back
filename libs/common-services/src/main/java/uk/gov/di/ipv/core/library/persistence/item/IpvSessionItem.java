@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 
 import java.util.ArrayList;
@@ -33,7 +32,6 @@ public class IpvSessionItem implements DynamodbItem {
     private String errorDescription;
     private List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
             new ArrayList<>();
-    private List<VcStatusDto> currentVcStatuses;
     private String vot;
     private long ttl;
     private IpvJourneyTypes journeyType;

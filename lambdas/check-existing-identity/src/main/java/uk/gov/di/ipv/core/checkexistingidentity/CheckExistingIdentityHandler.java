@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -165,7 +164,6 @@ public class CheckExistingIdentityHandler
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
-            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
             boolean dataCorrelates = vcDataCorrelates(userId);
             if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
@@ -313,35 +311,6 @@ public class CheckExistingIdentityHandler
             }
         }
         return Optional.empty();
-    }
-
-    @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-
-        // get list of success vc's
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-
-        if (currentVcStatusDtos.size() != credentials.size()) {
-            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-        }
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
-            throws ParseException {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-        for (SignedJWT signedJWT : credentials) {
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT);
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
     }
 
     @Tracing
