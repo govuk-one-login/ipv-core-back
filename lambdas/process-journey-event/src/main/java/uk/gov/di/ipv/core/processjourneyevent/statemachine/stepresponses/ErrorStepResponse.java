@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorStepResponse implements JourneyStepResponse {
+public class ErrorStepResponse implements StepResponse {
 
     private static final String ERROR = "error";
     private String pageId;

@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageStepResponse implements JourneyStepResponse {
+public class PageStepResponse implements StepResponse {
 
     private String pageId;
 

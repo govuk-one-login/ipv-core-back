@@ -6,7 +6,6 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -83,8 +82,7 @@ class ConfigServicePublicKeySelectorTest {
                                 false,
                                 null));
 
-        Assertions.assertEquals(
-                ECKey.parse(TestFixtures.EC_PUBLIC_JWK).toECPublicKey(), jwkClientPublicKey);
+        assertEquals(ECKey.parse(TestFixtures.EC_PUBLIC_JWK).toECPublicKey(), jwkClientPublicKey);
         assertEquals(
                 CertificateFactory.getInstance("X.509")
                         .generateCertificate(

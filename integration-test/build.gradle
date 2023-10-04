@@ -23,7 +23,7 @@ dependencies {
 			"org.apache.logging.log4j:log4j-core:$rootProject.ext.dependencyVersions.log4j",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
-			project(":lib")
+			project(":libs:common-services")
 
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
 			"org.junit.jupiter:junit-jupiter:5.10.0",

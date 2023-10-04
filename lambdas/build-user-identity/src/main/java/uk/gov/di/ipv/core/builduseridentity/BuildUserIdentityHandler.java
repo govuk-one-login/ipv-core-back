@@ -20,12 +20,12 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -57,7 +57,6 @@ public class BuildUserIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
-    private final String componentId;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
@@ -72,7 +71,6 @@ public class BuildUserIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -83,7 +81,6 @@ public class BuildUserIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -91,7 +88,7 @@ public class BuildUserIdentityHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         try {
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
@@ -141,26 +138,23 @@ public class BuildUserIdentityHandler
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
-                            userId,
-                            userId,
-                            ipvSessionItem.getVot(),
-                            ipvSessionItem.getCurrentVcStatuses());
+                            userId, userId, ipvSessionItem.getVot());
 
-            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                    && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
-                SignedJWT signedCiMitJwt =
-                        ciMitService.getContraIndicatorsVCJwt(
-                                userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
-                userIdentity.getVcs().add(signedCiMitJwt.serialize());
-            }
+            SignedJWT signedCiMitJwt =
+                    ciMitService.getContraIndicatorsVCJwt(
+                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+            userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
             AuditExtensionsUserIdentity extensions =
-                    new AuditExtensionsUserIdentity(ipvSessionItem.getVot());
+                    new AuditExtensionsUserIdentity(
+                            ipvSessionItem.getVot(),
+                            ipvSessionItem.isCiFail(),
+                            ciMitService.getContraIndicators(signedCiMitJwt).hasMitigations());
 
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_ISSUED,
-                            componentId,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             extensions));
 
@@ -191,6 +185,14 @@ public class BuildUserIdentityHandler
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
             var errorHeader = "Error when fetching CIs from storage system.";
+            LogHelper.logErrorMessage(errorHeader, e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                    OAuth2Error.SERVER_ERROR
+                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                            .toJSONObject());
+        } catch (CredentialParseException e) {
+            var errorHeader = "Failed to parse successful VC Store items.";
             LogHelper.logErrorMessage(errorHeader, e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),

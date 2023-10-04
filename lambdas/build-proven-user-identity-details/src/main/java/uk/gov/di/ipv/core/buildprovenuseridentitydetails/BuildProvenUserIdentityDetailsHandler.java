@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -35,7 +34,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -45,7 +44,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -73,6 +71,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.userIdentityService = userIdentityService;
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -81,13 +80,14 @@ public class BuildProvenUserIdentityDetailsHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
         try {
@@ -153,12 +153,10 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(
-                            item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
+                            currentVcStatuses,
+                            configService.getComponentId(item.getCredentialIssuer()))) {
                 JsonNode vcSubjectNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())
@@ -200,12 +198,10 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(
-                            item.getCredentialIssuer());
             if (item.getCredentialIssuer().equals(ADDRESS_CRI)
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
+                            currentVcStatuses,
+                            configService.getComponentId(item.getCredentialIssuer()))) {
                 JsonNode addressNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())
@@ -238,12 +234,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            List<CredentialIssuerConfig> excludedCriConfig =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig);
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

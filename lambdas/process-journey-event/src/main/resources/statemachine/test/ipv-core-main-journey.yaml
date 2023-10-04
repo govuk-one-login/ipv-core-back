@@ -46,6 +46,19 @@ ERROR_STATE:
     enterNestedJourneyAtStateTwo:
       targetState: NESTED_JOURNEY_INVOKE_STATE
 
+PROCESS_STATE:
+  response:
+    type: process
+    lambda: a-lambda-to-invoke
+    lambdaInput:
+      input1: the-first-input
+      input2: 2
+  events:
+    met:
+      targetState: CRI_STATE
+    unmet:
+      targetState: ERROR_STATE
+
 NESTED_JOURNEY_INVOKE_STATE:
   nestedJourney: NESTED_JOURNEY_DEFINITION
   exitEvents:

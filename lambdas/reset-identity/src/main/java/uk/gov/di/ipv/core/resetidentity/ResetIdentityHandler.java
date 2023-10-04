@@ -7,18 +7,14 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -40,26 +36,19 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
     private final UserIdentityService userIdentityService;
     private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
-    private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
 
     @SuppressWarnings("unused") // Used by AWS
     public ResetIdentityHandler(
             ConfigService configService,
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiMitService ciMitService,
-            AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
-        this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = criResponseService;
     }
 
@@ -69,9 +58,7 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = new CriResponseService(configService);
     }
 
@@ -79,7 +66,7 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);

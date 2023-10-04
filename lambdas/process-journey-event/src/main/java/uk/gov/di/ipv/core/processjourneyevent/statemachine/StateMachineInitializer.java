@@ -50,13 +50,13 @@ public class StateMachineInitializer {
     private void initializeJourneyStates() {
         journeyStates.forEach(
                 (stateName, state) -> {
-                    if (state instanceof BasicState) {
-                        initializeBasicState((BasicState) state, stateName, journeyStates);
+                    if (state instanceof BasicState basicState) {
+                        initializeBasicState(basicState, stateName, journeyStates);
                     }
 
-                    if (state instanceof NestedJourneyInvokeState) {
+                    if (state instanceof NestedJourneyInvokeState nestedJourneyInvokeState) {
                         initializeNestedJourneyInvokeState(
-                                (NestedJourneyInvokeState) state, stateName, journeyStates);
+                                nestedJourneyInvokeState, stateName, journeyStates);
                     }
                 });
     }
@@ -95,9 +95,8 @@ public class StateMachineInitializer {
             Map<String, Event> nestedJourneyExitEvents) {
         eventMap.forEach(
                 (eventName, event) -> {
-                    if (event instanceof ExitNestedJourneyEvent) {
-                        ((ExitNestedJourneyEvent) event)
-                                .setNestedJourneyExitEvents(nestedJourneyExitEvents);
+                    if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
+                        exitNestedJourneyEvent.setNestedJourneyExitEvents(nestedJourneyExitEvents);
                     } else {
                         event.initialize(eventName, eventStatesSource);
                     }
@@ -136,16 +135,19 @@ public class StateMachineInitializer {
                             String name =
                                     createNestedJourneyStateName(
                                             nestedJourneyInvokeState, nestedJourneyStateName);
-                            if (nestedJourneyState instanceof BasicState) {
+                            if (nestedJourneyState instanceof BasicState basicState) {
                                 initializeBasicState(
-                                        (BasicState) nestedJourneyState,
+                                        basicState,
                                         name,
                                         nestedJourneyDefinition.getNestedJourneyStates(),
                                         nestedJourneyInvokeState.getExitEvents());
                             }
-                            if (nestedJourneyState instanceof NestedJourneyInvokeState) {
+                            if (nestedJourneyState
+                                    instanceof
+                                    NestedJourneyInvokeState
+                                    subNestedJourneyInvokeState) {
                                 initializeNestedJourneyInvokeState(
-                                        (NestedJourneyInvokeState) nestedJourneyState,
+                                        subNestedJourneyInvokeState,
                                         name,
                                         nestedJourneyDefinition.getNestedJourneyStates());
                             }

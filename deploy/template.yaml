@@ -6,6 +6,10 @@ Description: >-
 Globals:
   Function:
     Timeout: 40
+    SnapStart:
+      ApplyOn: !If [IsDevelopment, PublishedVersions, None]
+    Architectures:
+      - !If [ IsDevelopment, x86_64, arm64 ]
     Environment:
       Variables:
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
@@ -50,6 +54,20 @@ Parameters:
       - "False"
       - "True"
     Default: "False"
+  LocalCoreFront:
+    Type: String
+    Description: |
+      Whether to expect core-front to be run on a dev machine at localhost.
+      If "True" expect localhost for core-front, if "False" expect core-front to run on AWS.
+    AllowedValues:
+      - "False"
+      - "True"
+    Default: "False"
+  LocalIpAddress:
+    Type: String
+    Description: |
+      The IP address that requests to AWS from a local core-front will come from.
+    Default: ""
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -59,8 +77,8 @@ Conditions:
   IsDevelopment: !Or
     - !Equals [ !Ref AWS::AccountId, "130355686670"]
     - !Equals [ !Ref AWS::AccountId, "175872367215"]
-  IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
-  IsNewDevelopment: !Equals [ !Ref AWS::AccountId, "175872367215"]
+  IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
+  IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   UseCodeSigning:
@@ -76,28 +94,31 @@ Conditions:
   UseIndividualCiMitStubs: !And
     - !Condition IsDevelopment
     - !Equals [ !Ref IndividualCiMitStubs, "True"]
+  UseLocalCoreFront: !Equals [ !Ref LocalCoreFront, "True"]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
 # mapping up to date with each developer environment.
 Mappings:
   EnvironmentConfiguration:
-    "130355686670": # Old Development Account
+    "130355686670": # core dev01
       provisionedConcurrency: 0
-      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueOldDev"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
-    "175872367215": # New Development Account
+    "175872367215": # Core dev02
       provisionedConcurrency: 0
-      ciStorageAccountId: 158853307826 # new CIMIT dev
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -108,7 +129,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "457601271792": # Build
       provisionedConcurrency: 1
-      ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: build
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -119,7 +141,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "335257547869": # Staging
       provisionedConcurrency: 1
-      ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
+      cimitAccountId: 265689800486 # di-ipv-contra-indicators-staging
+      cimitEnvironment: staging
       environment: staging
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -130,7 +153,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "991138514218": # Integration
       provisionedConcurrency: 1
-      ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
+      cimitAccountId: 697519714716 # di-ipv-contra-indicators-integration
+      cimitEnvironment: integration
       environment: integration
       criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -141,7 +165,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "075701497069": # Production
       provisionedConcurrency: 1
-      ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
+      cimitAccountId: 442136572379 # di-ipv-contra-indicators-prod
+      cimitEnvironment: production
       environment: production
       criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -184,22 +209,37 @@ Resources:
   # ssl cert
   DevSSLCert:
     Type: AWS::CertificateManager::Certificate
-    Condition: IsNewDevelopment
+    Condition: IsDevelopment
     Properties:
-      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainName: !If
+        - IsDev01
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
       DomainValidationOptions:
-        - DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
-          HostedZoneId: !ImportValue DevIdentityHostedZoneId
+        - DomainName: !If
+            - IsDev01
+            - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+            - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+          HostedZoneId: !If
+            - IsDev01
+            - !ImportValue Dev01IdentityHostedZoneId
+            - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
       ValidationMethod: DNS
 
   # dns rcord
   DevDNSRecord:
     Type: AWS::Route53::RecordSet
-    Condition: IsNewDevelopment
+    Condition: IsDevelopment
     Properties:
       Type: A
-      Name: !Sub "api-${Environment}.dev.identity.account.gov.uk"
-      HostedZoneId: !ImportValue DevIdentityHostedZoneId
+      Name: !If
+        - IsDev01
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+      HostedZoneId: !If
+        - IsDev01
+        - !ImportValue Dev01IdentityHostedZoneId
+        - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
       AliasTarget:
         DNSName: !GetAtt DevApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt DevApiDomain.RegionalHostedZoneId
@@ -207,9 +247,12 @@ Resources:
   # api domain entries / mapping
   DevApiDomain:
     Type: AWS::ApiGatewayV2::DomainName
-    Condition: IsNewDevelopment
+    Condition: IsDevelopment
     Properties:
-      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainName: !If
+        - IsDev01
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
       DomainNameConfigurations:
         - CertificateArn: !Ref DevSSLCert
           EndpointType: REGIONAL
@@ -217,9 +260,12 @@ Resources:
 
   DevApiMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
-    Condition: IsNewDevelopment
+    Condition: IsDevelopment
     Properties:
-      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainName: !If
+        - IsDev01
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
       ApiId: !Ref IPVCoreExternalAPI
       Stage: !Ref IPVCoreExternalAPI.Stage
     DependsOn:
@@ -241,10 +287,8 @@ Resources:
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-        - DestinationSecurityGroupId: !If
-            - IsOldDevelopment
-            - !ImportValue InterfaceVpcEndpointSecurityGroupId
-            - Fn::ImportValue:  !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
+        - DestinationSecurityGroupId:
+            Fn::ImportValue:  !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
           Description: Allow outbound HTTPS traffic to AWS Services vpc endpoint security group
           IpProtocol: tcp
           FromPort: 443
@@ -270,11 +314,9 @@ Resources:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
-        Type: PRIVATE
-        VPCEndpointIds: !If
-          - IsOldDevelopment
-          - - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
-          - - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+        Type: !If [UseLocalCoreFront, REGIONAL, PRIVATE]
+        VPCEndpointIds:
+          - !If [UseLocalCoreFront, !Ref AWS::NoValue, Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"]
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
@@ -292,18 +334,25 @@ Resources:
               Principal: '*'
               Resource:
                 - 'execute-api:/*'
-            - Action: 'execute-api:Invoke'
-              Effect: Deny
-              Principal: '*'
-              Resource:
-                - 'execute-api:/*'
-              Condition:
-                StringNotEquals:
-                  'aws:SourceVpce': !If
-                    - IsOldDevelopment
-                    - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
-                    - Fn::ImportValue:
-                        !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+            - !If
+              - UseLocalCoreFront
+              - Action: 'execute-api:Invoke'
+                Effect: Deny
+                Principal: '*'
+                Resource:
+                  - 'execute-api:/*'
+                Condition:
+                  NotIpAddress:
+                    'aws:SourceIp': [!Ref LocalIpAddress]
+              - Action: 'execute-api:Invoke'
+                Effect: Deny
+                Principal: '*'
+                Resource:
+                  - 'execute-api:/*'
+                Condition:
+                  StringNotEquals:
+                    'aws:SourceVpce':
+                      Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       StageName: !Sub ${Environment}
       TracingEnabled: true
       AccessLogSetting:
@@ -324,13 +373,13 @@ Resources:
 
   IPVCorePrivateAPILogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       LogGroupName: !If
-        - IsNewDevelopment
+        - IsDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
-      RetentionInDays: 14
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+      RetentionInDays: 30
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -372,13 +421,13 @@ Resources:
 
   IPVCoreExternalAPILogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       LogGroupName: !If
-        - IsNewDevelopment
+        - IsDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
-      RetentionInDays: 14
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+      RetentionInDays: 30
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -401,8 +450,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -461,10 +508,10 @@ Resources:
 
   IssueClientAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -487,8 +534,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -556,10 +601,10 @@ Resources:
 
   BuildClientOauthResponseFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -582,8 +627,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -660,10 +703,10 @@ Resources:
 
   InitialiseIpvSessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -686,8 +729,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-oauth-access-token
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -702,21 +743,21 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -777,21 +818,21 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -809,10 +850,10 @@ Resources:
 
   RetrieveCriOauthAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   RetrieveCriOauthAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -835,8 +876,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-credential
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -852,37 +891,37 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -945,42 +984,42 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -998,10 +1037,10 @@ Resources:
 
   RetrieveCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/retrieve-cri-credential-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   RetrieveCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1024,8 +1063,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
-      Architectures:
-        - arm64
       MemorySize: 3008
       Tracing: Active
       Environment:
@@ -1108,10 +1145,10 @@ Resources:
 
   BuildCriOauthRequestFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1134,8 +1171,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1148,21 +1183,21 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt ClientOAuthSessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1214,21 +1249,21 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -1246,10 +1281,10 @@ Resources:
 
   BuildUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   BuildUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1264,12 +1299,12 @@ Resources:
     Properties:
       DefinitionUri: criReturnStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
-        RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
-        RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
-        ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
-        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
-        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
+        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
+        RetrieveCriCredentialFunctionArn: !Ref RetrieveCriCredentialFunction.Alias
+        RetrieveCriOauthAccessTokenFunctionArn: !Ref RetrieveCriOauthAccessTokenFunction.Alias
+        ValidateOAuthCallbackFunctionArn: !Ref ValidateOAuthCallbackFunction.Alias
+        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
+        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1296,7 +1331,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref CiScoringFunction
+            FunctionName: !Ref CheckCiScoreFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1346,10 +1381,10 @@ Resources:
 
   CriReturnStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/states/cri-return-step-function-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CriReturnStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1364,13 +1399,13 @@ Resources:
     Properties:
       DefinitionUri: journeyEngineStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
-        CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
-        ResetIdentityFunctionArn: !GetAtt ResetIdentityFunction.Arn
-        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
-        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
-        BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
-        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
+        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
+        CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Alias
+        ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Alias
+        BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
+        BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
+        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
+        CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1393,13 +1428,13 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref ResetIdentityFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref EvaluateGpg45ScoresFunction
-        - LambdaInvokePolicy:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildClientOauthResponseFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref CiScoringFunction
+            FunctionName: !Ref CheckCiScoreFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckGpg45ScoreFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1449,10 +1484,10 @@ Resources:
 
   JourneyEngineStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   JourneyEngineStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1475,8 +1510,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1528,10 +1561,10 @@ Resources:
 
   IPVProcessJourneyEventFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVProcessJourneyEventFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1554,8 +1587,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1619,10 +1650,10 @@ Resources:
 
   EvaluateGpg45ScoresFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   EvaluateGpg45ScoresFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1645,8 +1676,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/validate-oauth-callback
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1721,10 +1750,10 @@ Resources:
 
   ValidateOAuthCallbackFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/validate-oauth-callback-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   ValidateOAuthCallbackFunctionFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1747,8 +1776,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1820,10 +1847,10 @@ Resources:
 
   BuildProvenUserIdentityDetailsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-proven-user-identity-details-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   BuildProvenUserIdentityDetailsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1847,8 +1874,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1913,10 +1938,10 @@ Resources:
 
   CheckExistingIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/check-existing-identity-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CheckExistingIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1940,8 +1965,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/reset-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -2004,10 +2027,10 @@ Resources:
 
   ResetIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/reset-identity-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   ResetIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -2031,8 +2054,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
-      Architectures:
-        - arm64
       MemorySize: 2048
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
       Tracing: Active
@@ -2046,37 +2067,37 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2129,42 +2150,42 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: asyncCriResponseQueuePermission
               Effect: Allow
               Action:
@@ -2172,7 +2193,7 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: !If
-                - IsNewDevelopment
+                - IsDevelopment
                 - !Join
                   - ''
                   - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
@@ -2189,7 +2210,7 @@ Resources:
           Properties:
             Enabled: true
             Queue: !If
-              - IsNewDevelopment
+              - IsDevelopment
               - !Join
                 - ''
                 - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
@@ -2207,10 +2228,10 @@ Resources:
 
   ProcessAsyncCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/process-async-cri-credential-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -2220,62 +2241,44 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
 
-  CiScoringFunction:
+  CheckCiScoreFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - CiScoringFunctionLogGroup
+      - CheckCiScoreFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ci-scoring-${Environment}"
-      Handler: uk.gov.di.ipv.core.ciscoring.CiScoringHandler::handleRequest
+      FunctionName: !Sub "check-ci-score-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler::handleRequest
       Runtime: java17
       PackageType: Zip
-      CodeUri: ../lambdas/ci-scoring
-      Architectures:
-        - arm64
+      CodeUri: ../lambdas/check-ci-score
       MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub ci-scoring-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub check-ci-score-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CI_STORAGE_GET_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - ciStorageAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - environment
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2287,6 +2290,8 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
@@ -2306,48 +2311,27 @@ Resources:
               StringEquals:
                 "lambda:VpcIds":
                   - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-          - Sid: invokeGetCiFunction
-            Effect: Allow
-            Action:
-              - 'lambda:InvokeFunction'
-            Resource:
-              - !Sub
-                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-                - contra_indicator_storage_account_id: !If
-                    - UseIndividualCiMitStubs
-                    - !Ref AWS::AccountId
-                    - !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - ciStorageAccountId
-                  env: !If
-                    - UseIndividualCiMitStubs
-                    - !Sub ${Environment}
-                    - !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
           - Sid: invokeGetContraIndicatorCredentialFunction
             Effect: Allow
             Action:
               - 'lambda:InvokeFunction'
             Resource:
               - !Sub
-                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-                - contra_indicator_storage_account_id: !If
+                - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                - cimit_account_id: !If
                     - UseIndividualCiMitStubs
                     - !Ref AWS::AccountId
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - cimitAccountId
                   env: !If
                     - UseIndividualCiMitStubs
                     - !Sub ${Environment}
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - environment
+                      - cimitEnvironment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -2355,20 +2339,95 @@ Resources:
         - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
         - !Ref AWS::NoValue
 
-  CiScoringFunctionLogGroup:
+  CheckCiScoreFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ci-scoring-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/check-ci-score-${Environment}"
 
-  CiScoringFunctionLogGroupSubscriptionFilter:
+  CheckCiScoreFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref CiScoringFunctionLogGroup
+      LogGroupName: !Ref CheckCiScoreFunctionLogGroup
+
+  CheckGpg45ScoreFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - CheckGpg45ScoreFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "check-gpg45-score-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/check-gpg45-score
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+          - Sid: EnforceStayinSpecificVpc
+            Effect: Allow
+            Action:
+              - 'lambda:CreateFunction'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource:
+              - "*"
+            Condition:
+              StringEquals:
+                "lambda:VpcIds":
+                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  CheckGpg45ScoreFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  CheckGpg45ScoreFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

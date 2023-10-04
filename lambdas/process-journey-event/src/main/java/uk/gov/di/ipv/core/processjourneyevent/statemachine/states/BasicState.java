@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class BasicState implements State {
     private String name;
     private String parent;
     private BasicState parentObj;
-    private JourneyStepResponse response;
+    private StepResponse response;
     private Map<String, Event> events = new HashMap<>();
 
     @Override

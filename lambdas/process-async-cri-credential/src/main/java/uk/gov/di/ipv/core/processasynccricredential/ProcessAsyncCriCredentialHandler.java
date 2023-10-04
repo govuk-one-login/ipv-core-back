@@ -16,20 +16,21 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
-import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
@@ -39,9 +40,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -62,7 +60,6 @@ public class ProcessAsyncCriCredentialHandler
     private final CiMitService ciMitService;
 
     private final CriResponseService criResponseService;
-    private final String componentId;
 
     public ProcessAsyncCriCredentialHandler(
             ConfigService configService,
@@ -75,9 +72,9 @@ public class ProcessAsyncCriCredentialHandler
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.ciMitService = ciMitService;
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -88,13 +85,14 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
+        LogHelper.attachComponentIdToLogs(configService);
         List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
 
         for (SQSMessage message : event.getRecords()) {
@@ -164,8 +162,6 @@ public class ProcessAsyncCriCredentialHandler
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     AsyncVerifiableCredentialException, CiPostMitigationsException {
 
-        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
-
         validateOAuthState(successAsyncCriResponse);
 
         final List<SignedJWT> verifiableCredentials =
@@ -176,29 +172,20 @@ public class ProcessAsyncCriCredentialHandler
                 configService.getCredentialIssuerActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
 
-        final List<CredentialIssuerConfig> excludedCriConfigs =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
-
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
                     verifiableCredential,
                     credentialIssuerConfig,
                     successAsyncCriResponse.getUserId());
 
-            boolean isSuccessful =
-                    VcHelper.isSuccessfulVc(verifiableCredential, excludedCriConfigs);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential, isSuccessful);
 
             submitVcToCiStorage(verifiableCredential);
-            if (postMitigatingVcs) {
-                postMitigatingVc(verifiableCredential);
-            }
+            postMitigatingVc(verifiableCredential);
 
             verifiableCredentialService.persistUserCredentials(
                     verifiableCredential,
@@ -250,7 +237,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getExtensionsForAudit(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
@@ -262,7 +249,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
                         getVcNamePartsForAudit(verifiableCredential));

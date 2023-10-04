@@ -37,9 +37,9 @@
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
-    "CiScoring": {
+    "CheckCiScore": {
       "Type": "Task",
-      "Resource": "${CiScoringFunctionArn}",
+      "Resource": "${CheckCiScoreFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
         "ipAddress.$": "$.ipAddress",
@@ -88,11 +88,11 @@
         {
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/ci-scoring",
-          "Next": "CiScoring"
+          "Next": "CheckCiScore"
         },
         {
           "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/next",
+          "StringEquals": "/journey/ci-score-not-breaching",
           "Next": "EvaluateGpg45Scores"
         }
       ],

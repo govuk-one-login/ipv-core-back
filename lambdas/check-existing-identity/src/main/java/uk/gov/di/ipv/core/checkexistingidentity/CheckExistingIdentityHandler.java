@@ -15,20 +15,19 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -41,7 +40,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -49,15 +48,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_UNCORRELATABLE_DATA;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -72,7 +73,6 @@ public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -86,6 +86,9 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
+    public static final String NAMES = "names";
+    public static final String DATE_OF_BIRTH = "dob";
+    public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -94,7 +97,6 @@ public class CheckExistingIdentityHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -111,8 +113,8 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -121,18 +123,18 @@ public class CheckExistingIdentityHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = new CriResponseService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);
@@ -151,11 +153,10 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
-            VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
+            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
+            VcStoreItem f2fVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            Optional<Map<String, Object>> f2fResponse =
-                    getFaceToFaceResponse(faceToFaceRequest, faceToFaceVc);
+            Optional<Map<String, Object>> f2fResponse = getFaceToFaceResponse(f2fRequest, f2fVc);
             if (f2fResponse.isPresent()) {
                 return f2fResponse.get();
             }
@@ -164,13 +165,30 @@ public class CheckExistingIdentityHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
+            boolean dataCorrelates = vcDataCorrelates(userId);
+            if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
+                return JOURNEY_FAIL;
+            } else if (!dataCorrelates) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "VC data does not correlate so resetting identity."));
+
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser));
+
+                return JOURNEY_RESET_IDENTITY;
+            }
+
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
 
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceVc != null
-                    && matchedProfile.isEmpty()) {
+            if (matchedProfile.isEmpty() && completedF2F(f2fRequest, f2fVc)) {
                 var message =
                         new StringMapMessage()
                                 .with(
@@ -201,12 +219,11 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                                componentId,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser));
 
                 ipvSessionItem.setVot(VOT_P2);
-
-                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 return JOURNEY_REUSE;
             }
@@ -222,7 +239,7 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                componentId,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser));
 
                 return JOURNEY_RESET_IDENTITY;
@@ -262,9 +279,17 @@ public class CheckExistingIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
+        } catch (CredentialParseException e) {
+            LOGGER.error("Failed to parse successful VC Store items.", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
+                    .toObjectMap();
         }
     }
 
+    @Tracing
     private Optional<Map<String, Object>> getFaceToFaceResponse(
             CriResponseItem faceToFaceRequest, VcStoreItem faceToFaceVc) {
         if (Objects.isNull(faceToFaceVc) && !Objects.isNull(faceToFaceRequest)) {
@@ -289,41 +314,6 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-
-        // get list of success vc's
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-
-        if (currentVcStatusDtos.size() != credentials.size()) {
-            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-        }
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
-            throws ParseException {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-        for (SignedJWT signedJWT : credentials) {
-
-            List<CredentialIssuerConfig> excludedCriConfigs =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
-
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
-    }
-
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -340,12 +330,13 @@ public class CheckExistingIdentityHandler
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                componentId,
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,
                 new AuditExtensionGpg45ProfileMatched(
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
     }
 
+    @Tracing
     private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
             throws ParseException {
         List<String> txnIds = new ArrayList<>();
@@ -359,5 +350,36 @@ public class CheckExistingIdentityHandler
             }
         }
         return txnIds;
+    }
+
+    @Tracing
+    private boolean vcDataCorrelates(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        StringJoiner uncorrelatableData = new StringJoiner(",");
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
+            uncorrelatableData.add(NAMES);
+        }
+
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(userId)) {
+            uncorrelatableData.add(DATE_OF_BIRTH);
+        }
+
+        if (uncorrelatableData.length() > 0) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getMessage())
+                            .with(LOG_UNCORRELATABLE_DATA.getFieldName(), uncorrelatableData));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean completedF2F(CriResponseItem request, VcStoreItem vc) {
+        return request != null && vc != null;
     }
 }
