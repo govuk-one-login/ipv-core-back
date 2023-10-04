@@ -24,7 +24,6 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -39,7 +38,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -787,41 +785,12 @@ class ConfigServiceTest {
     }
 
     @Test
-    void shouldFetchLegacyCimitConfig() throws ConfigException {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/cimit/config"))
-                .thenReturn(
-                        "{\""
-                                + "X01\":{"
-                                + "\"sameSessionStep\":\"/journey/j1\","
-                                + "\"separateSessionStep\":\"/journey/j2\","
-                                + "\"mitigatingCredentialIssuers\":[\"cri1\"]"
-                                + "}}");
-        Map<String, ContraIndicatorMitigation> expectedCiMitConfig =
-                Map.of(
-                        "X01",
-                        ContraIndicatorMitigation.builder()
-                                .sameSessionStep("/journey/j1")
-                                .separateSessionStep("/journey/j2")
-                                .mitigatingCredentialIssuers(List.of("cri1"))
-                                .build());
-        assertEquals(expectedCiMitConfig, configService.getLegacyCimitConfig());
-    }
-
-    @Test
     void shouldFetchCimitConfig() throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config"))
                 .thenReturn("{\"X01\":\"/journey/do-a-thing\"}");
         Map<String, String> expectedCiMitConfig = Map.of("X01", "/journey/do-a-thing");
         assertEquals(expectedCiMitConfig, configService.getCimitConfig());
-    }
-
-    @Test
-    void shouldThrowErrorOnInvalidLegacyCimitConfig() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
-        assertThrows(ConfigException.class, () -> configService.getLegacyCimitConfig());
     }
 
     @Test

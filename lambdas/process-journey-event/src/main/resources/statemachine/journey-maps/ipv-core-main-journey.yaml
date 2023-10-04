@@ -54,8 +54,6 @@ INITIAL_CI_SCORING:
       targetState: PYI_F2F_TECHNICAL
     error:
       targetState: ERROR
-    mitigation01:
-      targetState: MITIGATION_01
     enhanced-verification:
       targetState: MITIGATION_01
 
@@ -324,8 +322,6 @@ CRI_KBV_J2:
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
-    mitigation02:
-      targetState: MITIGATION_02_OPTIONS
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
 
@@ -386,8 +382,6 @@ CRI_KBV_J3:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: PYI_NO_MATCH
-    mitigation02:
-      targetState: MITIGATION_02_OPTIONS
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
 
@@ -521,8 +515,6 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
-    mitigation02:
-      targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
 
@@ -560,8 +552,6 @@ MITIGATION_02_CRI_DCMAW:
     temporarily-unavailable:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
-      targetState: PYI_ANOTHER_WAY
-    mitigation02:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY

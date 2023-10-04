@@ -8,7 +8,6 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -55,7 +54,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndicators contraIndicators, boolean separateSession, IpvSessionItem ipvSession)
+            ContraIndicators contraIndicators, IpvSessionItem ipvSession)
             throws ConfigException, UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
@@ -79,28 +78,13 @@ public class Gpg45ProfileEvaluator {
         ipvSession.setCiFail(true);
         ipvSessionService.updateIpvSession(ipvSession);
 
-        Optional<ContraIndicator> latestContraIndicator =
-                contraIndicators.getLatestContraIndicator();
-        final String latestContraIndicatorCode =
-                latestContraIndicator.isPresent() ? latestContraIndicator.get().getCode() : "";
-        try {
-            Map<String, ContraIndicatorMitigation> cimitConfig =
-                    configService.getLegacyCimitConfig();
-            if (cimitConfig.containsKey(latestContraIndicatorCode)) {
-                final ContraIndicatorMitigation contraIndicatorMitigation =
-                        cimitConfig.get(latestContraIndicatorCode);
-                return Optional.of(
-                        new JourneyResponse(
-                                separateSession
-                                        ? contraIndicatorMitigation.getSeparateSessionStep()
-                                        : contraIndicatorMitigation.getSameSessionStep()));
-            }
-        } catch (ConfigException e) {
-            LOGGER.error("Error fetching legacy cimit config, attempting new config version");
+        Optional<ContraIndicator> latestCI = contraIndicators.getLatestContraIndicator();
 
+        if (latestCI.isPresent()) {
             Map<String, String> cimitConfig = configService.getCimitConfig();
-            if (cimitConfig.containsKey(latestContraIndicatorCode)) {
-                return Optional.of(new JourneyResponse(cimitConfig.get(latestContraIndicatorCode)));
+            String ciCode = latestCI.get().getCode();
+            if (cimitConfig.containsKey(ciCode)) {
+                return Optional.of(new JourneyResponse(cimitConfig.get(ciCode)));
             }
         }
 
