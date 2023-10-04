@@ -117,6 +117,22 @@ IPV_IDENTITY_START_PAGE:
         f2f:
           targetState: PYI_ANOTHER_WAY
 
+CRI_F2F:
+  response:
+    type: cri
+    criId: f2f
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: F2F_HANDOFF_PAGE
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+
+F2F_HANDOFF_PAGE:
+  response:
+    type: page
+    pageId: page-face-to-face-handoff
+
 PYI_ANOTHER_WAY:
   response:
     type: page
@@ -222,7 +238,7 @@ PYI_CRI_ESCAPE:
     dcmaw:
       targetState: CRI_DCMAW_J5
     f2f:
-      targetState: CRI_F2F_J5
+      targetState: CRI_F2F
     end:
       targetState: END
 
@@ -399,7 +415,7 @@ ADDRESS_AND_FRAUD_J4:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: CRI_F2F_J4
+      targetState: CRI_F2F
 
 CRI_F2F_J4:
   response:
@@ -408,7 +424,7 @@ CRI_F2F_J4:
   parent: CRI_STATE
   events:
     next:
-      targetState: F2F_HANDOFF_PAGE_J4
+      targetState: F2F_HANDOFF_PAGE
     access-denied:
       targetState: PYI_ANOTHER_WAY
 
@@ -446,7 +462,7 @@ CRI_F2F_J5:
   parent: CRI_STATE
   events:
     next:
-      targetState: F2F_HANDOFF_PAGE_J5
+      targetState: F2F_HANDOFF_PAGE
     access-denied:
       targetState: PYI_ANOTHER_WAY
 
