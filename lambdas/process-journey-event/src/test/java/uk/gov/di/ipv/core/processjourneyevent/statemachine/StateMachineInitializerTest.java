@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
@@ -21,6 +22,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SystemStubsExtension.class)
 class StateMachineInitializerTest {
@@ -36,6 +40,18 @@ class StateMachineInitializerTest {
     @EnumSource
     void stateMachineInitializerShouldHandleAllProductionJourneyMaps(IpvJourneyTypes journeyType) {
         assertDoesNotThrow(() -> new StateMachineInitializer(journeyType).initialize());
+    }
+
+    @Test
+    void initializeShouldThrowIfJourneyMapNotFound() {
+        StateMachineInitializerMode modeMock = mock(StateMachineInitializerMode.class);
+        when(modeMock.getPathPart()).thenReturn("some-rubbish");
+        assertThrows(
+                JourneyMapDeserializationException.class,
+                () -> {
+                    new StateMachineInitializer(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY, modeMock)
+                            .initialize();
+                });
     }
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
