@@ -14,6 +14,9 @@ import java.time.Instant;
 public class AuditEvent {
     @JsonProperty private final long timestamp;
 
+    @JsonProperty("event_timestamp_ms")
+    private final long timestampMs;
+
     @JsonProperty("event_name")
     private final AuditEventTypes eventName;
 
@@ -37,7 +40,9 @@ public class AuditEvent {
             @JsonProperty(value = "user", required = false) AuditEventUser user,
             @JsonProperty(value = "extensions", required = false) AuditExtensions extensions,
             @JsonProperty(value = "restricted", required = false) AuditRestricted restricted) {
-        this.timestamp = Instant.now().getEpochSecond();
+        Instant now = Instant.now();
+        this.timestamp = now.getEpochSecond();
+        this.timestampMs = now.toEpochMilli();
         this.eventName = eventName;
         this.componentId = componentId;
         this.user = user;
