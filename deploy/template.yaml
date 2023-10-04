@@ -1809,7 +1809,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /user/build-proven-user-identity-details
+            Path: /user/proven-identity-details
             Method: GET
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
