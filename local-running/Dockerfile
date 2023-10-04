@@ -12,9 +12,9 @@ COPY gradlew ./
 COPY build.gradle ./
 COPY settings.gradle ./
 
-RUN ./gradlew :local-running:build --no-daemon
-RUN mkdir untarred
-RUN tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
+RUN ./gradlew :local-running:build --no-daemon; \
+    mkdir untarred; \
+    tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
 
 FROM openjdk:17-jdk-slim
 
