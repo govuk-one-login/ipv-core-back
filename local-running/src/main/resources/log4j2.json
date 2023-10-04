@@ -1,0 +1,22 @@
+{
+  "Configuration": {
+    "status": "warn",
+    "appenders": {
+      "Console": {
+        "name": "STDOUT",
+        "target": "SYSTEM_OUT",
+        "PatternLayout": {
+          "pattern": "%d{HH:mm:ss,SSS} %highlight{%-5p: %m - %c{1}%n}"
+        }
+      }
+    },
+    "Loggers": {
+      "Root": {
+        "level": "info",
+        "AppenderRef": {
+          "ref": "STDOUT"
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ A replacement for deploying your stack to AWS and making sure things work proper
 
 ## How it works
 
-Core-front, orch-stub and the CRI stubs are pretty straight forward and just use the current Dockerfiles we have to build
+Core-front, orch-stub, and the CRI stubs are pretty straight forward and just use the current Dockerfiles we have to build
 images and run them.
 
 Core-back has some extra code to replace the AWS step functions we use and the API gateways. A Spark application is spun
@@ -45,10 +45,18 @@ Next, spin up the containers with Docker compose. You need to have your dev env 
 or 02), set as env vars, and be auth'd to your AWS account. Here's how I do it.
 
 ```
-ENVIRONMENT=dev-chrisw DEV_ACCOUNT_NUM=01 aws-vault exec core-dev01 -- docker-compose up
+ENVIRONMENT=dev-chrisw DEV_ACCOUNT_NUM=01 aws-vault exec core-dev01 -- docker-compose up --attach core-back
 ```
 
 You can now visit the orch-stub at http://localhost:3000 and start a journey.
+
+### Logging
+
+The `--attach` option in the above command will limit the logs seen in the console to just core-back's. Core-back's logs
+use a specific logging configuration to display the logs in an easy-to-read way, rather than full JSON blobs.
+
+If you want to also see the logs from core-front and the CRIs you can omit that option, but it does make the logs a lot
+noisier. And JSONier.
 
 ### Debugging
 
@@ -73,4 +81,4 @@ For some reason running the functional test suite against the local deployment h
 
 * Consolidate the setting of parameters with the dev-deploy tool.
 * Integrate more fully with the dev-deploy tool to have local running as a switch within it.
-* Reformat the logs in docker-compose to make the easier to visually parse - https://docs.docker.com/config/formatting/
+* Reformat the core-front and CRI stub logs to make them easier to visually parse.
