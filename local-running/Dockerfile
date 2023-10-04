@@ -4,13 +4,15 @@ WORKDIR /core-back
 
 RUN apt-get update && apt-get install -y findutils
 
+COPY gradle ./gradle
+COPY gradlew ./
+COPY *.gradle ./
+
+RUN ./gradlew --version
+
 COPY lambdas ./lambdas
 COPY libs ./libs
 COPY local-running ./local-running
-COPY gradle ./gradle
-COPY gradlew ./
-COPY build.gradle ./
-COPY settings.gradle ./
 
 RUN ./gradlew :local-running:build --no-daemon; \
     mkdir untarred; \
