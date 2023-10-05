@@ -236,6 +236,42 @@ paths:
                 #end
                 $input.body
 
+  /user/proven-identity-details:
+    get:
+      description: "Called when core front needs to display information about a users proven identity"
+      responses:
+        200:
+          description: "User identity response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildProvenUserIdentityDetailsFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws"
+        requestTemplates:
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              {
+                "ipvSessionId": "$input.params('ipv-session-id')",
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+                #if ($bodyObj.statusCode)
+                #set($context.responseOverride.status = $bodyObj.statusCode)
+                #end
+                $input.body
+
 components:
   schemas:
     journeyType:
