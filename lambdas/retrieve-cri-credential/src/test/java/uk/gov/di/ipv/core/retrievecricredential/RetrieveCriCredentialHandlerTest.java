@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrieved;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.retrievecricredential.enums.CriResourceRetrievedType;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -195,9 +197,11 @@ class RetrieveCriCredentialHandlerTest {
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(AuditEventTypes.IPV_VC_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, auditEvents.get(1).getEventName());
 
         verify(verifiableCredentialJwtValidator)
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
@@ -359,6 +363,16 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        AuditEvent event = auditEventCaptor.getAllValues().get(0);
+        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
+        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
+                (AuditExtensionsCriResRetrieved) event.getExtensions();
+        assertEquals(
+                CriResourceRetrievedType.ERROR.getType(), auditExtensionsCriResRetrieved.type());
+
         assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
     }
 
@@ -380,9 +394,11 @@ class RetrieveCriCredentialHandlerTest {
         handler.handleRequest(testInput, context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(AuditEventTypes.IPV_VC_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, auditEvents.get(1).getEventName());
 
         assertEquals(testComponentId, auditEvents.get(0).getComponentId());
         AuditEventUser auditEventUser = auditEvents.get(0).getUser();
@@ -416,10 +432,10 @@ class RetrieveCriCredentialHandlerTest {
         handler.handleRequest(testInput, context);
 
         ArgumentCaptor<AuditEvent> argumentCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(argumentCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(argumentCaptor.capture());
+
         AuditEvent event = argumentCaptor.getAllValues().get(0);
         assertEquals(AuditEventTypes.IPV_VC_RECEIVED, event.getEventName());
-
         assertEquals(testComponentId, event.getComponentId());
 
         AuditEventUser auditEventUser = event.getUser();
@@ -427,11 +443,18 @@ class RetrieveCriCredentialHandlerTest {
         assertEquals(testSessionId, auditEventUser.getSessionId());
 
         AuditExtensionsVcEvidence auditExtensionsVcEvidence =
-                (AuditExtensionsVcEvidence) argumentCaptor.getValue().getExtensions();
+                (AuditExtensionsVcEvidence) event.getExtensions();
         assertEquals(
                 "https://staging-di-ipv-cri-address-front.london.cloudapps.digital",
                 auditExtensionsVcEvidence.getIss());
         assertNull(auditExtensionsVcEvidence.getEvidence());
+
+        AuditEvent event2 = argumentCaptor.getAllValues().get(1);
+        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event2.getEventName());
+        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
+                (AuditExtensionsCriResRetrieved) event2.getExtensions();
+        assertEquals(CriResourceRetrievedType.VC.getType(), auditExtensionsCriResRetrieved.type());
+
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
@@ -616,7 +639,8 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() throws ParseException {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse()
+            throws ParseException, SqsException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -638,6 +662,16 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        AuditEvent event = auditEventCaptor.getAllValues().get(0);
+        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
+        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
+                (AuditExtensionsCriResRetrieved) event.getExtensions();
+        assertEquals(
+                CriResourceRetrievedType.PENDING.getType(), auditExtensionsCriResRetrieved.type());
+
         assertEquals(JOURNEY_CI_SCORING_PATH, output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
@@ -648,7 +682,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser() {
+    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser() throws SqsException {
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
                         testPassportIssuer,
@@ -663,6 +697,16 @@ class RetrieveCriCredentialHandlerTest {
         mockServiceCalls(makeTestIpvSessionItem(TEST_IPV_SESSION_ID));
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        AuditEvent event = auditEventCaptor.getAllValues().get(0);
+        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
+        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
+                (AuditExtensionsCriResRetrieved) event.getExtensions();
+        assertEquals(
+                CriResourceRetrievedType.ERROR.getType(), auditExtensionsCriResRetrieved.type());
 
         assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
 
