@@ -193,16 +193,22 @@ public class RetrieveCriCredentialHandler
                         credentialIssuerId,
                         CriResourceRetrievedType.PENDING.getType());
             } else {
+                List<SignedJWT> verifiableCredentials =
+                        verifiableCredentialResponse.getVerifiableCredentials();
                 processVerifiableCredentials(
                         userId,
                         credentialIssuerId,
                         credentialIssuerConfig,
                         ipAddress,
-                        verifiableCredentialResponse.getVerifiableCredentials(),
+                        verifiableCredentials,
                         clientOAuthSessionItem,
                         ipvSessionItem);
-                sendCriResRetrievedAuditEvent(
-                        auditEventUser, credentialIssuerId, CriResourceRetrievedType.VC.getType());
+                if (!verifiableCredentials.isEmpty()) {
+                    sendCriResRetrievedAuditEvent(
+                            auditEventUser,
+                            credentialIssuerId,
+                            CriResourceRetrievedType.VC.getType());
+                }
             }
 
             return JOURNEY_CI_SCORING;

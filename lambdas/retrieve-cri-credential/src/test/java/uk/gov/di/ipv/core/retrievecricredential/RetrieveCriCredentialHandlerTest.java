@@ -211,6 +211,33 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
+    void shouldReturnJourneyResponseOnSuccessfulRequest_withEmptySignedJwtList() throws Exception {
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(verifiableCredentialService.getVerifiableCredentialResponse(
+                        testBearerAccessToken,
+                        testPassportIssuer,
+                        testApiKey,
+                        CREDENTIAL_ISSUER_ID))
+                .thenReturn(
+                        VerifiableCredentialResponse.builder()
+                                .verifiableCredentials(Collections.emptyList())
+                                .build());
+
+        mockServiceCallsAndSessionItem();
+
+        Map<String, Object> output = handler.handleRequest(testInput, context);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
+
+        verify(verifiableCredentialJwtValidator, times(0))
+                .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
+        verify(verifiableCredentialService, times(0)).persistUserCredentials(any(), any(), any());
+        assertEquals(JOURNEY_CI_SCORING_PATH, output.get("journey"));
+        verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
     void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
         mockServiceCalls();
         when(verifiableCredentialService.getVerifiableCredentialResponse(
