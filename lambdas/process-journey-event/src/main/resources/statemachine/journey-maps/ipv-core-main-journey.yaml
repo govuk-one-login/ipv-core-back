@@ -42,6 +42,12 @@ INITIAL_CI_SCORING:
   events:
     ci-score-not-breaching:
       targetState: CHECK_EXISTING_IDENTITY
+      checkFeatureFlag:
+        sausages:
+          targetState: CRI_DCMAW
+          checkFeatureFlag:
+            bananas:
+              targetState: F2F_START_PAGE
     reuse:
       targetState: IPV_IDENTITY_REUSE_PAGE
     pending:

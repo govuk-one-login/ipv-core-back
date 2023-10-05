@@ -24,7 +24,7 @@
                 height: 100%;
             }
             form {
-                width: 250px;
+                width: 260px;
                 margin-top: 16px;
                 display: flex;
                 flex-direction: column;
@@ -40,20 +40,25 @@
             form select {
                 flex: 0 0 30%;
             }
+            span {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
         </style>
     </head>
     <body>
         <div id="header">
             <h1>IPV Core Journey Map</h1>
             <form id="configuration-form">
-                <label>
-                    <div>Disabled CRI:</div>
-                    <select id="disabledInput" name="disabled"></select>
-                </label>
-                <label>
-                    <div>Feature flag:</div>
-                    <select id="featureFlagInput" name="featureFlag"></select>
-                </label>
+                <span>
+                    <fieldset id="disabledInput">
+                        <legend>Disabled CRI:</legend>
+                    </fieldset>
+                    <fieldset id="featureFlagInput">
+                        <legend>Feature flag:</legend>
+                    </fieldset>
+                </span>
                 <label>
                     <div>Include errors:</div>
                     <input id="includeErrorsInput" name="includeErrors" type="checkbox">
@@ -91,23 +96,52 @@
 
             // Set up the form options
             const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
-            disabledOptions.forEach((option) => {
-                const element = document.createElement('option');
-                element.value = option;
-                element.innerText = option;
-                disabledInput.appendChild(element);
-            });
-            featureFlagOptions.forEach((option) => {
-                const element = document.createElement('option');
-                element.value = option;
-                element.innerText = option;
-                featureFlagInput.appendChild(element);
-            });
+            if (disabledOptions.length > 0) {
+                disabledOptions.forEach((option) => {
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'disabledCri';
+                    input.value = option;
+                    input.id = option;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = option;
+                    label.innerText = option;
+
+                    const span = document.createElement('span');
+                    span.appendChild(label);
+                    span.appendChild(input);
+                    disabledInput.appendChild(span);
+                });
+            } else {
+                disabledInput.append("N/A")
+            }
+
+            if (featureFlagOptions.length > 0) {
+                featureFlagOptions.forEach((option) => {
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'flag';
+                    input.value = option;
+                    input.id = option;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = option;
+                    label.innerText = option;
+
+                    const span = document.createElement('span');
+                    span.appendChild(label);
+                    span.appendChild(input);
+                    featureFlagInput.appendChild(span)
+                });
+            } else {
+                featureFlagInput.append("N/A");
+            }
+
 
             // Render the journey map SVG
             const renderSvg = async (formData) => {
-                const options = Object.fromEntries(formData || []);
-                const diagram = render(journeyMap, nestedJourneys, options);
+                const diagram = render(journeyMap, nestedJourneys, formData);
                 const diagramElement = document.getElementById('diagram');
                 const { svg } = await mermaid.render('diagramSvg', diagram);
                 diagramElement.innerHTML = svg;
