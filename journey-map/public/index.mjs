@@ -2,6 +2,21 @@ const initialStates = ['INITIAL_IPV_JOURNEY'];
 const errorStates = ['ERROR'];
 const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
 
+const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
+    Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
+        if (!disabledOptions.includes(opt)) {
+            disabledOptions.push(opt);
+        }
+        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    });
+    Object.entries(definition.checkFeatureFlag || {}).forEach(([opt, def]) => {
+        if (!featureFlagOptions.includes(opt)) {
+            featureFlagOptions.push(opt);
+        }
+        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    });
+};
+
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMap) => {
     const disabledOptions = [];
@@ -10,36 +25,11 @@ export const getOptions = (journeyMap) => {
     Object.values(journeyMap).forEach((definition) => {
         const events = definition.events || definition.exitEvents || {};
         Object.values(events).forEach((def) => {
-            recurseCheckIfDisabledOptions(def, disabledOptions);
-            recurseCheckFeatureFlagOptions(def, featureFlagOptions);
+            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
         });
     });
 
     return { disabledOptions, featureFlagOptions };
-};
-
-// Make sure we've collected options only defined on events within a `checkIfDisabled` block.
-const recurseCheckIfDisabledOptions = (def, disabledOptions) => {
-    if (def.checkIfDisabled) {
-        Object.keys(def.checkIfDisabled).forEach((opt) => {
-            if (!disabledOptions.includes(opt)) {
-                disabledOptions.push(opt);
-            }
-            recurseCheckIfDisabledOptions(def.checkIfDisabled[opt], disabledOptions)
-        });
-    }
-};
-
-// Make sure we've collected options only defined on events within a `checkFeatureFlag` block.
-const recurseCheckFeatureFlagOptions = (def, featureFlagOptions) => {
-    if (def.checkFeatureFlag) {
-        Object.keys(def.checkFeatureFlag).forEach((opt) => {
-            if (!featureFlagOptions.includes(opt)) {
-                featureFlagOptions.push(opt);
-            }
-            recurseCheckFeatureFlagOptions(def.checkFeatureFlag[opt], featureFlagOptions)
-        });
-    }
 };
 
 // Expand out parent states
