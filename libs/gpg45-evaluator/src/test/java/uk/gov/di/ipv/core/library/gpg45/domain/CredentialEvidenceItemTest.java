@@ -10,32 +10,47 @@ import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CredentialEvidenceItemTest {
-    @Test
-    void shouldConstructorWithEvidenceTypeAndScore() {
-        CredentialEvidenceItem credentialEvidenceItem1 =
-                new CredentialEvidenceItem(EvidenceType.ACTIVITY, 10, Collections.emptyList());
-        assertEquals(10, credentialEvidenceItem1.getActivityHistoryScore());
-        assertNull(credentialEvidenceItem1.getIdentityFraudScore());
-        assertNull(credentialEvidenceItem1.getVerificationScore());
+    @ParameterizedTest
+    @MethodSource("provideCasesForConstructorWithEvidenceTypeAndScore")
+    void shouldConstructorWithEvidenceTypeAndScore(EvidenceType evidenceType) {
+        Random rand = new Random();
+        int score = rand.nextInt(10, 40);
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(evidenceType, score, Collections.emptyList());
 
-        CredentialEvidenceItem credentialEvidenceItem2 =
-                new CredentialEvidenceItem(
-                        EvidenceType.IDENTITY_FRAUD, 20, Collections.emptyList());
-        assertNull(credentialEvidenceItem2.getActivityHistoryScore());
-        assertEquals(20, credentialEvidenceItem2.getIdentityFraudScore());
-        assertNull(credentialEvidenceItem2.getVerificationScore());
+        switch (evidenceType) {
+            case ACTIVITY -> {
+                assertEquals(score, credentialEvidenceItem.getActivityHistoryScore());
+                assertNull(credentialEvidenceItem.getIdentityFraudScore());
+                assertNull(credentialEvidenceItem.getVerificationScore());
+            }
+            case IDENTITY_FRAUD -> {
+                assertNull(credentialEvidenceItem.getActivityHistoryScore());
+                assertEquals(score, credentialEvidenceItem.getIdentityFraudScore());
+                assertNull(credentialEvidenceItem.getVerificationScore());
+            }
+            case VERIFICATION -> {
+                assertNull(credentialEvidenceItem.getActivityHistoryScore());
+                assertNull(credentialEvidenceItem.getIdentityFraudScore());
+                assertEquals(score, credentialEvidenceItem.getVerificationScore());
+            }
+        }
+    }
 
-        CredentialEvidenceItem credentialEvidenceItem3 =
-                new CredentialEvidenceItem(EvidenceType.VERIFICATION, 30, Collections.emptyList());
-        assertNull(credentialEvidenceItem3.getActivityHistoryScore());
-        assertNull(credentialEvidenceItem3.getIdentityFraudScore());
-        assertEquals(30, credentialEvidenceItem3.getVerificationScore());
+    private static Stream<EvidenceType> provideCasesForConstructorWithEvidenceTypeAndScore() {
+        return Stream.of(
+                EvidenceType.ACTIVITY, EvidenceType.IDENTITY_FRAUD, EvidenceType.VERIFICATION);
     }
 
     @Test
@@ -66,7 +81,7 @@ class CredentialEvidenceItemTest {
     @Test
     void shouldGetTypeActivity() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
-                new CredentialEvidenceItem(EvidenceType.ACTIVITY, 30, Collections.emptyList());
+                CredentialEvidenceItem.builder().activityHistoryScore(30).build();
         assertEquals(EvidenceType.ACTIVITY, credentialEvidenceItem.getType());
         assertEquals(30, credentialEvidenceItem.getActivityHistoryScore());
     }
@@ -379,16 +394,25 @@ class CredentialEvidenceItemTest {
     }
 
     @Test
-    void shouldHasContraIndicators() {
-        CredentialEvidenceItem credentialEvidenceItem1 = new CredentialEvidenceItem(10, 20, null);
+    void shouldHaveContraIndicators() {
+        CredentialEvidenceItem credentialEvidenceItem1 =
+                CredentialEvidenceItem.builder().strengthScore(10).validityScore(20).build();
         assertFalse(credentialEvidenceItem1.hasContraIndicators());
 
         CredentialEvidenceItem credentialEvidenceItem2 =
-                new CredentialEvidenceItem(10, 20, Collections.emptyList());
+                CredentialEvidenceItem.builder()
+                        .strengthScore(10)
+                        .validityScore(20)
+                        .ci(Collections.emptyList())
+                        .build();
         assertFalse(credentialEvidenceItem2.hasContraIndicators());
 
         CredentialEvidenceItem credentialEvidenceItem3 =
-                new CredentialEvidenceItem(10, 20, Arrays.asList("contra1", "contra2"));
+                CredentialEvidenceItem.builder()
+                        .strengthScore(10)
+                        .validityScore(20)
+                        .ci(Arrays.asList("contra1", "contra2"))
+                        .build();
         assertTrue(credentialEvidenceItem3.hasContraIndicators());
     }
 
