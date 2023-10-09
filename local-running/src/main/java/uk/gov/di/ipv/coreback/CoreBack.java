@@ -19,10 +19,9 @@ public class CoreBack {
 
         Spark.post("/session/initialise", lambdaHandler.getInitialiseSession());
         Spark.post("/journey/:event", lambdaHandler.getJourneyEngine());
-        Spark.get(
-                "/journey/build-proven-user-identity-details",
-                lambdaHandler.getBuildProvenUserIdentityDetails());
         Spark.post("/journey/cri/callback", lambdaHandler.getCriCallBack());
+        Spark.get(
+                "/user/proven-identity-details", lambdaHandler.getBuildProvenUserIdentityDetails());
 
         Spark.post("/token", lambdaHandler.getToken());
         Spark.get("/user-identity", lambdaHandler.getUserIdentity());
