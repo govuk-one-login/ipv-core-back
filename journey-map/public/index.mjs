@@ -106,45 +106,22 @@ const expandNestedJourneys = (journeyMap, subjourneys) => {
 
 // Should match logic in BasicEvent.java
 const resolveEventTarget = (definition, formData) => {
-    const disabledCriTargetState = recurseToCheckIfDisabledTargetState(definition.checkIfDisabled || {}, formData, null);
-    if (disabledCriTargetState) {
-        return disabledCriTargetState;
+    // Look for an override for disabled CRIs
+    const disabledCris = formData.getAll('disabledCri');
+    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
+    if (disabledResolution) {
+        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
     }
-    const checkFeatureFlagTargetState = recurseToCheckFeatureFlagTargetState(definition.checkFeatureFlag || {}, formData, null);
-    if (checkFeatureFlagTargetState) {
-        return checkFeatureFlagTargetState;
+
+    // Look for an override for feature flags
+    const featureFlags = formData.getAll('featureFlag');
+    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
+    if (featureFlagResolution) {
+        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
     }
+
     return definition.targetState;
 };
-
-// Find the target state for the first disabled CRI defined in a `checkIfDisabled` block, and also check if it's event
-// has a `checkIfDisabled` block. If it does return that events target state. All the way down.
-const recurseToCheckIfDisabledTargetState = (checkIfDisabledObject, formData, disabledCriTargetState) => {
-    Object.keys(checkIfDisabledObject).forEach((cri) => {
-        if (formData.getAll('disabledCri').includes(cri)) {
-            disabledCriTargetState = checkIfDisabledObject[cri].targetState;
-            if (checkIfDisabledObject[cri].checkIfDisabled) {
-                disabledCriTargetState = recurseToCheckIfDisabledTargetState(checkIfDisabledObject[cri].checkIfDisabled, formData, disabledCriTargetState)
-            }
-        }
-    })
-    return disabledCriTargetState;
-};
-
-// Find the target state for the first checked feture flag defined in a `checkFeatureFlag` block, and also check if it's
-// event has a `checkFeatureFlag` block. If it does return that events target state. All the way down.
-const recurseToCheckFeatureFlagTargetState = (checkFeatureFlagObject, formData, featureFlagTargetState) => {
-    Object.keys(checkFeatureFlagObject).forEach((flag) => {
-        if (formData.getAll('flag').includes(flag)) {
-            featureFlagTargetState = checkFeatureFlagObject[flag].targetState;
-            if (checkFeatureFlagObject[flag].checkFeatureFlag) {
-                featureFlagTargetState = recurseToCheckFeatureFlagTargetState(checkFeatureFlagObject[flag].checkFeatureFlag, formData, featureFlagTargetState)
-            }
-        }
-    })
-    return featureFlagTargetState;
-};
-
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip

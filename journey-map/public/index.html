@@ -40,7 +40,7 @@
             form select {
                 flex: 0 0 30%;
             }
-            span {
+            #checkbox-controls {
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
@@ -51,7 +51,7 @@
         <div id="header">
             <h1>IPV Core Journey Map</h1>
             <form id="configuration-form">
-                <span>
+                <span id="checkbox-controls">
                     <fieldset id="disabledInput">
                         <legend>Disabled CRI:</legend>
                     </fieldset>
@@ -94,50 +94,30 @@
             const nestedResponse = await fetch('./nested-journey-definitions.yaml');
             const nestedJourneys = yaml.parse(await nestedResponse.text());
 
+            const setupOptions = (name, options, fieldset) => {
+                if (options.length) {
+                    options.forEach((option) => {
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.name = name;
+                        input.value = option;
+                        input.id = option;
+
+                        const label = document.createElement('label');
+                        label.innerText = option;
+                        label.appendChild(input);
+
+                        fieldset.appendChild(label);
+                    });
+                } else {
+                    fieldset.append("N/A")
+                }
+            };
+
             // Set up the form options
             const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
-            if (disabledOptions.length > 0) {
-                disabledOptions.forEach((option) => {
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'disabledCri';
-                    input.value = option;
-                    input.id = option;
-
-                    const label = document.createElement('label');
-                    label.htmlFor = option;
-                    label.innerText = option;
-
-                    const span = document.createElement('span');
-                    span.appendChild(label);
-                    span.appendChild(input);
-                    disabledInput.appendChild(span);
-                });
-            } else {
-                disabledInput.append("N/A")
-            }
-
-            if (featureFlagOptions.length > 0) {
-                featureFlagOptions.forEach((option) => {
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.name = 'flag';
-                    input.value = option;
-                    input.id = option;
-
-                    const label = document.createElement('label');
-                    label.htmlFor = option;
-                    label.innerText = option;
-
-                    const span = document.createElement('span');
-                    span.appendChild(label);
-                    span.appendChild(input);
-                    featureFlagInput.appendChild(span)
-                });
-            } else {
-                featureFlagInput.append("N/A");
-            }
-
+            setupOptions('disabledCri', disabledOptions, disabledInput);
+            setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
 
             // Render the journey map SVG
             const renderSvg = async (formData) => {
