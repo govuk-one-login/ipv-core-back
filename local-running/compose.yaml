@@ -35,12 +35,18 @@ services:
       - NODE_ENV=development
       - EXTERNAL_WEBSITE_HOST=http://localhost:3001
       - PORT=3001
+      - CDN_DOMAIN=
       - AWS_REGION
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
     ports:
       - "3001:3001"
+      - "5001:9229"
+    command:
+      - node
+      - "--inspect=0.0.0.0"
+      - "src/app.js"
 
   core-back:
     image: core-back:latest
