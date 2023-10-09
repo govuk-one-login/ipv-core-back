@@ -74,7 +74,7 @@ class DataStoreTest {
 
     @Test
     void shouldPutItemIntoDynamoDbTable() {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TTL)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TTL)).thenReturn("PT2H");
 
         dataStore.create(authorizationCodeItem, BACKEND_SESSION_TTL);
 

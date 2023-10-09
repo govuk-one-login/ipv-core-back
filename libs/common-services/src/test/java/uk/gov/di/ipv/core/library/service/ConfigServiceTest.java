@@ -655,7 +655,7 @@ class ConfigServiceTest {
         BACKEND_SESSION_TIMEOUT(
                 "self/backendSessionTimeout", "7200", Map.of("FS02", "7300", "FS03", "7400")),
         BACKEND_SESSION_TTL(
-                "self/backendSessionTtl", "3600", Map.of("FS03", "3700", "FS04", "3800")),
+                "self/backendSessionTtl", "PT2H", Map.of("FS03", "3700", "FS04", "P2H")),
         CLIENT_VALID_REDIRECT_URLS(
                 "clients/aClientId/validRedirectUrls",
                 "one.example.com/callback,two.example.com/callback,three.example.com/callback",

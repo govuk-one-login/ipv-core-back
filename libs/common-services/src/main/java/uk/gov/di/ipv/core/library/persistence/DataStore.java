@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Expiry;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -62,9 +63,8 @@ public class DataStore<T extends DynamodbItem> {
 
     public void create(T item, ConfigurationVariable tableTtl) {
         item.setTtl(
-                Instant.now()
-                        .plusSeconds(Long.parseLong(configService.getSsmParameter(tableTtl)))
-                        .getEpochSecond());
+                new Expiry(configService.getSsmParameter(tableTtl), Instant.now())
+                        .toEpochSeconds());
         table.putItem(item);
     }
 
