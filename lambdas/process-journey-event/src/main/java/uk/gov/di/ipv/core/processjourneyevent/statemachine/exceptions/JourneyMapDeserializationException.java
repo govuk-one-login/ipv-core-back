@@ -7,4 +7,8 @@ public class JourneyMapDeserializationException extends RuntimeException {
     public JourneyMapDeserializationException(Throwable cause) {
         super(cause);
     }
+
+    public JourneyMapDeserializationException(String message) {
+        super(message);
+    }
 }
