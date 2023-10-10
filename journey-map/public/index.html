@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <style>
+            * {
+                margin: 0;
+                box-sizing: border-box;
+            }
+            body {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                font-family: sans-serif;
+            }
+            #header {
+                padding: 8px 16px 16px;
+                border-bottom: 2px solid black;
+            }
+            #diagram {
+                flex: 1 1 auto;
+            }
+            #diagram > * {
+                height: 100%;
+            }
+            form {
+                width: 260px;
+                margin-top: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            form button {
+                width: 180px;
+            }
+            form label {
+                display: flex;
+                justify-content: space-between;
+            }
+            form select {
+                flex: 0 0 30%;
+            }
+            #checkbox-controls {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="header">
+            <h1>IPV Core Journey Map</h1>
+            <form id="configuration-form">
+                <span id="checkbox-controls">
+                    <fieldset id="disabledInput">
+                        <legend>Disabled CRI:</legend>
+                    </fieldset>
+                    <fieldset id="featureFlagInput">
+                        <legend>Feature flag:</legend>
+                    </fieldset>
+                </span>
+                <label>
+                    <div>Include errors:</div>
+                    <input id="includeErrorsInput" name="includeErrors" type="checkbox">
+                </label>
+                <label>
+                    <div>Include failures:</div>
+                    <input id="includeFailuresInput" name="includeFailures" type="checkbox">
+                </label>
+                <label>
+                    <div>Expand nested journeys:</div>
+                    <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
+                </label>
+            </form>
+        </div>
+        <div id="diagram"></div>
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
+            import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
+            import { getOptions, render } from './index.mjs';
+
+            // We initialize mermaid manually
+            mermaid.initialize({ startOnLoad: false });
+
+            // Page elements
+            const form = document.getElementById('configuration-form');
+            const disabledInput = document.getElementById('disabledInput');
+            const featureFlagInput = document.getElementById('featureFlagInput')
+
+            // Load the journey map
+            const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
+            const journeyMap = yaml.parse(await journeyResponse.text());
+            const nestedResponse = await fetch('./nested-journey-definitions.yaml');
+            const nestedJourneys = yaml.parse(await nestedResponse.text());
+
+            const setupOptions = (name, options, fieldset) => {
+                if (options.length) {
+                    options.forEach((option) => {
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.name = name;
+                        input.value = option;
+                        input.id = option;
+
+                        const label = document.createElement('label');
+                        label.innerText = option;
+                        label.appendChild(input);
+
+                        fieldset.appendChild(label);
+                    });
+                } else {
+                    fieldset.append("N/A")
+                }
+            };
+
+            // Set up the form options
+            const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
+            setupOptions('disabledCri', disabledOptions, disabledInput);
+            setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
+
+            // Render the journey map SVG
+            const renderSvg = async (formData) => {
+                const diagram = render(journeyMap, nestedJourneys, formData);
+                const diagramElement = document.getElementById('diagram');
+                const { svg } = await mermaid.render('diagramSvg', diagram);
+                diagramElement.innerHTML = svg;
+                svgPanZoom('#diagramSvg');
+            };
+
+            // Re-render on change
+            form.addEventListener('change', async (event) => {
+                event.preventDefault();
+                await renderSvg(new FormData(form));
+            });
+
+            await renderSvg();
+        </script>
+    </body>
+</html>
