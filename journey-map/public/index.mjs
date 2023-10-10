@@ -2,33 +2,35 @@ const initialStates = ['INITIAL_IPV_JOURNEY'];
 const errorStates = ['ERROR'];
 const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
 
+const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
+    Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
+        if (!disabledOptions.includes(opt)) {
+            disabledOptions.push(opt);
+        }
+        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    });
+    Object.entries(definition.checkFeatureFlag || {}).forEach(([opt, def]) => {
+        if (!featureFlagOptions.includes(opt)) {
+            featureFlagOptions.push(opt);
+        }
+        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    });
+};
+
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMap) => {
-    const disabledOptions = ['none'];
-    const featureFlagOptions = ['none'];
+    const disabledOptions = [];
+    const featureFlagOptions = [];
 
     Object.values(journeyMap).forEach((definition) => {
         const events = definition.events || definition.exitEvents || {};
         Object.values(events).forEach((def) => {
-            if (def.checkIfDisabled) {
-                Object.keys(def.checkIfDisabled).forEach((opt) => {
-                    if (!disabledOptions.includes(opt)) {
-                        disabledOptions.push(opt);
-                    }
-                });
-            }
-            if (def.checkFeatureFlag) {
-                Object.keys(def.checkFeatureFlag).forEach((opt) => {
-                    if (!featureFlagOptions.includes(opt)) {
-                        featureFlagOptions.push(opt);
-                    }
-                });
-            }
+            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
         });
     });
 
     return { disabledOptions, featureFlagOptions };
-}
+};
 
 // Expand out parent states
 const expandParents = (journeyMap) => {
@@ -93,19 +95,27 @@ const expandNestedJourneys = (journeyMap, subjourneys) => {
 };
 
 // Should match logic in BasicEvent.java
-const resolveEventTarget = (definition, options) => {
-    if (definition.checkIfDisabled && definition.checkIfDisabled[options.disabled]) {
-        return definition.checkIfDisabled[options.disabled].targetState;
+const resolveEventTarget = (definition, formData) => {
+    // Look for an override for disabled CRIs
+    const disabledCris = formData.getAll('disabledCri');
+    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
+    if (disabledResolution) {
+        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
     }
-    if (definition.checkFeatureFlag && definition.checkFeatureFlag[options.featureFlag]) {
-        return definition.checkFeatureFlag[options.featureFlag].targetState;
+
+    // Look for an override for feature flags
+    const featureFlags = formData.getAll('featureFlag');
+    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
+    if (featureFlagResolution) {
+        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
     }
+
     return definition.targetState;
-}
+};
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
-// This allows us to skip 
-const renderTransitions = (journeyMap, options) => {
+// This allows us to skip
+const renderTransitions = (journeyMap, formData) => {
     const states = [...initialStates];
     const stateTransitions = [];
 
@@ -116,12 +126,12 @@ const renderTransitions = (journeyMap, options) => {
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            const target = resolveEventTarget(def, options);
+            const target = resolveEventTarget(def, formData);
 
-            if (errorStates.includes(target) && !options.includeErrors) {
+            if (errorStates.includes(target) && !formData.has('includeErrors')) {
                 return;
             }
-            if (failureStates.includes(target) && !options.includeFailures) {
+            if (failureStates.includes(target) && !formData.has('includeFailures')) {
                 return;
             }
 
@@ -144,7 +154,7 @@ const renderStates = (journeyMap, states) => {
     // Types
     // process - response.type = process, response.lambda = <lambda>
     // page    - response.type = page, response.pageId = 'page-id'
-    // cri     - response.type = cri, 
+    // cri     - response.type = cri,
     const mermaids = states.map((state) => {
         const definition = journeyMap[state];
 
@@ -167,15 +177,15 @@ const renderStates = (journeyMap, states) => {
     return { statesMermaid: mermaids.join('\n') };
 };
 
-export const render = (journeyMap, nestedJourneys, options = {}) => {
+export const render = (journeyMap, nestedJourneys, formData = new FormData()) => {
     // Copy to avoid mutating the input
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
-    if (options.expandNestedJourneys) {
+    if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy, nestedJourneys);
     }
     expandParents(journeyMapCopy);
 
-    const { transitionsMermaid, states } = renderTransitions(journeyMapCopy, options);
+    const { transitionsMermaid, states } = renderTransitions(journeyMapCopy, formData);
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
     const mermaid =
