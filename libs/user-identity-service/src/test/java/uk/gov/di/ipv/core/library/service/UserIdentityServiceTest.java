@@ -27,18 +27,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_FAILED_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_FRAUD_VC_WITH_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_PASSPORT;
@@ -794,30 +795,45 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
-        when(userIdentityService.getVcStoreItem(any(), any())).thenReturn(null);
+    void getVCSuccessStatusReturnShouldBeEmpty() throws Exception {
+        when(userIdentityService.getVcStoreItem(USER_ID_1, "fraud")).thenReturn(null);
 
         Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "fraud");
 
-        assertFalse(isValid.isPresent());
+        assertEquals(Optional.empty(), isValid);
+    }
 
-        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "dcmaw");
+    @Test
+    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
+        VcStoreItem vcStoreItem =
+                createVcStoreItem(USER_ID_1, "ukPassport", M1A_FAILED_PASSPORT_VC, Instant.now());
+        when(userIdentityService.getVcStoreItem(USER_ID_1, "ukPassport")).thenReturn(vcStoreItem);
 
-        assertFalse(isValid.isPresent());
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "ukPassport");
+
+        assertEquals(Optional.of(false), isValid);
     }
 
     @Test
     void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
         VcStoreItem vcStoreItem =
                 createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, "test-issuer")).thenReturn(vcStoreItem);
+        when(userIdentityService.getVcStoreItem(USER_ID_1, "ukPassport")).thenReturn(vcStoreItem);
 
-        mockCredentialIssuerConfig();
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "ukPassport");
 
-        Optional<Boolean> isValid =
-                userIdentityService.getVCSuccessStatus(USER_ID_1, "test-issuer");
+        assertEquals(Optional.of(true), isValid);
+    }
 
-        assertTrue(isValid.isPresent());
+    @Test
+    void getVCSuccessStatusShouldIgnoreCIs() throws Exception {
+        VcStoreItem vcStoreItem =
+                createVcStoreItem(USER_ID_1, "fraud", SIGNED_FRAUD_VC_WITH_CI, Instant.now());
+        when(userIdentityService.getVcStoreItem(USER_ID_1, "fraud")).thenReturn(vcStoreItem);
+
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "fraud");
+
+        assertEquals(Optional.of(true), isValid);
     }
 
     private VcStoreItem createVcStoreItem(
