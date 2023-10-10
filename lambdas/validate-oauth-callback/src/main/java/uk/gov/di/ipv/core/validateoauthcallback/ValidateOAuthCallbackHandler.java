@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -220,7 +221,9 @@ public class ValidateOAuthCallbackHandler
             CriCallbackRequest callbackRequest)
             throws SqsException {
         String error = callbackRequest.getError();
-        String errorDescription = callbackRequest.getErrorDescription();
+        String errorDescription =
+                Objects.toString(
+                        callbackRequest.getErrorDescription(), "No error description provided");
         String criId = callbackRequest.getCredentialIssuerId();
 
         AuditExtensionErrorParams extensions =

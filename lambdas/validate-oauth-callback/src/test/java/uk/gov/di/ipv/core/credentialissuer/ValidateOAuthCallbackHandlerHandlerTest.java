@@ -50,6 +50,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_REDIRECT_URI = "https://redirect.example.com";
     private static final String TEST_OAUTH_ACCESS_DENIED_ERROR = OAuth2Error.ACCESS_DENIED_CODE;
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
+    private static final String TEST_ERROR = "test-error";
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
@@ -376,6 +377,24 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
+    void shouldReceiveJourneyErrorJourneyResponseWithNullErrorDescription() {
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(null);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
+
+        assertEquals("/journey/error", output.get("journey"));
+    }
+
+    @Test
     void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() {
         CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
         criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
@@ -392,6 +411,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         assertEquals("/journey/error", output.get("journey"));
     }
+
 
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
