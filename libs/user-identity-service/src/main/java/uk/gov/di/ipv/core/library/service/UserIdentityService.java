@@ -178,6 +178,7 @@ public class UserIdentityService {
             SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
             return Optional.of(VcHelper.isSuccessfulVc(vc));
         }
+        LOGGER.info("vcStoreItem for CRI '{}' was null", criId);
         return Optional.empty();
     }
 
