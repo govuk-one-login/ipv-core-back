@@ -56,6 +56,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_END_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
@@ -328,6 +329,14 @@ public class EvaluateGpg45ScoresHandler
         if (lastVisitedCriVcStatus.isPresent()
                 && Boolean.FALSE.equals(lastVisitedCriVcStatus.get())) {
             // Handle scenario where VCs without CIs should be redirected
+            StringMapMessage message = new StringMapMessage();
+            message.with(
+                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                            "Returning fail-with-no-ci response")
+                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_FAIL_WITH_NO_CI)
+                    .with("lastVisitedCri", lastVisitedCri.getCriId())
+                    .with("lastVisitedCriVcStatus", lastVisitedCriVcStatus.get());
+            LOGGER.info(message);
             return Optional.of(JOURNEY_FAIL_WITH_NO_CI);
         }
         return Optional.empty();
