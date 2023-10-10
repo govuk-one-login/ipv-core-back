@@ -60,7 +60,7 @@ noisier. And JSONier.
 
 ### Debugging
 
-All of the running Java containers expose a debug port to connect to. This allows you to attach your debugger and see
+All of the running containers expose a debug port to connect to. This allows you to attach your debugger and see
 what's going on. The debug port is 2000 ports above the http port the services are listening on. Look at the Docker
 compose file to see which port to use for which service.
 
