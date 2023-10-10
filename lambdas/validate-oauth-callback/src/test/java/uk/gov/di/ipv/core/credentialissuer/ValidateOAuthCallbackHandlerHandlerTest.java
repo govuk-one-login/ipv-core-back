@@ -412,7 +412,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals("/journey/error", output.get("journey"));
     }
 
-
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
         CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
