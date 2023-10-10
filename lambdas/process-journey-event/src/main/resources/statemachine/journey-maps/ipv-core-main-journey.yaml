@@ -35,6 +35,16 @@ F2F_START_PAGE:
     end:
       targetState: PYI_ESCAPE
 
+F2F_PYI_POST_OFFICE:
+  response:
+    type: page
+    pageId: pyi-post-office
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: PYI_ESCAPE
+
 INITIAL_CI_SCORING:
   response:
     type: process
@@ -190,7 +200,7 @@ MULTIPLE_DOC_F2F_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: CRI_CLAIMED_IDENTITY_J4
+      targetState: F2F_PYI_POST_OFFICE
 
 PYI_NO_MATCH:
   response:
