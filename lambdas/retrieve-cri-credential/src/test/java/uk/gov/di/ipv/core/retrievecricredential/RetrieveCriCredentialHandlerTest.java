@@ -390,16 +390,6 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        AuditEvent event = auditEventCaptor.getAllValues().get(0);
-        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
-        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
-                (AuditExtensionsCriResRetrieved) event.getExtensions();
-        assertEquals(
-                CriResourceRetrievedType.ERROR.getType(), auditExtensionsCriResRetrieved.type());
-
         assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
     }
 
@@ -724,16 +714,6 @@ class RetrieveCriCredentialHandlerTest {
         mockServiceCalls(makeTestIpvSessionItem(TEST_IPV_SESSION_ID));
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        AuditEvent event = auditEventCaptor.getAllValues().get(0);
-        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
-        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
-                (AuditExtensionsCriResRetrieved) event.getExtensions();
-        assertEquals(
-                CriResourceRetrievedType.ERROR.getType(), auditExtensionsCriResRetrieved.type());
 
         assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
 

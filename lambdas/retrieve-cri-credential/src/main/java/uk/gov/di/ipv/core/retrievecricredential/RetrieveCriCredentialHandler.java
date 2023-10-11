@@ -150,7 +150,6 @@ public class RetrieveCriCredentialHandler
                 criOAuthSessionService.getCriOauthSessionItem(
                         ipvSessionItem.getCriOAuthSessionId());
         String credentialIssuerId = criOAuthSessionItem.getCriId();
-        AuditEventUser auditEventUser = null;
         try {
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
@@ -168,6 +167,13 @@ public class RetrieveCriCredentialHandler
                             ? configService.getCriPrivateApiKey(credentialIssuerId)
                             : null;
 
+            final AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            userId,
+                            ipvSessionItem.getIpvSessionId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress);
+
             VerifiableCredentialResponse verifiableCredentialResponse =
                     verifiableCredentialService.getVerifiableCredentialResponse(
                             BearerAccessToken.parse(criOAuthSessionItem.getAccessToken()),
@@ -175,15 +181,12 @@ public class RetrieveCriCredentialHandler
                             apiKey,
                             credentialIssuerId);
 
-            auditEventUser =
-                    new AuditEventUser(
-                            userId,
-                            ipvSessionItem.getIpvSessionId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
-
             if (VerifiableCredentialStatus.PENDING.equals(
                     verifiableCredentialResponse.getCredentialStatus())) {
+                sendCriResRetrievedAuditEvent(
+                        auditEventUser,
+                        credentialIssuerId,
+                        CriResourceRetrievedType.PENDING.getType());
                 processPendingResponse(
                         userId,
                         credentialIssuerId,
@@ -191,10 +194,6 @@ public class RetrieveCriCredentialHandler
                         verifiableCredentialResponse,
                         criOAuthSessionItem.getCriOAuthSessionId(),
                         ipvSessionItem);
-                sendCriResRetrievedAuditEvent(
-                        auditEventUser,
-                        credentialIssuerId,
-                        CriResourceRetrievedType.PENDING.getType());
             } else {
                 List<SignedJWT> verifiableCredentials =
                         verifiableCredentialResponse.getVerifiableCredentials();
@@ -222,17 +221,6 @@ public class RetrieveCriCredentialHandler
                 | CiPostMitigationsException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
-            try {
-                sendCriResRetrievedAuditEvent(
-                        auditEventUser,
-                        credentialIssuerId,
-                        CriResourceRetrievedType.ERROR.getType());
-            } catch (SqsException ex) {
-                LogHelper.logErrorMessage(
-                        "Failed to send cri_response_retrieve audit event to SQS queue.",
-                        ex.getMessage());
-            }
-
             if (credentialIssuerId.equals(DCMAW_CRI)
                     && e instanceof VerifiableCredentialException vce
                     && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
