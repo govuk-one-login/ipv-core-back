@@ -197,6 +197,12 @@ public class RetrieveCriCredentialHandler
             } else {
                 List<SignedJWT> verifiableCredentials =
                         verifiableCredentialResponse.getVerifiableCredentials();
+                if (!verifiableCredentials.isEmpty()) {
+                    sendCriResRetrievedAuditEvent(
+                            auditEventUser,
+                            credentialIssuerId,
+                            CriResourceRetrievedType.VC.getType());
+                }
                 processVerifiableCredentials(
                         userId,
                         credentialIssuerId,
@@ -204,13 +210,8 @@ public class RetrieveCriCredentialHandler
                         ipAddress,
                         verifiableCredentials,
                         clientOAuthSessionItem,
-                        ipvSessionItem);
-                if (!verifiableCredentials.isEmpty()) {
-                    sendCriResRetrievedAuditEvent(
-                            auditEventUser,
-                            credentialIssuerId,
-                            CriResourceRetrievedType.VC.getType());
-                }
+                        ipvSessionItem,
+                        auditEventUser);
             }
 
             return JOURNEY_CI_SCORING;
@@ -295,16 +296,10 @@ public class RetrieveCriCredentialHandler
             String ipAddress,
             List<SignedJWT> verifiableCredentials,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException {
-        final AuditEventUser auditEventUser =
-                new AuditEventUser(
-                        userId,
-                        ipvSessionItem.getIpvSessionId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-
         final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         String issuer = null;
