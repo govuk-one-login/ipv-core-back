@@ -228,7 +228,13 @@ class RetrieveCriCredentialHandlerTest {
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent event = auditEventCaptor.getAllValues().get(0);
+        assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, event.getEventName());
+        AuditExtensionsCriResRetrieved auditExtensionsCriResRetrieved =
+                (AuditExtensionsCriResRetrieved) event.getExtensions();
+        assertEquals(
+                CriResourceRetrievedType.EMPTY.getType(), auditExtensionsCriResRetrieved.type());
 
         verify(verifiableCredentialJwtValidator, times(0))
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));

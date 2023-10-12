@@ -113,13 +113,13 @@ public class VerifiableCredentialService {
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(Collections.singletonList(vcJwt))
                                 .build();
-                LOGGER.info("Verifiable Credential retrieved.");
+                LOGGER.info("Verifiable Credential retrieved from JWT response.");
                 return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
                 VerifiableCredentialResponse verifiableCredentialResponse =
                         getVerifiableCredentialResponse(response.getContent());
-                LOGGER.info("Verifiable Credential retrieved.");
+                LOGGER.info("Verifiable Credential retrieved from json response.");
                 return verifiableCredentialResponse;
             } else {
                 LOGGER.error(

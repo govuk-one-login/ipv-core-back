@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum CriResourceRetrievedType {
     PENDING("pending"),
     VC("vc"),
+    EMPTY("empty"),
     ERROR("error");
 
     private final String type;

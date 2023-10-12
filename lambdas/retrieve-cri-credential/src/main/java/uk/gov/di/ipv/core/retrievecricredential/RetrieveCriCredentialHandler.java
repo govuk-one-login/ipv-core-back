@@ -197,12 +197,12 @@ public class RetrieveCriCredentialHandler
             } else {
                 List<SignedJWT> verifiableCredentials =
                         verifiableCredentialResponse.getVerifiableCredentials();
-                if (!verifiableCredentials.isEmpty()) {
-                    sendCriResRetrievedAuditEvent(
-                            auditEventUser,
-                            credentialIssuerId,
-                            CriResourceRetrievedType.VC.getType());
-                }
+                sendCriResRetrievedAuditEvent(
+                        auditEventUser,
+                        credentialIssuerId,
+                        verifiableCredentials.isEmpty()
+                                ? CriResourceRetrievedType.EMPTY.getType()
+                                : CriResourceRetrievedType.VC.getType());
                 processVerifiableCredentials(
                         userId,
                         credentialIssuerId,
