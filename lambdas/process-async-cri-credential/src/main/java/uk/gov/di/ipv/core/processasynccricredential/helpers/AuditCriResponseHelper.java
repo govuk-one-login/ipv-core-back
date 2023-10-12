@@ -17,7 +17,6 @@ public class AuditCriResponseHelper {
     private static final String EVIDENCE = "evidence";
     private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
     private static final String VC_NAME = "name";
-    private static final String VC_NAME_PARTS = "nameParts";
     private static final String VC_PASSPORT = "passport";
     private static final String VC_EXPIRY_DATE = "expiryDate";
 
@@ -36,13 +35,13 @@ public class AuditCriResponseHelper {
         return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
     }
 
-    public static AuditRestrictedVc getVcNamePartsForAudit(SignedJWT verifiableCredential)
+    public static AuditRestrictedVc getRestrictedDataForAuditEvent(SignedJWT verifiableCredential)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
         var name = (JSONArray) credentialSubject.get(VC_NAME);
-        var nameParts = ((JSONObject) name.get(0)).getAsString(VC_NAME_PARTS);
+        var nameParts = ((JSONObject) name.get(0)).toJSONString();
 
         var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
         if (passport != null && !passport.isEmpty()) {

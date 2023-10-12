@@ -429,8 +429,7 @@ class RetrieveCriCredentialHandlerTest {
         AuditExtensionsVcEvidence auditExtensionsVcEvidence =
                 (AuditExtensionsVcEvidence) argumentCaptor.getValue().getExtensions();
         assertEquals(
-                "https://staging-di-ipv-cri-address-front.london.cloudapps.digital",
-                auditExtensionsVcEvidence.getIss());
+                "https://address-cri.stubs.account.gov.uk", auditExtensionsVcEvidence.getIss());
         assertNull(auditExtensionsVcEvidence.getEvidence());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }

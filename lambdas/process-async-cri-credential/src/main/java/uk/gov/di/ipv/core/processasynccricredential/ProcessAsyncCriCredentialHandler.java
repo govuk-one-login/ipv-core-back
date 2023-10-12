@@ -48,7 +48,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.isSuccessAsyncCriResponse;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getVcNamePartsForAudit;
+import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getRestrictedDataForAuditEvent;
 
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
@@ -252,7 +252,7 @@ public class ProcessAsyncCriCredentialHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
-                        getVcNamePartsForAudit(verifiableCredential));
+                        getRestrictedDataForAuditEvent(verifiableCredential));
         auditService.sendAuditEvent(auditEvent);
     }
 
