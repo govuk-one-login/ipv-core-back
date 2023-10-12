@@ -56,7 +56,9 @@ public class LogHelper {
         LOG_FEATURE_SET("featureSet"),
         LOG_JOURNEY_TYPE("journeyType"),
         LOG_SCORE_TYPE("scoreType"),
-        LOG_UNCORRELATABLE_DATA("uncorrelatableData");
+        LOG_UNCORRELATABLE_DATA("uncorrelatableData"),
+        LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
+        LOG_CRI_RES_RETRIEVED_TYPE("criResourceRetrievedType");
 
         private final String fieldName;
 
