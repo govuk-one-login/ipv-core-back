@@ -492,15 +492,11 @@ class UserIdentityServiceTest {
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
         JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
 
-        assertEquals(
-                "PRIME MINISTER & FIRST LORD OF THE TREASURY",
-                address.get("organisationName").asText());
-        assertEquals("10", address.get("buildingNumber").asText());
-        assertEquals("DOWNING STREET", address.get("streetName").asText());
+        assertEquals("221B", address.get("buildingName").asText());
+        assertEquals("BAKER STREET", address.get("streetName").asText());
         assertEquals("LONDON", address.get("addressLocality").asText());
-        assertEquals("SW1A 2AA", address.get("postalCode").asText());
-        assertEquals("GB", address.get("addressCountry").asText());
-        assertEquals("2019-01-01", address.get("validFrom").asText());
+        assertEquals("NW1 6XE", address.get("postalCode").asText());
+        assertEquals("1887-01-01", address.get("validFrom").asText());
     }
 
     @Test
