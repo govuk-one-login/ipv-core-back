@@ -39,7 +39,7 @@ class AuditCriResponseHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
-                "{\"name\":{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Paul\"}]},\"docExpiryDate\":\"2020-01-01\"}",
+                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Paul\"}]}],\"docExpiryDate\":\"2020-01-01\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -48,7 +48,7 @@ class AuditCriResponseHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_DL_VC);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
-                "{\"name\":{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]},\"docExpiryDate\":\"2032-02-02\"}",
+                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -58,19 +58,19 @@ class AuditCriResponseHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_ADDRESS_VC);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
-                "{\"name\":{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]},\"docExpiryDate\":null}",
+                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":null}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
     @Test
-    void shouldGetPassportExpiryDateForAudit() throws ParseException, JsonProcessingException {
+    void shouldGetPassportExpiryDateForAudit() throws ParseException {
         SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals("2020-01-01", auditNameParts.getDocExpiryDate());
     }
 
     @Test
-    void shouldNotGetExpiryDateForAudit() throws ParseException, JsonProcessingException {
+    void shouldNotGetExpiryDateForAudit() throws ParseException {
         SignedJWT testVerifiableCredential =
                 SignedJWT.parse(SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
