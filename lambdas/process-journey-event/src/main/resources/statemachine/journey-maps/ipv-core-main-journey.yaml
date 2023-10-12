@@ -137,6 +137,16 @@ CRI_F2F:
       targetState: F2F_HANDOFF_PAGE
     access-denied:
       targetState: PYI_ANOTHER_WAY
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    fail-with-no-ci:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
 
 F2F_HANDOFF_PAGE:
   response:
@@ -177,6 +187,12 @@ CRI_DCMAW:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 MULTIPLE_DOC_CHECK_PAGE:
   response:
@@ -317,6 +333,16 @@ CRI_UK_PASSPORT_J2:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    fail-with-no-ci:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
 
 ADDRESS_AND_FRAUD_J2:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -350,6 +376,14 @@ CRI_KBV_J2:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
+    next:
+      targetState: ERROR
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -365,6 +399,16 @@ CRI_DRIVING_LICENCE_J3:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    fail-with-no-ci:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
 
 ADDRESS_AND_FRAUD_J3:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -410,6 +454,12 @@ CRI_KBV_J3:
       targetState: PYI_NO_MATCH
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -420,6 +470,18 @@ CRI_CLAIMED_IDENTITY_J4:
   events:
     next:
       targetState: ADDRESS_AND_FRAUD_J4
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    fail-with-no-ci:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 ADDRESS_AND_FRAUD_J4:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -440,6 +502,14 @@ CRI_DCMAW_J5:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
+    temporarily-unavailable:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 POST_DCMAW_SUCCESS_PAGE_J5:
   response:
@@ -460,6 +530,16 @@ CRI_NINO_J6:
       targetState: CRI_HMRC_KBV_J6
     fail-with-no-ci:
       targetState: PRE_KBV_TRANSITION_PAGE_J2
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    end:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 CRI_HMRC_KBV_J6:
   response:
@@ -473,6 +553,14 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_KBV_TRANSITION_PAGE_J3
     next:
       targetState: PYI_NO_MATCH
+    not-found:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
+    enhanced-verification:
+      targetState: ERROR
+    access-denied:
+      targetState: ERROR
 
 # Mitigation journey (01)
 MITIGATION_01:
@@ -511,6 +599,8 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
+    end:
+      targetState: ERROR
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
@@ -549,3 +639,7 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
+    next:
+      targetState: ERROR
+    end:
+      targetState: ERROR
