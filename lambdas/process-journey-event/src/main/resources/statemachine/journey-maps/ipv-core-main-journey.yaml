@@ -137,6 +137,8 @@ CRI_F2F:
       targetState: F2F_HANDOFF_PAGE
     access-denied:
       targetState: PYI_ANOTHER_WAY
+    enhanced-verification:
+      targetState: F2F_HANDOFF_PAGE
 
 F2F_HANDOFF_PAGE:
   response:
@@ -350,6 +352,9 @@ CRI_KBV_J2:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_OPTIONS_WITH_F2F
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -410,6 +415,10 @@ CRI_KBV_J3:
       targetState: PYI_NO_MATCH
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_OPTIONS_WITH_F2F
+
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -548,4 +557,24 @@ MITIGATION_02_CRI_DCMAW:
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
+      targetState: MITIGATION_02_SUGGEST_F2F
+
+MITIGATION_02_OPTIONS_WITH_F2F:
+  response:
+    type: page
+    pageId: pyi-suggest-other-options
+  events:
+    f2f:
+      targetState: CRI_F2F
+    dcmaw:
+      targetState: MITIGATION_02_CRI_ELIGIBILITY
+    end:
       targetState: PYI_ANOTHER_WAY
+
+MITIGATION_02_SUGGEST_F2F:
+  response:
+    type: page
+    pageId: pyi-ipv-suggest-f2f
+  events:
+    next:
+      targetState: CRI_F2F
