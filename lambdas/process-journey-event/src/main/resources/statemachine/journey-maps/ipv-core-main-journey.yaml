@@ -355,6 +355,9 @@ CRI_KBV_J2:
       checkFeatureFlag:
         f2fCimit:
           targetState: MITIGATION_02_OPTIONS_WITH_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -418,7 +421,9 @@ CRI_KBV_J3:
       checkFeatureFlag:
         f2fCimit:
           targetState: MITIGATION_02_OPTIONS_WITH_F2F
-
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -561,6 +566,9 @@ MITIGATION_02_CRI_DCMAW:
       checkFeatureFlag:
         f2fCimit:
           targetState: MITIGATION_02_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
 
 MITIGATION_02_OPTIONS_WITH_F2F:
   response:
