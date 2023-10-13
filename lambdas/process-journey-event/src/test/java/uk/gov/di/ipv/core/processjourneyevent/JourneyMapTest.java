@@ -6,6 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
@@ -18,6 +21,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SystemStubsExtension.class)
 public class JourneyMapTest {
@@ -46,7 +51,10 @@ public class JourneyMapTest {
         findCriStatesAndEvents(stateMachine, criStates, criStateEvents);
 
         for (StateAndEvents stateAndEvents : criStates) {
-            assertEquals(criStateEvents, stateAndEvents.events, String.format("%s doesn't handle all CRI state events", stateAndEvents.state));
+            assertEquals(
+                    criStateEvents,
+                    stateAndEvents.events,
+                    String.format("%s doesn't handle all CRI state events", stateAndEvents.state));
         }
     }
 
@@ -67,17 +75,106 @@ public class JourneyMapTest {
             }
 
             for (StateAndEvents singleStateAndEvent : statesAndEvents) {
-                assertEquals(pageStateEvents, singleStateAndEvent.events, String.format("%s doesn't handle all events for this page", singleStateAndEvent.state));
+                assertEquals(
+                        pageStateEvents,
+                        singleStateAndEvent.events,
+                        String.format(
+                                "%s doesn't handle all events for this page",
+                                singleStateAndEvent.state));
             }
         }
-        
     }
 
-    private void findCriStatesAndEvents(Map<String, State> stateMachine, List<StateAndEvents> criStates, Set<String> criEvents) {
+    @ParameterizedTest
+    @EnumSource
+    void shouldMatchNestedJourneyEntryEvents(IpvJourneyTypes journeyType) throws IOException {
+        StateMachineInitializer stateMachineInitialiser = new StateMachineInitializer(journeyType);
+
+        Map<String, State> stateMachine = stateMachineInitialiser.initialize();
+        Set<String> stateMachineKeys = stateMachine.keySet();
+
+        for (String key : stateMachineKeys) {
+            State state = stateMachine.get(key);
+
+            if (state instanceof NestedJourneyInvokeState) {
+                Set<String> entryEvents =
+                        ((NestedJourneyInvokeState) state).getExitEvents().keySet();
+
+                for (String comparingStateKey : stateMachineKeys) {
+                    State comparingState = stateMachine.get(comparingStateKey);
+
+                    if (comparingState instanceof BasicState) {
+                        Map<String, Event> eventMap = ((BasicState) comparingState).getEvents();
+
+                        for (Map.Entry<String, Event> entry : eventMap.entrySet()) {
+                            String eventName = entry.getKey();
+                            Event event = entry.getValue();
+
+                            if (event instanceof BasicEvent) {
+                                if (((BasicEvent) event).getTargetState() == key) {
+                                    assertTrue(entryEvents.contains(eventName));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ;
+        }
+        ;
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    void shouldMatchNestedJourneyExitEvents(IpvJourneyTypes journeyType) throws IOException {
+        StateMachineInitializer stateMachineInitialiser = new StateMachineInitializer(journeyType);
+
+        Map<String, State> stateMachine = stateMachineInitialiser.initialize();
+        Set<String> stateMachineKeys = stateMachine.keySet();
+
+        for (String key : stateMachineKeys) {
+            State state = stateMachine.get(key);
+
+            if (state instanceof NestedJourneyInvokeState) {
+                Set<String> exitEvents =
+                        ((NestedJourneyInvokeState) state).getExitEvents().keySet();
+                Set<String> actualExitEvents = new HashSet<>();
+
+                Map<String, State> nestedStateMap =
+                        ((NestedJourneyInvokeState) state)
+                                .getNestedJourneyDefinition()
+                                .getNestedJourneyStates();
+                for (State nestedState : nestedStateMap.values()) {
+                    if (nestedState instanceof BasicState) {
+                        Collection<Event> events = ((BasicState) nestedState).getEvents().values();
+                        for (Event event : events) {
+                            if (event instanceof ExitNestedJourneyEvent) {
+                                actualExitEvents.add(
+                                        ((ExitNestedJourneyEvent) event).getExitEventToEmit());
+                            }
+                        }
+                    }
+                }
+
+                assertEquals(
+                        exitEvents,
+                        actualExitEvents,
+                        String.format(
+                                "%s doesn't have matching exit states to nested journey", state));
+            }
+            ;
+        }
+        ;
+    }
+
+    private void findCriStatesAndEvents(
+            Map<String, State> stateMachine,
+            List<StateAndEvents> criStates,
+            Set<String> criEvents) {
         for (Map.Entry<String, State> entry : stateMachine.entrySet()) {
             String key = entry.getKey();
             State state = entry.getValue();
-    
+
             if (state instanceof BasicState) {
                 StepResponse response = ((BasicState) state).getResponse();
 
@@ -88,27 +185,36 @@ public class JourneyMapTest {
                     criEvents.addAll(events);
                 }
             } else if (state instanceof NestedJourneyInvokeState) {
-                Map<String, State> nestedStateMachine = ((NestedJourneyInvokeState) state).getNestedJourneyDefinition().getNestedJourneyStates();
+                Map<String, State> nestedStateMachine =
+                        ((NestedJourneyInvokeState) state)
+                                .getNestedJourneyDefinition()
+                                .getNestedJourneyStates();
                 findCriStatesAndEvents(nestedStateMachine, criStates, criEvents);
             }
         }
     }
 
-    private void findPageSpecificStatesAndEvents(Map<String, State> stateMachine, Map<String, List<StateAndEvents>> pageStateMap) {
+    private void findPageSpecificStatesAndEvents(
+            Map<String, State> stateMachine, Map<String, List<StateAndEvents>> pageStateMap) {
         for (String key : stateMachine.keySet()) {
             State state = stateMachine.get(key);
-    
+
             if (state instanceof BasicState) {
                 StepResponse response = ((BasicState) state).getResponse();
-            
+
                 if (response instanceof PageStepResponse) {
                     String pageId = (String) response.value().get("page");
                     Set<String> events = ((BasicState) state).getEvents().keySet();
 
-                    pageStateMap.computeIfAbsent(pageId, k -> new ArrayList<>()).add(new StateAndEvents(key, events));
+                    pageStateMap
+                            .computeIfAbsent(pageId, k -> new ArrayList<>())
+                            .add(new StateAndEvents(key, events));
                 }
             } else if (state instanceof NestedJourneyInvokeState) {
-                Map<String, State> nestedStateMachine = ((NestedJourneyInvokeState) state).getNestedJourneyDefinition().getNestedJourneyStates();
+                Map<String, State> nestedStateMachine =
+                        ((NestedJourneyInvokeState) state)
+                                .getNestedJourneyDefinition()
+                                .getNestedJourneyStates();
                 findPageSpecificStatesAndEvents(nestedStateMachine, pageStateMap);
             }
         }
@@ -118,6 +224,7 @@ public class JourneyMapTest {
 class StateAndEvents {
     public String state;
     public Set<String> events;
+
     public StateAndEvents(String state, Set<String> events) {
         this.state = state;
         this.events = events;

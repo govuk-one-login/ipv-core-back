@@ -352,6 +352,8 @@ ADDRESS_AND_FRAUD_J2:
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_KBV_TRANSITION_PAGE_J2
+    end:
+      targetState: ERROR
 
 PRE_KBV_TRANSITION_PAGE_J2:
   response:
@@ -415,6 +417,8 @@ ADDRESS_AND_FRAUD_J3:
   exitEvents:
     next:
       targetState: CHECK_FRAUD_SCORE_J3
+    end:
+      targetState: END
 
 CHECK_FRAUD_SCORE_J3:
   response:
@@ -488,6 +492,8 @@ ADDRESS_AND_FRAUD_J4:
   exitEvents:
     next:
       targetState: CRI_F2F
+    end:
+      targetState: ERROR
 
 # CRI escape journey (J5)
 CRI_DCMAW_J5:
