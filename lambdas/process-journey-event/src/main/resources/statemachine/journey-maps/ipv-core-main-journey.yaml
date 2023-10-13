@@ -557,7 +557,10 @@ MITIGATION_02_CRI_DCMAW:
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
-      targetState: MITIGATION_02_SUGGEST_F2F
+      targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_SUGGEST_F2F
 
 MITIGATION_02_OPTIONS_WITH_F2F:
   response:
