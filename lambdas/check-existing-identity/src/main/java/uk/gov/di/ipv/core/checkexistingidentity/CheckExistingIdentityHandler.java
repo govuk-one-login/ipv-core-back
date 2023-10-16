@@ -67,6 +67,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.service.ConfigService.featureFlags.RESET_IDENTITY;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -198,7 +199,8 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL;
             }
 
-            if (matchedProfile.isPresent() && configService.enabled("resetIdentity")) {
+            if (matchedProfile.isPresent()
+                    && configService.enabled(RESET_IDENTITY.getFeatureFlag())) {
                 LOGGER.info("resetIdentity flag is enabled, reset users identity.");
                 return JOURNEY_RESET_IDENTITY;
             }

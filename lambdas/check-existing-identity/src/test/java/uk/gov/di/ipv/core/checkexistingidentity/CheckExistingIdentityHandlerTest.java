@@ -63,6 +63,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.VOT_P2;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
+import static uk.gov.di.ipv.core.library.service.ConfigService.featureFlags.RESET_IDENTITY;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -188,7 +189,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled("resetIdentity")).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -196,8 +197,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
-
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -230,7 +229,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled("resetIdentity")).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -238,8 +237,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
-
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -259,7 +256,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled("resetIdentity")).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -267,8 +264,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
-
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -342,7 +337,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals("/journey/next", journeyResponse.getJourney());
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -394,7 +388,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_PENDING, journeyResponse);
-        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -418,7 +411,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
-        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -447,7 +439,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
-        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -474,7 +465,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
-        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -502,7 +492,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
-        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 

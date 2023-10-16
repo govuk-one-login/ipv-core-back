@@ -61,6 +61,20 @@ public class ConfigService {
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public enum featureFlags {
+        RESET_IDENTITY("resetIdentity");
+
+        private final String featureFlag;
+
+        featureFlags(String featureFlag) {
+            this.featureFlag = featureFlag;
+        }
+
+        public String getFeatureFlag() {
+            return featureFlag;
+        }
+    }
+
     private String featureSet;
 
     public ConfigService(
