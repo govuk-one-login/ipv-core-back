@@ -199,7 +199,7 @@ public class CheckExistingIdentityHandler
             }
 
             if (matchedProfile.isPresent() && configService.enabled("resetIdentity")) {
-                LOGGER.info("inside reset identity");
+                LOGGER.info("resetIdentity flag is enabled, reset users identity.");
                 return JOURNEY_RESET_IDENTITY;
             }
 
