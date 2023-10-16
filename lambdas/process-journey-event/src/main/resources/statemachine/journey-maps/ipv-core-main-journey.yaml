@@ -585,7 +585,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
 MITIGATION_02_SUGGEST_F2F:
   response:
     type: page
-    pageId: pyi-ipv-suggest-f2f
+    pageId: pyi-suggest-f2f
   events:
     next:
       targetState: CRI_F2F
