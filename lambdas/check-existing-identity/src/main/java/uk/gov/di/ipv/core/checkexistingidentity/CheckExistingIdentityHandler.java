@@ -198,6 +198,11 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL;
             }
 
+            if (matchedProfile.isPresent() && configService.enabled("resetIdentity")) {
+                LOGGER.info("inside reset identity");
+                return JOURNEY_RESET_IDENTITY;
+            }
+
             if (matchedProfile.isPresent()) {
                 auditService.sendAuditEvent(
                         buildProfileMatchedAuditEvent(
