@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -196,6 +197,11 @@ public class CheckExistingIdentityHandler
                                         "F2F return - failed to match a profile.");
                 LOGGER.info(message);
                 return JOURNEY_FAIL;
+            }
+
+            if (matchedProfile.isPresent() && configService.enabled(RESET_IDENTITY.getName())) {
+                LOGGER.info("resetIdentity flag is enabled, reset users identity.");
+                return JOURNEY_RESET_IDENTITY;
             }
 
             if (matchedProfile.isPresent()) {
