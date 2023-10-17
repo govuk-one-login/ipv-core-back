@@ -491,7 +491,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
     next:
       targetState: MITIGATION_01_CRI_DCMAW
     end:
-      targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_F2F_START_PAGE
 
 MITIGATION_01_CRI_DCMAW:
   response:
@@ -502,15 +502,51 @@ MITIGATION_01_CRI_DCMAW:
     next:
       targetState: POST_DCMAW_SUCCESS_PAGE
     not-found:
-      targetState: PYI_NO_MATCH
+      targetState: MITIGATION_01_SUGGEST_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     access-denied:
-      targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_SUGGEST_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
-      targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_SUGGEST_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
-      targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_SUGGEST_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_01_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
+
+MITIGATION_01_F2F_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-identity-postoffice-start
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_01_SUGGEST_F2F:
+  response:
+    type: page
+    pageId: pyi-suggest-f2f
+  events:
+    next:
+      targetState: MITIGATION_01_F2F_START_PAGE
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
