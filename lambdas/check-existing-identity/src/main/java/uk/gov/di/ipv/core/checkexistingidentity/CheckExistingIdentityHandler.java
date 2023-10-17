@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -67,7 +68,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.service.ConfigService.featureFlags.RESET_IDENTITY;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -199,8 +199,7 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL;
             }
 
-            if (matchedProfile.isPresent()
-                    && configService.enabled(RESET_IDENTITY.getFeatureFlag())) {
+            if (matchedProfile.isPresent() && configService.enabled(RESET_IDENTITY.getName())) {
                 LOGGER.info("resetIdentity flag is enabled, reset users identity.");
                 return JOURNEY_RESET_IDENTITY;
             }

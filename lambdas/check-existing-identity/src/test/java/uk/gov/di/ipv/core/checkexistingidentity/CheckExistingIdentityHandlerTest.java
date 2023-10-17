@@ -61,9 +61,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.VOT_P2;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
-import static uk.gov.di.ipv.core.library.service.ConfigService.featureFlags.RESET_IDENTITY;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -189,7 +189,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -229,7 +229,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -256,7 +256,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getFeatureFlag())).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
