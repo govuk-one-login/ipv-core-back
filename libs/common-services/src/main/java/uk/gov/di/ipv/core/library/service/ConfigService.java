@@ -42,6 +42,8 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVI
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONNECTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FEATURE_SET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -217,11 +219,13 @@ public class ConfigService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public String getCriPrivateApiKey(String criId) {
+    public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
         String secretId =
                 String.format(
-                        "%s/credential-issuers/%s/api-key",
-                        getEnvironmentVariable(ENVIRONMENT), criId);
+                        "%s/credential-issuers/%s/connections/%s/api-key",
+                        getEnvironmentVariable(ENVIRONMENT),
+                        criOAuthSessionItem.getCriId(),
+                        criOAuthSessionItem.getConnection());
         try {
             String secretValue = getSecretValue(secretId);
 
@@ -230,11 +234,18 @@ public class ConfigService {
                         objectMapper.readValue(secretValue, new TypeReference<>() {});
                 return secret.get(API_KEY);
             }
+            LOGGER.warn(
+                    (new StringMapMessage())
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "API key not found")
+                            .with(LOG_CRI_ID.getFieldName(), criOAuthSessionItem.getCriId())
+                            .with(
+                                    LOG_CONNECTION.getFieldName(),
+                                    criOAuthSessionItem.getConnection()));
             return null;
         } catch (JsonProcessingException e) {
             LOGGER.error(
                     "Failed to parse the api key secret from secrets manager for client: {}",
-                    criId);
+                    criOAuthSessionItem.getCriId());
             return null;
         }
     }

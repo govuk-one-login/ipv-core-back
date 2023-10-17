@@ -59,6 +59,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @ExtendWith(SystemStubsExtension.class)
 class ConfigServiceTest {
 
+    public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
+            CriOAuthSessionItem.builder().criId("ukPassport").connection("main").build();
     private static final String TEST_CERT =
             "MIIC/TCCAeWgAwIBAgIBATANBgkqhkiG9w0BAQsFADAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwHhcNMjExMjE3MTEwNTM5WhcNMjIxMjE3MTEwNTM5WjAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDYIxWKwYNoz2MIDvYb2ip4nhCOGUccufIqwSHXl5FBOoOxOZh1rV57sWhdKO/hyZYbF5YUYTwzV4rW7DgLkfx0sN/p5igk74BZRSXvV/s+XCkVC5c0NDhNGh6WK5rc8Qbm0Ad5vEO1JpQih5y2mPGCwfLBqcY8AC7fwZinP/4YoMTCtEk5ueA0HwZLHXOEMWl/QCkj7WlSBL4i6ozk4So3RFL4awYP6nvhY7OLAcad7g/ZW0dXvztPOJnT9rwi1p6BNoD/Zk6jMJHhbvKyGsluUy7PYVGYCQ36Uuzby2Jq8cG5qNS+CBjy0/d/RmrClKd7gcnLY/J5NOC+YSynoHXRAgMBAAGjKjAoMA4GA1UdDwEB/wQEAwIFoDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDBDANBgkqhkiG9w0BAQsFAAOCAQEAvHT2AGTymh02A9HWrnGm6PEXx2Ye3NXV9eJNU1z6J298mS2kYq0Z4D0hj9i8+IoCQRbWOxLTAWBNt/CmH7jWltE4uqoAwTZD6mDgkC2eo5dY+RcuydsvJNfTcvUOyi47KKGGEcddfLti4NuX51BQIY5vSBfqZXt8+y28WuWqBMh6eny2wJtxNHo20wQei5g7w19lqwJu2F+l/ykX9K5DHjhXqZUJ77YWmY8sy/WROLjOoZZRy6YuzV8S/+c/nsPzqDAkD4rpWwASjsEDaTcH22xpGq5XUAf1hwwNsuiyXKGUHCxafYYS781LR8pLg6DpEAgcn8tBbq6MoiEGVeOp7Q==";
     private static final String TEST_CERT_FS01 = "not a real cert";
@@ -474,7 +476,7 @@ class ConfigServiceTest {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
         when(secretsProvider.get(any())).thenReturn(gson.toJson(apiKeySecret));
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertEquals("api-key-value", apiKey);
     }
@@ -485,7 +487,7 @@ class ConfigServiceTest {
                 DecryptionFailureException.builder().message("Test decryption error").build();
         when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertNull(apiKey);
     }
@@ -498,7 +500,7 @@ class ConfigServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertNull(apiKey);
     }
@@ -509,7 +511,7 @@ class ConfigServiceTest {
                 InvalidParameterException.builder().message("Test invalid parameter error").build();
         when(secretsProvider.get(any())).thenThrow(invalidParameterException);
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertNull(apiKey);
     }
@@ -520,7 +522,7 @@ class ConfigServiceTest {
                 InvalidRequestException.builder().message("Test invalid request error").build();
         when(secretsProvider.get(any())).thenThrow(invalidRequestException);
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertNull(apiKey);
     }
@@ -533,7 +535,7 @@ class ConfigServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
 
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 
         assertNull(apiKey);
     }
@@ -541,7 +543,7 @@ class ConfigServiceTest {
     @Test
     void shouldReturnNullOnInvalidApiKeyJsonFromSecretsManager() {
         when(secretsProvider.get(any())).thenReturn("{\"apiKey\":\"invalidJson}");
-        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
         assertNull(apiKey);
     }
 
