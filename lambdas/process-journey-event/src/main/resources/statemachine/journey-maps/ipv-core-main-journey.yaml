@@ -538,6 +538,12 @@ MITIGATION_01_CRI_DCMAW_PARENT:
               targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_01_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
