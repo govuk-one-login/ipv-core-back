@@ -15,13 +15,13 @@ CRI_STATE:
     error:
       targetState: ERROR
     access-denied:
-      targetState: ERROR
+      targetState: PYI_NO_MATCH
     enhanced-verification:
       targetState: ERROR
     temporarily-unavailable:
-      targetState: ERROR
+      targetState: PYI_NO_MATCH
     end:
-      targetState: ERROR
+      targetState: IPV_SUCCESS_PAGE
     pyi-no-match:
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
