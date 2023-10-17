@@ -11,18 +11,6 @@ ADDRESS_AND_FRAUD:
       events:
         next:
           targetState: CRI_FRAUD
-        not-found:
-          targetState: ERROR
-        temporarily-unavailable:
-          targetState: ERROR
-        fail-with-no-ci:
-          targetState: ERROR
-        end:
-          targetState: ERROR
-        enhanced-verification:
-          targetState: ERROR
-        access-denied:
-          targetState: ERROR
     CRI_FRAUD:
       response:
         type: cri
@@ -33,13 +21,3 @@ ADDRESS_AND_FRAUD:
           exitEventToEmit: end
         next:
           exitEventToEmit: next
-        not-found:
-          targetState: ERROR
-        temporarily-unavailable:
-          targetState: ERROR
-        fail-with-no-ci:
-          targetState: ERROR
-        enhanced-verification:
-          targetState: ERROR
-        access-denied:
-          targetState: ERROR
