@@ -81,7 +81,7 @@ CHECK_EXISTING_IDENTITY:
     lambda: check-existing-identity
   events:
     next:
-      targetState: IPV_IDENTITY_START_PAGE
+      targetState: CRI_CLAIMED_IDENTITY_J2
     reset-identity:
       targetState: RESET_IDENTITY
     reuse:
@@ -192,7 +192,7 @@ MULTIPLE_DOC_CHECK_PAGE:
     pageId: page-multiple-doc-check
   events:
     ukPassport:
-      targetState: CRI_UK_PASSPORT_J2
+      targetState: CRI_BAV_J2
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
@@ -204,7 +204,7 @@ MULTIPLE_DOC_F2F_CHECK_PAGE:
     pageId: page-f2f-multiple-doc-check
   events:
     ukPassport:
-      targetState: CRI_UK_PASSPORT_J2
+      targetState: CRI_BAV_J2
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
@@ -325,6 +325,33 @@ CRI_UK_PASSPORT_J2:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+
+CRI_CLAIMED_IDENTITY_J2:
+  response:
+    type: cri
+    criId: claimedIdentity
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_BAV_J2
+
+CRI_BAV_J2:
+  response:
+    type: cri
+    criId: bav
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_NINO_J2
+
+CRI_NINO_J2:
+  response:
+    type: cri
+    criId: nino
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: ADDRESS_AND_FRAUD_J2
 
 ADDRESS_AND_FRAUD_J2:
   nestedJourney: ADDRESS_AND_FRAUD

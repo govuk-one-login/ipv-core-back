@@ -73,7 +73,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_P
 public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
 

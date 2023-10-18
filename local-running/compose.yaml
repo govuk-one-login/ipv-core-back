@@ -276,7 +276,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=National Insurance Number (Stub)
-      - CREDENTIAL_ISSUER_TYPE=NINO
+      - CREDENTIAL_ISSUER_TYPE=EVIDENCE
       - CLIENT_AUDIENCE=https://nino-cri.stubs.account.gov.uk
       - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
       - CREDENTIAL_ISSUER_PORT=3011
@@ -311,5 +311,28 @@ services:
     ports:
       - "3012:3012"
       - "5012:5012"
+    volumes:
+      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+
+  bav-stub:
+    image: cri-stub:latest
+    container_name: bav-stub
+    build:
+      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      dockerfile: Dockerfile
+    environment:
+      - CREDENTIAL_ISSUER_NAME=Bank account verification (Stub)
+      - CREDENTIAL_ISSUER_TYPE=EVIDENCE
+      - CLIENT_AUDIENCE=https://bav-cri.stubs.account.gov.uk
+      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
+      - CREDENTIAL_ISSUER_PORT=3013
+      - MITIGATION_ENABLED=false
+      - VC_TTL_SECONDS=300
+      - VC_ISSUER=https://bav-cri.stubs.account.gov.uk
+      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013
+    ports:
+      - "3013:3013"
+      - "5013:5013"
     volumes:
       - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"

@@ -43,6 +43,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -56,7 +57,7 @@ public class UserIdentityService {
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
+            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI, NINO_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -251,16 +252,60 @@ public class UserIdentityService {
         return new IdentityClaim(names, birthDates);
     }
 
+    //    private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem>
+    // successfulVCStoreItems)
+    //            throws HttpResponseExceptionWithErrorBody {
+    //        for (VcStoreItem item : successfulVCStoreItems) {
+    //            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
+    //                return Optional.of(
+    //                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(),
+    // false));
+    //            }
+    //        }
+    //        LOGGER.warn("Failed to generate identity claim");
+    //        return Optional.empty();
+    //    }
+
     private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody {
+        List<BirthDate> birthDates = new ArrayList<>();
+        List<Name> names = new ArrayList<>();
         for (VcStoreItem item : successfulVCStoreItems) {
-            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                return Optional.of(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), false));
+            JsonNode vcClaimNode = getVCClaimNode(item.getCredential());
+            JsonNode birthDateNode = vcClaimNode.path(BIRTH_DATE_PROPERTY_NAME);
+            if (!birthDateNode.isMissingNode() && birthDates.isEmpty()) {
+                birthDates =
+                        getJsonProperty(
+                                vcClaimNode,
+                                BIRTH_DATE_PROPERTY_NAME,
+                                item.getCredentialIssuer(),
+                                objectMapper
+                                        .getTypeFactory()
+                                        .constructCollectionType(List.class, BirthDate.class),
+                                false);
+            }
+
+            JsonNode nameNode = vcClaimNode.path(NAME_PROPERTY_NAME);
+            if (!nameNode.isMissingNode() && names.isEmpty()) {
+                names =
+                        getJsonProperty(
+                                vcClaimNode,
+                                NAME_PROPERTY_NAME,
+                                item.getCredentialIssuer(),
+                                objectMapper
+                                        .getTypeFactory()
+                                        .constructCollectionType(List.class, Name.class),
+                                false);
+            }
+
+            if (!names.isEmpty() && !birthDates.isEmpty()) {
+                return Optional.of(new IdentityClaim(names, birthDates));
             }
         }
-        LOGGER.warn("Failed to generate identity claim");
-        return Optional.empty();
+
+        LOGGER.error("Unable to generate core identity claim");
+        throw new HttpResponseExceptionWithErrorBody(
+                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
