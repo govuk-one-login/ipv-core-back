@@ -3,7 +3,7 @@ services:
     image: orch-stub:latest
     container_name: orch-stub
     build:
-      context: ../../ipv-stubs/di-ipv-orchestrator-stub
+      context: ../../../ipv-stubs/di-ipv-orchestrator-stub
       dockerfile: Dockerfile
     environment:
       - ORCHESTRATOR_CLIENT_ID=orchestrator
@@ -26,7 +26,7 @@ services:
     image: core-front:latest
     container_name: core-front
     build:
-      context: ../../ipv-core-front
+      context: ../../../ipv-core-front
       dockerfile: Dockerfile
     environment:
       - API_BASE_URL=http://host.docker.internal:3002
@@ -86,7 +86,7 @@ services:
     image: cri-stub:latest
     container_name: dcmaw-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=DOC Checking App (Stub)
@@ -103,13 +103,13 @@ services:
       - "3003:3003"
       - "5003:5003"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   address-stub:
     image: cri-stub:latest
     container_name: address-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Address (Stub)
@@ -126,13 +126,13 @@ services:
       - "3004:3004"
       - "5004:5004"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   fraud-stub:
     image: cri-stub:latest
     container_name: fraud-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Fraud Check (Stub)
@@ -149,13 +149,13 @@ services:
       - "3005:3005"
       - "5005:5005"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   driving-license-stub:
     image: cri-stub:latest
     container_name: driving-license-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Driving Licence (Stub)
@@ -172,13 +172,13 @@ services:
       - "3006:3006"
       - "5006:5006"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   passport-stub:
     image: cri-stub:latest
     container_name: passport-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=UK Passport (Stub)
@@ -195,13 +195,13 @@ services:
       - "3007:3007"
       - "5007:5007"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   kbv-stub:
     image: cri-stub:latest
     container_name: kbv-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Knowledge Based Verification (Stub)
@@ -218,13 +218,13 @@ services:
       - "3008:3008"
       - "5008:5008"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   claimed-identity-stub:
     image: cri-stub:latest
     container_name: claimed-identity-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Claimed Identity (Stub)
@@ -241,13 +241,13 @@ services:
       - "3009:3009"
       - "5009:5009"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   f2f-stub:
     image: cri-stub:latest
     container_name: f2f-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=Face to Face Check (Stub)
@@ -266,13 +266,13 @@ services:
       - "3010:3010"
       - "5010:5010"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   nino-stub:
     image: cri-stub:latest
     container_name: nino-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=National Insurance Number (Stub)
@@ -289,13 +289,13 @@ services:
       - "3011:3011"
       - "5011:5011"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   hmrc-kbv-stub:
     image: cri-stub:latest
     container_name: hmrc-kbv-stub
     build:
-      context: ../../ipv-stubs/di-ipv-credential-issuer-stub
+      context: ../../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: Dockerfile
     environment:
       - CREDENTIAL_ISSUER_NAME=HMRC Knowledge Based Verification (Stub)
@@ -312,4 +312,4 @@ services:
       - "3012:3012"
       - "5012:5012"
     volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "../../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
