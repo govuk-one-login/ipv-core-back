@@ -527,12 +527,6 @@ MITIGATION_01_CRI_DCMAW:
       targetState: POST_DCMAW_SUCCESS_PAGE
     not-found:
       targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_SUGGEST_F2F
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_NO_MATCH
     access-denied:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
