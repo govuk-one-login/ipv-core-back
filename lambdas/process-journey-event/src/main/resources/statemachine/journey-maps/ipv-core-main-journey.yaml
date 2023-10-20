@@ -557,10 +557,28 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_NO_MATCH
     access-denied:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
