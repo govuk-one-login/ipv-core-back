@@ -546,6 +546,12 @@ MITIGATION_02_CRI_ELIGIBILITY:
       targetState: MITIGATION_02_CRI_DCMAW
     end:
       targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_SUGGEST_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_ANOTHER_WAY
 
 MITIGATION_02_CRI_DCMAW:
   response:
