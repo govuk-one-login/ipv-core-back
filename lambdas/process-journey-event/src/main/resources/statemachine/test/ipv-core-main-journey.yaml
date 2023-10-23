@@ -8,6 +8,7 @@ PAGE_STATE:
   response:
     type: page
     pageId: page-id-for-some-page
+    context: test
   parent: PARENT_STATE
   events:
     eventOne:

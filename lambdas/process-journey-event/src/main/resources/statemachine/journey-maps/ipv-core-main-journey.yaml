@@ -193,7 +193,8 @@ MULTIPLE_DOC_CHECK_PAGE:
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
     type: page
-    pageId: page-f2f-multiple-doc-check
+    pageId: page-multiple-doc-check
+    context: f2f
   events:
     ukPassport:
       targetState: CRI_UK_PASSPORT_J2
