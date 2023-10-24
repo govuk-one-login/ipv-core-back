@@ -18,6 +18,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -54,11 +56,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1098,10 +1096,7 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(any())).thenReturn(3);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
+        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any())).thenReturn(new ArrayList<>(List.of(new ArrayList<>(List.of(new Gpg45Scores.Evidence(3, 2))))));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1134,6 +1129,47 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
         assertEquals(3, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4})
+    void shouldMakeCorrectEvidenceRequests(int strengthScore) throws Exception {
+        int randomValidityScore = new Random().nextInt(1, 5) ;
+
+        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
+                .thenReturn(f2fCredentialIssuerConfig);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any())).thenReturn(new ArrayList<>(List.of(new ArrayList<>(List.of(new Gpg45Scores.Evidence(strengthScore, randomValidityScore))))));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(F2F_CRI)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
+
+        assertEquals(strengthScore, evidenceRequested.get("strengthScore").asInt());
     }
 
     @Test

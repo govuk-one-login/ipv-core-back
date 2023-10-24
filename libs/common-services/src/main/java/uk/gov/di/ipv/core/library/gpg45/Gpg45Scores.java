@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -88,7 +86,11 @@ public class Gpg45Scores {
     }
 
     public List<Evidence> getEvidences() {
-        return evidences;
+        return evidences.stream()
+                    .sorted(Comparator.comparingInt(Gpg45Scores.Evidence::getStrength)
+                            .thenComparingInt(Gpg45Scores.Evidence::getValidity)
+                            .reversed())
+                    .collect(Collectors.toList());
     }
 
     public static Builder builder() {
@@ -109,69 +111,6 @@ public class Gpg45Scores {
                 && fraud == that.fraud
                 && verification == that.verification
                 && evidences.equals(that.evidences);
-    }
-
-    private Gpg45Scores difference(Gpg45Scores other) {
-        return new Gpg45Scores(
-                diffEvidence(other),
-                other.getActivity() - activity,
-                other.getFraud() - fraud,
-                other.getVerification() - verification);
-    }
-
-    private List<Gpg45Scores.Evidence> diffEvidence(Gpg45Scores target) {
-
-        var thisEvidenceSize = evidences.size();
-        var targetEvidenceSize = target.evidences.size();
-
-        if (thisEvidenceSize > 1 || targetEvidenceSize > 1) {
-            throw new IllegalArgumentException(
-                    "It's currently unclear how to define the difference between multiple pieces of evidence.");
-        }
-
-        var thisEvidence =
-                thisEvidenceSize == 0 ? new Gpg45Scores.Evidence(0, 0) : evidences.get(0);
-        var targetEvidence =
-                targetEvidenceSize == 0 ? new Gpg45Scores.Evidence(0, 0) : target.evidences.get(0);
-
-        return List.of(
-                new Gpg45Scores.Evidence(
-                        targetEvidence.getStrength() - thisEvidence.getStrength(),
-                        targetEvidence.getValidity() - thisEvidence.getValidity()));
-    }
-
-    public Gpg45Scores calculateRequiredScores(Gpg45Profile target) {
-        Gpg45Scores targetScores = target.getScores();
-        Gpg45Scores diff = difference(targetScores);
-        return new Gpg45Scores(
-                calculateRequiredEvidences(diff.getEvidences(), targetScores.getEvidences()),
-                diff.getActivity() > 0 ? targetScores.getActivity() : 0,
-                diff.getFraud() > 0 ? targetScores.getFraud() : 0,
-                diff.getVerification() > 0 ? targetScores.getVerification() : 0);
-    }
-
-    private List<Gpg45Scores.Evidence> calculateRequiredEvidences(
-            List<Gpg45Scores.Evidence> diffEvidences, List<Gpg45Scores.Evidence> targetEvidences) {
-
-        var diffEvidenceSize = diffEvidences.size();
-        var targetEvidenceSize = targetEvidences.size();
-
-        if (diffEvidenceSize > 1 || targetEvidenceSize > 1) {
-            throw new IllegalArgumentException(
-                    "It's currently unclear how to define the required evidence for multiple pieces of evidence.");
-        }
-
-        var requiredEvidences = new ArrayList<Evidence>();
-        var maxEvidence = Math.max(diffEvidenceSize, targetEvidenceSize);
-        for (int i = 0; i < maxEvidence; i++) {
-            var diff = diffEvidences.get(i);
-            if (diff.getStrength() > 0 || diff.getValidity() > 0) {
-                requiredEvidences.add(targetEvidences.get(i));
-            } else {
-                requiredEvidences.add(EV_00);
-            }
-        }
-        return requiredEvidences;
     }
 
     @Override
@@ -233,6 +172,10 @@ public class Gpg45Scores {
 
         public int getStrength() {
             return strength;
+        }
+
+        public boolean satisfies(Evidence evidence) {
+            return strength >= evidence.strength && validity >= evidence.validity;
         }
 
         @Override

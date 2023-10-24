@@ -12,13 +12,10 @@ import software.amazon.awssdk.utils.CollectionUtils;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -203,22 +200,30 @@ public class Gpg45ProfileEvaluator {
         return Optional.empty();
     }
 
-    public int calculateF2FRequiredStrengthScore(List<RequiredGpg45ScoresDto> requiredGpg45Scores) {
-        int strengthScore = 0;
-        if (!CollectionUtils.isNullOrEmpty(requiredGpg45Scores)) {
-            for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
-                Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
-                if (requiredScores.getFraud() > 0 || requiredScores.getActivity() > 0) {
-                    continue;
-                }
-                List<EvidenceDto> evidences = requiredScores.getEvidences();
-                if (!evidences.isEmpty()
-                        && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
-                    strengthScore = evidences.get(0).getStrength();
-                }
-            }
-        }
-        return strengthScore;
+    public List<List<Gpg45Scores.Evidence>> calculateEvidencesRequiredToMeetAProfile(Gpg45Scores acquiredEvidenceScores, List<Gpg45Profile> profiles) {
+        return profiles.stream()
+                .map(
+                        profile -> {
+                            List<Gpg45Scores.Evidence> acquiredEvidences = acquiredEvidenceScores.getEvidences();
+                            List<Gpg45Scores.Evidence> requiredEvidences = profile.scores.getEvidences();
+                            List<Gpg45Scores.Evidence> missingEvidence = new ArrayList<>();
+
+                            while (!requiredEvidences.isEmpty()) {
+                                if (!acquiredEvidences.isEmpty()) {
+                                    if (acquiredEvidences.get(0).satisfies(requiredEvidences.get(0))) {
+                                        requiredEvidences.remove(0);
+                                        acquiredEvidences.remove(0);
+                                        continue;
+                                    }
+                                }
+
+                                missingEvidence.add(requiredEvidences.remove(0));
+                            }
+
+                            return missingEvidence;
+                        }
+                    )
+                .toList();
     }
 
     private boolean isRelevantEvidence(CredentialEvidenceItem evidenceItem)

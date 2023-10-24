@@ -257,6 +257,13 @@ public class EvaluateGpg45ScoresHandler
 
             return JOURNEY_NEXT;
         }
+
+        LOGGER.info(
+                new StringMapMessage()
+                        .with("lambdaResult", "No GPG45 profiles have been met")
+                        .with("journeyResponse", JOURNEY_NEXT));
+
+        return JOURNEY_NEXT;
     }
 
     @Tracing
