@@ -60,7 +60,7 @@ describe("sendAuditEvent", () => {
           MessageBody: JSON.stringify(expectedAuditEvent),
           QueueUrl: mockQueueUrl,
         },
-      })
+      }),
     );
   });
 });
