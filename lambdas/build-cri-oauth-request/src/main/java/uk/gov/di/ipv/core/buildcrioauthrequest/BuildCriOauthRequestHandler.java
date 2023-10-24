@@ -64,7 +64,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.ACCEPTED_PROFILES;
+import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
@@ -326,7 +326,7 @@ public class BuildCriOauthRequestHandler
         List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
         List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                ACCEPTED_PROFILES.stream()
+                CURRENT_ACCEPTED_GPG45_PROFILES.stream()
                         .map(
                                 profile ->
                                         new RequiredGpg45ScoresDto(
