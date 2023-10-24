@@ -33,9 +33,14 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
@@ -54,6 +59,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -69,6 +75,8 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 
 public class BuildCriOauthRequestHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
@@ -241,6 +249,14 @@ public class BuildCriOauthRequestHandler
                             ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
                             e.getMessage())
                     .toObjectMap();
+        } catch (UnknownEvidenceTypeException e) {
+            LOGGER.error("Unable to determine type of credential.", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE,
+                            e.getMessage())
+                    .toObjectMap();
         }
     }
 
@@ -275,14 +291,31 @@ public class BuildCriOauthRequestHandler
             String oauthState,
             String govukSigninJourneyId,
             String criId)
-            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
+            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
+                    UnknownEvidenceTypeException {
+
+        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributesForUser(ipvSessionItem, userId, criId);
+                getSharedAttributesForUser(ipvSessionItem, criId, credentials);
         EvidenceRequest evidenceRequest = null;
+
+        List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
+        List<RequiredGpg45ScoresDto> requiredGpg45Scores =
+                ACCEPTED_PROFILES.stream()
+                        .map(
+                                profile ->
+                                        new RequiredGpg45ScoresDto(
+                                                profile,
+                                                Gpg45ScoresDto.fromGpg45Scores(
+                                                        gpg45Scores.calculateRequiredScores(
+                                                                profile))))
+                        .collect(Collectors.toList());
+
         if (criId.equals(F2F_CRI)) {
             int strengthScore =
-                    gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(
-                            ipvSessionItem.getRequiredGpg45Scores());
+                    gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(requiredGpg45Scores);
             if (strengthScore != 0) {
                 evidenceRequest = new EvidenceRequest(strengthScore);
             }
@@ -313,10 +346,8 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, String userId, String criId)
+            IpvSessionItem ipvSessionItem, String criId, List<String> credentials)
             throws HttpResponseExceptionWithErrorBody {
-
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
