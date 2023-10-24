@@ -19,7 +19,7 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator")
 
-	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(":libs:common-services").sourceSets.test.output
