@@ -310,9 +310,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -383,9 +380,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -457,9 +451,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -531,9 +522,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -604,9 +592,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -756,9 +741,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -814,9 +796,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -870,9 +849,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -947,9 +923,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1005,9 +978,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1068,9 +1038,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1195,9 +1162,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1231,8 +1195,8 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldReceive500CredentialOfUnknownType() throws Exception {
-        when(configService.getActiveConnection(DCMAW_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getCriConfigForConnection(MAIN_CONNECTION, DCMAW_CRI))
+        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getComponentId(ADDRESS_CRI))
@@ -1257,7 +1221,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(DCMAW_CRI)
+                        .journey(F2F_CRI)
                         .build();
 
         var response = handleRequest(input, context);

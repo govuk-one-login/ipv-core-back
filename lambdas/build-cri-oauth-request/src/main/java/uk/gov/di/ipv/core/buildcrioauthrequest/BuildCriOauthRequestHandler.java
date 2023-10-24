@@ -298,24 +298,11 @@ public class BuildCriOauthRequestHandler
 
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributesForUser(ipvSessionItem, criId, credentials);
+
         EvidenceRequest evidenceRequest = null;
-
-        List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
-        List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                ACCEPTED_PROFILES.stream()
-                        .map(
-                                profile ->
-                                        new RequiredGpg45ScoresDto(
-                                                profile,
-                                                Gpg45ScoresDto.fromGpg45Scores(
-                                                        gpg45Scores.calculateRequiredScores(
-                                                                profile))))
-                        .collect(Collectors.toList());
-
         if (criId.equals(F2F_CRI)) {
-            int strengthScore =
-                    gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(requiredGpg45Scores);
+            int strengthScore = getF2FStrengthScore(credentials);
+
             if (strengthScore != 0) {
                 evidenceRequest = new EvidenceRequest(strengthScore);
             }
@@ -333,6 +320,24 @@ public class BuildCriOauthRequestHandler
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+    }
+
+    @Tracing
+    private int getF2FStrengthScore(List<String> credentials)
+            throws ParseException, UnknownEvidenceTypeException {
+        List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
+        List<RequiredGpg45ScoresDto> requiredGpg45Scores =
+                ACCEPTED_PROFILES.stream()
+                        .map(
+                                profile ->
+                                        new RequiredGpg45ScoresDto(
+                                                profile,
+                                                Gpg45ScoresDto.fromGpg45Scores(
+                                                        gpg45Scores.calculateRequiredScores(
+                                                                profile))))
+                        .collect(Collectors.toList());
+        return gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(requiredGpg45Scores);
     }
 
     @Tracing
