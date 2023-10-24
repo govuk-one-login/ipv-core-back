@@ -1096,7 +1096,10 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any())).thenReturn(new ArrayList<>(List.of(new ArrayList<>(List.of(new Gpg45Scores.Evidence(3, 2))))));
+        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any()))
+                .thenReturn(
+                        new ArrayList<>(
+                                List.of(new ArrayList<>(List.of(new Gpg45Scores.Evidence(3, 2))))));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1134,7 +1137,7 @@ class BuildCriOauthRequestHandlerTest {
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 3, 4})
     void shouldMakeCorrectEvidenceRequests(int strengthScore) throws Exception {
-        int randomValidityScore = new Random().nextInt(1, 5) ;
+        int randomValidityScore = new Random().nextInt(1, 5);
 
         when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
         when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
@@ -1144,7 +1147,15 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any())).thenReturn(new ArrayList<>(List.of(new ArrayList<>(List.of(new Gpg45Scores.Evidence(strengthScore, randomValidityScore))))));
+        when(mockGpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(any(), any()))
+                .thenReturn(
+                        new ArrayList<>(
+                                List.of(
+                                        new ArrayList<>(
+                                                List.of(
+                                                        new Gpg45Scores.Evidence(
+                                                                strengthScore,
+                                                                randomValidityScore))))));
 
         JourneyRequest input =
                 JourneyRequest.builder()

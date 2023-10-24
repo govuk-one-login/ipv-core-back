@@ -302,11 +302,16 @@ class Gpg45ProfileEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("evidenceParams")
-    void calculateEvidencesRequiredToMeetAProfileShouldReturnCorrectEvidences(Gpg45Scores acquiredEvidenceScores,
-                                                                              List<Gpg45Profile> profiles,
-                                                                              List<List<Gpg45Scores.Evidence>> expectedMissingEvidences,
-                                                                              String message) {
-        assertEquals(expectedMissingEvidences, evaluator.calculateEvidencesRequiredToMeetAProfile(acquiredEvidenceScores, profiles), message);
+    void calculateEvidencesRequiredToMeetAProfileShouldReturnCorrectEvidences(
+            Gpg45Scores acquiredEvidenceScores,
+            List<Gpg45Profile> profiles,
+            List<List<Gpg45Scores.Evidence>> expectedMissingEvidences,
+            String message) {
+        assertEquals(
+                expectedMissingEvidences,
+                evaluator.calculateEvidencesRequiredToMeetAProfile(
+                        acquiredEvidenceScores, profiles),
+                message);
     }
 
     private static Stream<Arguments> evidenceParams() {
@@ -315,60 +320,48 @@ class Gpg45ProfileEvaluatorTest {
                         new Gpg45Scores(Gpg45Scores.EV_22, 4, 4, 4),
                         List.of(Gpg45Profile.M1A),
                         List.of(List.of(Gpg45Scores.EV_42)),
-                        "M1A profile requirement, EV_42, shouldn't be satisfied by EV_22"
-                ),
+                        "M1A profile requirement, EV_42, shouldn't be satisfied by EV_22"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_33, 3, 3, 3),
                         List.of(Gpg45Profile.M1B),
                         List.of(List.of()),
-                        "M1B profile requirement, EV_32, should be satisfied by EV_33"
-                ),
+                        "M1B profile requirement, EV_32, should be satisfied by EV_33"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_22, 3, 3, 3),
                         List.of(Gpg45Profile.M1B),
                         List.of(List.of(Gpg45Scores.EV_32)),
-                        "M1B profile requirement, EV_32, shouldn't be satisfied by either EV_11 nor EV_22"
-                ),
+                        "M1B profile requirement, EV_32, shouldn't be satisfied by either EV_11 nor EV_22"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M1B),
                         List.of(List.of()),
-                        "M1B profile requirement, EV_32, should be satisfied by either EV_11 or EV_32"
-                ),
-
+                        "M1B profile requirement, EV_32, should be satisfied by either EV_11 or EV_32"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M1B, Gpg45Profile.H1B),
                         List.of(List.of(), List.of(Gpg45Scores.EV_33)),
-                        "M1B profile requirement, EV_32, should be satisfied by EV_11/& EV_32, while neither should satisfy H1B's EV_33 requirement"
-                ),
+                        "M1B profile requirement, EV_32, should be satisfied by EV_11/& EV_32, while neither should satisfy H1B's EV_33 requirement"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_33, 3, 3, 3),
                         List.of(Gpg45Profile.M2B),
                         List.of(List.of(Gpg45Scores.EV_22)),
-                        "One of M2Bs requirements should be satisfied by EV_33."
-                ),
+                        "One of M2Bs requirements should be satisfied by EV_33."),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_22, 3, 3, 3),
                         List.of(Gpg45Profile.M2B),
                         List.of(List.of(Gpg45Scores.EV_32)),
-                        "One of M2Bs requirements should be satisfied by EV_22."
-                ),
+                        "One of M2Bs requirements should be satisfied by EV_22."),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_32, Gpg45Scores.EV_42, 3, 3, 3),
                         List.of(Gpg45Profile.H2C),
                         List.of(List.of(Gpg45Scores.EV_33)),
-                        "One of H2C requirements should be satisfied by EV_32."
-                ),
+                        "One of H2C requirements should be satisfied by EV_32."),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M2B, Gpg45Profile.H2B),
                         List.of(List.of(Gpg45Scores.EV_22), List.of(Gpg45Scores.EV_42)),
-                        "The highest of M2Bs and lowest of H2Bs requirements should be satisfied by EV_32."
-                )
-        );
+                        "The highest of M2Bs and lowest of H2Bs requirements should be satisfied by EV_32."));
     }
-
 
     private void setupMockContraIndicatorScoringConfig() {
         when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(TEST_CI_SCORES);

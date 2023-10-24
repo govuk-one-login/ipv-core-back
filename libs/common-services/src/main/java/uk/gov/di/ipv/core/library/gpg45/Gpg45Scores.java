@@ -87,10 +87,11 @@ public class Gpg45Scores {
 
     public List<Evidence> getEvidences() {
         return evidences.stream()
-                    .sorted(Comparator.comparingInt(Gpg45Scores.Evidence::getStrength)
-                            .thenComparingInt(Gpg45Scores.Evidence::getValidity)
-                            .reversed())
-                    .collect(Collectors.toList());
+                .sorted(
+                        Comparator.comparingInt(Gpg45Scores.Evidence::getStrength)
+                                .thenComparingInt(Gpg45Scores.Evidence::getValidity)
+                                .reversed())
+                .collect(Collectors.toList());
     }
 
     public static Builder builder() {

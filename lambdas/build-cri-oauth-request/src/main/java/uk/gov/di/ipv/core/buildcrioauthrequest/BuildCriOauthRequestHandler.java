@@ -297,7 +297,8 @@ public class BuildCriOauthRequestHandler
 
         List<SignedJWT> credentials = getSignedJWTs(userId);
 
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributesForUser(ipvSessionItem, credentials, criId);
+        SharedClaimsResponse sharedClaimsResponse =
+                getSharedAttributesForUser(ipvSessionItem, credentials, criId);
         EvidenceRequest evidenceRequest = null;
 
         if (criId.equals(F2F_CRI)) {
@@ -318,21 +319,27 @@ public class BuildCriOauthRequestHandler
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
-    private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials) throws UnknownEvidenceTypeException, ParseException {
+    private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        List<List<Gpg45Scores.Evidence>> requiredEvidences = gpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(gpg45Scores, ACCEPTED_PROFILES);
+        List<List<Gpg45Scores.Evidence>> requiredEvidences =
+                gpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(
+                        gpg45Scores, ACCEPTED_PROFILES);
 
         if (requiredEvidences == null) {
             return null;
         }
 
-        OptionalInt minViableStrengthOpt = requiredEvidences.stream()
-                .filter(subList -> subList.size() == 1)
-                .map(subList -> subList.get(0))
-                .mapToInt(Gpg45Scores.Evidence::getStrength)
-                .min();
+        OptionalInt minViableStrengthOpt =
+                requiredEvidences.stream()
+                        .filter(subList -> subList.size() == 1)
+                        .map(subList -> subList.get(0))
+                        .mapToInt(Gpg45Scores.Evidence::getStrength)
+                        .min();
 
-        return minViableStrengthOpt.isPresent() ? new EvidenceRequest(minViableStrengthOpt.getAsInt()) : null;
+        return minViableStrengthOpt.isPresent()
+                ? new EvidenceRequest(minViableStrengthOpt.getAsInt())
+                : null;
     }
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
@@ -343,12 +350,12 @@ public class BuildCriOauthRequestHandler
             try {
                 signedJWTs.add(SignedJWT.parse(credential));
             } catch (ParseException e) {
-                throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
         return signedJWTs;
     }
-
 
     @Tracing
     private int getF2FStrengthScore(List<String> credentials)
