@@ -33,14 +33,10 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
-
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -68,13 +64,11 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
@@ -300,7 +294,9 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId) throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException, UnknownEvidenceTypeException {
+            String criId)
+            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
+                    UnknownEvidenceTypeException {
 
         List<SignedJWT> credentials = getSignedJWTs(userId);
 
@@ -364,24 +360,6 @@ public class BuildCriOauthRequestHandler
             }
         }
         return signedJWTs;
-    }
-
-    @Tracing
-    private int getF2FStrengthScore(List<String> credentials)
-            throws ParseException, UnknownEvidenceTypeException {
-        List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
-        List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                CURRENT_ACCEPTED_GPG45_PROFILES.stream()
-                        .map(
-                                profile ->
-                                        new RequiredGpg45ScoresDto(
-                                                profile,
-                                                Gpg45ScoresDto.fromGpg45Scores(
-                                                        gpg45Scores.calculateRequiredScores(
-                                                                profile))))
-                        .collect(Collectors.toList());
-        return gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(requiredGpg45Scores);
     }
 
     @Tracing

@@ -1199,21 +1199,9 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
-                .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVcIgnoringCi(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenThrow(new UnknownEvidenceTypeException());
 
