@@ -335,10 +335,6 @@ public class BuildCriOauthRequestHandler
                         .mapToInt(Gpg45Scores.Evidence::getStrength)
                         .min();
 
-        System.out.println("Hey");
-        System.out.println(requiredEvidences);
-        System.out.println(minViableStrengthOpt);
-
         if (minViableStrengthOpt.isPresent()) {
             return new EvidenceRequest(minViableStrengthOpt.getAsInt());
         }
