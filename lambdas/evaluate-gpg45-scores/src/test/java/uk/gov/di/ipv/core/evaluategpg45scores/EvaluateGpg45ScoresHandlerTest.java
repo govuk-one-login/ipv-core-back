@@ -23,13 +23,10 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -257,28 +254,21 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldStoreRequiredScoresInSessionIfGpg45ProfileNotMatched() throws Exception {
+    void shouldReturnJourneyNextIfGpg45ProfileNotMatched() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
 
-        assertEquals(
-                List.of(
-                        new RequiredGpg45ScoresDto(
-                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                        new RequiredGpg45ScoresDto(
-                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2))),
-                ipvSessionItem.getRequiredGpg45Scores());
+        assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());

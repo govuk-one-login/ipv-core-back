@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 
@@ -94,7 +95,7 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores m1aScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2);
         assertEquals(
                 Optional.of(M1A),
-                evaluator.getFirstMatchingProfile(m1aScores, List.of(M1B, M1A, Gpg45Profile.V1D)));
+                evaluator.getFirstMatchingProfile(m1aScores, CURRENT_ACCEPTED_GPG45_PROFILES));
     }
 
     @Test

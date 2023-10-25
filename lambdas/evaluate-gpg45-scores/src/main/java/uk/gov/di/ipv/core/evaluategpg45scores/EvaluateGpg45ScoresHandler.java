@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -29,7 +28,6 @@ import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -48,11 +46,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
@@ -66,8 +64,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
@@ -233,7 +229,8 @@ public class EvaluateGpg45ScoresHandler
             throws UnknownEvidenceTypeException, ParseException, SqsException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         Optional<Gpg45Profile> matchedProfile =
-                gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
+                gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
         if (matchedProfile.isPresent()) {
             auditService.sendAuditEvent(
@@ -253,19 +250,6 @@ public class EvaluateGpg45ScoresHandler
                             .with("journeyResponse", JOURNEY_END));
             return JOURNEY_END;
         } else {
-            List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                    ACCEPTED_PROFILES.stream()
-                            .map(
-                                    profile ->
-                                            new RequiredGpg45ScoresDto(
-                                                    profile,
-                                                    Gpg45ScoresDto.fromGpg45Scores(
-                                                            gpg45Scores.calculateRequiredScores(
-                                                                    profile))))
-                            .collect(Collectors.toList());
-            ipvSessionItem.setRequiredGpg45Scores(requiredGpg45Scores);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
             LOGGER.info(
                     new StringMapMessage()
                             .with("lambdaResult", "No GPG45 profiles have been met")

@@ -41,6 +41,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_NO_OF_CI
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 public class Gpg45ProfileEvaluator {
+    public static final List<Gpg45Profile> CURRENT_ACCEPTED_GPG45_PROFILES =
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
