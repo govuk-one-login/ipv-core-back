@@ -309,8 +309,7 @@ class Gpg45ProfileEvaluatorTest {
             String message) {
         assertEquals(
                 expectedMissingEvidences,
-                evaluator.calculateEvidencesRequiredToMeetAProfile(
-                        acquiredEvidenceScores, profiles),
+                acquiredEvidenceScores.calculateEvidencesRequiredToMeetAProfile(profiles),
                 message);
     }
 
@@ -360,7 +359,12 @@ class Gpg45ProfileEvaluatorTest {
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M2B, Gpg45Profile.H2B),
                         List.of(List.of(Gpg45Scores.EV_22), List.of(Gpg45Scores.EV_42)),
-                        "The highest of M2Bs and lowest of H2Bs requirements should be satisfied by EV_32."));
+                        "The highest of M2Bs and lowest of H2Bs requirements should be satisfied by EV_32."),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_32, 1, 1, 2),
+                        List.of(Gpg45Profile.M1B, Gpg45Profile.M2B),
+                        List.of(List.of(Gpg45Scores.EV_22)),
+                        "Should only consider profiles where evidence can match. So ignoring profiles when activity/fraud/verfication scores don't satisfy."));
     }
 
     private void setupMockContraIndicatorScoringConfig() {

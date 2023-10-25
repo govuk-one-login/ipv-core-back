@@ -58,7 +58,14 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -323,12 +330,7 @@ public class BuildCriOauthRequestHandler
             throws UnknownEvidenceTypeException, ParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         List<List<Gpg45Scores.Evidence>> requiredEvidences =
-                gpg45ProfileEvaluator.calculateEvidencesRequiredToMeetAProfile(
-                        gpg45Scores, ACCEPTED_PROFILES);
-
-        if (requiredEvidences == null) {
-            return null;
-        }
+                gpg45Scores.calculateEvidencesRequiredToMeetAProfile(ACCEPTED_PROFILES);
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()
@@ -337,9 +339,16 @@ public class BuildCriOauthRequestHandler
                         .mapToInt(Gpg45Scores.Evidence::getStrength)
                         .min();
 
-        return minViableStrengthOpt.isPresent()
-                ? new EvidenceRequest(minViableStrengthOpt.getAsInt())
-                : null;
+        System.out.println("Hey");
+        System.out.println(requiredEvidences);
+        System.out.println(minViableStrengthOpt);
+
+        if (minViableStrengthOpt.isPresent()) {
+            return new EvidenceRequest(minViableStrengthOpt.getAsInt());
+        }
+        LOGGER.error("Minimum strength evidence required cannot be attained.");
+
+        return null;
     }
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {

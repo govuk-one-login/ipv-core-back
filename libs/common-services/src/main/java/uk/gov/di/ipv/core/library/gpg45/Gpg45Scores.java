@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -32,22 +34,25 @@ public class Gpg45Scores {
     private final int verification;
 
     public Gpg45Scores(int strength, int validity, int activity, int fraud, int verification) {
+        this.evidences = List.of(new Evidence(strength, validity));
         this.activity = activity;
         this.fraud = fraud;
         this.verification = verification;
-        this.evidences = List.of(new Evidence(strength, validity));
     }
 
     public Gpg45Scores(Evidence evidence, int activity, int fraud, int verification) {
+        this.evidences = List.of(evidence);
         this.activity = activity;
         this.fraud = fraud;
         this.verification = verification;
-        this.evidences = List.of(evidence);
     }
 
     public Gpg45Scores(
             Evidence evidence1, Evidence evidence2, int activity, int fraud, int verification) {
-        this(Arrays.asList(evidence1, evidence2), activity, fraud, verification);
+        this.evidences = sortEvidence(Arrays.asList(evidence1, evidence2));
+        this.activity = activity;
+        this.fraud = fraud;
+        this.verification = verification;
     }
 
     public Gpg45Scores(
@@ -57,20 +62,17 @@ public class Gpg45Scores {
             int activity,
             int fraud,
             int verification) {
-        this(Arrays.asList(evidence1, evidence2, evidence3), activity, fraud, verification);
-    }
-
-    public Gpg45Scores(List<Evidence> evidence, int activity, int fraud, int verification) {
+        this.evidences = sortEvidence(Arrays.asList(evidence1, evidence2, evidence3));
         this.activity = activity;
         this.fraud = fraud;
         this.verification = verification;
-        this.evidences =
-                evidence.stream()
-                        .sorted(
-                                Comparator.comparing(Evidence::getStrength)
-                                        .thenComparing(Evidence::getValidity)
-                                        .reversed())
-                        .toList();
+    }
+
+    public Gpg45Scores(List<Evidence> evidence, int activity, int fraud, int verification) {
+        this.evidences = sortEvidence(evidence);
+        this.activity = activity;
+        this.fraud = fraud;
+        this.verification = verification;
     }
 
     public int getActivity() {
@@ -86,12 +88,42 @@ public class Gpg45Scores {
     }
 
     public List<Evidence> getEvidences() {
-        return evidences.stream()
-                .sorted(
-                        Comparator.comparingInt(Gpg45Scores.Evidence::getStrength)
-                                .thenComparingInt(Gpg45Scores.Evidence::getValidity)
-                                .reversed())
-                .collect(Collectors.toList());
+        return evidences;
+    }
+
+    public List<List<Gpg45Scores.Evidence>> calculateEvidencesRequiredToMeetAProfile(
+            List<Gpg45Profile> profiles) {
+        return profiles.stream()
+                .filter(
+                        profile ->
+                                (activity >= profile.scores.getActivity())
+                                        && (fraud >= profile.scores.getFraud())
+                                        && (verification >= profile.scores.getVerification()))
+                .map(
+                        profile -> {
+                            List<Gpg45Scores.Evidence> acquiredEvidences =
+                                    new ArrayList<>(evidences);
+                            List<Gpg45Scores.Evidence> requiredEvidences =
+                                    new ArrayList<>(profile.scores.getEvidences());
+                            List<Gpg45Scores.Evidence> missingEvidence = new ArrayList<>();
+
+                            while (!requiredEvidences.isEmpty()) {
+                                if (!acquiredEvidences.isEmpty()) {
+                                    if (acquiredEvidences
+                                            .get(0)
+                                            .satisfies(requiredEvidences.get(0))) {
+                                        requiredEvidences.remove(0);
+                                        acquiredEvidences.remove(0);
+                                        continue;
+                                    }
+                                }
+
+                                missingEvidence.add(requiredEvidences.remove(0));
+                            }
+
+                            return missingEvidence;
+                        })
+                .toList();
     }
 
     public static Builder builder() {
@@ -117,6 +149,15 @@ public class Gpg45Scores {
     @Override
     public int hashCode() {
         return Objects.hash(evidences, activity, fraud, verification);
+    }
+
+    private List<Evidence> sortEvidence(List<Evidence> evidence) {
+        return evidence.stream()
+                .sorted(
+                        Comparator.comparing(Evidence::getStrength)
+                                .thenComparing(Evidence::getValidity)
+                                .reversed())
+                .toList();
     }
 
     static class Builder {

@@ -200,36 +200,6 @@ public class Gpg45ProfileEvaluator {
         return Optional.empty();
     }
 
-    public List<List<Gpg45Scores.Evidence>> calculateEvidencesRequiredToMeetAProfile(
-            Gpg45Scores acquiredEvidenceScores, List<Gpg45Profile> profiles) {
-        return profiles.stream()
-                .map(
-                        profile -> {
-                            List<Gpg45Scores.Evidence> acquiredEvidences =
-                                    acquiredEvidenceScores.getEvidences();
-                            List<Gpg45Scores.Evidence> requiredEvidences =
-                                    profile.scores.getEvidences();
-                            List<Gpg45Scores.Evidence> missingEvidence = new ArrayList<>();
-
-                            while (!requiredEvidences.isEmpty()) {
-                                if (!acquiredEvidences.isEmpty()) {
-                                    if (acquiredEvidences
-                                            .get(0)
-                                            .satisfies(requiredEvidences.get(0))) {
-                                        requiredEvidences.remove(0);
-                                        acquiredEvidences.remove(0);
-                                        continue;
-                                    }
-                                }
-
-                                missingEvidence.add(requiredEvidences.remove(0));
-                            }
-
-                            return missingEvidence;
-                        })
-                .toList();
-    }
-
     private boolean isRelevantEvidence(CredentialEvidenceItem evidenceItem)
             throws UnknownEvidenceTypeException {
         return (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
