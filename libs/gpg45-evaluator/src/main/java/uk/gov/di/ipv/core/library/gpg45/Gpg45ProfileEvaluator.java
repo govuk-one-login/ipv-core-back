@@ -8,6 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.utils.CollectionUtils;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -202,15 +203,17 @@ public class Gpg45ProfileEvaluator {
 
     public int calculateF2FRequiredStrengthScore(List<RequiredGpg45ScoresDto> requiredGpg45Scores) {
         int strengthScore = 0;
-        for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
-            Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
-            if (requiredScores.getFraud() > 0 || requiredScores.getActivity() > 0) {
-                continue;
-            }
-            List<EvidenceDto> evidences = requiredScores.getEvidences();
-            if (!evidences.isEmpty()
-                    && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
-                strengthScore = evidences.get(0).getStrength();
+        if (!CollectionUtils.isNullOrEmpty(requiredGpg45Scores)) {
+            for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
+                Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
+                if (requiredScores.getFraud() > 0 || requiredScores.getActivity() > 0) {
+                    continue;
+                }
+                List<EvidenceDto> evidences = requiredScores.getEvidences();
+                if (!evidences.isEmpty()
+                        && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
+                    strengthScore = evidences.get(0).getStrength();
+                }
             }
         }
         return strengthScore;

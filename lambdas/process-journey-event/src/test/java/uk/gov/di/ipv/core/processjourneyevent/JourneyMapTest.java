@@ -42,8 +42,8 @@ public class JourneyMapTest {
     @ParameterizedTest
     @EnumSource
     void shouldHandleSameEventsForAllCris(IpvJourneyTypes journeyType) throws IOException {
-        var stateMachineInitialiser = new StateMachineInitializer(journeyType);
-        var stateMachine = stateMachineInitialiser.initialize();
+        var stateMachineInitializer = new StateMachineInitializer(journeyType);
+        var stateMachine = stateMachineInitializer.initialize();
 
         var criStatesAndEvents = new ArrayList<StateAndEvents>();
         var allCriEvents = new HashSet<String>();
@@ -65,8 +65,8 @@ public class JourneyMapTest {
     @ParameterizedTest
     @EnumSource
     void shouldHandleSameEventsForSamePage(IpvJourneyTypes journeyType) throws IOException {
-        var stateMachineInitialiser = new StateMachineInitializer(journeyType);
-        var stateMachine = stateMachineInitialiser.initialize();
+        var stateMachineInitializer = new StateMachineInitializer(journeyType);
+        var stateMachine = stateMachineInitializer.initialize();
 
         var pageMap = new HashMap<String, List<StateAndEvents>>();
         findPageSpecificStatesAndEvents(stateMachine, pageMap);
