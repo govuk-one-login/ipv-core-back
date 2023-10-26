@@ -234,7 +234,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(signedJWT);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

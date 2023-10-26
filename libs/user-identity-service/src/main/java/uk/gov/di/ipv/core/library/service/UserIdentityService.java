@@ -160,8 +160,7 @@ public class UserIdentityService {
         final List<VcStoreItem> successfulVCStoreItems = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if (VcHelper.isSuccessfulVcIgnoringCi(
-                        SignedJWT.parse(vcStoreItem.getCredential()))) {
+                if (VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     successfulVCStoreItems.add(vcStoreItem);
                 }
             } catch (ParseException e) {
@@ -176,7 +175,7 @@ public class UserIdentityService {
         VcStoreItem vcStoreItem = getVcStoreItem(userId, criId);
         if (vcStoreItem != null) {
             SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
-            return Optional.of(VcHelper.isSuccessfulVcIgnoringCi(vc));
+            return Optional.of(VcHelper.isSuccessfulVc(vc));
         }
         LOGGER.info("vcStoreItem for CRI '{}' was null", criId);
         return Optional.empty();

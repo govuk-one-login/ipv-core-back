@@ -37,27 +37,17 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
-        return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), true);
-    }
-
-    public static boolean isSuccessfulVcIgnoringCi(SignedJWT vc) throws ParseException {
-        return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), false);
-    }
-
     private static Set<String> getNonEvidenceCredentialIssuers() {
         return NON_EVIDENCE_CRI_TYPES.stream()
                 .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
                 .collect(Collectors.toSet());
     }
 
-    private static boolean isSuccessfulVc(
-            SignedJWT vc,
-            Set<String> excludedCredentialIssuers,
-            boolean shouldCheckContraIndicators)
-            throws ParseException {
+    public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+        var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
+
         if (evidenceArray == null) {
             String vcIssuer = vc.getJWTClaimsSet().getIssuer();
             if (excludedCredentialIssuers.contains(vcIssuer)) {
@@ -72,20 +62,13 @@ public class VcHelper {
                         evidenceArray.toJSONString(),
                         new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
 
-        return isValidEvidence(credentialEvidenceList, shouldCheckContraIndicators);
+        return isValidEvidence(credentialEvidenceList);
     }
 
-    private static boolean isValidEvidence(
-            List<CredentialEvidenceItem> credentialEvidenceList,
-            boolean shouldCheckContraIndicators) {
+    private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
-                if (shouldCheckContraIndicators && item.hasContraIndicators()) {
-                    return false;
-                }
-                CredentialEvidenceItem.EvidenceType evidenceType = item.getType();
-
-                switch (evidenceType) {
+                switch (item.getType()) {
                     case EVIDENCE -> {
                         return Gpg45EvidenceValidator.isSuccessful(item);
                     }
@@ -104,7 +87,7 @@ public class VcHelper {
                     case NINO -> {
                         return Gpg45NinoValidator.isSuccessful(item);
                     }
-                    default -> LOGGER.info("Unexpected evidence type: {}", evidenceType);
+                    default -> LOGGER.info("Unexpected evidence type: {}", item.getType());
                 }
             }
             return false;
