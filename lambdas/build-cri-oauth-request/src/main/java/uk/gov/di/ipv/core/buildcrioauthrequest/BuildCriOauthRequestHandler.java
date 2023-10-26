@@ -382,7 +382,7 @@ public class BuildCriOauthRequestHandler
             try {
                 String credentialIss = credential.getJWTClaimsSet().getIssuer();
 
-                if (VcHelper.isSuccessfulVcIgnoringCi(credential)) {
+                if (VcHelper.isSuccessfulVc(credential)) {
                     JsonNode credentialSubject =
                             mapper.readTree(credential.getPayload().toString())
                                     .path(VC_CLAIM)
