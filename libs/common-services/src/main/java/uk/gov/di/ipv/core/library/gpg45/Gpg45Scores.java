@@ -49,10 +49,7 @@ public class Gpg45Scores {
 
     public Gpg45Scores(
             Evidence evidence1, Evidence evidence2, int activity, int fraud, int verification) {
-        this.evidences = sortEvidence(Arrays.asList(evidence1, evidence2));
-        this.activity = activity;
-        this.fraud = fraud;
-        this.verification = verification;
+        this(Arrays.asList(evidence1, evidence2), activity, fraud, verification);
     }
 
     public Gpg45Scores(
@@ -62,14 +59,17 @@ public class Gpg45Scores {
             int activity,
             int fraud,
             int verification) {
-        this.evidences = sortEvidence(Arrays.asList(evidence1, evidence2, evidence3));
-        this.activity = activity;
-        this.fraud = fraud;
-        this.verification = verification;
+        this(Arrays.asList(evidence1, evidence2, evidence3), activity, fraud, verification);
     }
 
     public Gpg45Scores(List<Evidence> evidence, int activity, int fraud, int verification) {
-        this.evidences = sortEvidence(evidence);
+        this.evidences =
+                evidence.stream()
+                        .sorted(
+                                Comparator.comparing(Evidence::getStrength)
+                                        .thenComparing(Evidence::getValidity)
+                                        .reversed())
+                        .toList();
         this.activity = activity;
         this.fraud = fraud;
         this.verification = verification;
@@ -91,14 +91,9 @@ public class Gpg45Scores {
         return evidences;
     }
 
-    public List<List<Gpg45Scores.Evidence>> calculateEvidencesRequiredToMeetAProfile(
+    public List<Gpg45Scores> calculateGpg45ScoresRequiredToMeetAProfile(
             List<Gpg45Profile> profiles) {
         return profiles.stream()
-                .filter(
-                        profile ->
-                                (activity >= profile.scores.getActivity())
-                                        && (fraud >= profile.scores.getFraud())
-                                        && (verification >= profile.scores.getVerification()))
                 .map(
                         profile -> {
                             List<Gpg45Scores.Evidence> acquiredEvidences =
@@ -121,7 +116,17 @@ public class Gpg45Scores {
                                 missingEvidence.add(requiredEvidences.remove(0));
                             }
 
-                            return missingEvidence;
+                            return new Gpg45Scores(
+                                    missingEvidence,
+                                    activity >= profile.scores.getActivity()
+                                            ? 0
+                                            : profile.scores.getActivity(),
+                                    fraud >= profile.scores.getFraud()
+                                            ? 0
+                                            : profile.scores.getFraud(),
+                                    verification >= profile.scores.getVerification()
+                                            ? 0
+                                            : profile.scores.getVerification());
                         })
                 .toList();
     }
@@ -149,15 +154,6 @@ public class Gpg45Scores {
     @Override
     public int hashCode() {
         return Objects.hash(evidences, activity, fraud, verification);
-    }
-
-    private List<Evidence> sortEvidence(List<Evidence> evidence) {
-        return evidence.stream()
-                .sorted(
-                        Comparator.comparing(Evidence::getStrength)
-                                .thenComparing(Evidence::getValidity)
-                                .reversed())
-                .toList();
     }
 
     static class Builder {

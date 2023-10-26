@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -81,8 +80,6 @@ public class BuildCriOauthRequestHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DCMAW_CRI_ID = "dcmaw";
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
@@ -325,22 +322,28 @@ public class BuildCriOauthRequestHandler
     private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials)
             throws UnknownEvidenceTypeException, ParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        List<List<Gpg45Scores.Evidence>> requiredEvidences =
-                gpg45Scores.calculateEvidencesRequiredToMeetAProfile(ACCEPTED_PROFILES);
+        List<Gpg45Scores> requiredEvidences =
+                gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
+                        Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES);
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()
-                        .filter(subList -> subList.size() == 1)
-                        .map(subList -> subList.get(0))
+                        .filter(
+                                requiredScores ->
+                                        requiredScores.getEvidences().size() == 1
+                                                & requiredScores.getActivity() == 0
+                                                & requiredScores.getFraud() == 0
+                                                & requiredScores.getVerification() == 0)
+                        .map(subList -> subList.getEvidences().get(0))
                         .mapToInt(Gpg45Scores.Evidence::getStrength)
                         .min();
 
-        if (minViableStrengthOpt.isPresent()) {
-            return new EvidenceRequest(minViableStrengthOpt.getAsInt());
+        if (minViableStrengthOpt.isEmpty()) {
+            LOGGER.error("Minimum strength evidence required cannot be attained.");
+            return null;
         }
-        LOGGER.error("Minimum strength evidence required cannot be attained.");
 
-        return null;
+        return new EvidenceRequest(minViableStrengthOpt.getAsInt());
     }
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
