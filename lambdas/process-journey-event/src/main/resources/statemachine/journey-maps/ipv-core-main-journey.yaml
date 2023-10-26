@@ -533,7 +533,7 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_01_SUGGEST_F2F
+          targetState: MITIGATION_01_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -541,7 +541,7 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_01_SUGGEST_F2F
+          targetState: MITIGATION_01_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -549,7 +549,7 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_01_SUGGEST_F2F
+          targetState: MITIGATION_01_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -557,7 +557,7 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_01_SUGGEST_F2F
+          targetState: MITIGATION_01_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -572,13 +572,15 @@ MITIGATION_01_F2F_START_PAGE:
     end:
       targetState: PYI_ANOTHER_WAY
 
-MITIGATION_01_SUGGEST_F2F:
+MITIGATION_01_PYI_POST_OFFICE:
   response:
     type: page
-    pageId: pyi-suggest-f2f
+    pageId: pyi-post-office
   events:
     next:
-      targetState: MITIGATION_01_F2F_START_PAGE
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: PYI_ANOTHER_WAY
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
@@ -587,10 +589,11 @@ MITIGATION_02_OPTIONS:
     pageId: pyi-suggest-other-options-no-f2f
   events:
     next:
-      targetState: MITIGATION_02_CRI_ELIGIBILITY
+      targetState: MITIGATION_02_CRI_DCMAW
     end:
       targetState: PYI_ANOTHER_WAY
 
+# To be removed in a second stage
 MITIGATION_02_CRI_ELIGIBILITY:
   response:
     type: page
@@ -656,7 +659,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
     f2f:
       targetState: CRI_F2F
     dcmaw:
-      targetState: MITIGATION_02_CRI_ELIGIBILITY
+      targetState: MITIGATION_02_CRI_DCMAW
     end:
       targetState: PYI_ANOTHER_WAY
 
