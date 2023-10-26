@@ -116,6 +116,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
+                        null,
                         null);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
@@ -147,6 +148,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
+                        null,
                         null);
         assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
     }
@@ -168,6 +170,7 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID,
+                                        null,
                                         null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());

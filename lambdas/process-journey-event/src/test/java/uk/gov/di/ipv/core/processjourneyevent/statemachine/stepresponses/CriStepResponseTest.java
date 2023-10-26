@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CriStepResponseTest {
 
-    public static final CriStepResponse CRI_RESPONSE = new CriStepResponse("aCriId");
+    public static final CriStepResponse CRI_RESPONSE = new CriStepResponse("aCriId", null);
 
     @Test
     void valueReturnsCorrectJourneyResponse() {

@@ -18,10 +18,11 @@ public class ProcessRequest extends JourneyRequest {
             String ipAddress,
             String clientOAuthSessionId,
             String journey,
+            String context,
             String featureSet,
             String scoreType,
             Integer scoreThreshold) {
-        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet);
+        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, context, featureSet);
         this.scoreType = scoreType;
         this.scoreThreshold = scoreThreshold;
     }

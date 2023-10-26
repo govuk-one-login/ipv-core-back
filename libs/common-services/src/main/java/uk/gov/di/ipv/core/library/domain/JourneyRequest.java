@@ -14,5 +14,6 @@ public class JourneyRequest {
     private String ipAddress;
     private String clientOAuthSessionId;
     private String journey;
+    private String context;
     private String featureSet;
 }

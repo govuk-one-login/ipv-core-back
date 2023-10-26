@@ -74,6 +74,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getContext;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
@@ -147,6 +148,7 @@ public class BuildCriOauthRequestHandler
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             String journey = getJourney(input);
+            String criContext = getContext(input);
 
             var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {
@@ -187,7 +189,8 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            criId);
+                            criId,
+                            criContext);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
@@ -291,7 +294,8 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId)
+            String criId,
+            String context)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException {
 
@@ -313,7 +317,8 @@ public class BuildCriOauthRequestHandler
                         oauthState,
                         userId,
                         govukSigninJourneyId,
-                        evidenceRequest);
+                        evidenceRequest,
+                        context);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
