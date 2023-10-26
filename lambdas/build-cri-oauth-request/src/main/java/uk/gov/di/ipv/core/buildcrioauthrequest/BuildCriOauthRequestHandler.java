@@ -333,8 +333,8 @@ public class BuildCriOauthRequestHandler
                                         requiredScores.getEvidences().size() == 1
                                                 & requiredScores.getActivity() == 0
                                                 & requiredScores.getFraud() == 0
-                                                & requiredScores.getVerification() == 0)
-                        .map(subList -> subList.getEvidences().get(0))
+                                                & requiredScores.getVerification() <= 3)
+                        .map(requiredScores -> requiredScores.getEvidences().get(0))
                         .mapToInt(Gpg45Scores.Evidence::getStrength)
                         .min();
 
