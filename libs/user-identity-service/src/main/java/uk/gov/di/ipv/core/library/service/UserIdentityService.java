@@ -8,10 +8,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -415,11 +418,36 @@ public class UserIdentityService {
         return identityClaims;
     }
 
+    // This method checks the birthdate requirement, which is in violation of GPG45 rules.
+    // However, considering that 'BAV' CRI does not conta'in a birthdate,
+    // we add this special handling only for 'BAV' CRI. For other CRIs, we continue to validate this
+    // requirement.
+    private List<IdentityClaim> getIdentityClaimsAndHandleDOBExceptionForBAVCRI(
+            List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim =
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            if (BAV_CRI.equals(item.getCredentialIssuer())
+                    && isBirthDateEmpty(identityClaim.getBirthDate())) {
+                continue;
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    private boolean isBirthDateEmpty(List<BirthDate> birtDates) {
+        return CollectionUtils.isEmpty(birtDates)
+                || birtDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
+    }
+
     public boolean checkBirthDateCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsAndHandleDOBExceptionForBAVCRI(successfulVCStoreItems);
         return identityClaims.stream()
                         .map(IdentityClaim::getBirthDate)
                         .flatMap(List::stream)
