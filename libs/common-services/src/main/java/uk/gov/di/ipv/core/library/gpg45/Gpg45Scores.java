@@ -34,17 +34,11 @@ public class Gpg45Scores {
     private final int verification;
 
     public Gpg45Scores(int strength, int validity, int activity, int fraud, int verification) {
-        this.evidences = List.of(new Evidence(strength, validity));
-        this.activity = activity;
-        this.fraud = fraud;
-        this.verification = verification;
+        this(List.of(new Evidence(strength, validity)), activity, fraud, verification);
     }
 
     public Gpg45Scores(Evidence evidence, int activity, int fraud, int verification) {
-        this.evidences = List.of(evidence);
-        this.activity = activity;
-        this.fraud = fraud;
-        this.verification = verification;
+        this(List.of(evidence), activity, fraud, verification);
     }
 
     public Gpg45Scores(
