@@ -33,12 +33,10 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -55,16 +53,21 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
@@ -292,18 +295,14 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException {
 
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<SignedJWT> credentials = getSignedJWTs(userId);
 
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributesForUser(ipvSessionItem, criId, credentials);
-
+                getSharedAttributesForUser(ipvSessionItem, credentials, criId);
         EvidenceRequest evidenceRequest = null;
-        if (criId.equals(F2F_CRI)) {
-            int strengthScore = getF2FStrengthScore(credentials);
 
-            if (strengthScore != 0) {
-                evidenceRequest = new EvidenceRequest(strengthScore);
-            }
+        if (criId.equals(F2F_CRI)) {
+            evidenceRequest = getEvidenceRequestForF2F(credentials);
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -320,22 +319,46 @@ public class BuildCriOauthRequestHandler
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
-    @Tracing
-    private int getF2FStrengthScore(List<String> credentials)
-            throws ParseException, UnknownEvidenceTypeException {
-        List<SignedJWT> signedJWTS = gpg45ProfileEvaluator.parseCredentials(credentials);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(signedJWTS);
-        List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                CURRENT_ACCEPTED_GPG45_PROFILES.stream()
-                        .map(
-                                profile ->
-                                        new RequiredGpg45ScoresDto(
-                                                profile,
-                                                Gpg45ScoresDto.fromGpg45Scores(
-                                                        gpg45Scores.calculateRequiredScores(
-                                                                profile))))
-                        .collect(Collectors.toList());
-        return gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(requiredGpg45Scores);
+    private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        List<Gpg45Scores> requiredEvidences =
+                gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
+                        Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES);
+
+        OptionalInt minViableStrengthOpt =
+                requiredEvidences.stream()
+                        .filter(
+                                requiredScores ->
+                                        requiredScores.getEvidences().size() == 1
+                                                & requiredScores.getActivity() == 0
+                                                & requiredScores.getFraud() == 0
+                                                & requiredScores.getVerification() == 0)
+                        .map(subList -> subList.getEvidences().get(0))
+                        .mapToInt(Gpg45Scores.Evidence::getStrength)
+                        .min();
+
+        if (minViableStrengthOpt.isEmpty()) {
+            LOGGER.error("Minimum strength evidence required cannot be attained.");
+            return null;
+        }
+
+        return new EvidenceRequest(minViableStrengthOpt.getAsInt());
+    }
+
+    private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
+        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<SignedJWT> signedJWTs = new ArrayList<>();
+
+        for (String credential : credentials) {
+            try {
+                signedJWTs.add(SignedJWT.parse(credential));
+            } catch (ParseException e) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+            }
+        }
+        return signedJWTs;
     }
 
     @Tracing
@@ -349,20 +372,19 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, String criId, List<String> credentials)
+            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials, String criId)
             throws HttpResponseExceptionWithErrorBody {
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
         boolean hasAddressVc = false;
-        for (String credential : credentials) {
+        for (SignedJWT credential : credentials) {
             try {
-                SignedJWT signedJWT = SignedJWT.parse(credential);
-                String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
+                String credentialIss = credential.getJWTClaimsSet().getIssuer();
 
-                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT)) {
+                if (VcHelper.isSuccessfulVcIgnoringCi(credential)) {
                     JsonNode credentialSubject =
-                            mapper.readTree(signedJWT.getPayload().toString())
+                            mapper.readTree(credential.getPayload().toString())
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {

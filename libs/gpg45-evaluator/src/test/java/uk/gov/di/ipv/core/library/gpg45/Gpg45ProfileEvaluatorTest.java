@@ -6,6 +6,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,12 +17,9 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
-import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -299,52 +300,75 @@ class Gpg45ProfileEvaluatorTest {
         assertTrue(result.isEmpty());
     }
 
-    @Test
-    void calculateF2FRequiredStrengthScoreShouldReturn3ForUserWithActivityScore1FraudScore2() {
-        List<RequiredGpg45ScoresDto> requiredScores =
-                List.of(
-                        // User who has Fraud VC with activity score 1, fraud score 2
-                        new RequiredGpg45ScoresDto(
-                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                        new RequiredGpg45ScoresDto(
-                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 0, 0, 2)));
-        assertEquals(3, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
+    @ParameterizedTest
+    @MethodSource("evidenceParams")
+    void calculateEvidencesRequiredToMeetAProfileShouldReturnCorrectEvidences(
+            Gpg45Scores acquiredEvidenceScores,
+            List<Gpg45Profile> profiles,
+            List<Gpg45Profile> expectedMissingEvidences,
+            String message) {
+        assertEquals(
+                expectedMissingEvidences,
+                acquiredEvidenceScores.calculateGpg45ScoresRequiredToMeetAProfile(profiles),
+                message);
     }
 
-    @Test
-    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore0FraudScore2() {
-        List<RequiredGpg45ScoresDto> requiredScores =
-                List.of(
-                        // User who has Fraud VC with activity score 0, fraud score 2 (thin file)
-                        new RequiredGpg45ScoresDto(
-                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                        new RequiredGpg45ScoresDto(
-                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2)));
-        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
-    }
-
-    @Test
-    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore1FraudScore1() {
-        List<RequiredGpg45ScoresDto> requiredScores =
-                List.of(
-                        // User who has Fraud VC with activity score 1, fraud score 1 (thin file)
-                        new RequiredGpg45ScoresDto(
-                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                        new RequiredGpg45ScoresDto(
-                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 0, 2, 2)));
-        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
-    }
-
-    @Test
-    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore0FraudScore1() {
-        List<RequiredGpg45ScoresDto> requiredScores =
-                List.of(
-                        // User who has Fraud VC with activity score 0, fraud score 1 (thin file)
-                        new RequiredGpg45ScoresDto(
-                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                        new RequiredGpg45ScoresDto(
-                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 2, 2)));
-        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
+    private static Stream<Arguments> evidenceParams() {
+        return Stream.of(
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_22, 4, 4, 4),
+                        List.of(Gpg45Profile.M1A),
+                        List.of(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0)),
+                        "M1A profile requirement, EV_42, shouldn't be satisfied by EV_22"),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_33, 3, 3, 3),
+                        List.of(Gpg45Profile.M1B),
+                        List.of(new Gpg45Scores(List.of(), 0, 0, 0)),
+                        "M1B profile requirement, EV_32, should be satisfied by EV_33"),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_22, 3, 3, 3),
+                        List.of(Gpg45Profile.M1B),
+                        List.of(new Gpg45Scores(Gpg45Scores.EV_32, 0, 0, 0)),
+                        "M1B profile requirement, EV_32, shouldn't be satisfied by either EV_11 nor EV_22"),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
+                        List.of(Gpg45Profile.M1B),
+                        List.of(new Gpg45Scores(List.of(), 0, 0, 0)),
+                        "M1B profile requirement, EV_32, should be satisfied by either EV_11 or EV_32"),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
+                        List.of(Gpg45Profile.M1B, Gpg45Profile.H1B),
+                        List.of(
+                                new Gpg45Scores(List.of(), 0, 0, 0),
+                                new Gpg45Scores(Gpg45Scores.EV_33, 0, 0, 0)),
+                        "M1B profile requirement, EV_32, should be satisfied by EV_11/& EV_32, while neither should satisfy H1B's EV_33 requirement"),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_33, 3, 3, 3),
+                        List.of(Gpg45Profile.M2B),
+                        List.of(new Gpg45Scores(Gpg45Scores.EV_22, 0, 0, 0)),
+                        "One of M2Bs requirements should be satisfied by EV_33."),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_22, 3, 3, 3),
+                        List.of(Gpg45Profile.M2B),
+                        List.of(new Gpg45Scores(Gpg45Scores.EV_32, 0, 0, 0)),
+                        "One of M2Bs requirements should be satisfied by EV_22."),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_32, Gpg45Scores.EV_42, 3, 3, 3),
+                        List.of(Gpg45Profile.H2C),
+                        List.of(new Gpg45Scores(Gpg45Scores.EV_33, 0, 0, 0)),
+                        "One of H2C requirements should be satisfied by EV_32."),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
+                        List.of(Gpg45Profile.M2B, Gpg45Profile.H2B),
+                        List.of(
+                                new Gpg45Scores(Gpg45Scores.EV_22, 0, 0, 0),
+                                new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0)),
+                        "The highest of M2Bs and lowest of H2Bs requirements should be satisfied by EV_32."),
+                Arguments.of(
+                        new Gpg45Scores(Gpg45Scores.EV_32, 0, 0, 2),
+                        List.of(Gpg45Profile.M1B),
+                        List.of(new Gpg45Scores(List.of(), 1, 2, 0)),
+                        "Should return unsuccessful activity/fraud/verification scores."));
     }
 
     private void setupMockContraIndicatorScoringConfig() {
