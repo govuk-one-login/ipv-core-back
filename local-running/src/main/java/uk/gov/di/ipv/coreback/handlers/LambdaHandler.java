@@ -131,7 +131,8 @@ public class LambdaHandler {
                             && journey.matches("/journey/cri/build-oauth-request/.*")) {
                         lambdaOutput =
                                 buildCriOauthRequestHandler.handleRequest(
-                                        buildJourneyRequest(request, journey, context), EMPTY_CONTEXT);
+                                        buildJourneyRequest(request, journey, context),
+                                        EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
