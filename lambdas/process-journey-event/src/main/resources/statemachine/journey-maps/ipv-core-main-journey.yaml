@@ -605,7 +605,7 @@ MITIGATION_02_CRI_ELIGIBILITY:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_02_SUGGEST_F2F
+          targetState: MITIGATION_02_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -622,7 +622,7 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_02_SUGGEST_F2F
+          targetState: MITIGATION_02_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -630,7 +630,7 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_02_SUGGEST_F2F
+          targetState: MITIGATION_02_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -638,7 +638,7 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_02_SUGGEST_F2F
+          targetState: MITIGATION_02_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -646,7 +646,7 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
         f2fCimit:
-          targetState: MITIGATION_02_SUGGEST_F2F
+          targetState: MITIGATION_02_PYI_POST_OFFICE
           checkIfDisabled:
             f2f:
               targetState: PYI_ANOTHER_WAY
@@ -663,10 +663,12 @@ MITIGATION_02_OPTIONS_WITH_F2F:
     end:
       targetState: PYI_ANOTHER_WAY
 
-MITIGATION_02_SUGGEST_F2F:
+MITIGATION_02_PYI_POST_OFFICE:
   response:
     type: page
-    pageId: pyi-suggest-f2f
+    pageId: pyi-post-office
   events:
     next:
       targetState: CRI_F2F
+    end:
+      targetState: PYI_ANOTHER_WAY
