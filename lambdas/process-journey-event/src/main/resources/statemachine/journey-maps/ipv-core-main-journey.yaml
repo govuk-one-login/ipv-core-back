@@ -657,7 +657,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
     pageId: pyi-suggest-other-options
   events:
     f2f:
-      targetState: MITIGATION_02_PYI_POST_OFFICE
+      targetState: CRI_F2F
     dcmaw:
       targetState: MITIGATION_02_CRI_DCMAW
     end:
