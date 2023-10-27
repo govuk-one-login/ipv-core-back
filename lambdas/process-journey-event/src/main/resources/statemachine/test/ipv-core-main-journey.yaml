@@ -36,6 +36,17 @@ CRI_STATE:
   events:
     enterNestedJourneyAtStateOne:
       targetState: NESTED_JOURNEY_INVOKE_STATE
+    testWithContext:
+      targetState: CRI_STATE_WITH_CONTEXT
+
+CRI_STATE_WITH_CONTEXT:
+  response:
+    type: cri
+    criId: aCriId
+    context: bank_account
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
 
 ERROR_STATE:
   response:

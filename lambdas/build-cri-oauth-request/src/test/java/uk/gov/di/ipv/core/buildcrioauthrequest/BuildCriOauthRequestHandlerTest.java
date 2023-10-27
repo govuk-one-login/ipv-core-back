@@ -71,10 +71,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -112,6 +109,8 @@ class BuildCriOauthRequestHandlerTest {
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
+    private static final String CONTEXT = "context";
+    private static final String BANK_ACCOUNT_CONTEXT = "bank_account";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -1217,6 +1216,45 @@ class BuildCriOauthRequestHandlerTest {
                 HttpStatus.SC_INTERNAL_SERVER_ERROR,
                 response,
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+    }
+
+    @Test
+    void shouldIncludeContextIntoCriResponseIfInJourneyRequest() throws Exception {
+        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("5000");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockGpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(2, 2, 2, 2, 2));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(F2F_CRI)
+                        .context(BANK_ACCOUNT_CONTEXT)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        assertEquals(BANK_ACCOUNT_CONTEXT, claimsSet.get(CONTEXT).asText());
     }
 
     private void assertErrorResponse(

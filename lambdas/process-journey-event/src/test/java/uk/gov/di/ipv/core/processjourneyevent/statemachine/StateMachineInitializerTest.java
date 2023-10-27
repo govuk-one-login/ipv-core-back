@@ -67,6 +67,7 @@ class StateMachineInitializerTest {
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
+        BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
         BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
@@ -108,6 +109,16 @@ class StateMachineInitializerTest {
         assertEquals(
                 nestedJourneyInvokeState,
                 ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+
+        // cri state with context assertions
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId",
+                criWithContextState.getResponse().value().get("journey"));
+        assertEquals("bank_account", criWithContextState.getResponse().value().get("context"));
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
                         .getTargetStateObj());
 
         // error state assertions
