@@ -68,26 +68,14 @@ public class ProcessJourneyEventHandler
         this.stateMachines = loadStateMachines(journeyTypes, stateMachineInitializerMode);
     }
 
-    public ProcessJourneyEventHandler(
-            IpvSessionService ipvSessionService,
-            ConfigService configService,
-            ClientOAuthSessionDetailsService clientOAuthSessionService,
-            List<IpvJourneyTypes> journeyTypes)
-            throws IOException {
-        this(
-                ipvSessionService,
-                configService,
-                clientOAuthSessionService,
-                journeyTypes,
-                StateMachineInitializerMode.STANDARD);
-    }
-
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyEventHandler() throws IOException {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachines = loadStateMachines(List.of(IPV_CORE_MAIN_JOURNEY));
+        this.stateMachines =
+                loadStateMachines(
+                        List.of(IPV_CORE_MAIN_JOURNEY), StateMachineInitializerMode.STANDARD);
     }
 
     @Override
@@ -256,10 +244,5 @@ public class ProcessJourneyEventHandler
                             new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
         }
         return stateMachinesMap;
-    }
-
-    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(List<IpvJourneyTypes> journeyTypes)
-            throws IOException {
-        return loadStateMachines(journeyTypes, StateMachineInitializerMode.STANDARD);
     }
 }

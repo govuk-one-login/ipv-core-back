@@ -140,7 +140,8 @@ class ProcessJourneyEventHandlerTest {
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
-                        List.of());
+                        List.of(),
+                        StateMachineInitializerMode.STANDARD);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
