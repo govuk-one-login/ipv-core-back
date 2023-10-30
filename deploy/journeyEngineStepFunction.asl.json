@@ -82,6 +82,7 @@
       "Resource": "${BuildCriOauthRequestFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
+        "context.$": "$.context",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
