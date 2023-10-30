@@ -419,10 +419,10 @@ public class UserIdentityService {
     }
 
     // This method checks the birthdate requirement, which is in violation of GPG45 rules.
-    // However, considering that 'BAV' CRI does not conta'in a birthdate,
+    // However, considering that 'BAV' CRI does not contain a birthdate,
     // we add this special handling only for 'BAV' CRI. For other CRIs, we continue to validate this
     // requirement.
-    private List<IdentityClaim> getIdentityClaimsAndHandleDOBExceptionForBAVCRI(
+    private List<IdentityClaim> getIdentityClaimsForDOBCheckOnlyBAVCRI(
             List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
@@ -447,7 +447,7 @@ public class UserIdentityService {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
         List<IdentityClaim> identityClaims =
-                getIdentityClaimsAndHandleDOBExceptionForBAVCRI(successfulVCStoreItems);
+                getIdentityClaimsForDOBCheckOnlyBAVCRI(successfulVCStoreItems);
         return identityClaims.stream()
                         .map(IdentityClaim::getBirthDate)
                         .flatMap(List::stream)
