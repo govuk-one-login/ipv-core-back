@@ -70,7 +70,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getContext;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
@@ -148,7 +147,7 @@ public class BuildCriOauthRequestHandler
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             String journey = getJourney(input);
-            String criContext = getContext(input);
+            String criContext = input.getContext();
 
             var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {

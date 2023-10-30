@@ -109,7 +109,6 @@ public class LambdaHandler {
                                     EMPTY_CONTEXT);
 
                     journey = (String) processJourneyEventOutput.get(JOURNEY);
-                    String context = (String) processJourneyEventOutput.get(CONTEXT);
 
                     if ("/journey/check-existing-identity".equals(journey)) {
                         lambdaOutput =
@@ -131,7 +130,10 @@ public class LambdaHandler {
                             && journey.matches("/journey/cri/build-oauth-request/.*")) {
                         lambdaOutput =
                                 buildCriOauthRequestHandler.handleRequest(
-                                        buildJourneyRequest(request, journey, context),
+                                        buildJourneyRequest(
+                                                request,
+                                                journey,
+                                                (String) processJourneyEventOutput.get(CONTEXT)),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
