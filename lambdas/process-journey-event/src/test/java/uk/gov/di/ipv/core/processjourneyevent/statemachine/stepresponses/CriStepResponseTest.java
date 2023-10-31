@@ -15,7 +15,8 @@ public class CriStepResponseTest {
     @Test
     void valueReturnsCorrectJourneyResponse() {
         assertEquals(
-                Map.of("journey", "/journey/cri/build-oauth-request/aCriId"), CRI_RESPONSE.value());
+                Map.of("journey", "/journey/cri/build-oauth-request/aCriId", "context", ""),
+                CRI_RESPONSE.value());
     }
 
     @Test
