@@ -330,10 +330,18 @@ public class BuildCriOauthRequestHandler
                 requiredEvidences.stream()
                         .filter(
                                 requiredScores ->
-                                        requiredScores.getActivity() == 0
-                                                & requiredScores.getFraud() == 0)
-                        .map(requiredScores -> requiredScores.getEvidences().get(0))
-                        .mapToInt(Gpg45Scores.Evidence::getStrength)
+                                        requiredScores.getEvidences().size() <= 1
+                                                && requiredScores.getActivity() == 0
+                                                && requiredScores.getFraud() == 0
+                                                && requiredScores.getVerification() <= 3)
+                        .mapToInt(
+                                requiredScores ->
+                                        requiredScores.getEvidences().isEmpty()
+                                                ? 0
+                                                : requiredScores
+                                                        .getEvidences()
+                                                        .get(0)
+                                                        .getStrength())
                         .min();
 
         if (minViableStrengthOpt.isEmpty()) {

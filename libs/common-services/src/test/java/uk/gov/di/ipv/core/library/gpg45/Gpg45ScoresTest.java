@@ -58,7 +58,7 @@ class Gpg45ScoresTest {
                 new Gpg45Scores(List.of(), 1, 2, 0)
                         .calculateGpg45ScoresRequiredToMeetAProfile(Arrays.asList(M1B)));
         assertEquals(
-                Arrays.asList(new Gpg45Scores(0, 0, 0, 0, 2)),
+                Arrays.asList(new Gpg45Scores(List.of(), 0, 0, 2)),
                 new Gpg45Scores(EV_32, 1, 2, 0)
                         .calculateGpg45ScoresRequiredToMeetAProfile(Arrays.asList(M1B)));
         assertEquals(

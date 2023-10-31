@@ -323,7 +323,7 @@ class Gpg45ProfileEvaluatorTest {
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_33, 3, 3, 3),
                         List.of(Gpg45Profile.M1B),
-                        List.of(new Gpg45Scores(0, 0, 0, 0, 0)),
+                        List.of(new Gpg45Scores(List.of(), 0, 0, 0)),
                         "M1B profile requirement, EV_32, should be satisfied by EV_33"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_22, 3, 3, 3),
@@ -333,13 +333,13 @@ class Gpg45ProfileEvaluatorTest {
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M1B),
-                        List.of(new Gpg45Scores(0, 0, 0, 0, 0)),
+                        List.of(new Gpg45Scores(List.of(), 0, 0, 0)),
                         "M1B profile requirement, EV_32, should be satisfied by either EV_11 or EV_32"),
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_11, Gpg45Scores.EV_32, 3, 3, 3),
                         List.of(Gpg45Profile.M1B, Gpg45Profile.H1B),
                         List.of(
-                                new Gpg45Scores(0, 0, 0, 0, 0),
+                                new Gpg45Scores(List.of(), 0, 0, 0),
                                 new Gpg45Scores(Gpg45Scores.EV_33, 0, 0, 0)),
                         "M1B profile requirement, EV_32, should be satisfied by EV_11/& EV_32, while neither should satisfy H1B's EV_33 requirement"),
                 Arguments.of(
@@ -367,7 +367,7 @@ class Gpg45ProfileEvaluatorTest {
                 Arguments.of(
                         new Gpg45Scores(Gpg45Scores.EV_32, 0, 0, 2),
                         List.of(Gpg45Profile.M1B),
-                        List.of(new Gpg45Scores(0, 0, 1, 2, 0)),
+                        List.of(new Gpg45Scores(List.of(), 1, 2, 0)),
                         "Should return unsuccessful activity/fraud/verification scores."));
     }
 
