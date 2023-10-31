@@ -325,7 +325,7 @@ ADDRESS_AND_FRAUD_J2:
       targetState: CRI_NINO_J6
       checkIfDisabled:
         hmrcKbv:
-          targetState: PRE_KBV_TRANSITION_PAGE_J2
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     end:
       targetState: ERROR
 
@@ -350,6 +350,8 @@ CRI_KBV_J2:
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
+    next:
+      targetState: PYI_NO_MATCH
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS
       checkFeatureFlag:
@@ -391,7 +393,7 @@ CHECK_FRAUD_SCORE_J3:
       scoreThreshold: 2
   events:
     met:
-      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     unmet:
       targetState: PYI_NO_MATCH
 
@@ -479,7 +481,7 @@ CRI_NINO_J6:
     next:
       targetState: CRI_HMRC_KBV_J6
     fail-with-no-ci:
-      targetState: PRE_KBV_TRANSITION_PAGE_J2
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
 CRI_HMRC_KBV_J6:
   response:
@@ -490,9 +492,42 @@ CRI_HMRC_KBV_J6:
     end:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: PYI_NO_MATCH
+
+# Common pages
+PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+  response:
+    type: page
+    pageId: page-pre-kbv-transition
+  events:
+    next:
+      targetState: CRI_EXPERIAN_KBV
+
+CRI_EXPERIAN_KBV:
+  response:
+    type: cri
+    criId: kbv
+  parent: CRI_STATE
+  events:
+    end:
+      targetState: IPV_SUCCESS_PAGE
+    fail-with-no-ci:
+      targetState: PYI_CRI_ESCAPE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_CRI_ESCAPE_NO_F2F
+    next:
+      targetState: PYI_NO_MATCH
+    enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_OPTIONS_WITH_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: MITIGATION_02_OPTIONS
 
 # Mitigation journey (01)
 MITIGATION_01:
