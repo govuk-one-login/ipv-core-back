@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepEvents;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepPages;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepStates;
@@ -44,6 +45,7 @@ class ProcessJourneyEventHandlerTest {
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
+    private static final String CONTEXT = "context";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
 
@@ -138,7 +140,8 @@ class ProcessJourneyEventHandlerTest {
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
-                        List.of());
+                        List.of(),
+                        StateMachineInitializerMode.STANDARD);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -221,6 +224,21 @@ class ProcessJourneyEventHandlerTest {
         assertNull(sessionArgumentCaptor.getValue().getCriOAuthSessionId());
     }
 
+    @Test
+    void shouldReturnContextIfExists() throws Exception {
+        String context = "bank_account";
+
+        Map<String, String> input = Map.of(JOURNEY, "testWithContext", IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        var processJourneyEventOutput =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                        .handleRequest(input, mockContext);
+
+        assertEquals(context, processJourneyEventOutput.get(CONTEXT));
+    }
+
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -247,11 +265,17 @@ class ProcessJourneyEventHandlerTest {
                 .build();
     }
 
-    private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {
+    private ProcessJourneyEventHandler getProcessJourneyStepHandler(
+            StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
         return new ProcessJourneyEventHandler(
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
-                List.of(IPV_CORE_MAIN_JOURNEY));
+                List.of(IPV_CORE_MAIN_JOURNEY),
+                stateMachineInitializerMode);
+    }
+
+    private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {
+        return getProcessJourneyStepHandler(StateMachineInitializerMode.STANDARD);
     }
 }

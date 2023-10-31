@@ -40,6 +40,8 @@ public class AuthorizationRequestHelper {
 
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
 
+    private static final String CONTEXT = "context";
+
     private AuthorizationRequestHelper() {}
 
     public static SignedJWT createSignedJWT(
@@ -50,7 +52,8 @@ public class AuthorizationRequestHelper {
             String oauthState,
             String userId,
             String govukSigninJourneyId,
-            EvidenceRequest evidence)
+            EvidenceRequest evidence,
+            String context)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
@@ -105,6 +108,10 @@ public class AuthorizationRequestHelper {
 
         if (Objects.nonNull(evidence)) {
             claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidence);
+        }
+
+        if (Objects.nonNull(context)) {
+            claimsSetBuilder.claim(CONTEXT, context);
         }
 
         SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());

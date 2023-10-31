@@ -41,6 +41,7 @@ public class LambdaHandler {
             new TypeToken<Map<String, String>>() {}.getType();
     public static final String APPLICATION_JSON = "application/json";
     public static final String JOURNEY = "journey";
+    public static final String CONTEXT = "context";
     public static final String IPV_SESSION_ID = "ipv-session-id";
     public static final String IP_ADDRESS = "ip-address";
     public static final String CLIENT_SESSION_ID = "client-session-id";
@@ -129,7 +130,11 @@ public class LambdaHandler {
                             && journey.matches("/journey/cri/build-oauth-request/.*")) {
                         lambdaOutput =
                                 buildCriOauthRequestHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
+                                        buildJourneyRequest(
+                                                request,
+                                                journey,
+                                                (String) processJourneyEventOutput.get(CONTEXT)),
+                                        EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
@@ -248,14 +253,19 @@ public class LambdaHandler {
                 return responseEvent.getBody();
             };
 
-    private JourneyRequest buildJourneyRequest(Request request, String journey) {
+    private JourneyRequest buildJourneyRequest(Request request, String journey, String context) {
         return JourneyRequest.builder()
                 .ipvSessionId(request.headers(IPV_SESSION_ID))
                 .ipAddress(request.headers(IP_ADDRESS))
                 .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
                 .featureSet(request.headers(FEATURE_SET))
                 .journey(journey)
+                .context(context)
                 .build();
+    }
+
+    private JourneyRequest buildJourneyRequest(Request request, String journey) {
+        return buildJourneyRequest(request, journey, null);
     }
 
     private Map<String, String> buildCriReturnLambdaInput(Request request) {
