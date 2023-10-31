@@ -286,6 +286,39 @@ END:
     type: process
     lambda: build-client-oauth-response
 
+# Common pages
+PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+  response:
+    type: page
+    pageId: page-pre-kbv-transition
+  events:
+    next:
+      targetState: CRI_EXPERIAN_KBV
+
+CRI_EXPERIAN_KBV:
+  response:
+    type: cri
+    criId: kbv
+  parent: CRI_STATE
+  events:
+    end:
+      targetState: IPV_SUCCESS_PAGE
+    fail-with-no-ci:
+      targetState: PYI_CRI_ESCAPE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_CRI_ESCAPE_NO_F2F
+    next:
+      targetState: PYI_NO_MATCH
+    enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS
+      checkFeatureFlag:
+        f2fCimit:
+          targetState: MITIGATION_02_OPTIONS_WITH_F2F
+          checkIfDisabled:
+            f2f:
+              targetState: MITIGATION_02_OPTIONS
+
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
   response:
@@ -431,39 +464,6 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: PYI_NO_MATCH
-
-# Common pages
-PRE_EXPERIAN_KBV_TRANSITION_PAGE:
-  response:
-    type: page
-    pageId: page-pre-kbv-transition
-  events:
-    next:
-      targetState: CRI_EXPERIAN_KBV
-
-CRI_EXPERIAN_KBV:
-  response:
-    type: cri
-    criId: kbv
-  parent: CRI_STATE
-  events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-    fail-with-no-ci:
-      targetState: PYI_CRI_ESCAPE
-      checkIfDisabled:
-        f2f:
-          targetState: PYI_CRI_ESCAPE_NO_F2F
-    next:
-      targetState: PYI_NO_MATCH
-    enhanced-verification:
-      targetState: MITIGATION_02_OPTIONS
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_OPTIONS_WITH_F2F
-          checkIfDisabled:
-            f2f:
-              targetState: MITIGATION_02_OPTIONS
 
 # Mitigation journey (01)
 MITIGATION_01:
