@@ -329,38 +329,6 @@ ADDRESS_AND_FRAUD_J2:
     end:
       targetState: ERROR
 
-PRE_KBV_TRANSITION_PAGE_J2:
-  response:
-    type: page
-    pageId: page-pre-kbv-transition
-  events:
-    next:
-      targetState: CRI_KBV_J2
-
-CRI_KBV_J2:
-  response:
-    type: cri
-    criId: kbv
-  parent: CRI_STATE
-  events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-    fail-with-no-ci:
-      targetState: PYI_CRI_ESCAPE
-      checkIfDisabled:
-        f2f:
-          targetState: PYI_CRI_ESCAPE_NO_F2F
-    next:
-      targetState: PYI_NO_MATCH
-    enhanced-verification:
-      targetState: MITIGATION_02_OPTIONS
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_OPTIONS_WITH_F2F
-          checkIfDisabled:
-            f2f:
-              targetState: MITIGATION_02_OPTIONS
-
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
   response:
@@ -396,38 +364,6 @@ CHECK_FRAUD_SCORE_J3:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     unmet:
       targetState: PYI_NO_MATCH
-
-PRE_KBV_TRANSITION_PAGE_J3:
-  response:
-    type: page
-    pageId: page-pre-kbv-transition
-  events:
-    next:
-      targetState: CRI_KBV_J3
-
-CRI_KBV_J3:
-  response:
-    type: cri
-    criId: kbv
-  parent: CRI_STATE
-  events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-    fail-with-no-ci:
-      targetState: PYI_CRI_ESCAPE
-      checkIfDisabled:
-        f2f:
-          targetState: PYI_CRI_ESCAPE_NO_F2F
-    next:
-      targetState: PYI_NO_MATCH
-    enhanced-verification:
-      targetState: MITIGATION_02_OPTIONS
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_OPTIONS_WITH_F2F
-          checkIfDisabled:
-            f2f:
-              targetState: MITIGATION_02_OPTIONS
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
