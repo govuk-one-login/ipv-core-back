@@ -147,7 +147,6 @@ public class BuildCriOauthRequestHandler
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             String journey = getJourney(input);
-            String criContext = input.getContext();
 
             var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {
@@ -188,8 +187,7 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            criId,
-                            criContext);
+                            criId);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
@@ -293,8 +291,7 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId,
-            String context)
+            String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException {
 
@@ -316,8 +313,7 @@ public class BuildCriOauthRequestHandler
                         oauthState,
                         userId,
                         govukSigninJourneyId,
-                        evidenceRequest,
-                        context);
+                        evidenceRequest);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);

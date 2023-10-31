@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -59,13 +58,12 @@ public class ProcessJourneyEventHandler
             IpvSessionService ipvSessionService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
-            List<IpvJourneyTypes> journeyTypes,
-            StateMachineInitializerMode stateMachineInitializerMode)
+            List<IpvJourneyTypes> journeyTypes)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.stateMachines = loadStateMachines(journeyTypes, stateMachineInitializerMode);
+        this.stateMachines = loadStateMachines(journeyTypes);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -73,9 +71,7 @@ public class ProcessJourneyEventHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachines =
-                loadStateMachines(
-                        List.of(IPV_CORE_MAIN_JOURNEY), StateMachineInitializerMode.STANDARD);
+        this.stateMachines = loadStateMachines(List.of(IPV_CORE_MAIN_JOURNEY));
     }
 
     @Override
@@ -231,17 +227,13 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
-            List<IpvJourneyTypes> journeyTypes,
-            StateMachineInitializerMode stateMachineInitializerMode)
+    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(List<IpvJourneyTypes> journeyTypes)
             throws IOException {
         EnumMap<IpvJourneyTypes, StateMachine> stateMachinesMap =
                 new EnumMap<>(IpvJourneyTypes.class);
         for (IpvJourneyTypes journeyType : journeyTypes) {
             stateMachinesMap.put(
-                    journeyType,
-                    new StateMachine(
-                            new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
+                    journeyType, new StateMachine(new StateMachineInitializer(journeyType)));
         }
         return stateMachinesMap;
     }

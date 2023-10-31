@@ -62,7 +62,6 @@ class AuthorizationRequestHelperTest {
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
     private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
-    private static final String BANK_ACCOUNT_CONTEXT = "bank_account";
     private static final String IPV_TOKEN_TTL = "900";
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -117,7 +116,6 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        null,
                         null);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
@@ -135,30 +133,6 @@ class AuthorizationRequestHelperTest {
     }
 
     @Test
-    void shouldCreateSignedJWTWithContextIfExists()
-            throws ParseException, HttpResponseExceptionWithErrorBody {
-        setupCredentialIssuerConfigMock();
-        setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
-        when(credentialIssuerConfig.getClientCallbackUrl())
-                .thenReturn(URI.create(TEST_REDIRECT_URI));
-
-        SignedJWT result =
-                AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaims,
-                        signer,
-                        credentialIssuerConfig,
-                        configService,
-                        OAUTH_STATE,
-                        TEST_USER_ID,
-                        TEST_JOURNEY_ID,
-                        null,
-                        BANK_ACCOUNT_CONTEXT);
-
-        assertEquals(BANK_ACCOUNT_CONTEXT, result.getJWTClaimsSet().getStringClaim("context"));
-    }
-
-    @Test
     void shouldNotReturnSharedClaimsIfSharedClaimsMapIsEmpty()
             throws ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
@@ -173,7 +147,6 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        null,
                         null);
         assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
     }
@@ -195,7 +168,6 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID,
-                                        null,
                                         null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
