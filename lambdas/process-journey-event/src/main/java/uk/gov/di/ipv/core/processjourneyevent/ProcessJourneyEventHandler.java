@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 import java.io.IOException;
 import java.time.Instant;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

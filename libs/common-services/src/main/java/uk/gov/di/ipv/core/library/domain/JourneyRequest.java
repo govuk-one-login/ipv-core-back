@@ -14,7 +14,6 @@ public class JourneyRequest {
     private String ipAddress;
     private String clientOAuthSessionId;
     private String journey;
-    @Builder.Default
-    private String context = "";
+    @Builder.Default private String context = "";
     private String featureSet;
 }
