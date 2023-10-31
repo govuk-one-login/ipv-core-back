@@ -23,6 +23,6 @@ public class CriStepResponse implements StepResponse {
     public Map<String, Object> value() {
         return Objects.nonNull(context)
                 ? Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId), "context", context)
-                : Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId));
+                : Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId), "context", "");
     }
 }

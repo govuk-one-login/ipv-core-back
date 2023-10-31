@@ -110,7 +110,7 @@ public class AuthorizationRequestHelper {
             claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidence);
         }
 
-        if (Objects.nonNull(context)) {
+        if (Objects.nonNull(context) && !context.isEmpty()) {
             claimsSetBuilder.claim(CONTEXT, context);
         }
 
