@@ -41,7 +41,10 @@ F2F_START_PAGE:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
     end:
-      targetState: PYI_ESCAPE
+      targetState: BANK_ACCOUNT_START_PAGE
+      checkIfDisabled:
+        bav:
+          targetState: PYI_ESCAPE
 
 F2F_PYI_POST_OFFICE:
   response:
@@ -50,6 +53,19 @@ F2F_PYI_POST_OFFICE:
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: BANK_ACCOUNT_START_PAGE
+      checkIfDisabled:
+        bav:
+          targetState: PYI_ESCAPE
+
+BANK_ACCOUNT_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-bank-account-start
+  events:
+    next:
+      targetState: PYI_ESCAPE # Todo: Need to replace with CRI.
     end:
       targetState: PYI_ESCAPE
 
