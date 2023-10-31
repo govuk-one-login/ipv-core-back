@@ -111,7 +111,9 @@ public class Gpg45Scores {
                             }
 
                             return new Gpg45Scores(
-                                    missingEvidence,
+                                    missingEvidence.isEmpty()
+                                            ? Arrays.asList(EV_00)
+                                            : missingEvidence,
                                     activity >= profile.scores.getActivity()
                                             ? 0
                                             : profile.scores.getActivity(),
