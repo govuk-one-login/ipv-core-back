@@ -75,6 +75,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -116,6 +117,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CRI_SCOPE = "identityCheck";
     public static final String MAIN_CONNECTION = "main";
 
     @Mock private Context context;
@@ -656,72 +658,6 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.getMessage());
     }
 
-    private void assertSharedClaimsJWTIsValid(String request)
-            throws ParseException, JsonProcessingException, JOSEException {
-        SignedJWT signedJWT = SignedJWT.parse(request);
-        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
-        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
-        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
-
-        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
-        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
-
-        JsonNode address = vcAttributes.get("address");
-
-        List<Address> addressList = new ArrayList<>();
-        for (JsonNode jo : address) {
-            addressList.add(objectMapper.convertValue(jo, Address.class));
-        }
-
-        Address streetAddress =
-                addressList.stream()
-                        .filter(x -> "NotDowningStreet".equals(x.getStreetName()))
-                        .findAny()
-                        .orElse(null);
-        Address postCode =
-                addressList.stream()
-                        .filter(x -> "SW1A2AA".equals(x.getPostalCode()))
-                        .findAny()
-                        .orElse(null);
-
-        assertFalse(streetAddress.getStreetName().isEmpty());
-        assertFalse(postCode.getPostalCode().isEmpty());
-
-        assertEquals(2, (vcAttributes.get("name")).size());
-        assertEquals(3, (vcAttributes.get("address")).size());
-        assertEquals(2, (vcAttributes.get("birthDate")).size());
-
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
-        assertTrue(signedJWT.verify(verifier));
-    }
-
-    private void assertSharedClaimsJWTIsValidForAllVCsAreNotSuccess(String request)
-            throws ParseException, JsonProcessingException, JOSEException {
-        SignedJWT signedJWT = SignedJWT.parse(request);
-        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
-        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
-        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
-
-        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
-        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
-
-        JsonNode address = vcAttributes.get("address");
-        assertTrue(address.isEmpty());
-        JsonNode name = vcAttributes.get("name");
-        assertTrue(name.isEmpty());
-        JsonNode birtDate = vcAttributes.get("birthDate");
-        assertTrue(birtDate.isEmpty());
-
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
-        assertTrue(signedJWT.verify(verifier));
-    }
-
     @Test
     void shouldDeduplicateSharedClaims() throws Exception {
         when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
@@ -1219,6 +1155,83 @@ class BuildCriOauthRequestHandlerTest {
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
     }
 
+    @Test
+    void shouldIncludeScopeIntoCriResponseIfCriScopeInJourneyRequest() throws Exception {
+        when(configService.getActiveConnection(NINO_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, NINO_CRI))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("5000");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(NINO_CRI)
+                        .scope(TEST_CRI_SCOPE)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        assertEquals(TEST_CRI_SCOPE, claimsSet.get("scope").asText());
+    }
+
+    @Test
+    void shouldNotIncludeScopeIntoCriResponseIfCriScopeInJourneyRequestForNonNinoCri()
+            throws Exception {
+        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("5000");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockGpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(2, 2, 2, 2, 2));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(F2F_CRI)
+                        .scope(TEST_CRI_SCOPE)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        assertNull(claimsSet.get("scope"));
+    }
+
     private void assertErrorResponse(
             int httpStatusCode, String responseJson, ErrorResponse errorResponse)
             throws JsonProcessingException {
@@ -1227,6 +1240,72 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(httpStatusCode, response.getStatusCode());
         assertEquals(errorResponse.getCode(), response.getCode());
         assertEquals(errorResponse.getMessage(), response.getMessage());
+    }
+
+    private void assertSharedClaimsJWTIsValid(String request)
+            throws ParseException, JsonProcessingException, JOSEException {
+        SignedJWT signedJWT = SignedJWT.parse(request);
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
+        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
+        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
+        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
+
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
+
+        JsonNode address = vcAttributes.get("address");
+
+        List<Address> addressList = new ArrayList<>();
+        for (JsonNode jo : address) {
+            addressList.add(objectMapper.convertValue(jo, Address.class));
+        }
+
+        Address streetAddress =
+                addressList.stream()
+                        .filter(x -> "NotDowningStreet".equals(x.getStreetName()))
+                        .findAny()
+                        .orElse(null);
+        Address postCode =
+                addressList.stream()
+                        .filter(x -> "SW1A2AA".equals(x.getPostalCode()))
+                        .findAny()
+                        .orElse(null);
+
+        assertFalse(streetAddress.getStreetName().isEmpty());
+        assertFalse(postCode.getPostalCode().isEmpty());
+
+        assertEquals(2, (vcAttributes.get("name")).size());
+        assertEquals(3, (vcAttributes.get("address")).size());
+        assertEquals(2, (vcAttributes.get("birthDate")).size());
+
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        assertTrue(signedJWT.verify(verifier));
+    }
+
+    private void assertSharedClaimsJWTIsValidForAllVCsAreNotSuccess(String request)
+            throws ParseException, JsonProcessingException, JOSEException {
+        SignedJWT signedJWT = SignedJWT.parse(request);
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
+        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
+        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
+        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
+
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
+
+        JsonNode address = vcAttributes.get("address");
+        assertTrue(address.isEmpty());
+        JsonNode name = vcAttributes.get("name");
+        assertTrue(name.isEmpty());
+        JsonNode birtDate = vcAttributes.get("birthDate");
+        assertTrue(birtDate.isEmpty());
+
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        assertTrue(signedJWT.verify(verifier));
     }
 
     private ECPrivateKey getSigningPrivateKey()

@@ -111,6 +111,10 @@ public class RequestHelper {
         return request.getJourney();
     }
 
+    public static String getCriScope(JourneyRequest request) {
+        return request.getScope();
+    }
+
     public static String getScoreType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         String scoreType = request.getScoreType();

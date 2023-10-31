@@ -66,10 +66,12 @@ import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getCriScope;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
@@ -147,6 +149,7 @@ public class BuildCriOauthRequestHandler
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             String journey = getJourney(input);
+            String criScope = getCriScope(input);
 
             var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {
@@ -187,7 +190,8 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            criId);
+                            criId,
+                            criScope);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
@@ -291,7 +295,8 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId)
+            String criId,
+            String criScope)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException {
 
@@ -313,7 +318,8 @@ public class BuildCriOauthRequestHandler
                         oauthState,
                         userId,
                         govukSigninJourneyId,
-                        evidenceRequest);
+                        evidenceRequest,
+                        criId.equals(NINO_CRI) ? criScope : null);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);

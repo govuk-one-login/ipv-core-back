@@ -23,6 +23,7 @@ class RequestHelperTest {
     private final String TEST_FEATURE_SET = "test-feature-set";
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
     private final String TEST_JOURNEY = DCMAW_CRI;
+    private static final String TEST_SCOPE = "identityCheck";
 
     @Test
     void getHeaderByKeyShouldReturnNullIfHeaderNotFound() {
@@ -275,5 +276,18 @@ class RequestHelperTest {
         assertEquals(
                 ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
                 exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getCriScopeShouldReturnScopeFromJourneyRequest() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .scope(TEST_SCOPE)
+                        .build();
+        assertEquals(TEST_SCOPE, RequestHelper.getCriScope(event));
     }
 }

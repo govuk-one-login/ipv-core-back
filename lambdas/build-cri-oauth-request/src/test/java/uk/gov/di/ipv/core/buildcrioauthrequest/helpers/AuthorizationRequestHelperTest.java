@@ -70,6 +70,8 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String TEST_EMAIL_ADDRESS = "test@hotmail.com";
+    private static final String TEST_CRI_SCOPE = "identityCheck";
+    private static final String CRI_SCOPE = "scope";
     private static final String OAUTH_STATE = SecureTokenHelper.generate();
 
     private final SharedClaimsResponse sharedClaims =
@@ -116,7 +118,8 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        null);
+                        null,
+                        TEST_CRI_SCOPE);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
@@ -129,6 +132,7 @@ class AuthorizationRequestHelperTest {
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(TEST_REDIRECT_URI, result.getJWTClaimsSet().getClaims().get("redirect_uri"));
+        assertEquals(TEST_CRI_SCOPE, result.getJWTClaimsSet().getClaims().get(CRI_SCOPE));
         assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
     }
 
@@ -147,6 +151,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
+                        null,
                         null);
         assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
     }
@@ -168,6 +173,7 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID,
+                                        null,
                                         null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
@@ -207,6 +213,25 @@ class AuthorizationRequestHelperTest {
                                         mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to encrypt JWT", exception.getErrorReason());
+    }
+
+    void shouldNotReturnScopeIfCriScopeIsEmpty()
+            throws ParseException, HttpResponseExceptionWithErrorBody {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+
+        SignedJWT result =
+                AuthorizationRequestHelper.createSignedJWT(
+                        null,
+                        signer,
+                        credentialIssuerConfig,
+                        configService,
+                        OAUTH_STATE,
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID,
+                        null,
+                        null);
+        assertNull(result.getJWTClaimsSet().getClaims().get(CRI_SCOPE));
     }
 
     private void setupCredentialIssuerConfigMock() {

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Map;
+import java.util.Objects;
 
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
@@ -16,8 +17,13 @@ public class CriStepResponse implements StepResponse {
     public static final String CRI_JOURNEY_TEMPLATE = "/journey/cri/build-oauth-request/%s";
 
     private String criId;
+    private String scope;
 
     public Map<String, Object> value() {
-        return Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId));
+        if (Objects.nonNull(scope)) {
+            return Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId), "scope", scope);
+        } else {
+            return Map.of("journey", String.format(CRI_JOURNEY_TEMPLATE, criId));
+        }
     }
 }

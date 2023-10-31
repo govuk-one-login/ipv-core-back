@@ -8,11 +8,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CriStepResponseTest {
 
-    public static final CriStepResponse CRI_RESPONSE = new CriStepResponse("aCriId");
+    public static final String CRI_SCOPE_VALUE = "criScope";
+    public static final CriStepResponse CRI_RESPONSE =
+            new CriStepResponse("aCriId", CRI_SCOPE_VALUE);
 
     @Test
     void valueReturnsCorrectJourneyResponse() {
         assertEquals(
-                Map.of("journey", "/journey/cri/build-oauth-request/aCriId"), CRI_RESPONSE.value());
+                Map.of(
+                        "journey",
+                        "/journey/cri/build-oauth-request/aCriId",
+                        "scope",
+                        CRI_SCOPE_VALUE),
+                CRI_RESPONSE.value());
     }
 }

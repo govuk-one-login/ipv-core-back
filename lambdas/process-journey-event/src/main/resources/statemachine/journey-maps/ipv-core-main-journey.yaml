@@ -474,6 +474,7 @@ CRI_NINO_J6:
   response:
     type: cri
     criId: nino
+    scope: identityCheck
   parent: CRI_STATE
   events:
     next:
