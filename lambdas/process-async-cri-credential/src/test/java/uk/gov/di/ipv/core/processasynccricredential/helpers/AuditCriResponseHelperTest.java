@@ -10,10 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getRestrictedDataForAuditEvent;
 
@@ -25,7 +25,7 @@ class AuditCriResponseHelperTest {
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit()
             throws ParseException, JsonProcessingException {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
+        SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.isSuccessful());
         assertEquals("test-issuer", auditExtensions.getIss());
@@ -36,7 +36,7 @@ class AuditCriResponseHelperTest {
 
     @Test
     void shouldGetPassportRestrictedDataForAudit() throws ParseException, JsonProcessingException {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
+        SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Paul\"}]}],\"docExpiryDate\":\"2020-01-01\"}",
@@ -45,7 +45,7 @@ class AuditCriResponseHelperTest {
 
     @Test
     void shouldGetDLRestrictedDataForAudit() throws ParseException, JsonProcessingException {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_DL_VC);
+        SignedJWT testVerifiableCredential = SignedJWT.parse(VC_DRIVING_PERMIT_NON_DCMAW);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
@@ -55,7 +55,7 @@ class AuditCriResponseHelperTest {
     @Test
     void shouldGetRestrictedDataWithoutDocForAudit()
             throws ParseException, JsonProcessingException {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_ADDRESS_VC);
+        SignedJWT testVerifiableCredential = SignedJWT.parse(VC_ADDRESS_2);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":null}",
@@ -64,7 +64,7 @@ class AuditCriResponseHelperTest {
 
     @Test
     void shouldGetPassportExpiryDateForAudit() throws ParseException {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
+        SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals("2020-01-01", auditNameParts.getDocExpiryDate());
     }
@@ -72,7 +72,7 @@ class AuditCriResponseHelperTest {
     @Test
     void shouldNotGetExpiryDateForAudit() throws ParseException {
         SignedJWT testVerifiableCredential =
-                SignedJWT.parse(SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY);
+                SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertNull(auditNameParts.getDocExpiryDate());
     }

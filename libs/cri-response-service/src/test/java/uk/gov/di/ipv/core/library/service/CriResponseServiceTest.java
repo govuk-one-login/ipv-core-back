@@ -21,7 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @ExtendWith(MockitoExtension.class)
 public class CriResponseServiceTest {
@@ -53,7 +53,8 @@ public class CriResponseServiceTest {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        USER_ID_1, "ukPassport", VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(criResponseItem);
 
@@ -69,7 +70,10 @@ public class CriResponseServiceTest {
         List<CriResponseItem> criResponseItem =
                 List.of(
                         createCriResponseStoreItem(
-                                USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now()));
+                                USER_ID_1,
+                                TEST_CREDENTIAL_ISSUER,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()));
 
         when(mockDataStore.getItems(USER_ID)).thenReturn(criResponseItem);
 
@@ -113,7 +117,8 @@ public class CriResponseServiceTest {
     @Test
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(USER_ID_1, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        USER_ID_1, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
 
         when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
@@ -127,7 +132,10 @@ public class CriResponseServiceTest {
     void shouldDeleteExistingWhenUserHasDeleteRequest() {
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
-                        USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now());
+                        USER_ID_1,
+                        TEST_CREDENTIAL_ISSUER,
+                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                        Instant.now());
 
         when(mockDataStore.delete(USER_ID_1, TEST_CREDENTIAL_ISSUER)).thenReturn(criResponseItem);
 
@@ -140,7 +148,10 @@ public class CriResponseServiceTest {
     void shouldUpdateExistingWhenUserHasUpdateRequest() {
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
-                        USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now());
+                        USER_ID_1,
+                        TEST_CREDENTIAL_ISSUER,
+                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                        Instant.now());
         when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
 
         criResponseService.updateCriResponseItem(criResponseItem);

@@ -65,9 +65,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_WITH_CONTRA_INDICATORS;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
@@ -146,7 +146,7 @@ class RetrieveCriCredentialHandlerTest {
             e.printStackTrace();
         }
         try {
-            TEST_SIGNED_ADDRESS_VC = SignedJWT.parse(SIGNED_ADDRESS_VC);
+            TEST_SIGNED_ADDRESS_VC = SignedJWT.parse(VC_ADDRESS_2);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -189,7 +189,8 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
+                                .verifiableCredentials(
+                                        List.of(SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)))
                                 .build());
 
         mockServiceCallsAndSessionItem();
@@ -253,7 +254,8 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
+                                .verifiableCredentials(
+                                        List.of(SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)))
                                 .build());
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -362,7 +364,8 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
+                                .verifiableCredentials(
+                                        List.of(SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)))
                                 .build());
 
         doThrow(new SqsException("Test sqs error"))
@@ -383,7 +386,8 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
+                                .verifiableCredentials(
+                                        List.of(SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)))
                                 .build());
 
         mockServiceCallsAndSessionItem();
@@ -411,7 +415,7 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(
-                                        List.of(SignedJWT.parse(SIGNED_CONTRA_INDICATORS)))
+                                        List.of(SignedJWT.parse(VC_WITH_CONTRA_INDICATORS)))
                                 .build());
         mockServiceCallsAndSessionItem();
 
@@ -450,7 +454,7 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)))
+                                .verifiableCredentials(List.of(SignedJWT.parse(VC_ADDRESS_2)))
                                 .build());
         mockServiceCallsAndSessionItem();
 
@@ -491,7 +495,7 @@ class RetrieveCriCredentialHandlerTest {
                         CREDENTIAL_ISSUER_ID))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)))
+                                .verifiableCredentials(List.of(SignedJWT.parse(VC_ADDRESS_2)))
                                 .build());
         mockServiceCalls();
 
@@ -648,7 +652,8 @@ class RetrieveCriCredentialHandlerTest {
                         any(), any(), any(), any()))
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
+                                .verifiableCredentials(
+                                        List.of(SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)))
                                 .build());
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
