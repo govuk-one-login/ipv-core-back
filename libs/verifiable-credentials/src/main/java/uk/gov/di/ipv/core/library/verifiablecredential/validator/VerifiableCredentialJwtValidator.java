@@ -18,7 +18,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -142,8 +142,8 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateCiCodes(SignedJWT verifiableCredential) {
-        Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
-                configService.getContraIndicatorScoresMap();
+        Map<String, ContraIndicatorConfig> contraIndicatorConfigMap =
+                configService.getContraIndicatorConfigMap();
 
         try {
             JSONObject vcClaim =
@@ -163,7 +163,7 @@ public class VerifiableCredentialJwtValidator {
                                 cis.stream()
                                         .anyMatch(
                                                 ciCode ->
-                                                        !contraIndicatorScoresMap.containsKey(
+                                                        !contraIndicatorConfigMap.containsKey(
                                                                 ciCode));
                         if (anyUnrecognisedCiCodes) {
                             break;

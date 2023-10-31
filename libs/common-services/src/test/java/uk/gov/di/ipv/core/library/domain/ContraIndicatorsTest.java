@@ -23,14 +23,14 @@ class ContraIndicatorsTest {
 
     private static final String TEST_CI4_UNKNOWN = "CI4";
     private static final Instant BASE_TIME = Instant.now();
-    private static final Map<String, ContraIndicatorScore> CONTRA_INDICATOR_SCORE_MAP =
+    private static final Map<String, ContraIndicatorConfig> CONTRA_INDICATOR_CONFIG_MAP =
             Map.of(
                     TEST_CI1,
-                    new ContraIndicatorScore(TEST_CI1, 4, -3, null, null),
+                    new ContraIndicatorConfig(TEST_CI1, 4, -3, "1"),
                     TEST_CI2,
-                    new ContraIndicatorScore(TEST_CI2, 3, -3, null, null),
+                    new ContraIndicatorConfig(TEST_CI2, 3, -3, "2"),
                     TEST_CI3,
-                    new ContraIndicatorScore(TEST_CI3, 2, -1, null, null));
+                    new ContraIndicatorConfig(TEST_CI3, 2, -1, "3"));
 
     @BeforeEach
     void setup() {
@@ -45,7 +45,7 @@ class ContraIndicatorsTest {
     @Test
     void shouldReturnZeroScoreWhenNoContraIndicatorExistInContraIndications()
             throws UnrecognisedCiException {
-        assertEquals(0, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
+        assertEquals(0, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
     }
 
     @Test
@@ -54,7 +54,7 @@ class ContraIndicatorsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
-        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
+        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
     }
 
     @Test
@@ -64,7 +64,7 @@ class ContraIndicatorsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
-        assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
+        assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
     }
 
     @Test
@@ -97,7 +97,7 @@ class ContraIndicatorsTest {
                 TEST_CI4_UNKNOWN, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertThrows(
                 UnrecognisedCiException.class,
-                () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
+                () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
     }
 
     @Test

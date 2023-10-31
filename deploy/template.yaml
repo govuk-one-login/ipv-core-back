@@ -965,7 +965,7 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/connections/*/api-key-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1644,7 +1644,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -1923,7 +1923,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
       AutoPublishAlias: live
@@ -2126,7 +2126,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - Statement:
             - Sid: kmsSigningKeyPermission
               Effect: Allow
@@ -2295,7 +2295,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - Statement:
           - Sid: EnforceStayinSpecificVpc
             Effect: Allow

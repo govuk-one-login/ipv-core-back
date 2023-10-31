@@ -21,7 +21,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
@@ -308,20 +308,19 @@ public class ConfigService {
         return Boolean.parseBoolean(getSsmParameterWithOverride(pathTemplate, credentialIssuerId));
     }
 
-    public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
-        String secretId = resolveBasePath() + ConfigurationVariable.CI_SCORING_CONFIG.getPath();
+    public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
+        String secretId = resolveBasePath() + ConfigurationVariable.CI_CONFIG.getPath();
         try {
             String secretValue = getSecretValue(secretId);
-            List<ContraIndicatorScore> scoresList =
+            List<ContraIndicatorConfig> configList =
                     objectMapper.readValue(secretValue, new TypeReference<>() {});
-            Map<String, ContraIndicatorScore> scoresMap = new HashMap<>();
-            for (ContraIndicatorScore scores : scoresList) {
-                String ci = scores.getCi();
-                scoresMap.put(ci, scores);
+            Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
+            for (ContraIndicatorConfig config : configList) {
+                configMap.put(config.getCi(), config);
             }
-            return scoresMap;
+            return configMap;
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse contra-indicator scoring config");
+            LOGGER.error("Failed to parse contra-indicator config");
             return Collections.emptyMap();
         }
     }

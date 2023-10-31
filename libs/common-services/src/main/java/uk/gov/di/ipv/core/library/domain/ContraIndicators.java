@@ -20,7 +20,7 @@ public class ContraIndicators {
     private final Map<String, ContraIndicator> contraIndicatorsMap;
 
     public Integer getContraIndicatorScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores)
+            final Map<String, ContraIndicatorConfig> contraIndicatorScores)
             throws UnrecognisedCiException {
         validateContraIndicators(contraIndicatorScores);
         return calculateDetectedScore(contraIndicatorScores)
@@ -38,7 +38,7 @@ public class ContraIndicators {
     }
 
     private void validateContraIndicators(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores)
+            final Map<String, ContraIndicatorConfig> contraIndicatorScores)
             throws UnrecognisedCiException {
         final Set<String> knownContraIndicators = contraIndicatorScores.keySet();
         final List<String> unknownContraIndicators =
@@ -51,7 +51,7 @@ public class ContraIndicators {
     }
 
     private Integer calculateDetectedScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores) {
+            final Map<String, ContraIndicatorConfig> contraIndicatorScores) {
         return contraIndicatorsMap.keySet().stream()
                 .map(
                         contraIndicatorCode ->
@@ -60,7 +60,7 @@ public class ContraIndicators {
     }
 
     private Integer calculateCheckedScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores) {
+            final Map<String, ContraIndicatorConfig> contraIndicatorScores) {
         return contraIndicatorsMap.values().stream()
                 .filter(
                         contraIndicator ->
