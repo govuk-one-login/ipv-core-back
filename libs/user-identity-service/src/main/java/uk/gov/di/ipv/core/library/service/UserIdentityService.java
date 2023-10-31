@@ -408,29 +408,36 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private List<IdentityClaim> getIdentityClaims(List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody {
-        List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem item : vcStoreItems) {
-            identityClaims.add(
-                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
-        }
-        return identityClaims;
+    public boolean checkBirthDateCorrelationInCredentials(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        final List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForBirthDateCorrelation(successfulVCStoreItems);
+        return identityClaims.stream()
+                        .map(IdentityClaim::getBirthDate)
+                        .flatMap(List::stream)
+                        .map(BirthDate::getValue)
+                        .distinct()
+                        .count()
+                <= 1;
     }
 
     // This method checks the birthdate requirement, which is in violation of GPG45 rules.
     // However, considering that 'BAV' CRI does not contain a birthdate,
     // we add this special handling only for 'BAV' CRI. For other CRIs, we continue to validate this
     // requirement.
-    private List<IdentityClaim> getIdentityClaimsForDOBCheckOnlyBAVCRI(
+    private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
             List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
-            if (BAV_CRI.equals(item.getCredentialIssuer())
-                    && isBirthDateEmpty(identityClaim.getBirthDate())) {
-                continue;
+            if (isBirthDateEmpty(identityClaim.getBirthDate())) {
+                if (BAV_CRI.equals(item.getCredentialIssuer())) {
+                    continue;
+                }
+                addLogMessage(item, "Birthdate property is missing from VC");
             }
             identityClaims.add(identityClaim);
         }
@@ -442,27 +449,35 @@ public class UserIdentityService {
                 || birtDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    public boolean checkBirthDateCorrelationInCredentials(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        final List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims =
-                getIdentityClaimsForDOBCheckOnlyBAVCRI(successfulVCStoreItems);
-        return identityClaims.stream()
-                        .map(IdentityClaim::getBirthDate)
-                        .flatMap(List::stream)
-                        .map(BirthDate::getValue)
-                        .distinct()
-                        .count()
-                <= 1;
-    }
-
     public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForNameCorrelation(successfulVCStoreItems);
         return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+    }
+
+    private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim =
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            if (isNamesEmpty(identityClaim.getName())) {
+                addLogMessage(item, "Name property is missing from VC");
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    private boolean isNamesEmpty(List<Name> names) {
+        return CollectionUtils.isEmpty(names)
+                || names.stream()
+                        .flatMap(name -> name.getNameParts().stream())
+                        .map(NameParts::getValue)
+                        .allMatch(StringUtils::isEmpty);
     }
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {
@@ -510,5 +525,13 @@ public class UserIdentityService {
                         })
                 .map(String::trim)
                 .toList();
+    }
+
+    private void addLogMessage(VcStoreItem item, String error) {
+        StringMapMessage logMessage =
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), error)
+                        .with(LOG_CRI_ISSUER.getFieldName(), item.getCredentialIssuer());
+        LOGGER.warn(logMessage);
     }
 }
