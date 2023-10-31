@@ -167,6 +167,12 @@ public class CheckExistingIdentityHandler
 
             boolean dataCorrelates = vcDataCorrelates(userId);
             if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser));
+
                 return JOURNEY_FAIL;
             } else if (!dataCorrelates) {
                 LOGGER.info(
