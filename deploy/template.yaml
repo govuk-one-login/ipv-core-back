@@ -2455,7 +2455,7 @@ Resources:
         AttributeName: "ttl"
         Enabled: !If
           - IsProduction
-          - true #false set to true until user privacy notice is updated
+          - false #false set to true until user privacy notice is updated
           - true
       SSESpecification:
         SSEEnabled: true
