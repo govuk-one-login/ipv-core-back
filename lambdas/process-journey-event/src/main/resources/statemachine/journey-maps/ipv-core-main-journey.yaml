@@ -644,23 +644,6 @@ MITIGATION_02_OPTIONS:
     end:
       targetState: PYI_ANOTHER_WAY
 
-# To be removed in a second stage
-MITIGATION_02_CRI_ELIGIBILITY:
-  response:
-    type: page
-    pageId: page-ipv-identity-document-start
-  events:
-    next:
-      targetState: MITIGATION_02_CRI_DCMAW
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
-
 MITIGATION_02_CRI_DCMAW:
   response:
     type: cri
