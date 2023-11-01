@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
@@ -24,6 +26,7 @@ public class UserIdentity {
     private static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
     private static final String DRIVING_PERMIT_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/drivingPermit";
+    public static final String EXIT_CODE_NAME = "exit_code";
 
     @JsonProperty(VCS_CLAIM_NAME)
     private List<String> vcs;
@@ -46,6 +49,10 @@ public class UserIdentity {
 
     @JsonProperty private String vtm;
 
+    @JsonInclude(Include.NON_NULL)
+    @JsonProperty(EXIT_CODE_NAME)
+    private List<String> exitCode;
+
     @JsonCreator
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
@@ -55,7 +62,8 @@ public class UserIdentity {
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
-            @JsonProperty(value = "vtm", required = true) String vtm) {
+            @JsonProperty(value = "vtm", required = true) String vtm,
+            @JsonProperty(value = EXIT_CODE_NAME) List<String> exitCode) {
         this.vcs = new ArrayList<>(vcs);
         this.identityClaim = identityClaim;
         this.addressClaim = addressClaim;
@@ -64,5 +72,6 @@ public class UserIdentity {
         this.sub = sub;
         this.vot = vot;
         this.vtm = vtm;
+        this.exitCode = exitCode;
     }
 }
