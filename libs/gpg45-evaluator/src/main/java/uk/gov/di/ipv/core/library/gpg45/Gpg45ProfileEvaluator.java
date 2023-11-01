@@ -63,7 +63,7 @@ public class Gpg45ProfileEvaluator {
                                 contraIndicators.getContraIndicatorsMap().size()));
         final int ciScore =
                 contraIndicators.getContraIndicatorScore(
-                        configService.getContraIndicatorScoresMap());
+                        configService.getContraIndicatorConfigMap());
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")

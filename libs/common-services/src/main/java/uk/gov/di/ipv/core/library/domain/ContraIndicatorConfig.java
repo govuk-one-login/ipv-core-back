@@ -4,15 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContraIndicatorScore {
+public class ContraIndicatorConfig {
     private String ci;
     private Integer detectedScore;
     private Integer checkedScore;
-    private String fidCode;
-    private List<String> mitigations;
+    private String exitCode;
 }

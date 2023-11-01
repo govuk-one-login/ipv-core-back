@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -79,14 +79,14 @@ class Gpg45ProfileEvaluatorTest {
     private static final String CI1 = "X98";
     private static final String CI2 = "X99";
     private static final String CI3 = "X97";
-    private static final Map<String, ContraIndicatorScore> TEST_CI_SCORES =
+    private static final Map<String, ContraIndicatorConfig> TEST_CI_CONFIG =
             Map.of(
                     CI1,
-                    new ContraIndicatorScore(CI1, 1, -1, null, Collections.emptyList()),
+                    new ContraIndicatorConfig(CI1, 1, -1, "1"),
                     CI2,
-                    new ContraIndicatorScore(CI2, 3, -2, null, Collections.emptyList()),
+                    new ContraIndicatorConfig(CI2, 3, -2, "2"),
                     CI3,
-                    new ContraIndicatorScore(CI3, 4, -3, null, Collections.emptyList()));
+                    new ContraIndicatorConfig(CI3, 4, -3, "3"));
 
     private static final Map<String, String> TEST_CI_MITIGATION_CONFIG =
             Map.of(CI3, JOURNEY_PYI_CI3_FAIL);
@@ -371,8 +371,8 @@ class Gpg45ProfileEvaluatorTest {
                         "Should return unsuccessful activity/fraud/verification scores."));
     }
 
-    private void setupMockContraIndicatorScoringConfig() {
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(TEST_CI_SCORES);
+    private void setupMockContraIndicatorConfig() {
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(TEST_CI_CONFIG);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
     }
 
@@ -427,7 +427,7 @@ class Gpg45ProfileEvaluatorTest {
         void shouldNotReturnJourneyIfNoContraIndicators()
                 throws ConfigException, UnrecognisedCiException {
             final ContraIndicators contraIndications = buildTestContraIndications();
-            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorConfig();
             IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(
@@ -442,7 +442,7 @@ class Gpg45ProfileEvaluatorTest {
                 throws ConfigException, UnrecognisedCiException {
             final ContraIndicators contraIndications =
                     buildTestContraIndications(new TestContraIndicator(CI2));
-            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorConfig();
             IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(
@@ -458,7 +458,7 @@ class Gpg45ProfileEvaluatorTest {
             final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI3), new TestContraIndicator(CI1));
-            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorConfig();
             setupMockContraIndicatorMitigationConfig();
             IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
@@ -475,7 +475,7 @@ class Gpg45ProfileEvaluatorTest {
             final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI1), new TestContraIndicator(CI3));
-            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorConfig();
             setupMockContraIndicatorMitigationConfig();
             IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
@@ -493,7 +493,7 @@ class Gpg45ProfileEvaluatorTest {
                     buildTestContraIndications(
                             new TestContraIndicator(CI1),
                             new TestContraIndicator(CI3, List.of("mitigated")));
-            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorConfig();
             IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(

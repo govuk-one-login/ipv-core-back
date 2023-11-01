@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -37,8 +37,8 @@ class VerifiableCredentialJwtValidatorTest {
             "https://staging-di-ipv-cri-address-front.london.cloudapps.digital";
     private static final ECKey TEST_SIGNING_KEY;
     private static final ECKey TEST_SIGNING_KEY2;
-    private static final Map<String, ContraIndicatorScore> CI_MAP =
-            Map.of("A02", new ContraIndicatorScore(), "A03", new ContraIndicatorScore());
+    private static final Map<String, ContraIndicatorConfig> CI_MAP =
+            Map.of("A02", new ContraIndicatorConfig(), "A03", new ContraIndicatorConfig());
 
     static {
         try {
@@ -64,7 +64,7 @@ class VerifiableCredentialJwtValidatorTest {
 
     @Test
     void validatesValidVerifiableCredentialsSuccessfully() {
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(CI_MAP);
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         vcJwtValidator.validate(verifiableCredentials, credentialIssuerConfig, TEST_USER);
@@ -125,7 +125,7 @@ class VerifiableCredentialJwtValidatorTest {
     @Test
     void validatesValidVerifiableCredentialsWithDerSignatureSuccessfully()
             throws JOSEException, ParseException {
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(CI_MAP);
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         var jwtParts = verifiableCredentials.getParsedParts();
@@ -169,7 +169,7 @@ class VerifiableCredentialJwtValidatorTest {
 
     @Test
     void validatesValidVCSuccessfully() throws ParseException {
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(CI_MAP);
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         vcJwtValidator.validate(
@@ -181,8 +181,8 @@ class VerifiableCredentialJwtValidatorTest {
 
     @Test
     void validateThrowsIfCiCodesAreNotRecognised() throws Exception {
-        when(mockConfigService.getContraIndicatorScoresMap())
-                .thenReturn(Map.of("NO", new ContraIndicatorScore()));
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("NO", new ContraIndicatorConfig()));
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         ECKey signingKey = credentialIssuerConfig.getSigningKey();
         String componentId = credentialIssuerConfig.getComponentId();

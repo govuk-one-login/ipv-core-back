@@ -24,7 +24,7 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
@@ -548,25 +548,29 @@ class ConfigServiceTest {
     }
 
     @Test
-    void shouldGetContraIndicatorScoresMap() {
+    void shouldGetContraIndicatorConfigMap() {
         String scoresJsonString =
-                "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
+                "[{\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\"},{\"ci\":\"Z03\",\"detectedScore\":5,\"checkedScore\":-3,\"exitCode\":\"1\"}]";
         when(secretsProvider.get(any())).thenReturn(scoresJsonString);
 
-        Map<String, ContraIndicatorScore> scoresMap = configService.getContraIndicatorScoresMap();
+        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
 
-        assertEquals(2, scoresMap.size());
-        assertTrue(scoresMap.containsKey("X01"));
-        assertTrue(scoresMap.containsKey("Z03"));
+        assertEquals(2, configMap.size());
+        assertTrue(configMap.containsKey("X01"));
+        assertTrue(configMap.containsKey("Z03"));
+        assertEquals("X01", configMap.get("X01").getCi());
+        assertEquals(3, configMap.get("X01").getDetectedScore());
+        assertEquals(-3, configMap.get("X01").getCheckedScore());
+        assertEquals("1", configMap.get("X01").getExitCode());
     }
 
     @Test
-    void shouldReturnEmptyCollectionOnInvalidContraIndicatorScoresMap() {
-        final String invalidCIScoresJsonString =
-                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"fidCode\":\"YZ01\"}]";
-        when(secretsProvider.get(any())).thenReturn(invalidCIScoresJsonString);
-        Map<String, ContraIndicatorScore> scoresMap = configService.getContraIndicatorScoresMap();
-        assertTrue(scoresMap.isEmpty());
+    void shouldReturnEmptyCollectionOnInvalidContraIndicatorConfigsMap() {
+        final String invalidCIConfigJsonString =
+                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\"}]";
+        when(secretsProvider.get(any())).thenReturn(invalidCIConfigJsonString);
+        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
+        assertTrue(configMap.isEmpty());
     }
 
     @Test
