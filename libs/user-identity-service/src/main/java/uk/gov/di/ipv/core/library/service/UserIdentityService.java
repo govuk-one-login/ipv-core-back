@@ -69,6 +69,7 @@ public class UserIdentityService {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String ADDRESS_PROPERTY_NAME = "address";
+    private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -162,6 +163,10 @@ public class UserIdentityService {
             Optional<JsonNode> drivingPermitClaim =
                     generateDrivingPermitClaim(successfulVCStoreItems);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+
+            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
+            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
+
             if (configService.enabled(EXIT_CODES)) {
                 userIdentityBuilder.exitCode(toAlwaysRequiredExitCode(contraIndicators));
             }
@@ -335,6 +340,39 @@ public class UserIdentityService {
         }
 
         return Optional.of(addressNode);
+    }
+
+    private Optional<JsonNode> generateNinoClaim(List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
+        var ninoStoreItem = findStoreItem(NINO_CRI, successfulVCStoreItems);
+
+        if (ninoStoreItem.isEmpty()) {
+            LOGGER.warn("Failed to find Nino CRI credential");
+            return Optional.empty();
+        }
+
+        var ninoNode =
+                extractCriNodeFromCredential(
+                        NINO_PROPERTY_NAME,
+                        ninoStoreItem.get(),
+                        "Error while parsing Nino CRI credential",
+                        ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
+
+        if (ninoNode.isMissingNode()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Nino property is missing from VC")
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    ninoStoreItem.get().getCredentialIssuer());
+            LOGGER.warn(mapMessage);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(ninoNode);
     }
 
     private Optional<JsonNode> generatePassportClaim(List<VcStoreItem> successfulVCStoreItems)

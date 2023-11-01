@@ -606,7 +606,143 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetSubClaimOnUserIdentity() throws Exception {
+    void generateUserIdentityShouldSetNinoClaimWhenVotIsP2()
+            throws Exception {
+        // Arrange
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_DRIVING_PERMIT_DCMAW, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "nino", VC_NINO_SUCCESSFUL, Instant.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        // Act
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+
+        // Assert
+        JsonNode ninoClaim = credentials.getNinoClaim();
+        assertEquals("AA000003D", ninoClaim.get(0).get("personalNumber").asText());
+    }
+
+    @Test
+    void generateUserIdentityShouldNotSetNinoClaimWhenVotIsP0()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_DRIVING_PERMIT_DCMAW, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "nino", VC_NINO_SUCCESSFUL, Instant.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        // Act
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoProperty()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_DRIVING_PERMIT_DCMAW, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "nino",
+                                VC_NINO_MISSING_SOCIAL_SECURITY_RECORD,
+                                Instant.now()));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        // Act
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoVc()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_DRIVING_PERMIT_DCMAW, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        // Act
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyNinoClaimWhenNinoVcIsUnsuccessful()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_DRIVING_PERMIT_DCMAW, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "nino", VC_NINO_UNSUCCESSFUL, Instant.now()));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        // Act
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void shouldSetSubClaimOnUserIdentity()
+            throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =

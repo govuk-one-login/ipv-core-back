@@ -58,10 +58,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class BuildUserIdentityHandlerTest {
@@ -104,6 +101,7 @@ class BuildUserIdentityHandlerTest {
                         objectMapper.readTree(ADDRESS_JSON_1),
                         objectMapper.readTree(PASSPORT_JSON_1),
                         objectMapper.readTree(DRIVING_PERMIT_JSON_1),
+                        objectMapper.readTree(NINO_JSON_1),
                         "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM,
@@ -141,6 +139,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest() throws Exception {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -163,9 +162,11 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
 
+        // Assert
         assertEquals(200, response.getStatusCode());
 
         UserIdentity responseBody =
@@ -178,6 +179,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
         assertEquals(userIdentity.getExitCode(), responseBody.getExitCode());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);

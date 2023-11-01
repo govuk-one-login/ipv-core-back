@@ -26,6 +26,8 @@ public class UserIdentity {
     private static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
     private static final String DRIVING_PERMIT_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/drivingPermit";
+    private static final String NINO_CLAIM_NAME =
+            "https://vocab.account.gov.uk/v1/socialSecurityRecord";
     public static final String EXIT_CODE_NAME = "exit_code";
 
     @JsonProperty(VCS_CLAIM_NAME)
@@ -42,6 +44,9 @@ public class UserIdentity {
 
     @JsonProperty(DRIVING_PERMIT_CLAIM_NAME)
     private JsonNode drivingPermitClaim;
+
+    @JsonProperty(NINO_CLAIM_NAME)
+    private JsonNode ninoClaim;
 
     @JsonProperty private String sub;
 
@@ -60,6 +65,7 @@ public class UserIdentity {
             @JsonProperty(value = ADDRESS_CLAIM_NAME) JsonNode addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) JsonNode passportClaim,
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
+            @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
@@ -69,6 +75,7 @@ public class UserIdentity {
         this.addressClaim = addressClaim;
         this.passportClaim = passportClaim;
         this.drivingPermitClaim = drivingPermitClaim;
+        this.ninoClaim = ninoClaim;
         this.sub = sub;
         this.vot = vot;
         this.vtm = vtm;
