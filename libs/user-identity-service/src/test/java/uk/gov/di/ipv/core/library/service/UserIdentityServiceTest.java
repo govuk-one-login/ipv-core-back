@@ -212,7 +212,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1,
-                                "ukPassport",
+                                "address",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_1, Instant.now()));
@@ -237,7 +237,7 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1,
-                                "ukPassport",
+                                "address",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()));
 
@@ -332,6 +332,11 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1,
                                 "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "address",
                                 SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
                                 Instant.now()));
 

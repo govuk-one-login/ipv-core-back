@@ -61,6 +61,9 @@ public class UserIdentityService {
     public static final List<String> EVIDENCE_CRI_TYPES =
             List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
 
+    public static final List<String> EXCLUDE_CRIS_TYPES_FOR_DOB_CORRELATION =
+            List.of(ADDRESS_CRI, BAV_CRI);
+
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
@@ -434,7 +437,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                if (BAV_CRI.equals(item.getCredentialIssuer())) {
+                if (EXCLUDE_CRIS_TYPES_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
                 addLogMessage(item, "Birthdate property is missing from VC");
@@ -465,6 +468,9 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isNamesEmpty(identityClaim.getName())) {
+                if (ADDRESS_CRI.equals(item.getCredentialIssuer())) {
+                    continue;
+                }
                 addLogMessage(item, "Name property is missing from VC");
             }
             identityClaims.add(identityClaim);
