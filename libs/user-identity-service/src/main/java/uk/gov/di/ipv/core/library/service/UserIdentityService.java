@@ -61,7 +61,8 @@ public class UserIdentityService {
     public static final List<String> EVIDENCE_CRI_TYPES =
             List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
 
-    public static final List<String> EXCLUDE_CRIS_TYPES_FOR_DOB_CORRELATION =
+    public static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS_CRI);
+    public static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
             List.of(ADDRESS_CRI, BAV_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -426,11 +427,6 @@ public class UserIdentityService {
                 <= 1;
     }
 
-    // This method checks the birthdate requirement, which is in violation of GPG45 rules.
-    // However, considering that BAV and Address CRI  does not contain a birthdate,
-    // we add this special handling only for BAV and Address CRI. For other CRIs, we continue to
-    // validate this
-    // requirement.
     private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
             List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
@@ -438,8 +434,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                // excluded BAV and Address CRI
-                if (EXCLUDE_CRIS_TYPES_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
                 addLogMessage(item, "Birthdate property is missing from VC");
@@ -449,9 +444,9 @@ public class UserIdentityService {
         return identityClaims;
     }
 
-    private boolean isBirthDateEmpty(List<BirthDate> birtDates) {
-        return CollectionUtils.isEmpty(birtDates)
-                || birtDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
+    public boolean isBirthDateEmpty(List<BirthDate> birthDates) {
+        return CollectionUtils.isEmpty(birthDates)
+                || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
     public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
@@ -470,8 +465,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isNamesEmpty(identityClaim.getName())) {
-                // excluded Address CRI. Because Address CRI does not contain a name,
-                if (ADDRESS_CRI.equals(item.getCredentialIssuer())) {
+                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
                 addLogMessage(item, "Name property is missing from VC");
