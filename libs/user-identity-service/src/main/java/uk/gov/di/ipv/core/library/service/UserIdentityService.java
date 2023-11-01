@@ -427,8 +427,8 @@ public class UserIdentityService {
     }
 
     // This method checks the birthdate requirement, which is in violation of GPG45 rules.
-    // However, considering that 'BAV' CRI does not contain a birthdate,
-    // we add this special handling only for 'BAV' CRI. For other CRIs, we continue to validate this
+    // However, considering that BAV and Address CRI  does not contain a birthdate,
+    // we add this special handling only for BAV and Address CRI. For other CRIs, we continue to validate this
     // requirement.
     private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
             List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
@@ -437,6 +437,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
+                //excluded BAV and Address CRI
                 if (EXCLUDE_CRIS_TYPES_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
@@ -468,6 +469,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim =
                     getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
             if (isNamesEmpty(identityClaim.getName())) {
+                //excluded Address CRI. Because Address CRI does not contain a name,
                 if (ADDRESS_CRI.equals(item.getCredentialIssuer())) {
                     continue;
                 }
