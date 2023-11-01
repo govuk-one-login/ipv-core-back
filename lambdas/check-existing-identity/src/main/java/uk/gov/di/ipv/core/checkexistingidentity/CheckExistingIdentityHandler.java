@@ -16,14 +16,17 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -35,6 +38,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -58,6 +62,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_UNCORRELATABLE_DATA;
@@ -97,6 +102,7 @@ public class CheckExistingIdentityHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final CiMitService ciMitService;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -106,7 +112,8 @@ public class CheckExistingIdentityHandler
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CriResponseService criResponseService) {
+            CriResponseService criResponseService,
+            CiMitService ciMitService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -114,6 +121,7 @@ public class CheckExistingIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
+        this.ciMitService = ciMitService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -127,6 +135,7 @@ public class CheckExistingIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        this.ciMitService = new CiMitService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -159,6 +168,16 @@ public class CheckExistingIdentityHandler
             Optional<Map<String, Object>> f2fResponse = getFaceToFaceResponse(f2fRequest, f2fVc);
             if (f2fResponse.isPresent()) {
                 return f2fResponse.get();
+            }
+
+            Optional<JourneyResponse> ciScoringJourneyResponse =
+                    checkCiScoring(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            govukSigninJourneyId,
+                            ipAddress);
+            if (ciScoringJourneyResponse.isPresent()) {
+                return ciScoringJourneyResponse.get().toObjectMap();
             }
 
             List<SignedJWT> credentials =
@@ -264,6 +283,13 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } catch (CiRetrievalException e) {
+            LOGGER.error("Error when fetching CIs from storage system", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GET_STORED_CIS)
+                    .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return new JourneyErrorResponse(
@@ -292,7 +318,46 @@ public class CheckExistingIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
+        } catch (ConfigException e) {
+            LOGGER.error("Configuration error", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
+                    .toObjectMap();
+        } catch (UnrecognisedCiException e) {
+            LOGGER.error("Unrecognised CI code received", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.UNRECOGNISED_CI_CODE)
+                    .toObjectMap();
         }
+    }
+
+    private Optional<JourneyResponse> checkCiScoring(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String govukSigninJourneyId,
+            String ipAddress)
+            throws CiRetrievalException, UnrecognisedCiException, ConfigException {
+        final Optional<JourneyResponse> contraIndicatorJourneyResponse =
+                gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        ciMitService.getContraIndicatorsVC(
+                                clientOAuthSessionItem.getUserId(),
+                                govukSigninJourneyId,
+                                ipAddress),
+                        ipvSessionItem);
+
+        if (contraIndicatorJourneyResponse.isPresent()) {
+            StringMapMessage message = new StringMapMessage();
+            JourneyResponse journeyResponse = contraIndicatorJourneyResponse.get();
+            message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
+                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), journeyResponse.toString());
+            LOGGER.info(message);
+            return Optional.of(journeyResponse);
+        }
+        return contraIndicatorJourneyResponse;
     }
 
     @Tracing
