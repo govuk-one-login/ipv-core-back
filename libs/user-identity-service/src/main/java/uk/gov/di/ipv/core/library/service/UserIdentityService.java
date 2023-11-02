@@ -8,10 +8,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -47,6 +49,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -64,6 +67,10 @@ public class UserIdentityService {
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
             List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
+
+    public static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS_CRI);
+    public static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
+            List.of(ADDRESS_CRI, BAV_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -451,21 +458,12 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private List<IdentityClaim> getIdentityClaims(List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody {
-        List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem item : vcStoreItems) {
-            identityClaims.add(
-                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
-        }
-        return identityClaims;
-    }
-
     public boolean checkBirthDateCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForBirthDateCorrelation(successfulVCStoreItems);
         return identityClaims.stream()
                         .map(IdentityClaim::getBirthDate)
                         .flatMap(List::stream)
@@ -475,12 +473,60 @@ public class UserIdentityService {
                 <= 1;
     }
 
+    private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
+            List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim =
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            if (isBirthDateEmpty(identityClaim.getBirthDate())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
+                    continue;
+                }
+                addLogMessage(item, "Birthdate property is missing from VC");
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    public boolean isBirthDateEmpty(List<BirthDate> birthDates) {
+        return CollectionUtils.isEmpty(birthDates)
+                || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
+    }
+
     public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForNameCorrelation(successfulVCStoreItems);
         return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+    }
+
+    private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim =
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            if (isNamesEmpty(identityClaim.getName())) {
+                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
+                    continue;
+                }
+                addLogMessage(item, "Name property is missing from VC");
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    private boolean isNamesEmpty(List<Name> names) {
+        return CollectionUtils.isEmpty(names)
+                || names.stream()
+                        .flatMap(name -> name.getNameParts().stream())
+                        .map(NameParts::getValue)
+                        .allMatch(StringUtils::isEmpty);
     }
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {
@@ -528,5 +574,13 @@ public class UserIdentityService {
                         })
                 .map(String::trim)
                 .toList();
+    }
+
+    private void addLogMessage(VcStoreItem item, String error) {
+        StringMapMessage logMessage =
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), error)
+                        .with(LOG_CRI_ISSUER.getFieldName(), item.getCredentialIssuer());
+        LOGGER.warn(logMessage);
     }
 }

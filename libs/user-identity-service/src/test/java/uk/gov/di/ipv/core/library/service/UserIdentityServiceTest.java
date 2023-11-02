@@ -150,7 +150,8 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
-                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "bav", SIGNED_VC_5, Instant.now()));
 
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
@@ -193,6 +194,22 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void checkNameCorrelationInCredentialsReturnFalseWhenNameDifferForBavCRI() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "bav", SIGNED_VC_1, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+
+        assertFalse(isValid);
+    }
+
+    @Test
     void checkNameCorrelationWithSameNamesAndMissingNameCredentialsForReturnTrue()
             throws Exception {
         List<VcStoreItem> vcStoreItems =
@@ -205,7 +222,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1,
-                                "ukPassport",
+                                "address",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_1, Instant.now()));
@@ -230,7 +247,7 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1,
-                                "ukPassport",
+                                "address",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()));
 
@@ -244,7 +261,28 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationWithSameBirthDatesAndMissingBirthDateCredentialsForReturnTrue()
+    void checkNameCorrelationWithMissingNameCredentialsForOnlyBAVCRIReturnFalse() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "bav",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+
+        assertFalse(isValid);
+    }
+
+    @Test
+    void checkBirthDateCorrelationWithSameBirthDatesAndMissingBirthDateCredentialsForReturnTrue()
             throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -270,7 +308,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationWithMissingBirthDateCredentialsForReturnTrue() throws Exception {
+    void checkBirthDateCorrelationWithMissingBirthDateCredentialsForReturnTrue() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -290,6 +328,88 @@ class UserIdentityServiceTest {
         boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
+    }
+
+    @Test
+    void checkBirthDateCorrelationWithMissingBirthDateForAllCRIsAndReturnTrue() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "bav",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "address",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkBirthDateCorrelationWithMissingBirthDateForOnlyBAVCRIAndReturnTrue()
+            throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "bav",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkBirthDateCorrelationWithBirthDateIsNotEmptyForBAVCRIAndReturnTrue() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "bav", SIGNED_VC_2, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkBirthDateCorrelationWithBirthDateIsNotEmptyButDifferentDOBForBAVCRIAndReturnFalse()
+            throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "bav", SIGNED_VC_1, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+
+        assertFalse(isValid);
     }
 
     @Test
