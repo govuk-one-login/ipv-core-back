@@ -167,6 +167,13 @@ public class CheckExistingIdentityHandler
 
             boolean dataCorrelates = vcDataCorrelates(userId);
             if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F return - failed to correlate VC data");
+                LOGGER.info(message);
+
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
