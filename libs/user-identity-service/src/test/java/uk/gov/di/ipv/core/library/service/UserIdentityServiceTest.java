@@ -65,7 +65,7 @@ class UserIdentityServiceTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
-    private ContraIndicators emptyContraIndicators =
+    private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().contraIndicatorsMap(new HashMap<>()).build();
     private UserIdentityService userIdentityService;
 
@@ -438,6 +438,40 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void shouldSetIdentityClaimWhenVotIsP2MissingName() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "dcmaw",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+
+        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
     void shouldNotSetIdentityClaimWhenVotIsP0() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -749,7 +783,7 @@ class UserIdentityServiceTest {
         assertTrue(
                 vcStoreItems.stream()
                         .map(VcStoreItem::getCredentialIssuer)
-                        .anyMatch(item -> testCredentialIssuer.equals(item)));
+                        .anyMatch(testCredentialIssuer::equals));
     }
 
     @Test
@@ -1094,9 +1128,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("issuer3", true));
         assertThrows(
                 NoVcStatusForIssuerException.class,
-                () -> {
-                    userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer");
-                });
+                () -> userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer"));
     }
 
     @Test
@@ -1154,9 +1186,8 @@ class UserIdentityServiceTest {
 
     private void mockCredentialIssuerConfig() {
         NON_EVIDENCE_CRI_TYPES.forEach(
-                credentialIssuer -> {
-                    when(mockConfigService.getComponentId(credentialIssuer))
-                            .thenReturn(credentialIssuer);
-                });
+                credentialIssuer ->
+                        when(mockConfigService.getComponentId(credentialIssuer))
+                                .thenReturn(credentialIssuer));
     }
 }
