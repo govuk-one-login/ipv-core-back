@@ -202,6 +202,13 @@ public class CheckExistingIdentityHandler
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "F2F return - failed to match a profile.");
                 LOGGER.info(message);
+
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser));
+
                 return JOURNEY_FAIL;
             }
 

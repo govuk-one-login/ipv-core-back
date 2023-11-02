@@ -438,6 +438,13 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+
         assertEquals(JOURNEY_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
