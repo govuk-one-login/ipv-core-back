@@ -621,7 +621,8 @@ class UserIdentityServiceTest {
 
         // Act
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         // Assert
         JsonNode ninoClaim = credentials.getNinoClaim();
@@ -643,7 +644,8 @@ class UserIdentityServiceTest {
 
         // Act
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -675,7 +677,8 @@ class UserIdentityServiceTest {
 
         // Act
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -702,7 +705,8 @@ class UserIdentityServiceTest {
 
         // Act
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -730,7 +734,8 @@ class UserIdentityServiceTest {
 
         // Act
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
