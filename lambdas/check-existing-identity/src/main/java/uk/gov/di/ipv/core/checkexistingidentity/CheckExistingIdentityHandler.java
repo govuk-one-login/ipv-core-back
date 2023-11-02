@@ -349,14 +349,18 @@ public class CheckExistingIdentityHandler
                                 ipAddress),
                         ipvSessionItem);
 
-        if (contraIndicatorJourneyResponse.isPresent()) {
-            StringMapMessage message = new StringMapMessage();
-            JourneyResponse journeyResponse = contraIndicatorJourneyResponse.get();
-            message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
-                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), journeyResponse.toString());
-            LOGGER.info(message);
-            return Optional.of(journeyResponse);
-        }
+        contraIndicatorJourneyResponse.ifPresent(
+                (journeyResponse) -> {
+                    StringMapMessage message = new StringMapMessage();
+                    message.with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Returning CI error response.")
+                            .with(
+                                    LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
+                                    journeyResponse.toString());
+                    LOGGER.info(message);
+                });
+
         return contraIndicatorJourneyResponse;
     }
 
