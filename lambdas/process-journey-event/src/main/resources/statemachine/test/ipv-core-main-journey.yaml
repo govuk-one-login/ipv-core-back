@@ -36,6 +36,40 @@ CRI_STATE:
   events:
     enterNestedJourneyAtStateOne:
       targetState: NESTED_JOURNEY_INVOKE_STATE
+    testWithContext:
+      targetState: CRI_STATE_WITH_CONTEXT
+    testWithScope:
+      targetState: CRI_STATE_WITH_SCOPE
+    testWithContextAndScope:
+      targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
+
+CRI_STATE_WITH_CONTEXT:
+  response:
+    type: cri
+    criId: aCriId
+    context: bank_account
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
+
+CRI_STATE_WITH_SCOPE:
+  response:
+    type: cri
+    criId: aCriId
+    scope: identityCheck
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
+
+CRI_STATE_WITH_CONTEXT_AND_SCOPE:
+  response:
+    type: cri
+    criId: aCriId
+    context: bank_account
+    scope: identityCheck
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
 
 ERROR_STATE:
   response:

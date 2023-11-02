@@ -3,17 +3,23 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
 
@@ -23,6 +29,18 @@ class RequestHelperTest {
     private final String TEST_FEATURE_SET = "test-feature-set";
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
     private final String TEST_JOURNEY = DCMAW_CRI;
+    private static final String CONTEXT = "context";
+    private static final String BANK_ACCOUNT_CONTEXT = "context";
+    private static final String TEST_JOURNEY_WITH_CONTEXT =
+            String.format("claimedIdentity?%s=%s", CONTEXT, BANK_ACCOUNT_CONTEXT);
+    private static final String SCOPE = "scope";
+    private static final String IDENTITY_CHECK_SCOPE = "identityCheck";
+    private static final String TEST_JOURNEY_WITH_SCOPE =
+            String.format("claimedIdentity?%s=%s", SCOPE, IDENTITY_CHECK_SCOPE);
+    private static final String TEST_JOURNEY_WITH_CONTEXT_AND_SCOPE =
+            String.format(
+                    "claimedIdentity?%s=%s&%s=%s",
+                    CONTEXT, BANK_ACCOUNT_CONTEXT, SCOPE, IDENTITY_CHECK_SCOPE);
 
     @Test
     void getHeaderByKeyShouldReturnNullIfHeaderNotFound() {
@@ -54,7 +72,7 @@ class RequestHelperTest {
                         .featureSet(TEST_FEATURE_SET)
                         .build();
 
-        assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
+        assertEquals("a-session-id", getIpvSessionId(event));
     }
 
     @Test
@@ -165,7 +183,7 @@ class RequestHelperTest {
                         .build();
 
         assertEquals(clientSessionId, getClientOAuthSessionId(event));
-        assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
+        assertEquals(ipvSessionId, getIpvSessionId(event));
         assertEquals(ipAddress, RequestHelper.getIpAddress(event));
         assertEquals(featureSet, RequestHelper.getFeatureSet(event));
     }
@@ -221,16 +239,32 @@ class RequestHelperTest {
         assertNull(RequestHelper.getFeatureSet(event));
     }
 
-    @Test
-    void getJourneyShouldReturnJourneyFromJourneyRequest() {
+    @ParameterizedTest
+    @MethodSource("journeyUriParameters")
+    void getJourneyShouldReturnJourneyWithParametersFromJourneyRequest(
+            String journey, String expectedContext, String expectedScope) {
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_IPV_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
-                        .journey(TEST_JOURNEY)
+                        .journey(journey)
                         .build();
-        assertEquals(TEST_JOURNEY, RequestHelper.getJourney(event));
+
+        URI journeyUri = URI.create(event.getJourney());
+        assertEquals(CLAIMED_IDENTITY_CRI, journeyUri.getPath());
+        assertEquals(expectedContext, RequestHelper.getJourneyParameter(journeyUri, CONTEXT));
+        assertEquals(expectedScope, RequestHelper.getJourneyParameter(journeyUri, SCOPE));
+    }
+
+    static Stream<Arguments> journeyUriParameters() {
+        return Stream.of(
+                Arguments.of(TEST_JOURNEY_WITH_CONTEXT, BANK_ACCOUNT_CONTEXT, null),
+                Arguments.of(TEST_JOURNEY_WITH_SCOPE, null, IDENTITY_CHECK_SCOPE),
+                Arguments.of(
+                        TEST_JOURNEY_WITH_CONTEXT_AND_SCOPE,
+                        BANK_ACCOUNT_CONTEXT,
+                        IDENTITY_CHECK_SCOPE));
     }
 
     @Test

@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
@@ -58,12 +60,13 @@ public class ProcessJourneyEventHandler
             IpvSessionService ipvSessionService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
-            List<IpvJourneyTypes> journeyTypes)
+            List<IpvJourneyTypes> journeyTypes,
+            StateMachineInitializerMode stateMachineInitializerMode)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.stateMachines = loadStateMachines(journeyTypes);
+        this.stateMachines = loadStateMachines(journeyTypes, stateMachineInitializerMode);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -71,7 +74,9 @@ public class ProcessJourneyEventHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachines = loadStateMachines(List.of(IPV_CORE_MAIN_JOURNEY));
+        this.stateMachines =
+                loadStateMachines(
+                        List.of(IPV_CORE_MAIN_JOURNEY), StateMachineInitializerMode.STANDARD);
     }
 
     @Override
@@ -176,6 +181,13 @@ public class ProcessJourneyEventHandler
                                     ipvSessionItem.getJourneyType()));
             throw new JourneyEngineException(
                     "State machine not found for journey type, failed to execute journey engine step");
+        } catch (URISyntaxException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            throw new JourneyEngineException(
+                    "State response journey URI cannot be built, failed to execute journey engine step.");
         }
     }
 
@@ -227,13 +239,17 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(List<IpvJourneyTypes> journeyTypes)
+    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
+            List<IpvJourneyTypes> journeyTypes,
+            StateMachineInitializerMode stateMachineInitializerMode)
             throws IOException {
         EnumMap<IpvJourneyTypes, StateMachine> stateMachinesMap =
                 new EnumMap<>(IpvJourneyTypes.class);
         for (IpvJourneyTypes journeyType : journeyTypes) {
             stateMachinesMap.put(
-                    journeyType, new StateMachine(new StateMachineInitializer(journeyType)));
+                    journeyType,
+                    new StateMachine(
+                            new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
         }
         return stateMachinesMap;
     }

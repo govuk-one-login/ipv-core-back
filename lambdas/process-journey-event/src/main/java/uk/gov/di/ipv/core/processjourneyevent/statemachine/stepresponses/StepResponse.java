@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import java.net.URISyntaxException;
 import java.util.Map;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -14,5 +15,5 @@ import java.util.Map;
     @JsonSubTypes.Type(value = ProcessStepResponse.class, name = "process")
 })
 public interface StepResponse {
-    Map<String, Object> value();
+    Map<String, Object> value() throws URISyntaxException;
 }

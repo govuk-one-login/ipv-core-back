@@ -6,6 +6,9 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,6 +19,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepEvents;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepPages;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepStates;
@@ -27,6 +31,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -138,7 +143,8 @@ class ProcessJourneyEventHandlerTest {
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
-                        List.of());
+                        List.of(),
+                        StateMachineInitializerMode.STANDARD);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -221,6 +227,42 @@ class ProcessJourneyEventHandlerTest {
         assertNull(sessionArgumentCaptor.getValue().getCriOAuthSessionId());
     }
 
+    @ParameterizedTest
+    @MethodSource("journeyUriParameters")
+    void shouldIncludeParametersInJourneyUriIfExists(String journeyEvent, String expectedJourneyUri)
+            throws Exception {
+        Map<String, String> input = Map.of(JOURNEY, journeyEvent, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        var processJourneyEventOutput =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                        .handleRequest(input, mockContext);
+
+        assertEquals(
+                expectedJourneyUri,
+                processJourneyEventOutput.get(JOURNEY),
+                () ->
+                        String.format(
+                                "Expected journey URI for event %s to be %s, but found %s",
+                                journeyEvent,
+                                expectedJourneyUri,
+                                processJourneyEventOutput.get(JOURNEY)));
+    }
+
+    private static Stream<Arguments> journeyUriParameters() {
+        return Stream.of(
+                Arguments.of(
+                        "testWithContext",
+                        "/journey/cri/build-oauth-request/aCriId?context=bank_account"),
+                Arguments.of(
+                        "testWithScope",
+                        "/journey/cri/build-oauth-request/aCriId?scope=identityCheck"),
+                Arguments.of(
+                        "testWithContextAndScope",
+                        "/journey/cri/build-oauth-request/aCriId?context=bank_account&scope=identityCheck"));
+    }
+
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -247,11 +289,17 @@ class ProcessJourneyEventHandlerTest {
                 .build();
     }
 
-    private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {
+    private ProcessJourneyEventHandler getProcessJourneyStepHandler(
+            StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
         return new ProcessJourneyEventHandler(
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
-                List.of(IPV_CORE_MAIN_JOURNEY));
+                List.of(IPV_CORE_MAIN_JOURNEY),
+                stateMachineInitializerMode);
+    }
+
+    private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {
+        return getProcessJourneyStepHandler(StateMachineInitializerMode.STANDARD);
     }
 }

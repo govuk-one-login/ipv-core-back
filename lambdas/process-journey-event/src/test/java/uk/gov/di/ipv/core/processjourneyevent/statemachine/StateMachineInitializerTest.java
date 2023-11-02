@@ -18,6 +18,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -56,7 +57,8 @@ class StateMachineInitializerTest {
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
     @Test
-    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
+    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps()
+            throws IOException, URISyntaxException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
                                 IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
@@ -67,6 +69,10 @@ class StateMachineInitializerTest {
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
+        BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
+        BasicState criWithScopeState = (BasicState) journeyMap.get("CRI_STATE_WITH_SCOPE");
+        BasicState criWithContextAndScopeState =
+                (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT_AND_SCOPE");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
         BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
@@ -108,6 +114,33 @@ class StateMachineInitializerTest {
         assertEquals(
                 nestedJourneyInvokeState,
                 ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+
+        // cri state with context assertions
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=bank_account",
+                criWithContextState.getResponse().value().get("journey"));
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+
+        // cri state with scope assertions
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?scope=identityCheck",
+                criWithScopeState.getResponse().value().get("journey"));
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+
+        // cri state with context and scope assertions
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=bank_account&scope=identityCheck",
+                criWithContextAndScopeState.getResponse().value().get("journey"));
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
                         .getTargetStateObj());
 
         // error state assertions
