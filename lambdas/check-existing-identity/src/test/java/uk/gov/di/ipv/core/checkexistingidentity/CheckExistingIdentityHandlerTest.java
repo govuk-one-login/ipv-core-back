@@ -428,7 +428,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException, SqsException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
@@ -445,6 +445,13 @@ class CheckExistingIdentityHandlerTest {
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
 
@@ -471,6 +478,13 @@ class CheckExistingIdentityHandlerTest {
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
 
