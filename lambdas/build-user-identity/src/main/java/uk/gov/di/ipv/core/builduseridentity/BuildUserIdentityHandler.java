@@ -23,11 +23,13 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -136,20 +138,22 @@ public class BuildUserIdentityHandler
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
-            UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(
-                            userId, userId, ipvSessionItem.getVot());
-
             SignedJWT signedCiMitJwt =
                     ciMitService.getContraIndicatorsVCJwt(
                             userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+
+            ContraIndicators contraIndicators = ciMitService.getContraIndicators(signedCiMitJwt);
+            UserIdentity userIdentity =
+                    userIdentityService.generateUserIdentity(
+                            userId, userId, ipvSessionItem.getVot(), contraIndicators);
+
             userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
             AuditExtensionsUserIdentity extensions =
                     new AuditExtensionsUserIdentity(
                             ipvSessionItem.getVot(),
                             ipvSessionItem.isCiFail(),
-                            ciMitService.getContraIndicators(signedCiMitJwt).hasMitigations());
+                            contraIndicators.hasMitigations());
 
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -174,31 +178,18 @@ public class BuildUserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
-            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR.toJSONObject());
+            return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
         } catch (HttpResponseExceptionWithErrorBody e) {
             LogHelper.logErrorMessage(
                     "Failed to generate the user identity output.", e.getErrorReason());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
-            var errorHeader = "Error when fetching CIs from storage system.";
-            LogHelper.logErrorMessage(errorHeader, e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR
-                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
-                            .toJSONObject());
+            return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
         } catch (CredentialParseException e) {
-            var errorHeader = "Failed to parse successful VC Store items.";
-            LogHelper.logErrorMessage(errorHeader, e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR
-                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
-                            .toJSONObject());
+            return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
+        } catch (UnrecognisedCiException e) {
+            return serverErrorJsonResponse("CI error.", e);
         }
     }
 
@@ -242,5 +233,15 @@ public class BuildUserIdentityHandler
             return Instant.now().isAfter(Instant.parse(accessTokenMetadata.getExpiryDateTime()));
         }
         return false;
+    }
+
+    private <T> APIGatewayProxyResponseEvent serverErrorJsonResponse(
+            String errorHeader, Exception e) {
+        LogHelper.logErrorMessage(errorHeader, e.getMessage());
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                OAuth2Error.SERVER_ERROR
+                        .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                        .toJSONObject());
     }
 }

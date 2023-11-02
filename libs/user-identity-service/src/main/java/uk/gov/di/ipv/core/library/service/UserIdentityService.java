@@ -14,16 +14,20 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -37,7 +41,10 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ALWAYS_REQUIRED_EXIT_CODES;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -124,8 +131,10 @@ public class UserIdentityService {
         return dataStore.getItem(userId, criId);
     }
 
-    public UserIdentity generateUserIdentity(String userId, String sub, String vot)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    public UserIdentity generateUserIdentity(
+            String userId, String sub, String vot, ContraIndicators contraIndicators)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                    UnrecognisedCiException {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
@@ -150,9 +159,47 @@ public class UserIdentityService {
             Optional<JsonNode> drivingPermitClaim =
                     generateDrivingPermitClaim(successfulVCStoreItems);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+            if (configService.enabled(EXIT_CODES)) {
+                userIdentityBuilder.exitCode(toAlwaysRequiredExitCode(contraIndicators));
+            }
+        } else {
+            if (configService.enabled(EXIT_CODES)
+                    && contraIndicators.getContraIndicatorScore(
+                                    configService.getContraIndicatorConfigMap())
+                            >= Integer.parseInt(
+                                    configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
+                userIdentityBuilder.exitCode(toExitCode(contraIndicators));
+            }
         }
 
         return userIdentityBuilder.build();
+    }
+
+    private List<String> toExitCode(ContraIndicators contraIndicators)
+            throws UnrecognisedCiException {
+        return contraIndicators.getContraIndicatorsMap().values().stream()
+                .map(ContraIndicator::getCode)
+                .map(
+                        ciCode ->
+                                Optional.ofNullable(
+                                                configService
+                                                        .getContraIndicatorConfigMap()
+                                                        .get(ciCode))
+                                        .orElseThrow(
+                                                () ->
+                                                        new UnrecognisedCiException(
+                                                                "CI code not found")))
+                .map(ContraIndicatorConfig::getExitCode)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    private List<String> toAlwaysRequiredExitCode(ContraIndicators contraIndicators)
+            throws UnrecognisedCiException {
+        return toExitCode(contraIndicators).stream()
+                .filter(configService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)::contains)
+                .toList();
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)

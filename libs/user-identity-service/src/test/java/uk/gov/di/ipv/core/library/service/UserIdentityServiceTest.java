@@ -7,19 +7,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.time.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ALWAYS_REQUIRED_EXIT_CODES;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
@@ -53,11 +63,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_5;
 class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
     @Mock private ConfigService mockConfigService;
-
     @Mock private DataStore<VcStoreItem> mockDataStore;
-
+    private ContraIndicators emptyContraIndicators =
+            ContraIndicators.builder().contraIndicatorsMap(new HashMap<>()).build();
     private UserIdentityService userIdentityService;
 
     @BeforeEach
@@ -78,7 +87,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
@@ -101,8 +111,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetVotClaimToP2OnSuccessfulIdentityCheck()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -115,7 +124,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
     }
@@ -296,7 +306,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -307,8 +318,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetIdentityClaimWhenVotIsP0()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetIdentityClaimWhenVotIsP0() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -317,7 +327,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -343,7 +354,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2"));
+                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -375,7 +386,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2"));
+                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -387,8 +398,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetPassportClaimWhenVotIsP2()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldSetPassportClaimWhenVotIsP2() throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
 
@@ -402,7 +412,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -411,8 +422,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetPassportClaimWhenVotIsP0()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetPassportClaimWhenVotIsP0() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -421,14 +431,14 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         assertNull(credentials.getPassportClaim());
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingPassportProperty()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldReturnEmptyWhenMissingPassportProperty() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -445,29 +455,30 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertNull(credentials.getPassportClaim());
     }
 
     @Test
-    void shouldSetSubClaimOnUserIdentity()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldSetSubClaimOnUserIdentity() throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertEquals("test-sub", credentials.getSub());
     }
 
     @Test
-    void shouldSetVtmClaimOnUserIdentity()
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+    void shouldSetVtmClaimOnUserIdentity() throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -486,7 +497,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -521,7 +533,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2"));
+                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -547,12 +559,13 @@ class UserIdentityServiceTest {
 
         assertThrows(
                 CredentialParseException.class,
-                () -> userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2"));
+                () ->
+                        userIdentityService.generateUserIdentity(
+                                USER_ID_1, "test-sub", "P2", emptyContraIndicators));
     }
 
     @Test
-    void shouldNotSetAddressClaimWhenVotIsP0()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetAddressClaimWhenVotIsP0() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
@@ -562,7 +575,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         assertNull(credentials.getAddressClaim());
     }
@@ -619,8 +633,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetDrivingPermitClaimWhenVotIsP2()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldSetDrivingPermitClaimWhenVotIsP2() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
@@ -632,7 +645,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -642,8 +656,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetDrivingPermitClaimWhenVotIsP0()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
@@ -653,7 +666,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -661,8 +675,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -675,7 +688,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -683,8 +697,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCFailed()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCFailed() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -699,7 +712,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -707,8 +721,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingDrivingPermitProperty()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldReturnEmptyWhenMissingDrivingPermitProperty() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -722,7 +735,8 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity(USER_ID_1, "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
 
         assertNull(credentials.getDrivingPermitClaim());
     }
@@ -746,10 +760,185 @@ class UserIdentityServiceTest {
                         CredentialParseException.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2"));
+                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
         assertEquals(
                 "Encountered a parsing error while attempting to parse successful VC Store items.",
                 thrownException.getMessage());
+    }
+
+    @Test
+    void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockDataStore.getItems(anyString())).thenReturn(List.of());
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        when(mockConfigService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)).thenReturn("1");
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01", ContraIndicator.builder().code("X01").build(),
+                                        "X02", ContraIndicator.builder().code("X02").build(),
+                                        "Z03", ContraIndicator.builder().code("Z03").build()))
+                        .build();
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", contraIndicators);
+
+        assertEquals(List.of("1"), userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldSetEmptyExitCodeWhenP2AndAlwaysRequiredCiNotPresent()
+            throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)).thenReturn("1");
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+
+        assertEquals(List.of(), userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of("wat", ContraIndicator.builder().code("wat").build()))
+                        .build();
+
+        assertThrows(
+                UnrecognisedCiException.class,
+                () ->
+                        userIdentityService.generateUserIdentity(
+                                USER_ID_1, "test-sub", "P2", contraIndicators));
+    }
+
+    @Test
+    void generateUserIdentityShouldNotSetExitCodeWhenP2AndExitCodesNotEnabled() throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(false);
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+
+        assertNull(userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("1");
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01", ContraIndicator.builder().code("X01").build(),
+                                        "X02",
+                                                ContraIndicator.builder()
+                                                        .code("X02")
+                                                        .mitigation(
+                                                                List.of(
+                                                                        Mitigation.builder()
+                                                                                .code("M01")
+                                                                                .build()))
+                                                        .build(),
+                                        "Z03", ContraIndicator.builder().code("Z03").build()))
+                        .build();
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", contraIndicators);
+
+        assertEquals(List.of("1", "2", "3"), userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of("wat", ContraIndicator.builder().code("wat").build()))
+                        .build();
+
+        assertThrows(
+                UnrecognisedCiException.class,
+                () ->
+                        userIdentityService.generateUserIdentity(
+                                USER_ID_1, "test-sub", "P0", contraIndicators));
+    }
+
+    @Test
+    void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3"),
+                                "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("1");
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01", ContraIndicator.builder().code("X01").build(),
+                                        "X02", ContraIndicator.builder().code("X02").build(),
+                                        "Z03", ContraIndicator.builder().code("Z03").build(),
+                                        "Z04", ContraIndicator.builder().code("Z04").build()))
+                        .build();
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", contraIndicators);
+
+        assertEquals(List.of("1", "2", "3"), userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldNotSetExitCodeWhenBreachingCiThresholdAndExitCodesNotEnabled()
+            throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(false);
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+
+        assertNull(userIdentity.getExitCode());
     }
 
     @Test

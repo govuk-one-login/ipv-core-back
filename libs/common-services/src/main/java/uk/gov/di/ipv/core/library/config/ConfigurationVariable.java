@@ -22,7 +22,8 @@ public enum ConfigurationVariable {
     JOURNEY_TYPE("self/journey/type"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_COMPONENT_ID("cimit/componentId"),
-    CIMIT_CONFIG("cimit/config");
+    CIMIT_CONFIG("cimit/config"),
+    ALWAYS_REQUIRED_EXIT_CODES("self/alwaysRequiredExitCodes");
 
     private final String path;
 
