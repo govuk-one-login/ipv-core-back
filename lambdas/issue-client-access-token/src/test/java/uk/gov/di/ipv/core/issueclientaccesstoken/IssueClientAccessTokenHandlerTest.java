@@ -94,6 +94,7 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
         mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
         mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
+        mockSessionItem.setFeatureSet("someCoolNewThing");
     }
 
     @Test
@@ -126,6 +127,8 @@ class IssueClientAccessTokenHandlerTest {
         assertEquals(
                 tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(),
                 responseBody.get("access_token").toString());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
     }
 
     @Test

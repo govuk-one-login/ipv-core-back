@@ -92,8 +92,6 @@ public class BuildUserIdentityHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs(configService);
         try {
-            String featureSet = RequestHelper.getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
             AccessToken accessToken =
                     AccessToken.parse(
                             RequestHelper.getHeaderByKey(
@@ -108,6 +106,8 @@ public class BuildUserIdentityHandler
             if (Objects.isNull((ipvSessionItem))) {
                 return getUnknownAccessTokenApiGatewayProxyResponseEvent();
             }
+
+            configService.setFeatureSet(ipvSessionItem.getFeatureSet());
 
             AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
 

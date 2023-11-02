@@ -116,6 +116,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot("P2");
+        ipvSessionItem.setFeatureSet("someCoolNewThing");
 
         buildUserIdentityHandler =
                 new BuildUserIdentityHandler(
@@ -194,6 +195,8 @@ class BuildUserIdentityHandlerTest {
         assertTrue(extensions.isHasMitigations());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
     }
 
     @Test

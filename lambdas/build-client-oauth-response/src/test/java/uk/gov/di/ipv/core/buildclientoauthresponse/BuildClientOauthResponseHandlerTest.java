@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
@@ -44,7 +45,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +85,7 @@ class BuildClientOauthResponseHandlerTest {
     void shouldReturn200OnSuccessfulOauthRequest() throws SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
-        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
+        IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
@@ -91,6 +94,7 @@ class BuildClientOauthResponseHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .featureSet("someCoolNewThing")
                         .build();
 
         ClientResponse clientResponse =
@@ -115,6 +119,10 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
+
+        InOrder inOrder = inOrder(ipvSessionItem, mockSessionService);
+        inOrder.verify(ipvSessionItem).setFeatureSet("someCoolNewThing");
+        inOrder.verify(mockSessionService).updateIpvSession(ipvSessionItem);
     }
 
     @Test
