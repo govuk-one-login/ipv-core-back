@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -11,8 +13,11 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -107,8 +112,14 @@ public class RequestHelper {
         return featureSet;
     }
 
-    public static String getJourney(JourneyRequest request) {
-        return request.getJourney();
+    public static String getJourneyParameter(URI journeyUri, String key) {
+        List<NameValuePair> queryParams = new URIBuilder(journeyUri).getQueryParams();
+        Optional<NameValuePair> parameter =
+                queryParams.stream()
+                        .filter(query -> Objects.equals(query.getName(), key))
+                        .findFirst();
+
+        return parameter.map(NameValuePair::getValue).orElse(null);
     }
 
     public static String getScoreType(ProcessRequest request)

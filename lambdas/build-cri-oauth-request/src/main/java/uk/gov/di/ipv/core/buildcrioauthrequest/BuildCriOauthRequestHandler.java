@@ -51,6 +51,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourneyParameter;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
@@ -88,6 +89,8 @@ public class BuildCriOauthRequestHandler
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
+    public static final String CONTEXT = "context";
+    public static final String SCOPE = "scope";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final ConfigService configService;
@@ -146,16 +149,19 @@ public class BuildCriOauthRequestHandler
             String ipAddress = getIpAddress(input);
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
-            String journey = getJourney(input);
+            URI journeyUri = URI.create(input.getJourney());
+            String journeyPath = journeyUri.getPath();
+            String criContext = getJourneyParameter(journeyUri, CONTEXT);
+            String criScope = getJourneyParameter(journeyUri, SCOPE);
 
-            var errorResponse = validate(journey);
+            var errorResponse = validate(journeyPath);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get())
                         .toObjectMap();
             }
 
-            String criId = getCriIdFromJourney(journey);
+            String criId = getCriIdFromJourney(journeyPath);
             String connection = configService.getActiveConnection(criId);
             CredentialIssuerConfig criConfig =
                     configService.getCriConfigForConnection(connection, criId);
@@ -187,7 +193,9 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            criId);
+                            criId,
+                            criContext,
+                            criScope);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
@@ -291,7 +299,9 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId)
+            String criId,
+            String context,
+            String scope)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException {
 
@@ -313,7 +323,9 @@ public class BuildCriOauthRequestHandler
                         oauthState,
                         userId,
                         govukSigninJourneyId,
-                        evidenceRequest);
+                        evidenceRequest,
+                        context,
+                        scope);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
