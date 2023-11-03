@@ -116,32 +116,20 @@ class StateMachineInitializerTest {
                 ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
                         .getTargetStateObj());
 
-        // cri state with context assertions
+        // cri state with context assertion
         assertEquals(
-                "/journey/cri/build-oauth-request/aCriId?context=bank_account",
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
                 criWithContextState.getResponse().value().get("journey"));
-        assertEquals(
-                nestedJourneyInvokeState,
-                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
-                        .getTargetStateObj());
 
-        // cri state with scope assertions
+        // cri state with scope assertion
         assertEquals(
-                "/journey/cri/build-oauth-request/aCriId?scope=identityCheck",
+                "/journey/cri/build-oauth-request/aCriId?scope=test_scope",
                 criWithScopeState.getResponse().value().get("journey"));
-        assertEquals(
-                nestedJourneyInvokeState,
-                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
-                        .getTargetStateObj());
 
-        // cri state with context and scope assertions
+        // cri state with context and scope assertion
         assertEquals(
-                "/journey/cri/build-oauth-request/aCriId?context=bank_account&scope=identityCheck",
+                "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope",
                 criWithContextAndScopeState.getResponse().value().get("journey"));
-        assertEquals(
-                nestedJourneyInvokeState,
-                ((BasicEvent) criWithContextState.getEvents().get("enterNestedJourneyAtStateOne"))
-                        .getTargetStateObj());
 
         // error state assertions
         assertEquals(

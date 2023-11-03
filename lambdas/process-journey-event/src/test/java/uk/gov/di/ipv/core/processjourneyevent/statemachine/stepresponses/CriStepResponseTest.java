@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -15,8 +14,7 @@ public class CriStepResponseTest {
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void valueReturnsExpectedJourneyResponse(
-            String criId, String context, String scope, String expectedJourney)
-            throws URISyntaxException {
+            String criId, String context, String scope, String expectedJourney) {
         CriStepResponse response = new CriStepResponse(criId, context, scope);
         assertEquals(
                 Map.of("journey", expectedJourney),
@@ -32,18 +30,18 @@ public class CriStepResponseTest {
                 Arguments.of("aCriId", null, null, "/journey/cri/build-oauth-request/aCriId"),
                 Arguments.of(
                         "aCriId",
-                        "someContext",
+                        "test_context",
                         null,
-                        "/journey/cri/build-oauth-request/aCriId?context=someContext"),
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
                         "aCriId",
                         null,
-                        "someScope",
-                        "/journey/cri/build-oauth-request/aCriId?scope=someScope"),
+                        "test_scope",
+                        "/journey/cri/build-oauth-request/aCriId?scope=test_scope"),
                 Arguments.of(
                         "aCriId",
-                        "someContext",
-                        "someScope",
-                        "/journey/cri/build-oauth-request/aCriId?context=someContext&scope=someScope"));
+                        "test_context",
+                        "test_scope",
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
     }
 }

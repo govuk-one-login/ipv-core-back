@@ -67,8 +67,8 @@ class AuthorizationRequestHelperTest {
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
     private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
-    private static final String BANK_ACCOUNT_CONTEXT = "bank_account";
-    private static final String IDENTITY_CHECK_SCOPE = "identityCheck";
+    private static final String TEST_CONTEXT = "test_context";
+    private static final String TEST_SCOPE = "test_scope";
     private static final String IPV_TOKEN_TTL = "900";
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -179,12 +179,12 @@ class AuthorizationRequestHelperTest {
 
     private static Stream<Arguments> journeyUriParameters() {
         return Stream.of(
-                Arguments.of(BANK_ACCOUNT_CONTEXT, null, Map.of("context", BANK_ACCOUNT_CONTEXT)),
-                Arguments.of(null, IDENTITY_CHECK_SCOPE, Map.of("scope", IDENTITY_CHECK_SCOPE)),
+                Arguments.of(TEST_CONTEXT, null, Map.of("context", TEST_CONTEXT)),
+                Arguments.of(null, TEST_SCOPE, Map.of("scope", TEST_SCOPE)),
                 Arguments.of(
-                        BANK_ACCOUNT_CONTEXT,
-                        IDENTITY_CHECK_SCOPE,
-                        Map.of("context", BANK_ACCOUNT_CONTEXT, "scope", IDENTITY_CHECK_SCOPE)));
+                        TEST_CONTEXT,
+                        TEST_SCOPE,
+                        Map.of("context", TEST_CONTEXT, "scope", TEST_SCOPE)));
     }
 
     @Test

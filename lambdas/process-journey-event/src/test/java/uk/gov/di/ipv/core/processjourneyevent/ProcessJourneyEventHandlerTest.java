@@ -254,13 +254,13 @@ class ProcessJourneyEventHandlerTest {
         return Stream.of(
                 Arguments.of(
                         "testWithContext",
-                        "/journey/cri/build-oauth-request/aCriId?context=bank_account"),
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
                         "testWithScope",
-                        "/journey/cri/build-oauth-request/aCriId?scope=identityCheck"),
+                        "/journey/cri/build-oauth-request/aCriId?scope=test_scope"),
                 Arguments.of(
                         "testWithContextAndScope",
-                        "/journey/cri/build-oauth-request/aCriId?context=bank_account&scope=identityCheck"));
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {

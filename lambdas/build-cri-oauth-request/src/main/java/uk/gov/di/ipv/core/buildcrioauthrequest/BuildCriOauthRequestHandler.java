@@ -150,18 +150,18 @@ public class BuildCriOauthRequestHandler
             String featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             URI journeyUri = URI.create(input.getJourney());
-            String journey = journeyUri.getPath();
+            String journeyPath = journeyUri.getPath();
             String criContext = getJourneyParameter(journeyUri, CONTEXT);
             String criScope = getJourneyParameter(journeyUri, SCOPE);
 
-            var errorResponse = validate(journey);
+            var errorResponse = validate(journeyPath);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get())
                         .toObjectMap();
             }
 
-            String criId = getCriIdFromJourney(journey);
+            String criId = getCriIdFromJourney(journeyPath);
             String connection = configService.getActiveConnection(criId);
             CredentialIssuerConfig criConfig =
                     configService.getCriConfigForConnection(connection, criId);

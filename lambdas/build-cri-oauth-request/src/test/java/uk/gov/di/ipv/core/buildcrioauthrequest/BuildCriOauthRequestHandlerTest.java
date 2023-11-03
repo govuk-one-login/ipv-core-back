@@ -118,17 +118,17 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
     private static final String CONTEXT = "context";
-    private static final String BANK_ACCOUNT_CONTEXT = "context";
+    private static final String TEST_CONTEXT = "test_context";
     private static final String CRI_WITH_CONTEXT =
-            String.format("claimedIdentity?%s=%s", CONTEXT, BANK_ACCOUNT_CONTEXT);
+            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT);
     private static final String SCOPE = "scope";
-    private static final String IDENTITY_CHECK_SCOPE = "identityCheck";
+    private static final String TEST_SCOPE = "test_scope";
     private static final String CRI_WITH_SCOPE =
-            String.format("claimedIdentity?%s=%s", SCOPE, IDENTITY_CHECK_SCOPE);
+            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, SCOPE, TEST_SCOPE);
     private static final String CRI_WITH_CONTEXT_AND_SCOPE =
             String.format(
-                    "claimedIdentity?%s=%s&%s=%s",
-                    CONTEXT, BANK_ACCOUNT_CONTEXT, SCOPE, IDENTITY_CHECK_SCOPE);
+                    "%s?%s=%s&%s=%s",
+                    CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -1287,11 +1287,11 @@ class BuildCriOauthRequestHandlerTest {
 
     private static Stream<Arguments> journeyUriParameters() {
         return Stream.of(
-                Arguments.of(CRI_WITH_CONTEXT, Map.of(CONTEXT, BANK_ACCOUNT_CONTEXT)),
-                Arguments.of(CRI_WITH_SCOPE, Map.of(SCOPE, IDENTITY_CHECK_SCOPE)),
+                Arguments.of(CRI_WITH_CONTEXT, Map.of(CONTEXT, TEST_CONTEXT)),
+                Arguments.of(CRI_WITH_SCOPE, Map.of(SCOPE, TEST_SCOPE)),
                 Arguments.of(
                         CRI_WITH_CONTEXT_AND_SCOPE,
-                        Map.of(CONTEXT, BANK_ACCOUNT_CONTEXT, SCOPE, IDENTITY_CHECK_SCOPE)));
+                        Map.of(CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE)));
     }
 
     private void assertErrorResponse(

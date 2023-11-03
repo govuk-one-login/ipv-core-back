@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
@@ -181,13 +180,6 @@ public class ProcessJourneyEventHandler
                                     ipvSessionItem.getJourneyType()));
             throw new JourneyEngineException(
                     "State machine not found for journey type, failed to execute journey engine step");
-        } catch (URISyntaxException e) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
-            throw new JourneyEngineException(
-                    "State response journey URI cannot be built, failed to execute journey engine step.");
         }
     }
 
