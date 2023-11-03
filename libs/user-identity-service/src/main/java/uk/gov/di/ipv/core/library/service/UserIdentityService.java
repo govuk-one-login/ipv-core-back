@@ -520,7 +520,7 @@ public class UserIdentityService {
         return identityClaims;
     }
 
-    public boolean isBirthDateEmpty(List<BirthDate> birthDates) {
+    private boolean isBirthDateEmpty(List<BirthDate> birthDates) {
         return CollectionUtils.isEmpty(birthDates)
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
