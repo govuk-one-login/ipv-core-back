@@ -246,7 +246,8 @@ public class UserIdentityService {
                     .path(node);
         } catch (JsonProcessingException | ParseException e) {
             throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse VC store item");
+                    "Encountered a parsing error while attempting to parse VC store item: "
+                            + e.getMessage());
         }
     }
 
@@ -477,20 +478,14 @@ public class UserIdentityService {
 
     private JsonNode extractCriNodeFromCredential(
             String criName,
-            VcStoreItem ninoCredentialItem,
+            VcStoreItem credentialItem,
             String errorLog,
             ErrorResponse errorResponse)
             throws HttpResponseExceptionWithErrorBody {
         try {
-            return objectMapper
-                    .readTree(
-                            SignedJWT.parse(ninoCredentialItem.getCredential())
-                                    .getPayload()
-                                    .toString())
-                    .path(VC_CLAIM)
-                    .path(VC_CREDENTIAL_SUBJECT)
+            return getVCClaimNode(credentialItem.getCredential(), VC_CREDENTIAL_SUBJECT)
                     .path(criName);
-        } catch (JsonProcessingException | ParseException e) {
+        } catch (CredentialParseException e) {
             LOGGER.error("{}: '{}'", errorLog, e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
