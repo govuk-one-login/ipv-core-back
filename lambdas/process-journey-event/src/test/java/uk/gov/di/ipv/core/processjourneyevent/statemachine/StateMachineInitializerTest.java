@@ -18,6 +18,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -56,7 +57,8 @@ class StateMachineInitializerTest {
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
     @Test
-    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
+    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps()
+            throws IOException, URISyntaxException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
                                 IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
@@ -67,6 +69,10 @@ class StateMachineInitializerTest {
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
+        BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
+        BasicState criWithScopeState = (BasicState) journeyMap.get("CRI_STATE_WITH_SCOPE");
+        BasicState criWithContextAndScopeState =
+                (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT_AND_SCOPE");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
         BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
@@ -109,6 +115,21 @@ class StateMachineInitializerTest {
                 nestedJourneyInvokeState,
                 ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
                         .getTargetStateObj());
+
+        // cri state with context assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                criWithContextState.getResponse().value().get("journey"));
+
+        // cri state with scope assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?scope=test_scope",
+                criWithScopeState.getResponse().value().get("journey"));
+
+        // cri state with context and scope assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope",
+                criWithContextAndScopeState.getResponse().value().get("journey"));
 
         // error state assertions
         assertEquals(

@@ -18,6 +18,9 @@ import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -59,6 +62,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -72,6 +76,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
@@ -112,6 +117,18 @@ class BuildCriOauthRequestHandlerTest {
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
+    private static final String CONTEXT = "context";
+    private static final String TEST_CONTEXT = "test_context";
+    private static final String CRI_WITH_CONTEXT =
+            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT);
+    private static final String SCOPE = "scope";
+    private static final String TEST_SCOPE = "test_scope";
+    private static final String CRI_WITH_SCOPE =
+            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, SCOPE, TEST_SCOPE);
+    private static final String CRI_WITH_CONTEXT_AND_SCOPE =
+            String.format(
+                    "%s?%s=%s&%s=%s",
+                    CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -282,7 +299,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId("aSessionId")
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey("Missing CriId")
+                        .journey("MissingCriId")
                         .build();
 
         var response = handleRequest(input, context);
@@ -1217,6 +1234,64 @@ class BuildCriOauthRequestHandlerTest {
                 HttpStatus.SC_INTERNAL_SERVER_ERROR,
                 response,
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+    }
+
+    @ParameterizedTest
+    @MethodSource("journeyUriParameters")
+    void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
+            String journeyUri, Map<String, String> expectedClaims) throws Exception {
+        when(configService.getActiveConnection(CLAIMED_IDENTITY_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityCredentialIssuerConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("5000");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(JOURNEY_BASE_URL + journeyUri)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent(), "Expected request parameter to be present");
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        for (Map.Entry<String, String> entry : expectedClaims.entrySet()) {
+            assertEquals(
+                    entry.getValue(),
+                    claimsSet.get(entry.getKey()).asText(),
+                    () ->
+                            String.format(
+                                    "Expected claim for key=%s to be %s, but found %s",
+                                    entry.getKey(),
+                                    entry.getValue(),
+                                    claimsSet.get(entry.getKey()).asText()));
+        }
+    }
+
+    private static Stream<Arguments> journeyUriParameters() {
+        return Stream.of(
+                Arguments.of(CRI_WITH_CONTEXT, Map.of(CONTEXT, TEST_CONTEXT)),
+                Arguments.of(CRI_WITH_SCOPE, Map.of(SCOPE, TEST_SCOPE)),
+                Arguments.of(
+                        CRI_WITH_CONTEXT_AND_SCOPE,
+                        Map.of(CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE)));
     }
 
     private void assertErrorResponse(

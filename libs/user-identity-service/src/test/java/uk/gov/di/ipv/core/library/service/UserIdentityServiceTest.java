@@ -51,7 +51,7 @@ class UserIdentityServiceTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
-    private ContraIndicators emptyContraIndicators =
+    private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().contraIndicatorsMap(new HashMap<>()).build();
     private UserIdentityService userIdentityService;
 
@@ -429,6 +429,34 @@ class UserIdentityServiceTest {
                                 "ukPassport",
                                 VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                                 Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+
+        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
+    void shouldSetIdentityClaimWhenVotIsP2MissingName() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, "ukPassport", VC_PASSPORT_MISSING_NAME, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, "dcmaw", VC_PASSPORT_MISSING_BIRTH_DATE, Instant.now()),
                         createVcStoreItem(USER_ID_1, "fraud", VC_FRAUD_SCORE_1, Instant.now()),
                         createVcStoreItem(USER_ID_1, "kbv", VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, "address", VC_ADDRESS, Instant.now()));
@@ -932,7 +960,7 @@ class UserIdentityServiceTest {
         assertTrue(
                 vcStoreItems.stream()
                         .map(VcStoreItem::getCredentialIssuer)
-                        .anyMatch(item -> testCredentialIssuer.equals(item)));
+                        .anyMatch(testCredentialIssuer::equals));
     }
 
     @Test
@@ -1291,9 +1319,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("issuer3", true));
         assertThrows(
                 NoVcStatusForIssuerException.class,
-                () -> {
-                    userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer");
-                });
+                () -> userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer"));
     }
 
     @Test
@@ -1352,9 +1378,8 @@ class UserIdentityServiceTest {
 
     private void mockCredentialIssuerConfig() {
         NON_EVIDENCE_CRI_TYPES.forEach(
-                credentialIssuer -> {
-                    when(mockConfigService.getComponentId(credentialIssuer))
-                            .thenReturn(credentialIssuer);
-                });
+                credentialIssuer ->
+                        when(mockConfigService.getComponentId(credentialIssuer))
+                                .thenReturn(credentialIssuer));
     }
 }

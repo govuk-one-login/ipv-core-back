@@ -51,6 +51,9 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_
 import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -60,8 +63,6 @@ public class UserIdentityService {
     private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT_CRI, DCMAW_CRI);
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
-    public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
 
     public static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS_CRI);
     public static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
@@ -151,7 +152,7 @@ public class UserIdentityService {
         if (vot.equals(VectorOfTrust.P2.toString())) {
             final List<VcStoreItem> successfulVCStoreItems =
                     getSuccessfulVCStoreItems(vcStoreItems);
-            Optional<IdentityClaim> identityClaim = generateIdentityClaim(successfulVCStoreItems);
+            Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
             identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
             Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
@@ -236,32 +237,23 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
+    private JsonNode getVCClaimNode(String credential, String node)
+            throws CredentialParseException {
         try {
             return objectMapper
                     .readTree(SignedJWT.parse(credential).getPayload().toString())
                     .path(VC_CLAIM)
-                    .path(VC_CREDENTIAL_SUBJECT);
-        } catch (ParseException | JsonProcessingException e) {
-            LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                    .path(node);
+        } catch (JsonProcessingException | ParseException e) {
+            throw new CredentialParseException(
+                    "Encountered a parsing error while attempting to parse VC store item");
         }
     }
 
-    private <T> T getJsonProperty(
-            JsonNode jsonNode,
-            String propertyName,
-            String credentialIssuer,
-            CollectionType valueType,
-            boolean validateCorrelation)
+    private <T> T getJsonProperty(JsonNode jsonNode, String propertyName, CollectionType valueType)
             throws HttpResponseExceptionWithErrorBody {
         JsonNode propertyNode = jsonNode.path(propertyName);
-        if (!validateCorrelation && propertyNode.isMissingNode()) {
-            LOGGER.error("Property [{}] is missing from [{}] VC.", propertyName, credentialIssuer);
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-        } else if (propertyNode.isMissingNode()) {
+        if (propertyNode.isMissingNode()) {
             try {
                 return objectMapper.readValue(new JSONArray().toJSONString(), valueType);
             } catch (JsonProcessingException e) {
@@ -279,42 +271,66 @@ public class UserIdentityService {
         }
     }
 
-    private IdentityClaim getIdentityClaim(
-            String credential, String credentialIssuer, boolean validateCorrelation)
-            throws HttpResponseExceptionWithErrorBody {
-        JsonNode vcClaimNode = getVCClaimNode(credential);
+    private IdentityClaim getIdentityClaim(String credential)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        JsonNode vcClaimNode = getVCClaimNode(credential, VC_CREDENTIAL_SUBJECT);
         List<Name> names =
                 getJsonProperty(
                         vcClaimNode,
                         NAME_PROPERTY_NAME,
-                        credentialIssuer,
                         objectMapper
                                 .getTypeFactory()
-                                .constructCollectionType(List.class, Name.class),
-                        validateCorrelation);
+                                .constructCollectionType(List.class, Name.class));
         List<BirthDate> birthDates =
                 getJsonProperty(
                         vcClaimNode,
                         BIRTH_DATE_PROPERTY_NAME,
-                        credentialIssuer,
                         objectMapper
                                 .getTypeFactory()
-                                .constructCollectionType(List.class, BirthDate.class),
-                        validateCorrelation);
+                                .constructCollectionType(List.class, BirthDate.class));
 
         return new IdentityClaim(names, birthDates);
     }
 
-    private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : successfulVCStoreItems) {
-            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                return Optional.of(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), false));
+    public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem vcStoreItem : vcStoreItems) {
+            try {
+                if (isEvidenceVc(vcStoreItem)
+                        && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
+                    identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
+                }
+            } catch (ParseException e) {
+                {
+                    throw new CredentialParseException(
+                            "Encountered a parsing error while attempting to parse VC store item");
+                }
             }
         }
-        LOGGER.warn("Failed to generate identity claim");
-        return Optional.empty();
+
+        if (identityClaims.isEmpty()) {
+            LOGGER.warn("Failed to generate identity claim");
+            return Optional.empty();
+        }
+
+        Optional<IdentityClaim> claimWithName =
+                identityClaims.stream()
+                        .filter(identityClaim -> !identityClaim.getName().isEmpty())
+                        .findFirst();
+        Optional<IdentityClaim> claimWithBirthDate =
+                identityClaims.stream()
+                        .filter(identityClaim -> !identityClaim.getBirthDate().isEmpty())
+                        .findFirst();
+        if (claimWithName.isEmpty() || claimWithBirthDate.isEmpty()) {
+            LOGGER.error("Failed to generate identity claim");
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+        IdentityClaim identityClaim =
+                new IdentityClaim(
+                        claimWithName.get().getName(), claimWithBirthDate.get().getBirthDate());
+        return Optional.of(identityClaim);
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
@@ -494,6 +510,17 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
+    private boolean isEvidenceVc(VcStoreItem item) throws CredentialParseException {
+        JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
+        for (JsonNode evidence : vcEvidenceNode) {
+            if (evidence.path(VC_EVIDENCE_VALIDITY).isInt()
+                    && evidence.path(VC_EVIDENCE_STRENGTH).isInt()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean checkBirthDateCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
@@ -510,11 +537,11 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
-            List<VcStoreItem> vcStoreItems) throws HttpResponseExceptionWithErrorBody {
+            List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
-            IdentityClaim identityClaim =
-                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
                 if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
@@ -541,11 +568,10 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
-            IdentityClaim identityClaim =
-                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true);
+            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
             if (isNamesEmpty(identityClaim.getName())) {
                 if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;

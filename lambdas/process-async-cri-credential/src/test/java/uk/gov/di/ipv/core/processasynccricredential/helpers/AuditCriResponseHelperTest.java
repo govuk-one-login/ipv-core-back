@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
@@ -75,5 +77,19 @@ class AuditCriResponseHelperTest {
                 SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertNull(auditNameParts.getDocExpiryDate());
+    }
+
+    @Test
+    void shouldGetBRPExpiryDateForAudit() throws ParseException {
+        SignedJWT testVerifiableCredential = SignedJWT.parse(F2F_BRP_VC);
+        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        assertEquals("2030-07-13", auditNameParts.getDocExpiryDate());
+    }
+
+    @Test
+    void shouldGetIdCardExpiryDateForAudit() throws ParseException {
+        SignedJWT testVerifiableCredential = SignedJWT.parse(F2F_ID_CARD_VC);
+        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        assertEquals("2031-08-02", auditNameParts.getDocExpiryDate());
     }
 }
