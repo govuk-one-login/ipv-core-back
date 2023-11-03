@@ -166,7 +166,9 @@ const renderStates = (journeyMap, states) => {
                     ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page`
                     : `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
             case 'cri':
-                return `    ${state}([${state}\\n${definition.response.criId}]):::cri`;
+                let contextInfo = definition.response.context ? `\\n context: ${definition.response.context}` : "";
+                let scopeInfo = definition.response.scope ? `\\n scope: ${definition.response.scope}` : "";
+                return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri`;
             case 'error':
                 return `    ${state}:::error_page`
             default:
