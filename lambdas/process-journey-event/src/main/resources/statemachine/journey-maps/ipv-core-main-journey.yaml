@@ -411,9 +411,6 @@ CRI_BANK_ACCOUNT:
   events:
     next:
       targetState: CRI_NINO_WITH_SCOPE_J6
-    enhanced-verification:
-      targetState: ADDRESS_AND_FRAUD_J4
-
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -477,9 +474,7 @@ CRI_NINO_WITH_SCOPE_J6:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_HMRC_KBV_J6
-    fail-with-no-ci:
-      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      targetState: ADDRESS_AND_FRAUD_J3
 
 CRI_HMRC_KBV_J6:
   response:
