@@ -406,6 +406,7 @@ CRI_BANK_ACCOUNT:
   response:
     type: cri
     criId: bav
+    scope: identityCheck
   parent: CRI_STATE
   events:
     next:
