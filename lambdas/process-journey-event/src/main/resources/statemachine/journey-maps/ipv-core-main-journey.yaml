@@ -65,7 +65,7 @@ BANK_ACCOUNT_START_PAGE:
     pageId: page-ipv-bank-account-start
   events:
     next:
-      targetState: PYI_ESCAPE # Todo: Need to replace with CRI.
+      targetState: CRI_BANK_ACCOUNT
     end:
       targetState: PYI_ESCAPE
 
@@ -401,6 +401,18 @@ CHECK_FRAUD_SCORE_J3:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     unmet:
       targetState: PYI_NO_MATCH
+
+CRI_BANK_ACCOUNT:
+  response:
+    type: cri
+    criId: bav
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: ADDRESS_AND_FRAUD_J4
+    enhanced-verification:
+      targetState: ADDRESS_AND_FRAUD_J4
+
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
