@@ -409,7 +409,7 @@ CRI_BANK_ACCOUNT:
   parent: CRI_STATE
   events:
     next:
-      targetState: ADDRESS_AND_FRAUD_J4
+      targetState: CRI_NINO_J6
     enhanced-verification:
       targetState: ADDRESS_AND_FRAUD_J4
 
