@@ -65,7 +65,7 @@ BANK_ACCOUNT_START_PAGE:
     pageId: page-ipv-bank-account-start
   events:
     next:
-      targetState: CRI_BANK_ACCOUNT
+      targetState: CRI_BANK_ACCOUNT_J7
     end:
       targetState: PYI_ESCAPE
 
@@ -402,16 +402,6 @@ CHECK_FRAUD_SCORE_J3:
     unmet:
       targetState: PYI_NO_MATCH
 
-CRI_BANK_ACCOUNT:
-  response:
-    type: cri
-    criId: bav
-    context: bank_account
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_NINO_WITH_SCOPE_J6
-
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
   response:
@@ -466,16 +456,6 @@ CRI_NINO_J6:
     fail-with-no-ci:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
-CRI_NINO_WITH_SCOPE_J6:
-  response:
-    type: cri
-    criId: nino
-    scope: identityCheck
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: ADDRESS_AND_FRAUD_J3
-
 CRI_HMRC_KBV_J6:
   response:
     type: cri
@@ -488,6 +468,38 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: PYI_NO_MATCH
+
+# No photo id M2B journey (J7)
+CRI_BANK_ACCOUNT_J7:
+  response:
+    type: cri
+    criId: bav
+    context: bank_account
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_NINO_WITH_SCOPE_J7
+
+CRI_NINO_WITH_SCOPE_J7:
+  response:
+    type: cri
+    criId: nino
+    scope: identityCheck
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: ADDRESS_AND_FRAUD_J7
+
+ADDRESS_AND_FRAUD_J7:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      checkFeatureFlag:
+        hmrcKbv:
+          targetState: CRI_HMRC_KBV_J6
+    end:
+      targetState: ERROR
 
 # Mitigation journey (01)
 MITIGATION_01:
