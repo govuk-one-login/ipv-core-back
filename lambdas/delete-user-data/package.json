@@ -10,7 +10,7 @@
     "local-invoke": "sam local invoke -e local-dev/sample-sqs-event.json -n local-dev/local-env.json"
   },
   "devDependencies": {
-    "@aws-lambda-powertools/commons": "1.12.1",
+    "@aws-lambda-powertools/commons": "1.14.2",
     "@aws-sdk/client-dynamodb": "3.391.0",
     "@aws-sdk/client-sns": "3.391.0",
     "@aws-sdk/client-sqs": "3.391.0",
@@ -22,7 +22,7 @@
     "@types/node": "18.11.18",
     "@typescript-eslint/eslint-plugin": "6.9.0",
     "@typescript-eslint/parser": "6.9.0",
-    "eslint": "8.46.0",
+    "eslint": "8.53.0",
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-jest": "27.4.3",
     "eslint-plugin-prettier": "5.0.1",

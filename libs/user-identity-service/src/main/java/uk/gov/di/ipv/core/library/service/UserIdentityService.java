@@ -64,8 +64,9 @@ public class UserIdentityService {
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
 
-    public static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS_CRI);
-    public static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
+    private static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION =
+            List.of(ADDRESS_CRI);
+    private static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
             List.of(ADDRESS_CRI, BAV_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -542,13 +543,16 @@ public class UserIdentityService {
                     continue;
                 }
                 addLogMessage(item, "Birthdate property is missing from VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
             }
             identityClaims.add(identityClaim);
         }
         return identityClaims;
     }
 
-    public boolean isBirthDateEmpty(List<BirthDate> birthDates) {
+    private boolean isBirthDateEmpty(List<BirthDate> birthDates) {
         return CollectionUtils.isEmpty(birthDates)
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
@@ -572,6 +576,8 @@ public class UserIdentityService {
                     continue;
                 }
                 addLogMessage(item, "Name property is missing from VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
             }
             identityClaims.add(identityClaim);
         }
