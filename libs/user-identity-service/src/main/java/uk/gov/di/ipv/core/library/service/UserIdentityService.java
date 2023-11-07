@@ -344,7 +344,7 @@ public class UserIdentityService {
         }
 
         var addressNode =
-                extractCriNodeFromCredential(
+                extractSubjectDetailFromVc(
                         ADDRESS_PROPERTY_NAME,
                         addressStoreItem.get(),
                         "Error while parsing Address CRI credential",
@@ -369,7 +369,7 @@ public class UserIdentityService {
         }
 
         var ninoNode =
-                extractCriNodeFromCredential(
+                extractSubjectDetailFromVc(
                         NINO_PROPERTY_NAME,
                         ninoStoreItem.get(),
                         "Error while parsing Nino CRI credential",
@@ -402,7 +402,7 @@ public class UserIdentityService {
         }
 
         var passportNode =
-                extractCriNodeFromCredential(
+                extractSubjectDetailFromVc(
                         PASSPORT_PROPERTY_NAME,
                         passportVc.get(),
                         "Error while parsing Passport CRI credential",
@@ -435,7 +435,7 @@ public class UserIdentityService {
         }
 
         var drivingPermitNode =
-                extractCriNodeFromCredential(
+                extractSubjectDetailFromVc(
                         DRIVING_PERMIT_PROPERTY_NAME,
                         drivingPermitVc.get(),
                         "Error while parsing Driving Permit CRI credential",
@@ -476,15 +476,15 @@ public class UserIdentityService {
                 .findFirst();
     }
 
-    private JsonNode extractCriNodeFromCredential(
-            String criName,
+    private JsonNode extractSubjectDetailFromVc(
+            String detailName,
             VcStoreItem credentialItem,
             String errorLog,
             ErrorResponse errorResponse)
             throws HttpResponseExceptionWithErrorBody {
         try {
             return getVCClaimNode(credentialItem.getCredential(), VC_CREDENTIAL_SUBJECT)
-                    .path(criName);
+                    .path(detailName);
         } catch (CredentialParseException e) {
             LOGGER.error("{}: '{}'", errorLog, e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(
