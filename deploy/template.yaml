@@ -1412,6 +1412,7 @@ Resources:
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
+        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1441,6 +1442,8 @@ Resources:
             FunctionName: !Ref CheckCiScoreFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGpg45ScoreFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EvaluateGpg45ScoresFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

@@ -22,6 +22,9 @@ CRI_STATE:
       targetState: PYI_NO_MATCH
     end:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     pyi-no-match:
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
@@ -279,6 +282,18 @@ CORE_SESSION_TIMEOUT:
     pageId: pyi-timeout-unrecoverable
   parent: END_JOURNEY
 
+EVALUATE_GPG45_SCORES:
+  response:
+    type: process
+    lambda: evaluate-gpg45-scores
+  events:
+    end:
+      targetState:
+        IPV_SUCCESS_PAGE
+    next:
+      targetState:
+        PYI_NO_MATCH
+
 IPV_SUCCESS_PAGE:
   response:
     type: page
@@ -307,6 +322,9 @@ CRI_EXPERIAN_KBV:
   events:
     end:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
@@ -337,6 +355,9 @@ ADDRESS_AND_FRAUD_J1:
   exitEvents:
     end:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     next:
       targetState: PYI_NO_MATCH
 
@@ -443,6 +464,9 @@ POST_DCMAW_SUCCESS_PAGE_J5:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
 
 # HMRC KBV journey (J6)
 CRI_NINO_J6:
@@ -464,6 +488,9 @@ CRI_HMRC_KBV_J6:
   events:
     end:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     fail-with-no-ci:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
