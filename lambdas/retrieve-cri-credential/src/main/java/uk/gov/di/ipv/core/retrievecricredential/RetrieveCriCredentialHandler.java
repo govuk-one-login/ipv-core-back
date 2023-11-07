@@ -19,13 +19,14 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrieved;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
-import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -41,26 +42,27 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.retrievecricredential.enums.CriResourceRetrievedType;
 
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_RES_RETRIEVED_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_IS_VC_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
@@ -86,8 +88,6 @@ public class RetrieveCriCredentialHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final CriResponseService criResponseService;
 
-    private String componentId;
-
     public RetrieveCriCredentialHandler(
             VerifiableCredentialService verifiableCredentialService,
             IpvSessionService ipvSessionService,
@@ -107,6 +107,7 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -120,13 +121,14 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
         String featureSet = StepFunctionHelpers.getFeatureSet(input);
@@ -147,7 +149,6 @@ public class RetrieveCriCredentialHandler
         CriOAuthSessionItem criOAuthSessionItem =
                 criOAuthSessionService.getCriOauthSessionItem(
                         ipvSessionItem.getCriOAuthSessionId());
-        String criOAuthState = criOAuthSessionItem.getCriOAuthSessionId();
         String credentialIssuerId = criOAuthSessionItem.getCriId();
         try {
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -158,15 +159,20 @@ public class RetrieveCriCredentialHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-
             CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
+                    configService.getCriConfig(criOAuthSessionItem);
 
             String apiKey =
                     credentialIssuerConfig.getRequiresApiKey()
-                            ? configService.getCriPrivateApiKey(credentialIssuerId)
+                            ? configService.getCriPrivateApiKey(criOAuthSessionItem)
                             : null;
+
+            final AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            userId,
+                            ipvSessionItem.getIpvSessionId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress);
 
             VerifiableCredentialResponse verifiableCredentialResponse =
                     verifiableCredentialService.getVerifiableCredentialResponse(
@@ -177,21 +183,35 @@ public class RetrieveCriCredentialHandler
 
             if (VerifiableCredentialStatus.PENDING.equals(
                     verifiableCredentialResponse.getCredentialStatus())) {
+                sendCriResRetrievedAuditEvent(
+                        auditEventUser,
+                        credentialIssuerId,
+                        CriResourceRetrievedType.PENDING.getType());
                 processPendingResponse(
                         userId,
                         credentialIssuerId,
+                        credentialIssuerConfig,
                         verifiableCredentialResponse,
-                        criOAuthState,
+                        criOAuthSessionItem.getCriOAuthSessionId(),
                         ipvSessionItem);
             } else {
+                List<SignedJWT> verifiableCredentials =
+                        verifiableCredentialResponse.getVerifiableCredentials();
+                sendCriResRetrievedAuditEvent(
+                        auditEventUser,
+                        credentialIssuerId,
+                        verifiableCredentials.isEmpty()
+                                ? CriResourceRetrievedType.EMPTY.getType()
+                                : CriResourceRetrievedType.VC.getType());
                 processVerifiableCredentials(
                         userId,
                         credentialIssuerId,
                         credentialIssuerConfig,
                         ipAddress,
-                        verifiableCredentialResponse.getVerifiableCredentials(),
+                        verifiableCredentials,
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        auditEventUser);
             }
 
             return JOURNEY_CI_SCORING;
@@ -228,6 +248,7 @@ public class RetrieveCriCredentialHandler
     private void processPendingResponse(
             String userId,
             String credentialIssuerId,
+            CredentialIssuerConfig credentialIssuerConfig,
             VerifiableCredentialResponse verifiableCredentialResponse,
             String criOAuthState,
             IpvSessionItem ipvSessionItem)
@@ -251,8 +272,14 @@ public class RetrieveCriCredentialHandler
                 OBJECT_MAPPER.writeValueAsString(verifiableCredentialResponseDto),
                 criOAuthState,
                 CriResponseService.STATUS_PENDING);
+
         // Update session to indicate no VC, but no error
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, null, false, null);
+        updateVisitedCredentials(
+                ipvSessionItem,
+                credentialIssuerId,
+                credentialIssuerConfig.getComponentId(),
+                false,
+                null);
         // Audit
         LOGGER.info(
                 new StringMapMessage()
@@ -269,36 +296,22 @@ public class RetrieveCriCredentialHandler
             String ipAddress,
             List<SignedJWT> verifiableCredentials,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException {
-        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
-        final AuditEventUser auditEventUser =
-                new AuditEventUser(
-                        userId,
-                        ipvSessionItem.getIpvSessionId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-
-        final List<CredentialIssuerConfig> excludedCriConfigs =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
         final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         String issuer = null;
         for (SignedJWT vc : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-            boolean isSuccessful = VcHelper.isSuccessfulVc(vc, excludedCriConfigs);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
             submitVcToCiStorage(vc, govukSigninJourneyId, ipAddress);
-            if (postMitigatingVcs) {
-                postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
-            }
+            postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
 
@@ -322,9 +335,38 @@ public class RetrieveCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_RECEIVED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getAuditExtensions(verifiableCredential, isSuccessful));
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Sending audit event IPV_VC_RECEIVED message.")
+                        .with(LOG_IS_VC_SUCCESSFUL.getFieldName(), isSuccessful));
+        auditService.sendAuditEvent(auditEvent);
+    }
+
+    @Tracing
+    private void sendCriResRetrievedAuditEvent(
+            AuditEventUser auditEventUser,
+            String credentialIssuerId,
+            String criResourceRetrievedType)
+            throws SqsException {
+        AuditEvent auditEvent =
+                new AuditEvent(
+                        AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionsCriResRetrieved(
+                                credentialIssuerId, criResourceRetrievedType));
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Sending audit event IPV_CORE_CRI_RESOURCE_RETRIEVED message.")
+                        .with(LOG_CRI_ID.getFieldName(), credentialIssuerId)
+                        .with(LOG_CRI_RES_RETRIEVED_TYPE.getFieldName(), criResourceRetrievedType));
         auditService.sendAuditEvent(auditEvent);
     }
 

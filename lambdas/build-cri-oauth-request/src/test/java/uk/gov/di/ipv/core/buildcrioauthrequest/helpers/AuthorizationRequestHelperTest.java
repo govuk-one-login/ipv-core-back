@@ -13,6 +13,9 @@ import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Address;
@@ -20,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -38,7 +42,9 @@ import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -61,6 +67,8 @@ class AuthorizationRequestHelperTest {
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
     private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
+    private static final String TEST_CONTEXT = "test_context";
+    private static final String TEST_SCOPE = "test_scope";
     private static final String IPV_TOKEN_TTL = "900";
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -76,7 +84,8 @@ class AuthorizationRequestHelperTest {
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
                     Set.of(new Address()),
-                    TEST_EMAIL_ADDRESS);
+                    TEST_EMAIL_ADDRESS,
+                    Set.of(new SocialSecurityRecord()));
 
     private ECDSASigner signer;
 
@@ -114,6 +123,8 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
+                        null,
+                        null,
                         null);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
@@ -128,6 +139,52 @@ class AuthorizationRequestHelperTest {
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(TEST_REDIRECT_URI, result.getJWTClaimsSet().getClaims().get("redirect_uri"));
         assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
+    }
+
+    @ParameterizedTest
+    @MethodSource("journeyUriParameters")
+    void shouldCreateSignedJWTWithGivenParameters(
+            String context, String scope, Map<String, String> expectedClaims)
+            throws ParseException, HttpResponseExceptionWithErrorBody {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(credentialIssuerConfig.getClientCallbackUrl())
+                .thenReturn(URI.create(TEST_REDIRECT_URI));
+
+        SignedJWT result =
+                AuthorizationRequestHelper.createSignedJWT(
+                        sharedClaims,
+                        signer,
+                        credentialIssuerConfig,
+                        configService,
+                        OAUTH_STATE,
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID,
+                        null,
+                        context,
+                        scope);
+
+        for (Map.Entry<String, String> entry : expectedClaims.entrySet()) {
+            var actual = result.getJWTClaimsSet().getStringClaim(entry.getKey());
+            assertEquals(
+                    entry.getValue(),
+                    actual,
+                    () ->
+                            String.format(
+                                    "Expected claim for key=%s to be %s, but found %s",
+                                    entry.getKey(), entry.getValue(), actual));
+        }
+    }
+
+    private static Stream<Arguments> journeyUriParameters() {
+        return Stream.of(
+                Arguments.of(TEST_CONTEXT, null, Map.of("context", TEST_CONTEXT)),
+                Arguments.of(null, TEST_SCOPE, Map.of("scope", TEST_SCOPE)),
+                Arguments.of(
+                        TEST_CONTEXT,
+                        TEST_SCOPE,
+                        Map.of("context", TEST_CONTEXT, "scope", TEST_SCOPE)));
     }
 
     @Test
@@ -145,6 +202,8 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
+                        null,
+                        null,
                         null);
         assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
     }
@@ -166,6 +225,8 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID,
+                                        null,
+                                        null,
                                         null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());

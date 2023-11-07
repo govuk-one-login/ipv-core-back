@@ -2,7 +2,7 @@ plugins {
 	id "java"
 	id "idea"
 	id "jacoco"
-	id 'io.freefair.aspectj.post-compile-weaving' version '8.0.1'
+	id 'io.freefair.aspectj.post-compile-weaving' version '8.4'
 }
 
 repositories {
@@ -17,7 +17,9 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
-			project(":lib")
+			project(":libs:common-services"),
+			project(":libs:audit-service"),
+			project(":libs:user-identity-service")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
@@ -28,8 +30,8 @@ dependencies {
 	}
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.4.0",
-			project(":lib").sourceSets.test.output
+			"org.mockito:mockito-junit-jupiter:5.7.0",
+			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

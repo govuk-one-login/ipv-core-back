@@ -26,19 +26,18 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
@@ -50,10 +49,19 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,7 +74,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourneyParameter;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
@@ -77,23 +85,25 @@ public class BuildCriOauthRequestHandler
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
     public static final String SHARED_CLAIM_ATTR_EMAIL = "emailAddress";
+    public static final String SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD = "socialSecurityRecord";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
+    public static final String CONTEXT = "context";
+    public static final String SCOPE = "scope";
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final CredentialIssuerConfigService credentialIssuerConfigService;
+    private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public BuildCriOauthRequestHandler(
-            CredentialIssuerConfigService credentialIssuerConfigService,
+            ConfigService configService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
@@ -102,57 +112,61 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
 
-        this.credentialIssuerConfigService = credentialIssuerConfigService;
+        this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.componentId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.credentialIssuerConfigService = new CredentialIssuerConfigService();
-        this.userIdentityService = new UserIdentityService(credentialIssuerConfigService);
-        this.signer = new KmsEs256Signer(credentialIssuerConfigService.getSigningKeyId());
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
-        this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
-        this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
-        this.clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
-        this.componentId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.signer = new KmsEs256Signer();
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        VcHelper.setConfigService(configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
+        if (signer instanceof KmsEs256Signer kmsEs256Signer) {
+            kmsEs256Signer.setKeyId(configService.getSigningKeyId());
+        }
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
             String featureSet = getFeatureSet(input);
-            credentialIssuerConfigService.setFeatureSet(featureSet);
-            String journey = getJourney(input);
+            configService.setFeatureSet(featureSet);
+            URI journeyUri = URI.create(input.getJourney());
+            String journeyPath = journeyUri.getPath();
+            String criContext = getJourneyParameter(journeyUri, CONTEXT);
+            String criScope = getJourneyParameter(journeyUri, SCOPE);
 
-            var errorResponse = validate(journey);
+            var errorResponse = validate(journeyPath);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get())
                         .toObjectMap();
             }
 
-            String criId = getCriIdFromJourney(journey);
-            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
+            String criId = getCriIdFromJourney(journeyPath);
+            String connection = configService.getActiveConnection(criId);
+            CredentialIssuerConfig criConfig =
+                    configService.getCriConfigForConnection(connection, criId);
 
-            if (credentialIssuerConfig == null) {
+            if (criConfig == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
                                 HttpStatus.SC_BAD_REQUEST,
@@ -169,32 +183,33 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.generate();
             JWEObject jweObject =
                     signEncryptJar(
                             ipvSessionItem,
-                            credentialIssuerConfig,
+                            criConfig,
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            currentVcStatuses,
-                            criId);
+                            criId,
+                            criContext,
+                            criScope);
 
-            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
+            CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
-            persistOauthState(ipvSessionItem, criId, oauthState);
+            persistOauthState(ipvSessionItem, oauthState);
 
-            persistCriOauthState(oauthState, criId, clientOAuthSessionId);
+            persistCriOauthState(oauthState, criId, clientOAuthSessionId, connection);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
                     new AuditEvent(
-                            AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
+                            AuditEventTypes.IPV_REDIRECT_TO_CRI,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
 
             var message =
                     new StringMapMessage()
@@ -243,6 +258,14 @@ public class BuildCriOauthRequestHandler
                             ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
                             e.getMessage())
                     .toObjectMap();
+        } catch (UnknownEvidenceTypeException e) {
+            LOGGER.error("Unable to determine type of credential.", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE,
+                            e.getMessage())
+                    .toObjectMap();
         }
     }
 
@@ -276,33 +299,84 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            List<VcStatusDto> currentVcStatuses,
-            String criId)
-            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
+            String criId,
+            String context,
+            String scope)
+            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
+                    UnknownEvidenceTypeException {
+
+        List<SignedJWT> credentials = getSignedJWTs(userId);
+
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
+                getSharedAttributesForUser(ipvSessionItem, credentials, criId);
         EvidenceRequest evidenceRequest = null;
+
         if (criId.equals(F2F_CRI)) {
-            int strengthScore =
-                    gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(
-                            ipvSessionItem.getRequiredGpg45Scores());
-            if (strengthScore != 0) {
-                evidenceRequest = new EvidenceRequest(strengthScore);
-            }
+            evidenceRequest = getEvidenceRequestForF2F(credentials);
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
                         signer,
                         credentialIssuerConfig,
-                        credentialIssuerConfigService,
+                        configService,
                         oauthState,
                         userId,
                         govukSigninJourneyId,
-                        evidenceRequest);
+                        evidenceRequest,
+                        context,
+                        scope);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+    }
+
+    private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        List<Gpg45Scores> requiredEvidences =
+                gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
+                        Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES);
+
+        OptionalInt minViableStrengthOpt =
+                requiredEvidences.stream()
+                        .filter(
+                                requiredScores ->
+                                        requiredScores.getEvidences().size() <= 1
+                                                && requiredScores.getActivity() == 0
+                                                && requiredScores.getFraud() == 0
+                                                && requiredScores.getVerification() <= 3)
+                        .mapToInt(
+                                requiredScores ->
+                                        requiredScores.getEvidences().isEmpty()
+                                                ? 0
+                                                : requiredScores
+                                                        .getEvidences()
+                                                        .get(0)
+                                                        .getStrength())
+                        .min();
+
+        if (minViableStrengthOpt.isEmpty()) {
+            LOGGER.error("Minimum strength evidence required cannot be attained.");
+            return null;
+        }
+
+        return new EvidenceRequest(minViableStrengthOpt.getAsInt());
+    }
+
+    private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
+        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<SignedJWT> signedJWTs = new ArrayList<>();
+
+        for (String credential : credentials) {
+            try {
+                signedJWTs.add(SignedJWT.parse(credential));
+            } catch (ParseException e) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+            }
+        }
+        return signedJWTs;
     }
 
     @Tracing
@@ -315,43 +389,20 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(criId);
-    }
-
-    @Tracing
-    private SharedClaimsResponse getSharedAttributes(
-            IpvSessionItem ipvSessionItem,
-            String userId,
-            List<VcStatusDto> currentVcStatuses,
-            String criId)
+    private SharedClaimsResponse getSharedAttributesForUser(
+            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials, String criId)
             throws HttpResponseExceptionWithErrorBody {
-        CredentialIssuerConfig addressCriConfig =
-                credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        ADDRESS_CRI);
-
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
         boolean hasAddressVc = false;
-        for (String credential : credentials) {
+        for (SignedJWT credential : credentials) {
             try {
-                SignedJWT signedJWT = SignedJWT.parse(credential);
-                String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
+                String credentialIss = credential.getJWTClaimsSet().getIssuer();
 
-                if (currentVcStatuses == null) {
-                    throw new NoVcStatusForIssuerException(
-                            String.format(
-                                    "User has credential from issuer '%s' but currentVcStatuses is null",
-                                    credentialIss));
-                }
-
-                if (getVcStatus(currentVcStatuses, credentialIss)
-                        .getIsSuccessfulVc()
-                        .equals(Boolean.TRUE)) {
+                if (VcHelper.isSuccessfulVc(credential)) {
                     JsonNode credentialSubject =
-                            mapper.readTree(signedJWT.getPayload().toString())
+                            mapper.readTree(credential.getPayload().toString())
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {
@@ -362,7 +413,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(addressCriConfig.getComponentId())) {
+                    if (credentialIss.equals(configService.getComponentId(ADDRESS_CRI))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -380,10 +431,6 @@ public class BuildCriOauthRequestHandler
                 LogHelper.logErrorMessage("Failed to parse issued credentials.", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-            } catch (NoVcStatusForIssuerException e) {
-                LogHelper.logErrorMessage("Error getting VC status", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
             }
         }
         return SharedClaimsResponse.from(
@@ -411,43 +458,28 @@ public class BuildCriOauthRequestHandler
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
             credentialsSharedClaims.setAddress(null);
         }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD)) {
+            credentialsSharedClaims.setSocialSecurityRecord(null);
+        }
     }
 
     private List<String> getAllowedSharedClaimAttrs(String criId) {
-        String allowedSharedAttributes =
-                credentialIssuerConfigService.getAllowedSharedAttributes(criId);
+        String allowedSharedAttributes = configService.getAllowedSharedAttributes(criId);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
     }
 
     @Tracing
-    private void persistOauthState(IpvSessionItem ipvSessionItem, String criId, String oauthState) {
+    private void persistOauthState(IpvSessionItem ipvSessionItem, String oauthState) {
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
     @Tracing
     private void persistCriOauthState(
-            String oauthState, String criId, String clientOAuthSessionId) {
-        criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
-    }
-
-    @Tracing
-    private VcStatusDto getVcStatus(List<VcStatusDto> currentVcStatuses, String credentialIss)
-            throws NoVcStatusForIssuerException {
-        return currentVcStatuses.stream()
-                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(credentialIss))
-                .findFirst()
-                .orElseThrow(
-                        () -> {
-                            StringJoiner stringJoiner = new StringJoiner(", ");
-                            currentVcStatuses.forEach(
-                                    (vcStatusDto -> stringJoiner.add(vcStatusDto.getCriIss())));
-                            return new NoVcStatusForIssuerException(
-                                    String.format(
-                                            "CRI issuer '%s' not found in current VC statuses: '%s'",
-                                            credentialIss, stringJoiner));
-                        });
+            String oauthState, String criId, String clientOAuthSessionId, String connection) {
+        criOAuthSessionService.persistCriOAuthSession(
+                oauthState, criId, clientOAuthSessionId, connection);
     }
 }

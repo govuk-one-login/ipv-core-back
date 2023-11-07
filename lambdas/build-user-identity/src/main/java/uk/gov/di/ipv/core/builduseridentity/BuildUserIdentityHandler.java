@@ -20,14 +20,16 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -57,7 +59,6 @@ public class BuildUserIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
-    private final String componentId;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
@@ -72,7 +73,6 @@ public class BuildUserIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -83,7 +83,6 @@ public class BuildUserIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -91,10 +90,8 @@ public class BuildUserIdentityHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         try {
-            String featureSet = RequestHelper.getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
             AccessToken accessToken =
                     AccessToken.parse(
                             RequestHelper.getHeaderByKey(
@@ -109,6 +106,8 @@ public class BuildUserIdentityHandler
             if (Objects.isNull((ipvSessionItem))) {
                 return getUnknownAccessTokenApiGatewayProxyResponseEvent();
             }
+
+            configService.setFeatureSet(ipvSessionItem.getFeatureSet());
 
             AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
 
@@ -139,28 +138,27 @@ public class BuildUserIdentityHandler
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
+            SignedJWT signedCiMitJwt =
+                    ciMitService.getContraIndicatorsVCJwt(
+                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+
+            ContraIndicators contraIndicators = ciMitService.getContraIndicators(signedCiMitJwt);
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
-                            userId,
-                            userId,
-                            ipvSessionItem.getVot(),
-                            ipvSessionItem.getCurrentVcStatuses());
+                            userId, userId, ipvSessionItem.getVot(), contraIndicators);
 
-            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                    && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
-                SignedJWT signedCiMitJwt =
-                        ciMitService.getContraIndicatorsVCJwt(
-                                userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
-                userIdentity.getVcs().add(signedCiMitJwt.serialize());
-            }
+            userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
             AuditExtensionsUserIdentity extensions =
-                    new AuditExtensionsUserIdentity(ipvSessionItem.getVot());
+                    new AuditExtensionsUserIdentity(
+                            ipvSessionItem.getVot(),
+                            ipvSessionItem.isCiFail(),
+                            contraIndicators.hasMitigations());
 
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_ISSUED,
-                            componentId,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             extensions));
 
@@ -180,23 +178,18 @@ public class BuildUserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
-            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR.toJSONObject());
+            return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
         } catch (HttpResponseExceptionWithErrorBody e) {
             LogHelper.logErrorMessage(
                     "Failed to generate the user identity output.", e.getErrorReason());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
-            var errorHeader = "Error when fetching CIs from storage system.";
-            LogHelper.logErrorMessage(errorHeader, e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR
-                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
-                            .toJSONObject());
+            return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
+        } catch (CredentialParseException e) {
+            return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
+        } catch (UnrecognisedCiException e) {
+            return serverErrorJsonResponse("CI error.", e);
         }
     }
 
@@ -240,5 +233,15 @@ public class BuildUserIdentityHandler
             return Instant.now().isAfter(Instant.parse(accessTokenMetadata.getExpiryDateTime()));
         }
         return false;
+    }
+
+    private <T> APIGatewayProxyResponseEvent serverErrorJsonResponse(
+            String errorHeader, Exception e) {
+        LogHelper.logErrorMessage(errorHeader, e.getMessage());
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                OAuth2Error.SERVER_ERROR
+                        .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                        .toJSONObject());
     }
 }

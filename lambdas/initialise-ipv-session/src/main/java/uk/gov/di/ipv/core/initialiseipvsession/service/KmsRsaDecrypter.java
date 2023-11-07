@@ -31,12 +31,15 @@ public class KmsRsaDecrypter implements JWEDecrypter {
             Set.of(EncryptionMethod.A256GCM);
 
     private final AWSKMS kmsClient;
-    private final String keyId;
+    private String keyId;
     private final JWEJCAContext jwejcaContext = new JWEJCAContext();
 
-    public KmsRsaDecrypter(String keyId) {
-        this.keyId = keyId;
+    public KmsRsaDecrypter() {
         this.kmsClient = AWSKMSClientBuilder.defaultClient();
+    }
+
+    public void setKeyId(String keyId) {
+        this.keyId = keyId;
     }
 
     @Override

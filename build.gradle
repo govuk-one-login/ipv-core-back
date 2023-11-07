@@ -1,7 +1,7 @@
 plugins {
 	id "java"
 	id "org.sonarqube" version "4.3.0.3225"
-	id "com.diffplug.spotless" version "6.20.0"
+	id "com.diffplug.spotless" version "6.22.0"
 }
 
 repositories {
@@ -10,8 +10,8 @@ repositories {
 
 sonarqube {
 	properties {
-		property "sonar.projectKey", "alphagov_di-ipv-core-back"
-		property "sonar.organization", "alphagov"
+		property "sonar.projectKey", "ipv-core-back"
+		property "sonar.organization", "govuk-one-login"
 		property "sonar.host.url", "https://sonarcloud.io"
 	}
 }

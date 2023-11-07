@@ -42,8 +42,10 @@ describe("sendAuditEvent", () => {
   });
 
   test("sends audit event to SQS queue", async () => {
+    const mockNow = Date.now();
     const expectedAuditEvent = {
-      timestamp: Math.trunc(Date.now() / 1000),
+      timestamp: Math.floor(mockNow / 1000),
+      event_timestamp_ms: mockNow,
       component_id: mockComponentId,
       event_name: mockAuditEventName,
       user: mockAuditUser,
@@ -58,7 +60,7 @@ describe("sendAuditEvent", () => {
           MessageBody: JSON.stringify(expectedAuditEvent),
           QueueUrl: mockQueueUrl,
         },
-      })
+      }),
     );
   });
 });

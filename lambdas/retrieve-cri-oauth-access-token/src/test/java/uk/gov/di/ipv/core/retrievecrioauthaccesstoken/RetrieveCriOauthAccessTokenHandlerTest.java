@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -58,6 +59,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private Context context;
+    @Mock private KmsEs256Signer signer;
     @Mock private AuthCodeToAccessTokenService authCodeToAccessTokenService;
     @Mock private AuditService auditService;
     @Mock private static ConfigService configService;
@@ -135,23 +137,14 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Test
     void shouldThrowJourneyErrorIfCredentialIssuerServiceThrowsException() {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
-
+        mockServiceCallsAndSessionItem();
         when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
                         new AuthCodeToAccessTokenException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
-
+        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
     }
 
@@ -185,54 +178,30 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     private void mockServiceCallsAndSessionItem() {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-
+        when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(passportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
-
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
+        when(configService.getCriPrivateApiKey(criOAuthSessionItem)).thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
-
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
     }
 
     @Test
     void shouldThrowJourneyErrorIfSqsExceptionIsThrown() throws SqsException {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
-
-        JSONObject testCredential = new JSONObject();
-        testCredential.appendField("foo", "bar");
-
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
+        mockServiceCallsAndSessionItem();
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
 
+        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException() {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
-
-        JSONObject testCredential = new JSONObject();
-        testCredential.appendField("foo", "bar");
-
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
+        mockServiceCallsAndSessionItem();
         when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
@@ -240,12 +209,9 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId("someIpvSessionId");
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
 
+        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
@@ -269,27 +235,14 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws SqsException {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
-
-        JSONObject testCredential = new JSONObject();
-        testCredential.appendField("foo", "bar");
-
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
-
+        mockServiceCallsAndSessionItem();
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
 
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId("someIpvSessionId");
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
-
+        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
@@ -325,8 +278,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "test-audience",
                         new URI("http://www.example.com/credential-issuers/callback/criId"),
                         false);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
-                .thenReturn(testCriNotRequiringApiKey);
+        when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(testCriNotRequiringApiKey);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);

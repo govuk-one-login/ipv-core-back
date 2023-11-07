@@ -1,12 +1,11 @@
 package uk.gov.di.ipv.core.processasynccricredential.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
-import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVcNameParts;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVc;
 
 import java.text.ParseException;
 
@@ -17,9 +16,11 @@ public class AuditCriResponseHelper {
     private static final String EVIDENCE = "evidence";
     private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
     private static final String VC_NAME = "name";
-    private static final String VC_NAME_PARTS = "nameParts";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String VC_PASSPORT = "passport";
+    private static final String VC_EXPIRY_DATE = "expiryDate";
+    private static final String VC_DRIVING_PERMIT = "drivingPermit";
+    private static final String VC_BRP = "residencePermit";
+    private static final String VC_NATIONAL_ID = "idCard";
 
     private AuditCriResponseHelper() {}
 
@@ -32,13 +33,37 @@ public class AuditCriResponseHelper {
         return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
     }
 
-    public static AuditRestrictedVcNameParts getVcNamePartsForAudit(SignedJWT verifiableCredential)
-            throws ParseException, JsonProcessingException {
+    public static AuditRestrictedVc getRestrictedDataForAuditEvent(SignedJWT verifiableCredential)
+            throws ParseException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
         var name = (JSONArray) credentialSubject.get(VC_NAME);
-        var nameParts = ((JSONObject) name.get(0)).getAsString(VC_NAME_PARTS);
-        return new AuditRestrictedVcNameParts(MAPPER.readTree(nameParts));
+
+        var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
+        if (passport != null && !passport.isEmpty()) {
+            var docExpiryDate = ((JSONObject) passport.get(0)).getAsString(VC_EXPIRY_DATE);
+            return new AuditRestrictedVc(name, docExpiryDate);
+        }
+
+        var drivingPermit = (JSONArray) credentialSubject.get(VC_DRIVING_PERMIT);
+        if (drivingPermit != null && !drivingPermit.isEmpty()) {
+            var docExpiryDate = ((JSONObject) drivingPermit.get(0)).getAsString(VC_EXPIRY_DATE);
+            return new AuditRestrictedVc(name, docExpiryDate);
+        }
+
+        var brp = (JSONArray) credentialSubject.get(VC_BRP);
+        if (brp != null && !brp.isEmpty()) {
+            var docExpiryDate = ((JSONObject) brp.get(0)).getAsString(VC_EXPIRY_DATE);
+            return new AuditRestrictedVc(name, docExpiryDate);
+        }
+
+        var idCard = (JSONArray) credentialSubject.get(VC_NATIONAL_ID);
+        if (idCard != null && !idCard.isEmpty()) {
+            var docExpiryDate = ((JSONObject) idCard.get(0)).getAsString(VC_EXPIRY_DATE);
+            return new AuditRestrictedVc(name, docExpiryDate);
+        }
+
+        return new AuditRestrictedVc(name);
     }
 }

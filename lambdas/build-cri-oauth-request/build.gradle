@@ -2,7 +2,7 @@ plugins {
 	id "java"
 	id "idea"
 	id "jacoco"
-	id 'io.freefair.aspectj.post-compile-weaving' version '8.0.1'
+	id 'io.freefair.aspectj.post-compile-weaving' version '8.4'
 }
 
 repositories {
@@ -10,15 +10,17 @@ repositories {
 }
 
 dependencies {
-
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			project(":lib"),
-			project(":libs:credential-issuer-config-service"),
+			project(":libs:common-services"),
 			project(":libs:kms-es256-signer"),
-			project(":libs:journey-uris")
+			project(":libs:journey-uris"),
+			project(":libs:audit-service"),
+			project(":libs:gpg45-evaluator"),
+			project(":libs:verifiable-credentials"),
+			project(":libs:user-identity-service")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
@@ -32,8 +34,8 @@ dependencies {
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.4.0",
-			project(":lib").sourceSets.test.output
+			"org.mockito:mockito-junit-jupiter:5.7.0",
+			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

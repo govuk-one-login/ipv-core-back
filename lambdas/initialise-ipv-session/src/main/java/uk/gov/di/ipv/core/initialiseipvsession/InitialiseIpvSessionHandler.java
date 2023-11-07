@@ -62,18 +62,15 @@ public class InitialiseIpvSessionHandler
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
     private final AuditService auditService;
-    private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.kmsRsaDecrypter =
-                new KmsRsaDecrypter(configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
+        this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     public InitialiseIpvSessionHandler(
@@ -89,7 +86,6 @@ public class InitialiseIpvSessionHandler
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -97,7 +93,7 @@ public class InitialiseIpvSessionHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
@@ -115,7 +111,9 @@ public class InitialiseIpvSessionHandler
             }
 
             SignedJWT signedJWT =
-                    jarValidator.decryptJWE(JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)));
+                    jarValidator.decryptJWE(
+                            JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)),
+                            configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
@@ -143,7 +141,10 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             auditService.sendAuditEvent(
-                    new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
+                    new AuditEvent(
+                            AuditEventTypes.IPV_JOURNEY_START,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());

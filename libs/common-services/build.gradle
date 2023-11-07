@@ -1,0 +1,73 @@
+plugins {
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.amazonaws:aws-java-sdk-dynamodb:$rootProject.ext.dependencyVersions.awsJavaSdkDynamodb",
+			"com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
+			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
+			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
+			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters"
+
+	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1",
+			"org.junit.jupiter:junit-jupiter:5.10.0",
+			"org.mockito:mockito-junit-jupiter:5.7.0",
+			"uk.org.webcompere:system-stubs-jupiter:2.1.3",
+			"org.hamcrest:hamcrest:2.2"
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}
+
+configurations {
+	tests.extendsFrom(testImplementation)
+}
+
+tasks.register('jarTest', Jar) {
+	from sourceSets.test.output
+	archiveClassifier.set('tests')
+}
+artifacts {
+	tests jarTest
+}

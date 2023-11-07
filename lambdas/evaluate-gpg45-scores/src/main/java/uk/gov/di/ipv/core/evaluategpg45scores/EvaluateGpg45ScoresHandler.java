@@ -15,25 +15,21 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -43,23 +39,22 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_END_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
@@ -69,8 +64,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
@@ -78,7 +71,6 @@ public class EvaluateGpg45ScoresHandler
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
 
-    private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
@@ -87,7 +79,7 @@ public class EvaluateGpg45ScoresHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
+    public static final String VOT_P2 = "P2";
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -103,8 +95,7 @@ public class EvaluateGpg45ScoresHandler
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        VcHelper.setConfigService(this.configService);
     }
 
     @SuppressWarnings("unused") // Used by AWS
@@ -113,18 +104,17 @@ public class EvaluateGpg45ScoresHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
@@ -144,32 +134,19 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            JourneyResponse journeyResponse;
-            StringMapMessage message = new StringMapMessage();
-
-            journeyResponse =
-                    checkForMatchingGpg45Profile(
-                            message,
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            credentials,
-                            ipAddress);
-
-            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+            if (!checkCorrelation(userId)) {
+                return JOURNEY_PYI_NO_MATCH.toObjectMap();
+            }
 
             Optional<JourneyResponse> journeyResponseForFailWithNoCi =
-                    getJourneyResponseForFailWithNoCi(ipvSessionItem);
+                    getJourneyResponseForFailWithNoCi(ipvSessionItem, userId);
             if (journeyResponseForFailWithNoCi.isPresent()) {
                 return journeyResponseForFailWithNoCi.get().toObjectMap();
             }
 
-            if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
-                return JOURNEY_PYI_NO_MATCH.toObjectMap();
-            }
-
-            LOGGER.info(message);
-
-            return journeyResponse.toObjectMap();
+            return checkForMatchingGpg45Profile(
+                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                    .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
@@ -203,20 +180,19 @@ public class EvaluateGpg45ScoresHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_FIND_VISITED_CRI)
                     .toObjectMap();
-        } catch (NoVcStatusForIssuerException e) {
-            LOGGER.error("No VC status found for CRI issuer", e);
+        } catch (CredentialParseException e) {
+            LOGGER.error("Failed to parse successful VC Store items.", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
         }
     }
 
-    private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+    private boolean checkCorrelation(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
             var message = new StringMapMessage();
             message.with(
                             LOG_ERROR_CODE.getFieldName(),
@@ -229,8 +205,7 @@ public class EvaluateGpg45ScoresHandler
             return false;
         }
 
-        if (!userIdentityService.checkBirthDateCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(userId)) {
             var message = new StringMapMessage();
             message.with(
                             LOG_ERROR_CODE.getFieldName(),
@@ -247,7 +222,6 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
-            StringMapMessage message,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
@@ -255,7 +229,8 @@ public class EvaluateGpg45ScoresHandler
             throws UnknownEvidenceTypeException, ParseException, SqsException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         Optional<Gpg45Profile> matchedProfile =
-                gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
+                gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
         if (matchedProfile.isPresent()) {
             auditService.sendAuditEvent(
@@ -267,69 +242,21 @@ public class EvaluateGpg45ScoresHandler
                             credentials,
                             ipAddress));
             ipvSessionItem.setVot(VOT_P2);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            message.with("lambdaResult", "A GPG45 profile has been met")
-                    .with("journeyResponse", JOURNEY_END);
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("lambdaResult", "A GPG45 profile has been met")
+                            .with("journeyResponse", JOURNEY_END));
             return JOURNEY_END;
         } else {
-            List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                    ACCEPTED_PROFILES.stream()
-                            .map(
-                                    profile ->
-                                            new RequiredGpg45ScoresDto(
-                                                    profile,
-                                                    Gpg45ScoresDto.fromGpg45Scores(
-                                                            gpg45Scores.calculateRequiredScores(
-                                                                    profile))))
-                            .collect(Collectors.toList());
-            ipvSessionItem.setRequiredGpg45Scores(requiredGpg45Scores);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("lambdaResult", "No GPG45 profiles have been met")
+                            .with("journeyResponse", JOURNEY_NEXT));
 
-            message.with("lambdaResult", "No GPG45 profiles have been met")
-                    .with("journeyResponse", JOURNEY_NEXT);
             return JOURNEY_NEXT;
         }
-    }
-
-    @Tracing
-    List<VcStatusDto> getVcStatuses(IpvSessionItem ipvSessionItem) {
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-        return currentVcStatusDtos;
-    }
-
-    @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-        List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
-
-        if (currentVcStatusDtos.size() != credentials.size()) {
-            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-        }
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
-            throws ParseException {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-        List<CredentialIssuerConfig> ignoredCriConfigurations =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
-
-        for (SignedJWT signedJWT : credentials) {
-            boolean isSuccessful =
-                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, ignoredCriConfigurations);
-
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
     }
 
     @Tracing
@@ -349,7 +276,7 @@ public class EvaluateGpg45ScoresHandler
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                componentId,
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,
                 new AuditExtensionGpg45ProfileMatched(
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
@@ -373,20 +300,27 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private Optional<JourneyResponse> getJourneyResponseForFailWithNoCi(
-            IpvSessionItem ipvSessionItem) throws NoVisitedCriFoundException {
+            IpvSessionItem ipvSessionItem, String userId)
+            throws NoVisitedCriFoundException, ParseException {
         VisitedCredentialIssuerDetailsDto lastVisitedCri =
                 ipvSessionItem.getVisitedCredentialIssuerDetails().stream()
                         .reduce((first, second) -> second)
                         .orElseThrow(NoVisitedCriFoundException::new);
 
-        Optional<VcStatusDto> lastVisitedCriVcStatus =
-                getVcStatuses(ipvSessionItem).stream()
-                        .filter(status -> status.getCriIss().equals(lastVisitedCri.getCriIssuer()))
-                        .findFirst();
+        Optional<Boolean> lastVisitedCriVcStatus =
+                userIdentityService.getVCSuccessStatus(userId, lastVisitedCri.getCriId());
 
         if (lastVisitedCriVcStatus.isPresent()
-                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())) {
+                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get())) {
             // Handle scenario where VCs without CIs should be redirected
+            StringMapMessage message = new StringMapMessage();
+            message.with(
+                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                            "Returning fail-with-no-ci response")
+                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_FAIL_WITH_NO_CI)
+                    .with("lastVisitedCri", lastVisitedCri.getCriId())
+                    .with("lastVisitedCriVcStatus", lastVisitedCriVcStatus.get());
+            LOGGER.info(message);
             return Optional.of(JOURNEY_FAIL_WITH_NO_CI);
         }
         return Optional.empty();

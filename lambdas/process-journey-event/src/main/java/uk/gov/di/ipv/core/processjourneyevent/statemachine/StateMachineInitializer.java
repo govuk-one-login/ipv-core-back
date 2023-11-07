@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
+import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +14,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyD
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.Objects;
 
 public class StateMachineInitializer {
     private static final ObjectMapper yamlOm = new ObjectMapper(new YAMLFactory());
@@ -37,10 +37,9 @@ public class StateMachineInitializer {
     private final IpvJourneyTypes journeyType;
 
     public Map<String, State> initialize() throws IOException {
-        journeyStates =
-                yamlOm.readValue(getJourneyConfigFile(journeyType), new TypeReference<>() {});
+        journeyStates = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
         nestedJourneyDefinitions =
-                yamlOm.readValue(getNestedJourneyDefinitionsConfigFile(), new TypeReference<>() {});
+                yamlOm.readValue(getNestedJourneyDefinitionsConfig(), new TypeReference<>() {});
 
         initializeJourneyStates();
 
@@ -50,13 +49,13 @@ public class StateMachineInitializer {
     private void initializeJourneyStates() {
         journeyStates.forEach(
                 (stateName, state) -> {
-                    if (state instanceof BasicState) {
-                        initializeBasicState((BasicState) state, stateName, journeyStates);
+                    if (state instanceof BasicState basicState) {
+                        initializeBasicState(basicState, stateName, journeyStates);
                     }
 
-                    if (state instanceof NestedJourneyInvokeState) {
+                    if (state instanceof NestedJourneyInvokeState nestedJourneyInvokeState) {
                         initializeNestedJourneyInvokeState(
-                                (NestedJourneyInvokeState) state, stateName, journeyStates);
+                                nestedJourneyInvokeState, stateName, journeyStates);
                     }
                 });
     }
@@ -95,9 +94,8 @@ public class StateMachineInitializer {
             Map<String, Event> nestedJourneyExitEvents) {
         eventMap.forEach(
                 (eventName, event) -> {
-                    if (event instanceof ExitNestedJourneyEvent) {
-                        ((ExitNestedJourneyEvent) event)
-                                .setNestedJourneyExitEvents(nestedJourneyExitEvents);
+                    if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
+                        exitNestedJourneyEvent.setNestedJourneyExitEvents(nestedJourneyExitEvents);
                     } else {
                         event.initialize(eventName, eventStatesSource);
                     }
@@ -136,16 +134,19 @@ public class StateMachineInitializer {
                             String name =
                                     createNestedJourneyStateName(
                                             nestedJourneyInvokeState, nestedJourneyStateName);
-                            if (nestedJourneyState instanceof BasicState) {
+                            if (nestedJourneyState instanceof BasicState basicState) {
                                 initializeBasicState(
-                                        (BasicState) nestedJourneyState,
+                                        basicState,
                                         name,
                                         nestedJourneyDefinition.getNestedJourneyStates(),
                                         nestedJourneyInvokeState.getExitEvents());
                             }
-                            if (nestedJourneyState instanceof NestedJourneyInvokeState) {
+                            if (nestedJourneyState
+                                    instanceof
+                                    NestedJourneyInvokeState
+                                    subNestedJourneyInvokeState) {
                                 initializeNestedJourneyInvokeState(
-                                        (NestedJourneyInvokeState) nestedJourneyState,
+                                        subNestedJourneyInvokeState,
                                         name,
                                         nestedJourneyDefinition.getNestedJourneyStates());
                             }
@@ -167,22 +168,26 @@ public class StateMachineInitializer {
         return String.format("%s/%s", state.getName(), nestedJourneyStateName);
     }
 
-    private File getJourneyConfigFile(IpvJourneyTypes journeyType) {
-        return getFile(journeyType.getValue());
+    private String getJourneyConfig(IpvJourneyTypes journeyType) throws IOException {
+        return readFileToString(journeyType.getValue());
     }
 
-    private File getNestedJourneyDefinitionsConfigFile() {
-        return getFile("nested-journey-definitions");
+    private String getNestedJourneyDefinitionsConfig() throws IOException {
+        return readFileToString("nested-journey-definitions");
     }
 
-    private File getFile(String filename) {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        return new File(
-                Objects.requireNonNull(
-                                classLoader.getResource(
-                                        String.format(
-                                                "statemachine/%s%s.yaml",
-                                                mode.getPathPart(), filename)))
-                        .getFile());
+    private String readFileToString(String filename) throws IOException {
+        InputStream inputStream =
+                getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(
+                                String.format(
+                                        "statemachine/%s%s.yaml", mode.getPathPart(), filename));
+
+        if (inputStream == null) {
+            throw new JourneyMapDeserializationException("Could not find journey map");
+        }
+
+        return IOUtils.toString(inputStream);
     }
 }

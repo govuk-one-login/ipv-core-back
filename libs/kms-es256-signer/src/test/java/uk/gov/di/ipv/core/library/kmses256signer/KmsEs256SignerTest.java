@@ -26,8 +26,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 @ExtendWith(MockitoExtension.class)
 class KmsEs256SignerTest {
 
-    private static final String KEY_ID = "test";
-
     @Mock private AWSKMS kmsClient;
     @Mock private SignResult signResult;
 
@@ -37,7 +35,7 @@ class KmsEs256SignerTest {
 
         byte[] bytes = Base64URL.from(DER_SIGNATURE).decode();
         when(signResult.getSignature()).thenReturn(ByteBuffer.wrap(bytes));
-        KmsEs256Signer kmsSigner = new KmsEs256Signer(KEY_ID, kmsClient);
+        KmsEs256Signer kmsSigner = new KmsEs256Signer(kmsClient);
 
         JSONObject jsonPayload = new JSONObject(Map.of("test", "test"));
 

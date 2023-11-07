@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
@@ -17,10 +18,14 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SystemStubsExtension.class)
 class StateMachineInitializerTest {
@@ -38,9 +43,22 @@ class StateMachineInitializerTest {
         assertDoesNotThrow(() -> new StateMachineInitializer(journeyType).initialize());
     }
 
+    @Test
+    void initializeShouldThrowIfJourneyMapNotFound() {
+        StateMachineInitializerMode modeMock = mock(StateMachineInitializerMode.class);
+        when(modeMock.getPathPart()).thenReturn("some-rubbish");
+        assertThrows(
+                JourneyMapDeserializationException.class,
+                () -> {
+                    new StateMachineInitializer(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY, modeMock)
+                            .initialize();
+                });
+    }
+
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
     @Test
-    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
+    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps()
+            throws IOException, URISyntaxException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
                                 IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
@@ -51,7 +69,12 @@ class StateMachineInitializerTest {
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
+        BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
+        BasicState criWithScopeState = (BasicState) journeyMap.get("CRI_STATE_WITH_SCOPE");
+        BasicState criWithContextAndScopeState =
+                (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT_AND_SCOPE");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
+        BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
                 (NestedJourneyInvokeState) journeyMap.get("NESTED_JOURNEY_INVOKE_STATE");
 
@@ -93,6 +116,21 @@ class StateMachineInitializerTest {
                 ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
                         .getTargetStateObj());
 
+        // cri state with context assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                criWithContextState.getResponse().value().get("journey"));
+
+        // cri state with scope assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?scope=test_scope",
+                criWithScopeState.getResponse().value().get("journey"));
+
+        // cri state with context and scope assertion
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope",
+                criWithContextAndScopeState.getResponse().value().get("journey"));
+
         // error state assertions
         assertEquals(
                 Map.of("statusCode", 500, "type", "error", "page", "page-error"),
@@ -101,6 +139,20 @@ class StateMachineInitializerTest {
                 nestedJourneyInvokeState,
                 ((BasicEvent) errorState.getEvents().get("enterNestedJourneyAtStateTwo"))
                         .getTargetStateObj());
+
+        // process state assertions
+        assertEquals(
+                Map.of(
+                        "journey",
+                        "/journey/a-lambda-to-invoke",
+                        "lambdaInput",
+                        Map.of("input1", "the-first-input", "input2", 2)),
+                processState.getResponse().value());
+        assertEquals(
+                criState, ((BasicEvent) processState.getEvents().get("met")).getTargetStateObj());
+        assertEquals(
+                errorState,
+                ((BasicEvent) processState.getEvents().get("unmet")).getTargetStateObj());
 
         // nested journey invoke state assertions
         assertEquals(

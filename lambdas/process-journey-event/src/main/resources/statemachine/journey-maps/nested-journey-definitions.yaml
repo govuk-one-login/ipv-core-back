@@ -2,6 +2,8 @@ ADDRESS_AND_FRAUD:
   entryEvents:
     next:
       targetState: CRI_ADDRESS
+    enhanced-verification:
+      targetState: CRI_ADDRESS
   nestedJourneyStates:
     CRI_ADDRESS:
       response:
@@ -10,6 +12,8 @@ ADDRESS_AND_FRAUD:
       parent: CRI_STATE
       events:
         next:
+          targetState: CRI_FRAUD
+        enhanced-verification:
           targetState: CRI_FRAUD
     CRI_FRAUD:
       response:
@@ -20,4 +24,6 @@ ADDRESS_AND_FRAUD:
         end:
           exitEventToEmit: end
         next:
+          exitEventToEmit: next
+        enhanced-verification:
           exitEventToEmit: next

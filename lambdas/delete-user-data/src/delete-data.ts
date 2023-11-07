@@ -7,7 +7,7 @@ import { VCItemKey } from "./types";
 const ddbDocClient = DynamoDBDocument.from(
   config.isLocalDev
     ? new DynamoDBClient({ endpoint: config.localDynamoDbEndpoint })
-    : new DynamoDBClient({ region: "eu-west-2" })
+    : new DynamoDBClient({ region: "eu-west-2" }),
 );
 
 export const deleteVCs = async (userId: string): Promise<number> => {
@@ -20,7 +20,7 @@ export const deleteVCs = async (userId: string): Promise<number> => {
     ddbDocClient.delete({
       TableName: config.userIssuedCredentialsTableName,
       Key: key,
-    })
+    }),
   );
   await Promise.all(deletePromises);
   logger.info("Deleted user's VCs", { count: deleteCount });

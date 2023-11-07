@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
+import uk.gov.di.ipv.core.library.domain.NinoSharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -39,6 +40,10 @@ public class AuthorizationRequestHelper {
 
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
 
+    private static final String CONTEXT = "context";
+
+    private static final String SCOPE = "scope";
+
     private AuthorizationRequestHelper() {}
 
     public static SignedJWT createSignedJWT(
@@ -49,7 +54,9 @@ public class AuthorizationRequestHelper {
             String oauthState,
             String userId,
             String govukSigninJourneyId,
-            EvidenceRequest evidence)
+            EvidenceRequest evidence,
+            String context,
+            String scope)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
@@ -84,6 +91,14 @@ public class AuthorizationRequestHelper {
         if (Objects.nonNull(sharedClaims)) {
             if (sharedClaims.getEmailAddress() != null) {
                 claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
+            } else if (!sharedClaims.getSocialSecurityRecord().isEmpty()) {
+                NinoSharedClaimsResponseDto response =
+                        new NinoSharedClaimsResponseDto(
+                                sharedClaims.getName(),
+                                sharedClaims.getBirthDate(),
+                                sharedClaims.getAddress(),
+                                sharedClaims.getSocialSecurityRecord());
+                claimsSetBuilder.claim(SHARED_CLAIMS, response);
             } else {
                 SharedClaimsResponseDto response =
                         new SharedClaimsResponseDto(
@@ -96,6 +111,14 @@ public class AuthorizationRequestHelper {
 
         if (Objects.nonNull(evidence)) {
             claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidence);
+        }
+
+        if (Objects.nonNull(context)) {
+            claimsSetBuilder.claim(CONTEXT, context);
+        }
+
+        if (Objects.nonNull(scope)) {
+            claimsSetBuilder.claim(SCOPE, scope);
         }
 
         SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());

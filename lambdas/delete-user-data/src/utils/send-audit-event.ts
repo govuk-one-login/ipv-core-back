@@ -9,7 +9,7 @@ const sqsClient = new SQSClient({ region: "eu-west-2" });
 export const sendAuditEvent = async (
   eventName: string,
   user: AuditUser,
-  extensions?: Record<string, unknown>
+  extensions?: Record<string, unknown>,
 ): Promise<void> => {
   if (config.isLocalDev) {
     logger.info("Local dev so skipping audit event", { eventName, user, extensions });
@@ -18,8 +18,10 @@ export const sendAuditEvent = async (
   logger.info("Sending audit event", { event: { name: eventName } });
   try {
     const componentId = await getConfigParam("core/self/componentId");
+    const now = Date.now();
     const auditEvent: AuditEvent = {
-      timestamp: Math.trunc(Date.now() / 1000),
+      timestamp: Math.floor(now / 1000),
+      event_timestamp_ms: now,
       component_id: componentId,
       event_name: eventName,
       user,
@@ -29,7 +31,7 @@ export const sendAuditEvent = async (
       new SendMessageCommand({
         MessageBody: JSON.stringify(auditEvent),
         QueueUrl: config.sqsAuditEventQueueUrl,
-      })
+      }),
     );
   } catch (e) {
     logger.error("Error sending audit event", e as Error);

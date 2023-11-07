@@ -15,8 +15,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -73,7 +74,6 @@ public class ValidateOAuthCallbackHandler
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
-    private final String componentId;
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
@@ -86,7 +86,6 @@ public class ValidateOAuthCallbackHandler
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
-        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
@@ -96,7 +95,6 @@ public class ValidateOAuthCallbackHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
@@ -105,7 +103,7 @@ public class ValidateOAuthCallbackHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(CriCallbackRequest callbackRequest, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         IpvSessionItem ipvSessionItem = null;
         CriOAuthSessionItem criOAuthSessionItem = null;
@@ -223,7 +221,9 @@ public class ValidateOAuthCallbackHandler
             CriCallbackRequest callbackRequest)
             throws SqsException {
         String error = callbackRequest.getError();
-        String errorDescription = callbackRequest.getErrorDescription();
+        String errorDescription =
+                Objects.toString(
+                        callbackRequest.getErrorDescription(), "No error description provided");
         String criId = callbackRequest.getCredentialIssuerId();
 
         AuditExtensionErrorParams extensions =
@@ -350,7 +350,7 @@ public class ValidateOAuthCallbackHandler
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         new AuditEventUser(
                                 clientOAuthSessionItem.getUserId(),
                                 ipvSessionItem.getIpvSessionId(),
