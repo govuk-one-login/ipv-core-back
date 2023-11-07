@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -145,8 +145,6 @@ public class ProcessAsyncCriCredentialHandler
             criResponseService.updateCriResponseItem(responseItem);
         }
 
-        sendIpvVcErrorAuditEvent(errorAsyncCriResponse);
-
         LOGGER.error(
                 new StringMapMessage()
                         .with(
@@ -159,6 +157,8 @@ public class ProcessAsyncCriCredentialHandler
                         .with(
                                 LOG_CRI_ISSUER.getFieldName(),
                                 errorAsyncCriResponse.getCredentialIssuer()));
+
+        sendIpvVcErrorAuditEvent(errorAsyncCriResponse);
     }
 
     @Tracing
@@ -249,7 +249,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, SignedJWT verifiableCredential)
-            throws ParseException, JsonProcessingException, SqsException {
+            throws ParseException, SqsException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
@@ -275,9 +275,14 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_ERROR,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         extensionErrorParams);
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Sending audit event IPV_F2F_CRI_VC_ERROR message."));
         auditService.sendAuditEvent(auditEvent);
     }
 
