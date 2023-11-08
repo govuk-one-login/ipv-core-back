@@ -494,10 +494,10 @@ ADDRESS_AND_FRAUD_J7:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      checkFeatureFlag:
+      targetState: CRI_HMRC_KBV_J6
+      checkIfDisabled:
         hmrcKbv:
-          targetState: CRI_HMRC_KBV_J6
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     end:
       targetState: ERROR
 
