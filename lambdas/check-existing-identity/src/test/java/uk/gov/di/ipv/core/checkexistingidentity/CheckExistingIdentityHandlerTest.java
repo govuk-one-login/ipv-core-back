@@ -96,7 +96,7 @@ class CheckExistingIdentityHandlerTest {
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse("/journey/reset-identity");

@@ -68,7 +68,7 @@ BANK_ACCOUNT_START_PAGE:
     pageId: page-ipv-bank-account-start
   events:
     next:
-      targetState: PYI_ESCAPE # Todo: Need to replace with CRI.
+      targetState: CRI_BANK_ACCOUNT_J7
     end:
       targetState: PYI_ESCAPE
 
@@ -495,6 +495,38 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: PYI_NO_MATCH
+
+# No photo id M2B journey (J7)
+CRI_BANK_ACCOUNT_J7:
+  response:
+    type: cri
+    criId: bav
+    context: bank_account
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_NINO_WITH_SCOPE_J7
+
+CRI_NINO_WITH_SCOPE_J7:
+  response:
+    type: cri
+    criId: nino
+    scope: identityCheck
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: ADDRESS_AND_FRAUD_J7
+
+ADDRESS_AND_FRAUD_J7:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: CRI_HMRC_KBV_J6
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    end:
+      targetState: ERROR
 
 # Mitigation journey (01)
 MITIGATION_01:

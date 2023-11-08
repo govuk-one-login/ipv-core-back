@@ -63,6 +63,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluateGpg45ScoresHandlerTest {
@@ -81,7 +82,7 @@ class EvaluateGpg45ScoresHandlerTest {
     public static CredentialIssuerConfig addressConfig = null;
     public static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B);
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
