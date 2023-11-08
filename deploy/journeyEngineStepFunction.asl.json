@@ -44,6 +44,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/check-gpg45-score",
           "Next": "CheckGpg45ScoreLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/evaluate-gpg45-scores",
+          "Next": "EvaluateGpg45Scores"
         }
       ],
       "Default": "Success"
@@ -87,6 +92,18 @@
     "BuildClientOauthResponseLambda": {
       "Type": "Task",
       "Resource": "${BuildClientOauthResponseFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "EvaluateGpg45Scores": {
+      "Type": "Task",
+      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
