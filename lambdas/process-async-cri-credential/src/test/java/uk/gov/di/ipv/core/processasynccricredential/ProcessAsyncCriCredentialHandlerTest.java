@@ -168,7 +168,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
+    void shouldProcessErrorAsyncVerifiableCredentialSuccessfully()
+            throws JsonProcessingException, SqsException {
         final SQSEvent testEvent = createErrorTestEvent();
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -178,6 +179,12 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(criResponseService, times(1)).updateCriResponseItem(TEST_CRI_RESPONSE_ITEM);
 
         assertEquals(0, batchResponse.getBatchItemFailures().size());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(1, auditEvents.size());
+        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
     }
 
     @Test
@@ -233,7 +240,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void willnotPersistVerifiableCredentialIfFailsToPutCredentialToCIMIT()
+    void willNotPersistVerifiableCredentialIfFailsToPutCredentialToCIMIT()
             throws JsonProcessingException, CiPutException, SqsException {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
@@ -248,8 +255,12 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
         verifyVerifiableCredentialJwtValidator();
-        verify(auditService, times(1))
-                .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(1, auditEvents.size());
+        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
+
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
 
         verifyBatchResponseFailures(testEvent, batchResponse);
