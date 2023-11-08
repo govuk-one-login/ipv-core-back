@@ -59,7 +59,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RES
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
@@ -228,13 +228,13 @@ class VerifiableCredentialServiceTest {
         String userId = "user-id-1";
 
         verifiableCredentialService.persistUserCredentials(
-                SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
+                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
         assertEquals(Instant.parse("2022-05-20T12:50:54Z"), vcStoreItem.getExpirationTime());
-        assertEquals(SIGNED_VC_1, vcStoreItem.getCredential());
+        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
     }
 
     @Test
@@ -273,7 +273,7 @@ class VerifiableCredentialServiceTest {
 
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any(), any());
 
-        SignedJWT signedJwt = SignedJWT.parse(SIGNED_VC_1);
+        SignedJWT signedJwt = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         VerifiableCredentialException thrown =
                 assertThrows(
                         VerifiableCredentialException.class,
@@ -339,7 +339,7 @@ class VerifiableCredentialServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/jwt;charset=utf-8")
-                                        .withBody(SIGNED_VC_1)));
+                                        .withBody(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -351,7 +351,7 @@ class VerifiableCredentialServiceTest {
                         accessToken, credentialIssuerConfig, testApiKey, cri);
 
         assertEquals(
-                SIGNED_VC_1,
+                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                 verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
 
         verify(
@@ -402,7 +402,7 @@ class VerifiableCredentialServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/jwt;charset=utf-8")
-                                        .withBody(SIGNED_VC_1)));
+                                        .withBody(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -414,7 +414,7 @@ class VerifiableCredentialServiceTest {
                         accessToken, credentialIssuerConfig, null, cri);
 
         assertEquals(
-                SIGNED_VC_1,
+                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                 verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
 
         verify(
@@ -446,7 +446,7 @@ class VerifiableCredentialServiceTest {
                         accessToken, credentialIssuerConfig, null, cri);
 
         assertEquals(
-                SIGNED_VC_1,
+                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                 verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
 
         verify(
@@ -518,7 +518,7 @@ class VerifiableCredentialServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/xml;charset=utf-8")
-                                        .withBody(SIGNED_VC_1)));
+                                        .withBody(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);

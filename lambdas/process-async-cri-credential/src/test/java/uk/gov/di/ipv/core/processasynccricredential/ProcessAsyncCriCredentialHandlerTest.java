@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
@@ -304,7 +304,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         null,
                         TEST_USER_ID,
                         testOauthState,
-                        List.of(TestFixtures.SIGNED_VC_1),
+                        List.of(TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                         null,
                         null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
@@ -341,7 +341,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         ipAddressCaptor.capture());
         List<SignedJWT> ciVerifiableCredentials = ciVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, ciVerifiableCredentials.size());
-        assertEquals(SIGNED_VC_1, ciVerifiableCredentials.get(0).serialize());
+        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, ciVerifiableCredentials.get(0).serialize());
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -362,7 +362,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         ipAddressCaptor.capture());
         var postedVcs = postedVcsCaptor.getValue();
         assertEquals(1, postedVcs.size());
-        assertEquals(SIGNED_VC_1, postedVcs.get(0));
+        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, postedVcs.get(0));
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -384,7 +384,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<SignedJWT> storedVerifiableCredentials =
                 storableVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, storedVerifiableCredentials.size());
-        assertEquals(SIGNED_VC_1, storedVerifiableCredentials.get(0).serialize());
+        assertEquals(
+                VC_PASSPORT_NON_DCMAW_SUCCESSFUL, storedVerifiableCredentials.get(0).serialize());
         List<String> credentialIssuers = credentialIssuerCaptor.getAllValues();
         assertEquals(1, credentialIssuers.size());
         assertEquals(TEST_CREDENTIAL_ISSUER_ID, credentialIssuers.get(0));

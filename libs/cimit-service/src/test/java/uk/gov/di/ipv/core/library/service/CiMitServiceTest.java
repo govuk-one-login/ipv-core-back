@@ -46,7 +46,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitServiceTest {
@@ -75,14 +75,18 @@ class CiMitServiceTest {
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
         ciMitService.submitVC(
-                SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                GOVUK_SIGNIN_JOURNEY_ID,
+                CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, SIGNED_VC_1),
+                        GOVUK_SIGNIN_JOURNEY_ID,
+                        CLIENT_SOURCE_IP,
+                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
@@ -97,7 +101,7 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(SIGNED_VC_1),
+                                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -117,7 +121,7 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(SIGNED_VC_1),
+                                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -130,14 +134,18 @@ class CiMitServiceTest {
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
         ciMitService.submitMitigatingVcList(
-                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                GOVUK_SIGNIN_JOURNEY_ID,
+                CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, SIGNED_VC_1),
+                        GOVUK_SIGNIN_JOURNEY_ID,
+                        CLIENT_SOURCE_IP,
+                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
@@ -152,7 +160,9 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+                                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                GOVUK_SIGNIN_JOURNEY_ID,
+                                CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -170,7 +180,9 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+                                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                GOVUK_SIGNIN_JOURNEY_ID,
+                                CLIENT_SOURCE_IP));
     }
 
     @Test

@@ -48,11 +48,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -74,6 +70,8 @@ public class UserIdentityService {
             List.of(ADDRESS_CRI, BAV_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String ADDRESS_PROPERTY_NAME = "address";
+    private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -167,6 +165,10 @@ public class UserIdentityService {
             Optional<JsonNode> drivingPermitClaim =
                     generateDrivingPermitClaim(successfulVCStoreItems);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+
+            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
+            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
+
             if (configService.enabled(EXIT_CODES)) {
                 userIdentityBuilder.exitCode(toAlwaysRequiredExitCode(contraIndicators));
             }
@@ -245,7 +247,8 @@ public class UserIdentityService {
                     .path(node);
         } catch (JsonProcessingException | ParseException e) {
             throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse VC store item");
+                    "Encountered a parsing error while attempting to parse VC store item: "
+                            + e.getMessage());
         }
     }
 
@@ -334,131 +337,160 @@ public class UserIdentityService {
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody {
-        Optional<VcStoreItem> addressCredentialItem =
-                vcStoreItems.stream()
-                        .filter(credential -> credential.getCredentialIssuer().equals(ADDRESS_CRI))
-                        .findFirst();
+        var addressStoreItem = findStoreItem(ADDRESS_CRI, vcStoreItems);
 
-        if (addressCredentialItem.isPresent()) {
-            JsonNode addressNode;
-            try {
-                addressNode =
-                        objectMapper
-                                .readTree(
-                                        SignedJWT.parse(addressCredentialItem.get().getCredential())
-                                                .getPayload()
-                                                .toString())
-                                .path(VC_CLAIM)
-                                .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_CRI);
-                if (addressNode.isMissingNode()) {
-                    LOGGER.error("Address property is missing from address VC");
-                    throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
-                }
-            } catch (JsonProcessingException | ParseException e) {
-                LOGGER.error("Error while parsing Address CRI credential: '{}'", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
-            }
-            return Optional.of(addressNode);
+        if (addressStoreItem.isEmpty()) {
+            LOGGER.warn("Failed to find Address CRI credential");
+            return Optional.empty();
         }
-        LOGGER.warn("Failed to find Address CRI credential");
-        return Optional.empty();
+
+        var addressNode =
+                extractSubjectDetailFromVc(
+                        ADDRESS_PROPERTY_NAME,
+                        addressStoreItem.get(),
+                        "Error while parsing Address CRI credential",
+                        ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+
+        if (addressNode.isMissingNode()) {
+            LOGGER.error("Address property is missing from address VC");
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+        }
+
+        return Optional.of(addressNode);
+    }
+
+    private Optional<JsonNode> generateNinoClaim(List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
+        var ninoStoreItem = findStoreItem(NINO_CRI, successfulVCStoreItems);
+
+        if (ninoStoreItem.isEmpty()) {
+            LOGGER.warn("Failed to find Nino CRI credential");
+            return Optional.empty();
+        }
+
+        var ninoNode =
+                extractSubjectDetailFromVc(
+                        NINO_PROPERTY_NAME,
+                        ninoStoreItem.get(),
+                        "Error while parsing Nino CRI credential",
+                        ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
+
+        if (ninoNode.isMissingNode()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Nino property is missing from VC")
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    ninoStoreItem.get().getCredentialIssuer());
+            LOGGER.warn(mapMessage);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(ninoNode);
     }
 
     private Optional<JsonNode> generatePassportClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : successfulVCStoreItems) {
-            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                JsonNode passportNode;
-                try {
-                    passportNode =
-                            objectMapper
-                                    .readTree(
-                                            SignedJWT.parse(item.getCredential())
-                                                    .getPayload()
-                                                    .toString())
-                                    .path(VC_CLAIM)
-                                    .path(VC_CREDENTIAL_SUBJECT)
-                                    .path(PASSPORT_PROPERTY_NAME);
-                    if (passportNode.isMissingNode()) {
-                        StringMapMessage mapMessage =
-                                new StringMapMessage()
-                                        .with(
-                                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                                "Passport property is missing from VC")
-                                        .with(
-                                                LOG_CRI_ISSUER.getFieldName(),
-                                                item.getCredentialIssuer());
-                        LOGGER.warn(mapMessage);
+        var passportVc = findStoreItem(PASSPORT_CRI_TYPES, successfulVCStoreItems);
 
-                        return Optional.empty();
-                    }
-                } catch (JsonProcessingException | ParseException e) {
-                    LOGGER.error(
-                            "Error while parsing Passport CRI credential: '{}'", e.getMessage());
-                    throw new HttpResponseExceptionWithErrorBody(
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
-                }
-                return Optional.of(passportNode);
-            }
+        if (passportVc.isEmpty()) {
+            LOGGER.warn("Failed to find Passport CRI credential");
+            return Optional.empty();
         }
 
-        LOGGER.warn("Failed to find Passport CRI credential");
-        return Optional.empty();
+        var passportNode =
+                extractSubjectDetailFromVc(
+                        PASSPORT_PROPERTY_NAME,
+                        passportVc.get(),
+                        "Error while parsing Passport CRI credential",
+                        ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+
+        if (passportNode.isMissingNode()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Passport property is missing from VC")
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    passportVc.get().getCredentialIssuer());
+            LOGGER.warn(mapMessage);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(passportNode);
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : successfulVCStoreItems) {
-            if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                JsonNode drivingPermitNode;
-                try {
-                    drivingPermitNode =
-                            objectMapper
-                                    .readTree(
-                                            SignedJWT.parse(item.getCredential())
-                                                    .getPayload()
-                                                    .toString())
-                                    .path(VC_CLAIM)
-                                    .path(VC_CREDENTIAL_SUBJECT)
-                                    .path(DRIVING_PERMIT_PROPERTY_NAME);
+        var drivingPermitVc = findStoreItem(DRIVING_PERMIT_CRI_TYPES, successfulVCStoreItems);
 
-                    if (drivingPermitNode instanceof ArrayNode) {
-                        ((ObjectNode) drivingPermitNode.get(0)).remove("fullAddress");
-                        ((ObjectNode) drivingPermitNode.get(0)).remove("issueDate");
-                    }
-
-                    if (drivingPermitNode.isMissingNode()) {
-                        StringMapMessage mapMessage =
-                                new StringMapMessage()
-                                        .with(
-                                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                                "Driving Permit property is missing from VC")
-                                        .with(
-                                                LOG_CRI_ISSUER.getFieldName(),
-                                                item.getCredentialIssuer());
-                        LOGGER.warn(mapMessage);
-
-                        return Optional.empty();
-                    }
-
-                    return Optional.of(drivingPermitNode);
-                } catch (ParseException | JsonProcessingException e) {
-                    LOGGER.error(
-                            "Error while parsing Driving Permit CRI credential: '{}'",
-                            e.getMessage());
-                    throw new HttpResponseExceptionWithErrorBody(
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
-                }
-            }
+        if (drivingPermitVc.isEmpty()) {
+            LOGGER.warn("Failed to find Driving Permit CRI credential");
+            return Optional.empty();
         }
-        LOGGER.warn("Failed to find Driving Permit CRI credential");
-        return Optional.empty();
+
+        var drivingPermitNode =
+                extractSubjectDetailFromVc(
+                        DRIVING_PERMIT_PROPERTY_NAME,
+                        drivingPermitVc.get(),
+                        "Error while parsing Driving Permit CRI credential",
+                        ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+
+        if (drivingPermitNode.isMissingNode()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Driving Permit property is missing from VC")
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    drivingPermitVc.get().getCredentialIssuer());
+            LOGGER.warn(mapMessage);
+
+            return Optional.empty();
+        }
+
+        if (drivingPermitNode instanceof ArrayNode) {
+            ((ObjectNode) drivingPermitNode.get(0)).remove("fullAddress");
+            ((ObjectNode) drivingPermitNode.get(0)).remove("issueDate");
+        }
+
+        return Optional.of(drivingPermitNode);
+    }
+
+    private Optional<VcStoreItem> findStoreItem(String criName, List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
+                .filter(credential -> credential.getCredentialIssuer().equals(criName))
+                .findFirst();
+    }
+
+    private Optional<VcStoreItem> findStoreItem(
+            List<String> criNames, List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
+                .filter(credential -> criNames.contains(credential.getCredentialIssuer()))
+                .findFirst();
+    }
+
+    private JsonNode extractSubjectDetailFromVc(
+            String detailName,
+            VcStoreItem credentialItem,
+            String errorLog,
+            ErrorResponse errorResponse)
+            throws HttpResponseExceptionWithErrorBody {
+        try {
+            return getVCClaimNode(credentialItem.getCredential(), VC_CREDENTIAL_SUBJECT)
+                    .path(detailName);
+        } catch (CredentialParseException e) {
+            LOGGER.error("{}: '{}'", errorLog, e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
+        }
     }
 
     public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)

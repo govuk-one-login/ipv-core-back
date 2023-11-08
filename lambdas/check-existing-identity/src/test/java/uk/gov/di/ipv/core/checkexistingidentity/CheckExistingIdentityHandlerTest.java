@@ -385,7 +385,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -408,7 +409,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
-                createCriErrorResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriErrorResponseStoreItem(
+                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -433,7 +435,8 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -467,7 +470,8 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -500,7 +504,8 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(
+                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
