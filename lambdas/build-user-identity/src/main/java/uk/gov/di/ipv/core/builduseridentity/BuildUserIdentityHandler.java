@@ -45,6 +45,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.time.Instant;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -195,7 +196,7 @@ public class BuildUserIdentityHandler
                         ipvSessionItem.getVot(),
                         ipvSessionItem.isCiFail(),
                         contraIndicators.hasMitigations(),
-                        userIdentity.getExitCode());
+                        configService.enabled(EXIT_CODES) ? userIdentity.getExitCode() : null);
 
         LOGGER.info(
                 new StringMapMessage()
