@@ -501,6 +501,7 @@ CRI_CLAIMED_IDENTITY_J7:
   response:
     type: cri
     criId: claimedIdentity
+    context: bank_account
   parent: CRI_STATE
   events:
     next:
@@ -512,7 +513,6 @@ CRI_BANK_ACCOUNT_J7:
   response:
     type: cri
     criId: bav
-    context: bank_account
   parent: CRI_STATE
   events:
     next:
