@@ -46,6 +46,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
 public class BuildUserIdentityHandler
@@ -149,18 +150,8 @@ public class BuildUserIdentityHandler
 
             userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
-            AuditExtensionsUserIdentity extensions =
-                    new AuditExtensionsUserIdentity(
-                            ipvSessionItem.getVot(),
-                            ipvSessionItem.isCiFail(),
-                            contraIndicators.hasMitigations());
-
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_IDENTITY_ISSUED,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            extensions));
+            sendIdentityIssuedAuditEvent(
+                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
 
@@ -191,6 +182,32 @@ public class BuildUserIdentityHandler
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
         }
+    }
+
+    private void sendIdentityIssuedAuditEvent(
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser,
+            ContraIndicators contraIndicators,
+            UserIdentity userIdentity)
+            throws SqsException {
+        AuditExtensionsUserIdentity extensions =
+                new AuditExtensionsUserIdentity(
+                        ipvSessionItem.getVot(),
+                        ipvSessionItem.isCiFail(),
+                        contraIndicators.hasMitigations(),
+                        userIdentity.getExitCode());
+
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Sending audit event IPV_IDENTITY_ISSUED message."));
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_IDENTITY_ISSUED,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        extensions));
     }
 
     private APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(

@@ -1,19 +1,15 @@
 package uk.gov.di.ipv.core.library.auditing.extension;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-@ExcludeFromGeneratedCoverageReport
-@Getter
-public class AuditExtensionsUserIdentity implements AuditExtensions {
-    private final String levelOfConfidence;
-    private final boolean ciFail;
-    private final boolean hasMitigations;
+import java.util.List;
 
-    public AuditExtensionsUserIdentity(
-            String levelOfConfidence, boolean ciFail, boolean hasMitigations) {
-        this.levelOfConfidence = levelOfConfidence;
-        this.ciFail = ciFail;
-        this.hasMitigations = hasMitigations;
-    }
-}
+@ExcludeFromGeneratedCoverageReport
+public record AuditExtensionsUserIdentity(
+        @JsonProperty String levelOfConfidence,
+        @JsonProperty boolean ciFail,
+        @JsonProperty boolean hasMitigations,
+        @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty List<String> exitCode)
+        implements AuditExtensions {}
