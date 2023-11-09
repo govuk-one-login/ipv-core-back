@@ -68,7 +68,7 @@ BANK_ACCOUNT_START_PAGE:
     pageId: page-ipv-bank-account-start
   events:
     next:
-      targetState: CRI_BANK_ACCOUNT_J7
+      targetState: CRI_CLAIMED_IDENTITY_J7
     end:
       targetState: PYI_ESCAPE
 
@@ -497,6 +497,17 @@ CRI_HMRC_KBV_J6:
       targetState: PYI_NO_MATCH
 
 # No photo id M2B journey (J7)
+CRI_CLAIMED_IDENTITY_J7:
+  response:
+    type: cri
+    criId: claimedIdentity
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_BANK_ACCOUNT_J7
+    enhanced-verification:
+      targetState: CRI_BANK_ACCOUNT_J7
+
 CRI_BANK_ACCOUNT_J7:
   response:
     type: cri
