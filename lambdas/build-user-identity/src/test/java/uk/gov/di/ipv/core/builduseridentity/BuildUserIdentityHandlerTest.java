@@ -207,36 +207,6 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldNotReturnExitCodeAttributeIfNullInUserIdentity() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
-        Map<String, String> headers =
-                Map.of(
-                        "Authorization",
-                        accessToken.toAuthorizationHeader(),
-                        "ip-address",
-                        TEST_IP_ADDRESS);
-        event.setHeaders(headers);
-
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
-                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(mock(ContraIndicators.class));
-
-        userIdentity.setExitCode(null);
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(event, mockContext);
-
-        assertFalse(response.getBody().contains("exit_code"));
-    }
-
-    @Test
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
