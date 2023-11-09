@@ -43,9 +43,10 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ALWAYS_REQUIRED_EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
@@ -170,22 +171,32 @@ public class UserIdentityService {
             ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
 
             if (configService.enabled(EXIT_CODES)) {
-                userIdentityBuilder.exitCode(toAlwaysRequiredExitCode(contraIndicators));
+                userIdentityBuilder.exitCode(getSuccessExitCode(contraIndicators));
             }
         } else {
-            if (configService.enabled(EXIT_CODES)
-                    && contraIndicators.getContraIndicatorScore(
-                                    configService.getContraIndicatorConfigMap())
-                            >= Integer.parseInt(
-                                    configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
-                userIdentityBuilder.exitCode(toExitCode(contraIndicators));
+            if (configService.enabled(EXIT_CODES)) {
+                userIdentityBuilder.exitCode(getFailExitCode(contraIndicators));
             }
         }
 
         return userIdentityBuilder.build();
     }
 
-    private List<String> toExitCode(ContraIndicators contraIndicators)
+    private List<String> getFailExitCode(ContraIndicators contraIndicators)
+            throws UnrecognisedCiException {
+        return breachingCiThreshold(contraIndicators)
+                ? mapCisToExitCodes(contraIndicators)
+                : List.of(configService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0));
+    }
+
+    private List<String> getSuccessExitCode(ContraIndicators contraIndicators)
+            throws UnrecognisedCiException {
+        return mapCisToExitCodes(contraIndicators).stream()
+                .filter(configService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)::contains)
+                .toList();
+    }
+
+    private List<String> mapCisToExitCodes(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
         return contraIndicators.getContraIndicatorsMap().values().stream()
                 .map(ContraIndicator::getCode)
@@ -205,11 +216,9 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> toAlwaysRequiredExitCode(ContraIndicators contraIndicators)
-            throws UnrecognisedCiException {
-        return toExitCode(contraIndicators).stream()
-                .filter(configService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)::contains)
-                .toList();
+    private boolean breachingCiThreshold(ContraIndicators contraIndicators) {
+        return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
+                >= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)

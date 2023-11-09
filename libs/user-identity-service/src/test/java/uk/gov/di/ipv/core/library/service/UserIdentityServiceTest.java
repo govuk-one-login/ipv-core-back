@@ -35,11 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ALWAYS_REQUIRED_EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
@@ -1115,7 +1117,7 @@ class UserIdentityServiceTest {
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockConfigService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)).thenReturn("1");
+        when(mockConfigService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)).thenReturn("1");
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1138,7 +1140,7 @@ class UserIdentityServiceTest {
             throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(ALWAYS_REQUIRED_EXIT_CODES)).thenReturn("1");
+        when(mockConfigService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)).thenReturn("1");
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
@@ -1277,6 +1279,31 @@ class UserIdentityServiceTest {
                         USER_ID_1, "test-sub", "P0", emptyContraIndicators);
 
         assertNull(userIdentity.getExitCode());
+    }
+
+    @Test
+    void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
+            throws Exception {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
+        when(mockConfigService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
+
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of("X01", ContraIndicator.builder().code("X01").build()))
+                        .build();
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", "P0", contraIndicators);
+
+        assertEquals(List.of("🐧"), userIdentity.getExitCode());
+        verify(mockConfigService, never()).getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED);
     }
 
     @Test
