@@ -192,9 +192,10 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         AuditExtensionsUserIdentity extensions =
                 (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertTrue(extensions.isHasMitigations());
+        assertEquals(VectorOfTrust.P2.toString(), extensions.levelOfConfidence());
+        assertFalse(extensions.ciFail());
+        assertTrue(extensions.hasMitigations());
+        assertEquals(extensions.exitCode(), responseBody.getExitCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 

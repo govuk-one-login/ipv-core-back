@@ -15,9 +15,14 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -134,6 +139,53 @@ class AuditServiceTest {
         assertEquals(
                 "someGovukSigninJourneyId",
                 messageBody.get("user").get("govuk_signin_journey_id").asText());
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithoutExitCode()
+            throws JsonProcessingException, SqsException {
+        AuditExtensionsUserIdentity extensions =
+                new AuditExtensionsUserIdentity("levelOFConfidence", false, false, null);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
+
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+
+        JsonNode messageBody =
+                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+        assertEquals(
+                AuditEventTypes.IPV_JOURNEY_START.toString(),
+                messageBody.get("event_name").asText());
+        JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
+        assertNull(auditExtensionsUserIdentity.get("exit_code"));
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithExitCode()
+            throws JsonProcessingException, SqsException {
+        AuditExtensionsUserIdentity extensions =
+                new AuditExtensionsUserIdentity(
+                        "levelOFConfidence", false, false, new ArrayList<>());
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
+
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+
+        JsonNode messageBody =
+                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+        assertEquals(
+                AuditEventTypes.IPV_JOURNEY_START.toString(),
+                messageBody.get("event_name").asText());
+        JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
+        assertNotNull(auditExtensionsUserIdentity.get("exit_code"));
     }
 
     @Test
