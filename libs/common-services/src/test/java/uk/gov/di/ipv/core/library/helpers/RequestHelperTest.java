@@ -21,7 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getHeaderByKey;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
 
 class RequestHelperTest {
     private final String TEST_IPV_SESSION_ID = "a-session-id";
@@ -184,8 +192,8 @@ class RequestHelperTest {
 
         assertEquals(clientSessionId, getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, getIpvSessionId(event));
-        assertEquals(ipAddress, RequestHelper.getIpAddress(event));
-        assertEquals(featureSet, RequestHelper.getFeatureSet(event));
+        assertEquals(ipAddress, getIpAddress(event));
+        assertEquals(featureSet, getFeatureSet(event));
     }
 
     @Test
@@ -224,7 +232,7 @@ class RequestHelperTest {
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
                         .build();
-        assertEquals(TEST_FEATURE_SET, RequestHelper.getFeatureSet(event));
+        assertEquals(TEST_FEATURE_SET, getFeatureSet(event));
     }
 
     @Test
@@ -236,7 +244,7 @@ class RequestHelperTest {
                         .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
                         .journey(TEST_JOURNEY)
                         .build();
-        assertNull(RequestHelper.getFeatureSet(event));
+        assertNull(getFeatureSet(event));
     }
 
     @ParameterizedTest

@@ -58,7 +58,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 
 @ExtendWith(MockitoExtension.class)
 class BuildUserIdentityHandlerTest {
