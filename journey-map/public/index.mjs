@@ -113,39 +113,20 @@ const resolveEventTarget = (definition, formData) => {
     return definition.targetState;
 };
 
-const resolveAllPossibleEventTargets = (eventDefinition) => {
-    let targets = [];
-    targets.push(eventDefinition.targetState);
-    if (eventDefinition.checkIfDisabled) {
-        Object.values(eventDefinition.checkIfDisabled).forEach((def) => {
-            targets.push(...resolveAllPossibleEventTargets(def));
-        })
-    }
-
-    if (eventDefinition.checkFeatureFlag) {
-        Object.values(eventDefinition.checkFeatureFlag).forEach((def) => {
-            targets.push(...resolveAllPossibleEventTargets(def));
-        })
-    }
-
-    return targets;
-};
+const resolveAllPossibleEventTargets = (eventDefinition) => [
+    eventDefinition.targetState,
+    ...Object.values(eventDefinition.checkIfDisabled || {}).flatMap(resolveAllPossibleEventTargets),
+    ...Object.values(eventDefinition.checkFeatureFlag || {}).flatMap(resolveAllPossibleEventTargets)
+];
 
 const calcOrphanStates = (journeyMap) => {
-    const targetedStates = [...initialStates]
-
-    Object.values(journeyMap).forEach((stateDefinition) => {
-        if (stateDefinition.events) {
-            Object.values(stateDefinition.events).forEach((eventDefinition) => {
-                targetedStates.push(...resolveAllPossibleEventTargets(eventDefinition));
-            })
-        }
-        if (stateDefinition.exitEvents) {
-            Object.values(stateDefinition.exitEvents).forEach((eventDefinition) => {
-                targetedStates.push(...resolveAllPossibleEventTargets(eventDefinition));
-            })
-        }
-    })
+    const targetedStates = [
+        ...initialStates,
+        ...Object.values(journeyMap).flatMap((stateDefinition) => [
+            ...Object.values(stateDefinition.events || {}).flatMap(resolveAllPossibleEventTargets),
+            ...Object.values(stateDefinition.exitEvents || {}).flatMap(resolveAllPossibleEventTargets)
+        ])
+    ]
 
     const uniqueTargetedStates = [...new Set(targetedStates)];
 
@@ -226,12 +207,9 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     }
     expandParents(journeyMapCopy);
 
-    let { transitionsMermaid, states } = renderTransitions(journeyMapCopy, formData);
-
-    if (formData.has('onlyOrphanStates')) {
-        states = calcOrphanStates(journeyMapCopy)
-        transitionsMermaid = '';
-    }
+    const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy) }
+        : renderTransitions(journeyMapCopy, formData);
 
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
