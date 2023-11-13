@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -35,6 +36,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception.AuthCodeToAccessTokenException;
 import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.service.AuthCodeToAccessTokenService;
 
+import java.time.Clock;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -72,7 +74,12 @@ public class RetrieveCriOauthAccessTokenHandler
     public RetrieveCriOauthAccessTokenHandler() {
         this.configService = new ConfigService();
         this.signer = new KmsEs256Signer();
-        this.authCodeToAccessTokenService = new AuthCodeToAccessTokenService(configService, signer);
+        this.authCodeToAccessTokenService =
+                new AuthCodeToAccessTokenService(
+                        configService,
+                        signer,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);

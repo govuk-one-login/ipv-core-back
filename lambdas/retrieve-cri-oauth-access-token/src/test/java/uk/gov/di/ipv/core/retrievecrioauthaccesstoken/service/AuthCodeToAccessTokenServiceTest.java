@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception.AuthCodeToAccessTokenException;
 
@@ -23,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Clock;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -50,7 +52,12 @@ class AuthCodeToAccessTokenServiceTest {
     @BeforeEach
     void setUp() throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
-        authCodeToAccessTokenService = new AuthCodeToAccessTokenService(mockConfigService, signer);
+        authCodeToAccessTokenService =
+                new AuthCodeToAccessTokenService(
+                        mockConfigService,
+                        signer,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
     }
 
     @Test

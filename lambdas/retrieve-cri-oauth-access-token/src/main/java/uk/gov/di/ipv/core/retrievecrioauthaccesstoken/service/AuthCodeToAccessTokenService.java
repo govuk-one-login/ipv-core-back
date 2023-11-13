@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception.AuthCodeToAccess
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -43,11 +44,19 @@ public class AuthCodeToAccessTokenService {
 
     private final ConfigService configService;
     private final JWSSigner signer;
+    private final SecureTokenHelper secureTokenHelper;
+    private final Clock clock;
 
     @ExcludeFromGeneratedCoverageReport
-    public AuthCodeToAccessTokenService(ConfigService configService, JWSSigner signer) {
+    public AuthCodeToAccessTokenService(
+            ConfigService configService,
+            JWSSigner signer,
+            SecureTokenHelper secureTokenHelper,
+            Clock clock) {
         this.configService = configService;
         this.signer = signer;
+        this.secureTokenHelper = secureTokenHelper;
+        this.clock = clock;
     }
 
     public BearerAccessToken exchangeCodeForToken(
@@ -58,7 +67,7 @@ public class AuthCodeToAccessTokenService {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
         try {
-            OffsetDateTime dateTime = OffsetDateTime.now();
+            OffsetDateTime dateTime = OffsetDateTime.now(clock);
             ClientAuthClaims clientAuthClaims =
                     new ClientAuthClaims(
                             config.getClientId(),
@@ -69,7 +78,7 @@ public class AuthCodeToAccessTokenService {
                                                     configService.getSsmParameter(
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
-                            SecureTokenHelper.getInstance().generate());
+                            secureTokenHelper.generate());
             SignedJWT signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
 
