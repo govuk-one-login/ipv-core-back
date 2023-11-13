@@ -180,19 +180,22 @@ const renderStates = (journeyMap, states) => {
 
         switch (definition.response?.type) {
             case 'process':
-                return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
+                const processClickHandler = `click ${state} call onProcessClick(${state}, ${definition.response.lambda})`;
+                return `    ${state}(${state}\\n${definition.response.lambda}):::process\n${processClickHandler}`;
             case 'page':
+                const pageClickHandler = `click ${state} call onPageClick(${state}, ${definition.response.pageId})`;
                 return failureStates.includes(state)
-                    ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page`
-                    : `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
+                    ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page\n${pageClickHandler}`
+                    : `    ${state}[${state}\\n${definition.response.pageId}]:::page\n${pageClickHandler}`;
             case 'cri':
+                const criClickHandler = `click ${state} call onCriClick(${state}, ${definition.response.criId})`;
                 const contextInfo = definition.response.context ? `\\n context: ${definition.response.context}` : "";
                 const scopeInfo = definition.response.scope ? `\\n scope: ${definition.response.scope}` : "";
-                return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri`;
+                return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri\n${criClickHandler}`;
             case 'error':
                 return `    ${state}:::error_page`
             default:
-                return `    ${state}`;
+                return `    ${state}\nclick ${state} call onOtherClick(${state})`;
         }
     });
 

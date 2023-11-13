@@ -26,7 +26,7 @@
                 height: 100%;
             }
             form {
-                width: 260px;
+                flex: 0 1 auto;
                 margin-top: 16px;
                 display: flex;
                 flex-direction: column;
@@ -42,42 +42,77 @@
             form select {
                 flex: 0 0 30%;
             }
+            form input[type=checkbox] {
+                margin-left: 8px;
+            }
             #checkbox-controls {
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
+                gap: 16px;
+            }
+            #nodeInfo {
+                border-left: solid 1px black;
+                margin-left: 16px;
+                padding: 16px;
+            }
+            #nodeInfo h2 {
+                margin-bottom: 8px;
+            }
+            #nodeInfo p {
+                margin-bottom: 0.5em;
+            }
+            .header-split {
+                display: flex;
+                padding: 16px 0;
+            }
+            #diagramSvg .highlight.outgoingEdge {
+                stroke-width: 3.5px;
+                filter: drop-shadow(0 0 6px blue);
+            }
+            #diagramSvg .highlight.incomingEdge {
+                stroke-width: 3.5px;
+                filter: drop-shadow(0 0 6px darkorange);
+            }
+            #diagramSvg .highlight.node rect {
+                stroke-width: 3px;
             }
         </style>
     </head>
     <body>
         <div id="header">
             <h1>IPV Core Journey Map</h1>
-            <form id="configuration-form">
-                <span id="checkbox-controls">
-                    <fieldset id="disabledInput">
-                        <legend>Disabled CRI:</legend>
-                    </fieldset>
-                    <fieldset id="featureFlagInput">
-                        <legend>Feature flag:</legend>
-                    </fieldset>
-                </span>
-                <label>
-                    <div>Include errors:</div>
-                    <input id="includeErrorsInput" name="includeErrors" type="checkbox">
-                </label>
-                <label>
-                    <div>Include failures:</div>
-                    <input id="includeFailuresInput" name="includeFailures" type="checkbox">
-                </label>
-                <label>
-                    <div>Expand nested journeys:</div>
-                    <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
-                </label>
-                <label>
-                    <div>Only show orphan states:</div>
-                    <input id="onlyOrphanStatesInput" name="onlyOrphanStates" type="checkbox">
-                </label>
-            </form>
+            <div class="header-split">
+                <form id="configuration-form">
+                    <div id="checkbox-controls">
+                        <fieldset id="disabledInput">
+                            <legend>Disabled CRI:</legend>
+                        </fieldset>
+                        <fieldset id="featureFlagInput">
+                            <legend>Feature flag:</legend>
+                        </fieldset>
+                    </div>
+                    <label>
+                        <span>Include errors:</span>
+                        <input id="includeErrorsInput" name="includeErrors" type="checkbox">
+                    </label>
+                    <label>
+                        <span>Include failures:</span>
+                        <input id="includeFailuresInput" name="includeFailures" type="checkbox">
+                    </label>
+                    <label>
+                        <span>Expand nested journeys:</span>
+                        <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
+                    </label>
+                    <label>
+                        <div>Only show orphan states:</div>
+                        <input id="onlyOrphanStatesInput" name="onlyOrphanStates" type="checkbox">
+                    </label>
+                </form>
+                <div id="nodeInfo">
+                    Click on a node to display more information
+                </div>
+            </div>
         </div>
         <div id="diagram"></div>
         <script type="module">
@@ -86,13 +121,18 @@
             import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
             import { getOptions, render } from './index.mjs';
 
-            // We initialize mermaid manually
-            mermaid.initialize({ startOnLoad: false });
+            mermaid.initialize({
+                startOnLoad: false,
+                // Required to enable links and callbacks
+                // This is (relatively) safe, as we only run on our own generated mermaid charts
+                securityLevel: 'loose',
+            });
 
             // Page elements
             const form = document.getElementById('configuration-form');
             const disabledInput = document.getElementById('disabledInput');
             const featureFlagInput = document.getElementById('featureFlagInput')
+            const nodeInfo = document.getElementById('nodeInfo');
 
             // Load the journey map
             const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
@@ -126,19 +166,61 @@
             setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
 
             // Render the journey map SVG
-            const renderSvg = async (formData) => {
-                const diagram = render(journeyMap, nestedJourneys, formData);
+            const renderSvg = async () => {
+                const diagram = render(journeyMap, nestedJourneys, new FormData(form));
                 const diagramElement = document.getElementById('diagram');
-                const { svg } = await mermaid.render('diagramSvg', diagram);
+                const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
                 diagramElement.innerHTML = svg;
+                if (bindFunctions) {
+                    bindFunctions(diagramElement);
+                }
                 svgPanZoom('#diagramSvg');
             };
 
             // Re-render on change
             form.addEventListener('change', async (event) => {
                 event.preventDefault();
-                await renderSvg(new FormData(form));
+                await renderSvg();
             });
+
+            const highlightState = (state) => {
+                Array.from(document.getElementsByClassName('highlight')).forEach((edge) => {
+                    edge.classList.remove('highlight', 'outgoingEdge', 'incomingEdge');
+                });
+                Array.from(document.getElementsByClassName(`LS-${state}`)).forEach((edge) => {
+                    edge.classList.add('highlight', 'outgoingEdge');
+                });
+                Array.from(document.getElementsByClassName(`LE-${state}`)).forEach((edge) => {
+                    edge.classList.add('highlight', 'incomingEdge');
+                });
+                Array.from(document.getElementsByClassName('node')).forEach((node) => {
+                    if (node.id.startsWith(`flowchart-${state}-`)) {
+                        node.classList.add('highlight');
+                    }
+                })
+            };
+
+            // Update node info on click
+            window.onPageClick = (state, pageId) => {
+                highlightState(state);
+                nodeInfo.innerHTML = `<h2>${state}</h2>
+<p>Page node displaying the '${pageId}' screen in IPV Core.</p>
+<p><a href="https://identity.build.account.gov.uk/ipv/page/${pageId}" target="_blank">Click here to view the page in build</a></p>`;
+            }
+            window.onCriClick = (state, criId) => {
+                highlightState(state);
+                nodeInfo.innerHTML = `<h2>${state}</h2>
+<p>CRI node routing to the '${criId}' CRI.</p>`;
+            }
+            window.onProcessClick = (state, lambda) => {
+                highlightState(state);
+                nodeInfo.innerHTML = `<h2>${state}</h2>
+<p>Process node executing the '${lambda}' lambda.</p>`;
+            }
+            window.onOtherClick = (state) => {
+                highlightState(state);
+                nodeInfo.innerHTML = `<h2>${state}</h2>`;
+            }
 
             await renderSvg();
         </script>
