@@ -55,7 +55,8 @@ import static org.mockito.Mockito.when;
 class BuildClientOauthResponseHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     public static final String TEST_FEATURE_SET = "fs-001";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -356,7 +357,7 @@ class BuildClientOauthResponseHandlerTest {
 
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
-        item.setIpvSessionId(SecureTokenHelper.generate());
+        item.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         item.setUserState("test-state");
         item.setCreationDateTime(new Date().toString());
         return item;
@@ -364,7 +365,7 @@ class BuildClientOauthResponseHandlerTest {
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         clientOAuthSessionItem.setResponseType("code");
         clientOAuthSessionItem.setClientId("test-client-id");
         clientOAuthSessionItem.setRedirectUri("https://example.com");

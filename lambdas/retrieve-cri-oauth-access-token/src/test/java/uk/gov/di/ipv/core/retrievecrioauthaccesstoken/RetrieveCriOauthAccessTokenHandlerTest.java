@@ -71,7 +71,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     private static CredentialIssuerConfig passportIssuer;
 
-    private static final String sessionId = SecureTokenHelper.generate();
+    private static final String sessionId = SecureTokenHelper.getInstance().generate();
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
     private static final String testApiKey = "test-api-key";
     private static final String testComponentId = "http://ipv-core-test.example.com";
@@ -297,7 +297,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         return ClientOAuthSessionItem.builder()
-                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
                 .responseType("code")
                 .state("test-state")
                 .redirectUri("https://example.com/redirect")

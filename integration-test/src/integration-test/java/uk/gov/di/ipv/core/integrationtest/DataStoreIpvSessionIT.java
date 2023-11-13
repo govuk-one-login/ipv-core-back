@@ -37,8 +37,9 @@ public class DataStoreIpvSessionIT {
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String USER_STATE = "userState";
     private static final String CREATION_DATE_TIME = "creationDateTime";
-    private static final String CRI_OAUTH_SESSION_ID = SecureTokenHelper.generate();
-    private static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String CRI_OAUTH_SESSION_ID = SecureTokenHelper.getInstance().generate();
+    private static final String CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
 
     private static List<String> createdItemIds = new ArrayList<>();
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
@@ -105,7 +106,7 @@ public class DataStoreIpvSessionIT {
 
     private IpvSessionItem setUpIpvSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);

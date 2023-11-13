@@ -374,7 +374,7 @@ class IssueClientAccessTokenHandlerTest {
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         ClientOAuthSessionItem clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.generate())
+                        .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
                         .responseType("code")
                         .state("test-state")
                         .redirectUri("https://example.com/redirect")

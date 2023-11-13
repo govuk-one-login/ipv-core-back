@@ -87,7 +87,8 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {

@@ -52,8 +52,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
     private static final String TEST_ERROR = "test-error";
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
-    private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_SESSION_ID = SecureTokenHelper.getInstance().generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_FEATURE_SET = "fs001";

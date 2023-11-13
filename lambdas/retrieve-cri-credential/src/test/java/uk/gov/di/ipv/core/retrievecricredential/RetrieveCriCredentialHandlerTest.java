@@ -112,7 +112,7 @@ class RetrieveCriCredentialHandlerTest {
     private static CredentialIssuerConfig testPassportIssuer;
     private static CredentialIssuerConfig testDcmawIssuer;
     private static Map<String, String> testInput;
-    private static final String testSessionId = SecureTokenHelper.generate();
+    private static final String testSessionId = SecureTokenHelper.getInstance().generate();
     private static final String testApiKey = "test-api-key";
     private static final String testComponentId = "https://ipv-core-test.example.com";
     private static CredentialIssuerConfig addressConfig = null;
@@ -757,7 +757,7 @@ class RetrieveCriCredentialHandlerTest {
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         return ClientOAuthSessionItem.builder()
-                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
                 .responseType("code")
                 .state(TEST_CLIENT_OAUTH_STATE)
                 .redirectUri("https://example.com/redirect")

@@ -86,7 +86,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
 
     private static final String TEST_FEATURE_SET = "test-feature-set";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
 
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
 

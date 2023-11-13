@@ -69,7 +69,7 @@ public class AuthCodeToAccessTokenService {
                                                     configService.getSsmParameter(
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
-                            SecureTokenHelper.generate());
+                            SecureTokenHelper.getInstance().generate());
             SignedJWT signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
 

@@ -122,7 +122,7 @@ public class InitialiseIpvSessionHandler
             String emailAddress = claimsSet.getStringClaim("email_address");
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientOAuthSessionId, null, emailAddress);
@@ -162,7 +162,7 @@ public class InitialiseIpvSessionHandler
             LogHelper.logErrorMessage(
                     "Recoverable Jar validation failed.", e.getErrorObject().getDescription());
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(

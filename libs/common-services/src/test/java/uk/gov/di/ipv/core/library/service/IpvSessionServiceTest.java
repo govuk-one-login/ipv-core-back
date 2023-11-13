@@ -39,7 +39,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItem() {
-        String ipvSessionID = SecureTokenHelper.generate();
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
@@ -60,7 +60,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItemByAuthorizationCode() {
-        String ipvSessionID = SecureTokenHelper.generate();
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String authorizationCode = "12345";
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -77,7 +77,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItemByAccessToken() {
-        String ipvSessionID = SecureTokenHelper.generate();
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -94,7 +94,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldRetryGettingSessionItemByAccessToken() {
-        String ipvSessionID = SecureTokenHelper.generate();
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -114,7 +114,8 @@ class IpvSessionServiceTest {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
                 .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, null);
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.getInstance().generate(), null, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -136,7 +137,7 @@ class IpvSessionServiceTest {
                 .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), null, "test@test.com");
+                        SecureTokenHelper.getInstance().generate(), null, "test@test.com");
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -160,7 +161,7 @@ class IpvSessionServiceTest {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), testErrorObject, null);
+                        SecureTokenHelper.getInstance().generate(), testErrorObject, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -183,7 +184,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -196,7 +197,7 @@ class IpvSessionServiceTest {
     void shouldSetAuthorizationCodeAndMetadataOnSessionItem() {
         AuthorizationCode testCode = new AuthorizationCode();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -214,7 +215,7 @@ class IpvSessionServiceTest {
     void shouldSetAccessTokenAndMetadataOnSessionItem() {
         BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -231,7 +232,7 @@ class IpvSessionServiceTest {
     void shouldRevokeAccessTokenOnSessionItem() {
         BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setAccessToken(accessToken.getValue());
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
 

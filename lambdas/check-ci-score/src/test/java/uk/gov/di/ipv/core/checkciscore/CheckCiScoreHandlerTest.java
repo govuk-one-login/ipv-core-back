@@ -48,7 +48,8 @@ class CheckCiScoreHandlerTest {
     private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
             new JourneyResponse("/journey/ci-score-not-breaching");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
     private static JourneyRequest request;
     @Mock private CiMitService ciMitService;
