@@ -3,81 +3,7 @@
     <head>
         <title>IPV Core Journey Map</title>
         <link rel="icon" href="./favicon.ico" type="image/x-icon">
-        <style>
-            * {
-                margin: 0;
-                box-sizing: border-box;
-            }
-            body {
-                height: 100vh;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                font-family: sans-serif;
-            }
-            #header {
-                padding: 8px 16px 16px;
-                border-bottom: 2px solid black;
-            }
-            #diagram {
-                flex: 1 1 auto;
-            }
-            #diagram > * {
-                height: 100%;
-            }
-            form {
-                flex: 0 1 auto;
-                margin-top: 16px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-            form button {
-                width: 180px;
-            }
-            form label {
-                display: flex;
-                justify-content: space-between;
-            }
-            form select {
-                flex: 0 0 30%;
-            }
-            form input[type=checkbox] {
-                margin-left: 8px;
-            }
-            #checkbox-controls {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                gap: 16px;
-            }
-            #nodeInfo {
-                border-left: solid 1px black;
-                margin-left: 16px;
-                padding: 16px;
-            }
-            #nodeInfo h2 {
-                margin-bottom: 8px;
-            }
-            #nodeInfo p {
-                margin-bottom: 0.5em;
-            }
-            .header-split {
-                display: flex;
-                padding: 16px 0;
-            }
-            #diagramSvg .highlight.outgoingEdge {
-                stroke-width: 3.5px;
-                filter: drop-shadow(0 0 6px blue);
-            }
-            #diagramSvg .highlight.incomingEdge {
-                stroke-width: 3.5px;
-                filter: drop-shadow(0 0 6px darkorange);
-            }
-            #diagramSvg .highlight.node rect {
-                stroke-width: 3px;
-            }
-        </style>
+        <link rel="stylesheet" href="./style.css" type="text/css">
     </head>
     <body>
         <div id="header">
@@ -110,119 +36,13 @@
                     </label>
                 </form>
                 <div id="nodeInfo">
-                    Click on a node to display more information
+                    <h2 id="nodeTitle"></h2>
+                    <pre id="nodeDef"></pre>
+                    <div id="nodeDesc">Click on a node to display more information</div>
                 </div>
             </div>
         </div>
         <div id="diagram"></div>
-        <script type="module">
-            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-            import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
-            import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
-            import { getOptions, render } from './index.mjs';
-
-            mermaid.initialize({
-                startOnLoad: false,
-                // Required to enable links and callbacks
-                // This is (relatively) safe, as we only run on our own generated mermaid charts
-                securityLevel: 'loose',
-            });
-
-            // Page elements
-            const form = document.getElementById('configuration-form');
-            const disabledInput = document.getElementById('disabledInput');
-            const featureFlagInput = document.getElementById('featureFlagInput')
-            const nodeInfo = document.getElementById('nodeInfo');
-
-            // Load the journey map
-            const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
-            const journeyMap = yaml.parse(await journeyResponse.text());
-            const nestedResponse = await fetch('./nested-journey-definitions.yaml');
-            const nestedJourneys = yaml.parse(await nestedResponse.text());
-
-            const setupOptions = (name, options, fieldset) => {
-                if (options.length) {
-                    options.forEach((option) => {
-                        const input = document.createElement('input');
-                        input.type = 'checkbox';
-                        input.name = name;
-                        input.value = option;
-                        input.id = option;
-
-                        const label = document.createElement('label');
-                        label.innerText = option;
-                        label.appendChild(input);
-
-                        fieldset.appendChild(label);
-                    });
-                } else {
-                    fieldset.append("N/A")
-                }
-            };
-
-            // Set up the form options
-            const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
-            setupOptions('disabledCri', disabledOptions, disabledInput);
-            setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
-
-            // Render the journey map SVG
-            const renderSvg = async () => {
-                const diagram = render(journeyMap, nestedJourneys, new FormData(form));
-                const diagramElement = document.getElementById('diagram');
-                const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
-                diagramElement.innerHTML = svg;
-                if (bindFunctions) {
-                    bindFunctions(diagramElement);
-                }
-                svgPanZoom('#diagramSvg');
-            };
-
-            // Re-render on change
-            form.addEventListener('change', async (event) => {
-                event.preventDefault();
-                await renderSvg();
-            });
-
-            const highlightState = (state) => {
-                Array.from(document.getElementsByClassName('highlight')).forEach((edge) => {
-                    edge.classList.remove('highlight', 'outgoingEdge', 'incomingEdge');
-                });
-                Array.from(document.getElementsByClassName(`LS-${state}`)).forEach((edge) => {
-                    edge.classList.add('highlight', 'outgoingEdge');
-                });
-                Array.from(document.getElementsByClassName(`LE-${state}`)).forEach((edge) => {
-                    edge.classList.add('highlight', 'incomingEdge');
-                });
-                Array.from(document.getElementsByClassName('node')).forEach((node) => {
-                    if (node.id.startsWith(`flowchart-${state}-`)) {
-                        node.classList.add('highlight');
-                    }
-                })
-            };
-
-            // Update node info on click
-            window.onPageClick = (state, pageId) => {
-                highlightState(state);
-                nodeInfo.innerHTML = `<h2>${state}</h2>
-<p>Page node displaying the '${pageId}' screen in IPV Core.</p>
-<p><a href="https://identity.build.account.gov.uk/ipv/page/${pageId}" target="_blank">Click here to view the page in build</a></p>`;
-            }
-            window.onCriClick = (state, criId) => {
-                highlightState(state);
-                nodeInfo.innerHTML = `<h2>${state}</h2>
-<p>CRI node routing to the '${criId}' CRI.</p>`;
-            }
-            window.onProcessClick = (state, lambda) => {
-                highlightState(state);
-                nodeInfo.innerHTML = `<h2>${state}</h2>
-<p>Process node executing the '${lambda}' lambda.</p>`;
-            }
-            window.onOtherClick = (state) => {
-                highlightState(state);
-                nodeInfo.innerHTML = `<h2>${state}</h2>`;
-            }
-
-            await renderSvg();
-        </script>
+        <script type="module" src="./index.mjs"></script>
     </body>
 </html>
