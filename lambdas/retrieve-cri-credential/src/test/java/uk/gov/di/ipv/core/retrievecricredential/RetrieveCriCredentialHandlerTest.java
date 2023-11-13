@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.retrievecricredential;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -245,7 +246,8 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
+    void shouldUpdateSessionWithDetailsOfVisitedCri()
+            throws ParseException, JsonProcessingException {
         mockServiceCalls();
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
@@ -290,7 +292,8 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrowsServerError() {
+    void shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrowsServerError()
+            throws JsonProcessingException {
         mockServiceCalls();
 
         when(verifiableCredentialService.getVerifiableCredentialResponse(
@@ -308,7 +311,7 @@ class RetrieveCriCredentialHandlerTest {
     @Test
     void
             shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrowsNotFoundErrorFromDcmawCri()
-                    throws URISyntaxException {
+                    throws URISyntaxException, JsonProcessingException {
 
         dcmawCriOAuthSessionItem =
                 CriOAuthSessionItem.builder()
@@ -669,7 +672,7 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse()
-            throws ParseException, SqsException {
+            throws JsonProcessingException, SqsException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -711,7 +714,8 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser() throws SqsException {
+    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser()
+            throws JsonProcessingException {
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
                         testPassportIssuer,
@@ -735,16 +739,17 @@ class RetrieveCriCredentialHandlerTest {
                 CREDENTIAL_ISSUER_ID, false, OAuth2Error.SERVER_ERROR_CODE);
     }
 
-    private void mockServiceCallsAndSessionItem() {
+    private void mockServiceCallsAndSessionItem() throws JsonProcessingException {
         mockServiceCalls();
         when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);
     }
 
-    private void mockServiceCalls() {
+    private void mockServiceCalls() throws JsonProcessingException {
         mockServiceCalls(ipvSessionItem);
     }
 
-    private void mockServiceCalls(IpvSessionItem testIpvSessionItem) {
+    private void mockServiceCalls(IpvSessionItem testIpvSessionItem)
+            throws JsonProcessingException {
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(testPassportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(any(CriOAuthSessionItem.class)))

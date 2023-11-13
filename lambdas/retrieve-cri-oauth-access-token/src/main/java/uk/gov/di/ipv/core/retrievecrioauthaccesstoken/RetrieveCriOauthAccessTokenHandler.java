@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.logging.log4j.LogManager;
@@ -160,6 +161,14 @@ public class RetrieveCriOauthAccessTokenHandler
             throw new JourneyError();
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+
+            setVisitedCredentials(
+                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            throw new JourneyError();
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to parse CRI configuration because: {}", e.getMessage());
 
             setVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);

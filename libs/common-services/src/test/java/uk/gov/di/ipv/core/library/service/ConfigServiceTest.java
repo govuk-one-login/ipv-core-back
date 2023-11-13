@@ -132,6 +132,11 @@ class ConfigServiceTest {
                         "requiresApiKey",
                         "true");
 
+        private final String testCredentialIssuerConfig =
+                String.format(
+                        "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
+                        EC_PRIVATE_KEY_JWK, RSA_ENCRYPTION_PUBLIC_JWK);
+
         private final CredentialIssuerConfig expectedBaseCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         URI.create("https://testTokenUrl"),
@@ -176,14 +181,13 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStore() {
+        void shouldGetCredentialIssuerFromParameterStore() throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(baseCredentialIssuerConfig);
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(testCredentialIssuerConfig);
 
             CredentialIssuerConfig result =
                     configService.getCredentialIssuerActiveConnectionConfig("passportCri");
@@ -192,12 +196,11 @@ class ConfigServiceTest {
         }
 
         @Test
-        void getCriConfigShouldGetConfigForCriOauthSessionItem() {
+        void getCriConfigShouldGetConfigForCriOauthSessionItem() throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(baseCredentialIssuerConfig);
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(testCredentialIssuerConfig);
 
             CredentialIssuerConfig result =
                     configService.getCriConfig(
@@ -212,9 +215,8 @@ class ConfigServiceTest {
         @Test
         void getCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(Map.of());
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(null);
 
             assertThrows(
                     NoConfigForConnectionException.class,
@@ -222,7 +224,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldApplyFeatureSetOverridesOnActiveConfiguration() {
+        void shouldApplyFeatureSetOverridesOnActiveConfiguration() throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
@@ -244,7 +246,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldOverrideActiveConfigurationForAFeatureSet() {
+        void shouldOverrideActiveConfigurationForAFeatureSet() throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
@@ -261,7 +263,8 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration() {
+        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration()
+                throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 

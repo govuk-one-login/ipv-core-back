@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -102,7 +103,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceiveSuccessResponseOnSuccessfulRequest() throws SqsException {
+    void shouldReceiveSuccessResponseOnSuccessfulRequest()
+            throws SqsException, JsonProcessingException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         JSONObject testCredential = new JSONObject();
@@ -136,7 +138,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldThrowJourneyErrorIfCredentialIssuerServiceThrowsException() {
+    void shouldThrowJourneyErrorIfCredentialIssuerServiceThrowsException()
+            throws JsonProcessingException {
         mockServiceCallsAndSessionItem();
         when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
@@ -177,7 +180,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         verify(criOAuthSessionService, times(1)).updateCriOAuthSessionItem(any());
     }
 
-    private void mockServiceCallsAndSessionItem() {
+    private void mockServiceCallsAndSessionItem() throws JsonProcessingException {
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(passportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(criOAuthSessionItem)).thenReturn(testApiKey);
@@ -188,7 +191,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldThrowJourneyErrorIfSqsExceptionIsThrown() throws SqsException {
+    void shouldThrowJourneyErrorIfSqsExceptionIsThrown()
+            throws SqsException, JsonProcessingException {
         mockServiceCallsAndSessionItem();
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
@@ -200,7 +204,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException() {
+    void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException()
+            throws JsonProcessingException {
         mockServiceCallsAndSessionItem();
         when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
@@ -234,7 +239,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws SqsException {
+    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException()
+            throws SqsException, JsonProcessingException {
         mockServiceCallsAndSessionItem();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -265,7 +271,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey() throws URISyntaxException {
+    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey()
+            throws URISyntaxException, JsonProcessingException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         CredentialIssuerConfig testCriNotRequiringApiKey =
                 new CredentialIssuerConfig(

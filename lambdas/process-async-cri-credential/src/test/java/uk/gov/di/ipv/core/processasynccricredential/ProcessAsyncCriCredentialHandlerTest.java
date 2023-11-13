@@ -422,7 +422,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
     }
 
-    private void mockCredentialIssuerConfig() {
+    private void mockCredentialIssuerConfig() throws JsonProcessingException {
         when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         when(configService.getComponentId(ADDRESS_CRI))

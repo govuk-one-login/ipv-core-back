@@ -251,29 +251,29 @@ public class ConfigService {
     }
 
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
-            String credentialIssuerId) {
+            String credentialIssuerId) throws JsonProcessingException {
         return getCriConfigForConnection(
                 getActiveConnection(credentialIssuerId), credentialIssuerId);
     }
 
-    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
+    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem)
+            throws JsonProcessingException {
         return getCriConfigForConnection(
                 criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
     }
 
-    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
+    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId)
+            throws JsonProcessingException {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        Map<String, String> result = getSsmParameters(pathTemplate, false, criId, connection);
-
-        if (result == null || result.isEmpty()) {
+        String result = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+        if (result == null) {
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",
                             connection, criId));
         }
-
-        return objectMapper.convertValue(result, CredentialIssuerConfig.class);
+        return objectMapper.readValue(result, CredentialIssuerConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {

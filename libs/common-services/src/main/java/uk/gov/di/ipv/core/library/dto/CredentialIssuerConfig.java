@@ -2,9 +2,11 @@ package uk.gov.di.ipv.core.library.dto;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.serializers.KeepAsJsonDeserializer;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -17,8 +19,13 @@ public class CredentialIssuerConfig {
     private URI credentialUrl;
     private URI authorizeUrl;
     private String clientId;
+
+    @JsonDeserialize(using = KeepAsJsonDeserializer.class)
     private String signingKey;
+
+    @JsonDeserialize(using = KeepAsJsonDeserializer.class)
     private String encryptionKey;
+
     private String componentId;
     private URI clientCallbackUrl;
     private boolean requiresApiKey;
