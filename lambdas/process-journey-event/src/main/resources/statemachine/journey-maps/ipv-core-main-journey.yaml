@@ -333,13 +333,10 @@ CRI_EXPERIAN_KBV:
     next:
       targetState: PYI_NO_MATCH
     enhanced-verification:
-      targetState: MITIGATION_02_OPTIONS
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_OPTIONS_WITH_F2F
-          checkIfDisabled:
-            f2f:
-              targetState: MITIGATION_02_OPTIONS
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: MITIGATION_02_OPTIONS
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
@@ -556,13 +553,10 @@ MITIGATION_01_IDENTITY_START_PAGE:
     next:
       targetState: MITIGATION_01_CRI_DCMAW
     end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_F2F_START_PAGE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_F2F_START_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
 
 MITIGATION_01_CRI_DCMAW:
   response:
@@ -575,37 +569,25 @@ MITIGATION_01_CRI_DCMAW:
     not-found:
       targetState: PYI_NO_MATCH
     access-denied:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     enhanced-verification:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_01_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_01_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
 
 MITIGATION_01_F2F_START_PAGE:
   response:
@@ -647,37 +629,25 @@ MITIGATION_02_CRI_DCMAW:
     not-found:
       targetState: PYI_NO_MATCH
     access-denied:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
     enhanced-verification:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        f2fCimit:
-          targetState: MITIGATION_02_PYI_POST_OFFICE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_ANOTHER_WAY
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
 
 MITIGATION_02_OPTIONS_WITH_F2F:
   response:
