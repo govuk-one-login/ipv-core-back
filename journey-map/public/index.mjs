@@ -113,6 +113,45 @@ const resolveEventTarget = (definition, formData) => {
     return definition.targetState;
 };
 
+const resolveAllPossibleEventTargets = (eventDefinition) => {
+    let targets = [];
+    targets.push(eventDefinition.targetState);
+    if (eventDefinition.checkIfDisabled) {
+        Object.values(eventDefinition.checkIfDisabled).forEach((def) => {
+            targets.push(...resolveAllPossibleEventTargets(def));
+        })
+    }
+
+    if (eventDefinition.checkFeatureFlag) {
+        Object.values(eventDefinition.checkFeatureFlag).forEach((def) => {
+            targets.push(...resolveAllPossibleEventTargets(def));
+        })
+    }
+
+    return targets;
+};
+
+const calcOrphanStates = (journeyMap) => {
+    const targetedStates = [...initialStates]
+
+    Object.values(journeyMap).forEach((stateDefinition) => {
+        if (stateDefinition.events) {
+            Object.values(stateDefinition.events).forEach((eventDefinition) => {
+                targetedStates.push(...resolveAllPossibleEventTargets(eventDefinition));
+            })
+        }
+        if (stateDefinition.exitEvents) {
+            Object.values(stateDefinition.exitEvents).forEach((eventDefinition) => {
+                targetedStates.push(...resolveAllPossibleEventTargets(eventDefinition));
+            })
+        }
+    })
+
+    const uniqueTargetedStates = [...new Set(targetedStates)];
+
+    return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
+};
+
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
 const renderTransitions = (journeyMap, formData) => {
@@ -187,7 +226,13 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     }
     expandParents(journeyMapCopy);
 
-    const { transitionsMermaid, states } = renderTransitions(journeyMapCopy, formData);
+    let { transitionsMermaid, states } = renderTransitions(journeyMapCopy, formData);
+
+    if (formData.has('onlyOrphanStates')) {
+        states = calcOrphanStates(journeyMapCopy)
+        transitionsMermaid = '';
+    }
+
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
     const mermaid =

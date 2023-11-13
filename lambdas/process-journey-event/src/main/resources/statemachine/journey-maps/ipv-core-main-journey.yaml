@@ -221,12 +221,6 @@ PYI_KBV_FAIL:
     pageId: pyi-kbv-fail
   parent: END_JOURNEY
 
-PYI_KBV_THIN_FILE:
-  response:
-    type: page
-    pageId: pyi-kbv-thin-file
-  parent: END_JOURNEY
-
 PYI_F2F_TECHNICAL:
   response:
     type: page
