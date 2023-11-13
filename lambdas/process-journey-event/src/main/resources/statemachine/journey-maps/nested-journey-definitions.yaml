@@ -25,3 +25,5 @@ ADDRESS_AND_FRAUD:
           exitEventToEmit: end
         next:
           exitEventToEmit: next
+        enhanced-verification:
+          exitEventToEmit: fraudEnhanced
