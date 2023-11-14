@@ -113,6 +113,26 @@ const resolveEventTarget = (definition, formData) => {
     return definition.targetState;
 };
 
+const resolveAllPossibleEventTargets = (eventDefinition) => [
+    eventDefinition.targetState,
+    ...Object.values(eventDefinition.checkIfDisabled || {}).flatMap(resolveAllPossibleEventTargets),
+    ...Object.values(eventDefinition.checkFeatureFlag || {}).flatMap(resolveAllPossibleEventTargets)
+];
+
+const calcOrphanStates = (journeyMap) => {
+    const targetedStates = [
+        ...initialStates,
+        ...Object.values(journeyMap).flatMap((stateDefinition) => [
+            ...Object.values(stateDefinition.events || {}).flatMap(resolveAllPossibleEventTargets),
+            ...Object.values(stateDefinition.exitEvents || {}).flatMap(resolveAllPossibleEventTargets)
+        ])
+    ]
+
+    const uniqueTargetedStates = [...new Set(targetedStates)];
+
+    return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
+};
+
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
 const renderTransitions = (journeyMap, formData) => {
@@ -187,7 +207,10 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     }
     expandParents(journeyMapCopy);
 
-    const { transitionsMermaid, states } = renderTransitions(journeyMapCopy, formData);
+    const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy) }
+        : renderTransitions(journeyMapCopy, formData);
+
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
     const mermaid =
