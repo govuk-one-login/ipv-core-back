@@ -53,7 +53,7 @@ const renderSvg = async () => {
     if (bindFunctions) {
         bindFunctions(diagramElement);
     }
-    svgPanZoom('#diagramSvg');
+    svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
 };
 
 const highlightState = (state) => {
