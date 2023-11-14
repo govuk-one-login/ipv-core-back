@@ -3,7 +3,7 @@ name: Secure Pipeline Test, Build, Package & Ship Core Back
 on:
   push:
     branches:
-      - main
+      - canary-back-2.0
     paths-ignore:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge-delete-account.yml'
@@ -58,7 +58,7 @@ jobs:
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.CANARY_GH_ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Generate code signing config
@@ -66,7 +66,7 @@ jobs:
         uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
         with:
           template: ./deploy/template.yaml
-          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+          profile: ${{ secrets.CANARY_SIGNING_PROFILE_NAME }}
 
       - name: SAM validate
         working-directory: ./deploy
@@ -79,7 +79,7 @@ jobs:
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+            artifact-bucket-name: ${{ secrets.CANARY_ARTIFACT_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.CANARY_SIGNING_PROFILE_NAME }}
             working-directory: ./deploy
             template-file: template.yaml
