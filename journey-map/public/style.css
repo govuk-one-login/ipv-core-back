@@ -1,0 +1,83 @@
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: sans-serif;
+}
+#header {
+    padding: 8px 16px 16px;
+    border-bottom: 2px solid black;
+}
+#diagram {
+    flex: 1 1 auto;
+}
+#diagram > * {
+    height: 100%;
+}
+form {
+    flex: 0 1 auto;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+form button {
+    width: 180px;
+}
+form label {
+    display: flex;
+    justify-content: space-between;
+}
+form select {
+    flex: 0 0 30%;
+}
+form input[type=checkbox] {
+    margin-left: 8px;
+}
+#checkbox-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 16px;
+}
+#nodeInfo {
+    border-left: solid 1px black;
+    margin-left: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+#nodeDef {
+    background: #f3f2f1;
+    padding: 8px;
+}
+#nodeDef:empty {
+    display: none;
+}
+#nodeDesc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.header-split {
+    display: flex;
+    padding: 16px 0;
+}
+#diagramSvg .highlight.outgoingEdge {
+    stroke-width: 3px;
+    filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00) drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
+}
+#diagramSvg .highlight.incomingEdge {
+    stroke-width: 3px;
+    filter: drop-shadow(1px 0 0 cyan) drop-shadow(-1px 0 0 cyan) drop-shadow(0 1px 0 cyan) drop-shadow(0 -1px 0 cyan);
+}
+#diagramSvg .highlight.node rect {
+    stroke-width: 3px;
+    filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00) drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
+}

@@ -1,227 +1,120 @@
-const initialStates = ['INITIAL_IPV_JOURNEY'];
-const errorStates = ['ERROR'];
-const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
+import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
+import { getOptions, render } from './render.mjs';
 
-const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
-    Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
-        if (!disabledOptions.includes(opt)) {
-            disabledOptions.push(opt);
-        }
-        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-    Object.entries(definition.checkFeatureFlag || {}).forEach(([opt, def]) => {
-        if (!featureFlagOptions.includes(opt)) {
-            featureFlagOptions.push(opt);
-        }
-        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-};
+mermaid.initialize({
+    startOnLoad: false,
+    // Required to enable links and callbacks
+    // This is (relatively) safe, as we only run on our own generated mermaid charts
+    securityLevel: 'loose',
+});
 
-// Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMap) => {
-    const disabledOptions = [];
-    const featureFlagOptions = [];
+// Page elements
+const form = document.getElementById('configuration-form');
+const disabledInput = document.getElementById('disabledInput');
+const featureFlagInput = document.getElementById('featureFlagInput')
+const nodeTitle = document.getElementById('nodeTitle');
+const nodeDef = document.getElementById('nodeDef');
+const nodeDesc = document.getElementById('nodeDesc');
 
-    Object.values(journeyMap).forEach((definition) => {
-        const events = definition.events || definition.exitEvents || {};
-        Object.values(events).forEach((def) => {
-            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+// Load the journey map
+const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
+const journeyMap = yaml.parse(await journeyResponse.text());
+const nestedResponse = await fetch('./nested-journey-definitions.yaml');
+const nestedJourneys = yaml.parse(await nestedResponse.text());
+
+const setupOptions = (name, options, fieldset) => {
+    if (options.length) {
+        options.forEach((option) => {
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = name;
+            input.value = option;
+            input.id = option;
+
+            const label = document.createElement('label');
+            label.innerText = option;
+            label.appendChild(input);
+
+            fieldset.appendChild(label);
         });
-    });
-
-    return { disabledOptions, featureFlagOptions };
-};
-
-// Expand out parent states
-const expandParents = (journeyMap) => {
-    const parentStates = [];
-    Object.entries(journeyMap).forEach(([state, definition]) => {
-        if (definition.parent) {
-            const parent = journeyMap[definition.parent];
-            definition.events = {
-                ...parent.events,
-                ...definition.events,
-            };
-            journeyMap[state] = { ...parent, ...definition };
-            parentStates.push(definition.parent);
-        }
-    });
-    parentStates.forEach((state) => delete journeyMap[state]);
-};
-
-// Expand out nested states
-const expandNestedJourneys = (journeyMap, subjourneys) => {
-    Object.entries(journeyMap).forEach(([state, definition]) => {
-        if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
-            delete journeyMap[state];
-            const subjourney = subjourneys[definition.nestedJourney];
-
-            // Expand out each of the nested states
-            Object.entries(subjourney.nestedJourneyStates).forEach(([nestedState, nestedDefinition]) => {
-                // Copy to avoid mutating different versions of the expanded definition
-                const expandedDefinition = JSON.parse(JSON.stringify(nestedDefinition));
-
-                Object.entries(expandedDefinition.events).forEach(([evt, def]) => {
-                    // Map target states to expanded states
-                    if (def.targetState) {
-                        def.targetState = `${def.targetState}_${state}`;
-                    }
-
-                    // Map exit events to targets in the parent definition
-                    if (def.exitEventToEmit) {
-                        if (definition.exitEvents[def.exitEventToEmit]) {
-                        def.targetState = definition.exitEvents[def.exitEventToEmit].targetState;
-                        } else {
-                            console.warn(`Unhandled exit event from ${state}:`, def.exitEventToEmit)
-                            delete expandedDefinition.events[evt];
-                        }
-                        delete def.exitEventToEmit;
-                    }
-                });
-
-                journeyMap[`${nestedState}_${state}`] = expandedDefinition;
-            });
-
-            // Update entry events on other states to expanded states
-            Object.entries(subjourney.entryEvents).forEach(([entryEvent, def]) => {
-                Object.values(journeyMap).forEach((journeyDef) => {
-                    if (journeyDef.events?.[entryEvent]?.targetState === state) {
-                        journeyDef.events[entryEvent].targetState = `${def.targetState}_${state}`;
-                    }
-                });
-            });
-        }
-    });
-};
-
-// Should match logic in BasicEvent.java
-const resolveEventTarget = (definition, formData) => {
-    // Look for an override for disabled CRIs
-    const disabledCris = formData.getAll('disabledCri');
-    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
-    if (disabledResolution) {
-        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
+    } else {
+        fieldset.append("N/A")
     }
+};
 
-    // Look for an override for feature flags
-    const featureFlags = formData.getAll('featureFlag');
-    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
-    if (featureFlagResolution) {
-        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
+// Render the journey map SVG
+const renderSvg = async () => {
+    const diagram = render(journeyMap, nestedJourneys, new FormData(form));
+    const diagramElement = document.getElementById('diagram');
+    const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
+    diagramElement.innerHTML = svg;
+    if (bindFunctions) {
+        bindFunctions(diagramElement);
     }
-
-    return definition.targetState;
+    svgPanZoom('#diagramSvg');
 };
 
-const resolveAllPossibleEventTargets = (eventDefinition) => [
-    eventDefinition.targetState,
-    ...Object.values(eventDefinition.checkIfDisabled || {}).flatMap(resolveAllPossibleEventTargets),
-    ...Object.values(eventDefinition.checkFeatureFlag || {}).flatMap(resolveAllPossibleEventTargets)
-];
+const highlightState = (state) => {
+    // Remove existing highlights
+    Array.from(document.getElementsByClassName('highlight'))
+        .forEach((edge) => edge.classList.remove('highlight', 'outgoingEdge', 'incomingEdge'));
 
-const calcOrphanStates = (journeyMap) => {
-    const targetedStates = [
-        ...initialStates,
-        ...Object.values(journeyMap).flatMap((stateDefinition) => [
-            ...Object.values(stateDefinition.events || {}).flatMap(resolveAllPossibleEventTargets),
-            ...Object.values(stateDefinition.exitEvents || {}).flatMap(resolveAllPossibleEventTargets)
-        ])
-    ]
-
-    const uniqueTargetedStates = [...new Set(targetedStates)];
-
-    return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
+    // Add new highlights
+    Array.from(document.getElementsByClassName(`LS-${state}`))
+        .forEach((edge) => edge.classList.add('highlight', 'outgoingEdge'));
+    Array.from(document.getElementsByClassName(`LE-${state}`))
+        .forEach((edge) => edge.classList.add('highlight', 'incomingEdge'));
+    Array.from(document.getElementsByClassName('node'))
+        .filter((node) => node.id.startsWith(`flowchart-${state}-`))
+        .forEach((node) => node.classList.add('highlight'));
 };
 
-// Render the transitions into mermaid, while tracking the states traced from the initial states
-// This allows us to skip
-const renderTransitions = (journeyMap, formData) => {
-    const states = [...initialStates];
-    const stateTransitions = [];
-
-    for (let i = 0; i < states.length; i++) {
-        const state = states[i];
-        const definition = journeyMap[state];
-        const events = definition.events || definition.exitEvents || {};
-
-        const eventsByTarget = {};
-        Object.entries(events).forEach(([eventName, def]) => {
-            const target = resolveEventTarget(def, formData);
-
-            if (errorStates.includes(target) && !formData.has('includeErrors')) {
-                return;
-            }
-            if (failureStates.includes(target) && !formData.has('includeFailures')) {
-                return;
-            }
-
-            if (!states.includes(target)) {
-                states.push(target);
-            }
-            eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(eventName);
-        });
-
-        Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
-            stateTransitions.push(`    ${state}-->|${eventNames.join('\\n')}|${target}`);
-        });
-    }
-
-    return { transitionsMermaid: stateTransitions.join('\n'), states };
-};
-
-const renderStates = (journeyMap, states) => {
-    // Types
-    // process - response.type = process, response.lambda = <lambda>
-    // page    - response.type = page, response.pageId = 'page-id'
-    // cri     - response.type = cri,
-    const mermaids = states.map((state) => {
-        const definition = journeyMap[state];
-
-        switch (definition.response?.type) {
+// Set up the click handlers that mermaid binds to each node
+const setupMermaidClickHandlers = () => {
+    const getDesc = (def) => {
+        switch(def.type) {
             case 'process':
-                return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
+                return `Process node executing the '${def.lambda}' lambda.`;
             case 'page':
-                return failureStates.includes(state)
-                    ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page`
-                    : `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
+                return `Page node displaying the \'${def.pageId}\' screen in IPV Core.`;
             case 'cri':
-                const contextInfo = definition.response.context ? `\\n context: ${definition.response.context}` : "";
-                const scopeInfo = definition.response.scope ? `\\n scope: ${definition.response.scope}` : "";
-                return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri`;
-            case 'error':
-                return `    ${state}:::error_page`
+                return `CRI node routing to the '${def.criId}' CRI.`;
             default:
-                return `    ${state}`;
+                return '';
         }
+    };
+
+    window.onStateClick = (state, encodedDef) => {
+        highlightState(state);
+        nodeTitle.innerText = state;
+        nodeDesc.innerHTML = '';
+        const def = JSON.parse(atob(encodedDef));
+        nodeDef.innerText = JSON.stringify(def, undefined, 2);
+        const desc = document.createElement('p');
+        desc.innerText = getDesc(def);
+        nodeDesc.append(desc);
+        if (def.pageId) {
+            const link = document.createElement('a');
+            link.innerText = 'Click here to view the page in build';
+            link.href = `https://identity.build.account.gov.uk/ipv/page/${encodeURIComponent(def.pageId)}?preview=true&lng=en`;
+            link.target = '_blank';
+            nodeDesc.append(link);
+        }
+    };
+}
+
+const initialize = async () => {
+    const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
+    setupOptions('disabledCri', disabledOptions, disabledInput);
+    setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
+    setupMermaidClickHandlers();
+    form.addEventListener('change', async (event) => {
+        event.preventDefault();
+        await renderSvg();
     });
+    await renderSvg();
+}
 
-    return { statesMermaid: mermaids.join('\n') };
-};
-
-export const render = (journeyMap, nestedJourneys, formData = new FormData()) => {
-    // Copy to avoid mutating the input
-    const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
-    if (formData.has('expandNestedJourneys')) {
-        expandNestedJourneys(journeyMapCopy, nestedJourneys);
-    }
-    expandParents(journeyMapCopy);
-
-    const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
-        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy) }
-        : renderTransitions(journeyMapCopy, formData);
-
-    const { statesMermaid } = renderStates(journeyMapCopy, states);
-
-    const mermaid =
-`graph LR
-    classDef process fill:#ffa,stroke:#330;
-    classDef page fill:#ae8,stroke:#050;
-    classDef error_page fill:#f99,stroke:#500;
-    classDef cri fill:#faf,stroke:#303;
-${statesMermaid}
-${transitionsMermaid}
-`;
-
-    return mermaid;
-};
+await initialize();
