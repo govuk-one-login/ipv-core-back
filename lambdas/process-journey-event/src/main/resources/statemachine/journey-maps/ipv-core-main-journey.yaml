@@ -247,7 +247,7 @@ PYI_CRI_ESCAPE:
     pageId: pyi-cri-escape
   events:
     dcmaw:
-      targetState: CRI_DCMAW_J5
+      targetState: CRI_DCMAW_PYI_ESCAPE
     f2f:
       targetState: CRI_F2F
     end:
@@ -259,7 +259,7 @@ PYI_CRI_ESCAPE_NO_F2F:
     pageId: pyi-cri-escape-no-f2f
   events:
     next:
-      targetState: CRI_DCMAW_J5
+      targetState: CRI_DCMAW_PYI_ESCAPE
     end:
       targetState: END
 
@@ -445,20 +445,6 @@ ADDRESS_AND_FRAUD_J4:
     enhanced-verification:
       targetState: CRI_F2F
 
-# CRI escape journey (J5)
-CRI_DCMAW_J5:
-  response:
-    type: cri
-    criId: dcmaw
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: POST_DCMAW_SUCCESS_PAGE_J5
-    not-found:
-      targetState: PYI_ANOTHER_WAY
-    fail-with-no-ci:
-      targetState: PYI_ANOTHER_WAY
-
 POST_DCMAW_SUCCESS_PAGE_J5:
   response:
     type: page
@@ -626,35 +612,38 @@ MITIGATION_02_OPTIONS:
     pageId: pyi-suggest-other-options-no-f2f
   events:
     next:
-      targetState: MITIGATION_02_CRI_DCMAW
+      targetState: CRI_DCMAW_PYI_ESCAPE
     end:
       targetState: PYI_ANOTHER_WAY
 
-MITIGATION_02_CRI_DCMAW:
+CRI_DCMAW_PYI_ESCAPE:
   response:
     type: cri
     criId: dcmaw
   parent: CRI_STATE
   events:
     not-found:
-      targetState: PYI_NO_MATCH
+      targetState: PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_NO_MATCH
     access-denied:
-      targetState: MITIGATION_02_PYI_POST_OFFICE
+      targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
           targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
-      targetState: MITIGATION_02_PYI_POST_OFFICE
+      targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
           targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
-      targetState: MITIGATION_02_PYI_POST_OFFICE
+      targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
           targetState: PYI_ANOTHER_WAY
     enhanced-verification:
-      targetState: MITIGATION_02_PYI_POST_OFFICE
+      targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
           targetState: PYI_ANOTHER_WAY
@@ -667,11 +656,11 @@ MITIGATION_02_OPTIONS_WITH_F2F:
     f2f:
       targetState: CRI_F2F
     dcmaw:
-      targetState: MITIGATION_02_CRI_DCMAW
+      targetState: CRI_DCMAW_PYI_ESCAPE
     end:
       targetState: PYI_ANOTHER_WAY
 
-MITIGATION_02_PYI_POST_OFFICE:
+PYI_POST_OFFICE:
   response:
     type: page
     pageId: pyi-post-office
