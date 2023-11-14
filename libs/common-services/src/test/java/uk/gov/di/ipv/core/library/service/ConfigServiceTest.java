@@ -132,7 +132,7 @@ class ConfigServiceTest {
                         "requiresApiKey",
                         "true");
 
-        private final String testCredentialIssuerConfig =
+        private final String jsonCredentialIssuerConfig =
                 String.format(
                         "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
                         EC_PRIVATE_KEY_JWK, RSA_ENCRYPTION_PUBLIC_JWK);
@@ -181,13 +181,33 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStore() throws JsonProcessingException {
+        void shouldGetCredentialIssuerFromParameterStoreSingleParameter()
+                throws JsonProcessingException {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(testCredentialIssuerConfig);
+                    .thenReturn(jsonCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+
+            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void shouldGetCredentialIssuerFromParameterStoreMultipleParameters()
+                throws JsonProcessingException {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(null);
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(baseCredentialIssuerConfig);
 
             CredentialIssuerConfig result =
                     configService.getCredentialIssuerActiveConnectionConfig("passportCri");
@@ -200,7 +220,7 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(testCredentialIssuerConfig);
+                    .thenReturn(jsonCredentialIssuerConfig);
 
             CredentialIssuerConfig result =
                     configService.getCriConfig(

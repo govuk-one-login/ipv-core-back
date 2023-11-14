@@ -266,14 +266,19 @@ public class ConfigService {
             throws JsonProcessingException {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        String result = getSsmParameter(resolvePath(pathTemplate, criId, connection));
-        if (result == null) {
+        String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+        if (parameter != null) {
+            return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
+        }
+        Map<String, String> parameters = getSsmParameters(pathTemplate, false, criId, connection);
+        if (parameters != null && !parameters.isEmpty()) {
+            return objectMapper.convertValue(parameters, CredentialIssuerConfig.class);
+        } else {
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",
                             connection, criId));
         }
-        return objectMapper.readValue(result, CredentialIssuerConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
