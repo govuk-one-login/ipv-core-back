@@ -3,7 +3,7 @@ name: Secure Pipeline Test, Build, Package & Ship Core Back
 on:
   push:
     branches:
-      - main
+      - canary-back-2.0
     paths-ignore:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge.yml'
@@ -90,7 +90,7 @@ jobs:
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.CANARY_GH_ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: SAM validate
@@ -106,7 +106,7 @@ jobs:
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
-            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+            artifact-bucket-name: ${{ secrets.CANARY_ARTIFACT_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.CANARY_SIGNING_PROFILE_NAME }}
             working-directory: ./deploy
             template-file: .aws-sam/build/template.yaml
