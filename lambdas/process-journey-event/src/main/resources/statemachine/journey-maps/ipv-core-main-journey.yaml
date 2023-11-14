@@ -351,6 +351,8 @@ ADDRESS_AND_FRAUD_J1:
           targetState: EVALUATE_GPG45_SCORES
     next:
       targetState: PYI_NO_MATCH
+    enhanced-verification:
+      targetState: PYI_NO_MATCH
 
 # Passport journey (J2)
 CRI_UK_PASSPORT_J2:
@@ -377,6 +379,11 @@ ADDRESS_AND_FRAUD_J2:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     end:
       targetState: ERROR
+    enhanced-verification:
+      targetState: CRI_NINO_J6
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -400,6 +407,8 @@ ADDRESS_AND_FRAUD_J3:
       targetState: CHECK_FRAUD_SCORE_J3
     end:
       targetState: ERROR
+    enhanced-verification:
+      targetState: CHECK_FRAUD_SCORE_J3
 
 CHECK_FRAUD_SCORE_J3:
   response:
@@ -433,6 +442,8 @@ ADDRESS_AND_FRAUD_J4:
       targetState: CRI_F2F
     end:
       targetState: ERROR
+    enhanced-verification:
+      targetState: CRI_F2F
 
 # CRI escape journey (J5)
 CRI_DCMAW_J5:
@@ -529,6 +540,11 @@ ADDRESS_AND_FRAUD_J7:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     end:
       targetState: ERROR
+    enhanced-verification:
+      targetState: CRI_HMRC_KBV_J6
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
 # Mitigation journey (01)
 MITIGATION_01:
