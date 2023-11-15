@@ -48,6 +48,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.domain.CiScoreThresholdChecker.ciScoreBreachesThreshold;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -217,8 +218,10 @@ public class UserIdentityService {
     }
 
     private boolean breachingCiThreshold(ContraIndicators contraIndicators) {
-        return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
-                >= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+        return ciScoreBreachesThreshold(
+                contraIndicators.getContraIndicatorScore(
+                        configService.getContraIndicatorConfigMap()),
+                configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)

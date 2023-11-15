@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.domain.CiScoreThresholdChecker.ciScoreBreachesThreshold;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CI_SCORE;
@@ -69,7 +70,8 @@ public class Gpg45ProfileEvaluator {
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
                         .with(LOG_CI_SCORE.getFieldName(), ciScore));
 
-        if (ciScore <= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
+        if (!ciScoreBreachesThreshold(
+                ciScore, configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
             ipvSession.setCiFail(false);
             ipvSessionService.updateIpvSession(ipvSession);
             return Optional.empty();

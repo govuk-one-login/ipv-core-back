@@ -83,7 +83,13 @@ class UserIdentityServiceTest {
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", EXIT_CODES_ALWAYS_REQUIRED, "🦆");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", CI_SCORING_THRESHOLD, "0");
+            Map.of(
+                    CORE_VTM_CLAIM,
+                    "mock-vtm-claim",
+                    CI_SCORING_THRESHOLD,
+                    "1",
+                    EXIT_CODES_NON_CI_BREACHING_P0,
+                    "🐭");
 
     @BeforeEach
     void setUp() {
@@ -1190,13 +1196,17 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
-        mockParamStoreCalls(paramsToMockForP0);
+        HashMap<ConfigurationVariable, String> paramsWithoutNonCiBreaching =
+                new HashMap<>(paramsToMockForP0);
+        paramsWithoutNonCiBreaching.remove(EXIT_CODES_NON_CI_BREACHING_P0);
+        mockParamStoreCalls(paramsWithoutNonCiBreaching);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("8");
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1243,7 +1253,10 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
-        mockParamStoreCalls(paramsToMockForP0);
+        HashMap<ConfigurationVariable, String> paramsWithoutNonCiBreaching =
+                new HashMap<>(paramsToMockForP0);
+        paramsWithoutNonCiBreaching.remove(EXIT_CODES_NON_CI_BREACHING_P0);
+        mockParamStoreCalls(paramsWithoutNonCiBreaching);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1273,11 +1286,11 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("42");
         when(mockConfigService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 42, -3, "1")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
