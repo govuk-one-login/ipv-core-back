@@ -669,3 +669,56 @@ PYI_POST_OFFICE:
       targetState: CRI_F2F
     end:
       targetState: PYI_ANOTHER_WAY
+
+# Two step deployment, will be deleted in next PR.
+MITIGATION_02_CRI_DCMAW:
+  response:
+    type: cri
+    criId: dcmaw
+  parent: CRI_STATE
+  events:
+    not-found:
+      targetState: PYI_NO_MATCH
+    access-denied:
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
+    temporarily-unavailable:
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
+    fail-with-no-ci:
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
+    enhanced-verification:
+      targetState: MITIGATION_02_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
+
+CRI_DCMAW_J5:
+  response:
+    type: cri
+    criId: dcmaw
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE_J5
+    not-found:
+      targetState: PYI_ANOTHER_WAY
+    fail-with-no-ci:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_02_PYI_POST_OFFICE:
+  response:
+    type: page
+    pageId: pyi-post-office
+  events:
+    next:
+      targetState: CRI_F2F
+    end:
+      targetState: PYI_ANOTHER_WAY
