@@ -120,9 +120,6 @@ IPV_IDENTITY_REUSE_PAGE_TEST:
   events:
     next:
       targetState:
-        END_JOURNEY
-    reset:
-      targetState:
         PYI_NEW_DETAILS_PAGE
 
 IPV_IDENTITY_PENDING_PAGE:
