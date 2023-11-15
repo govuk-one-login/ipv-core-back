@@ -111,6 +111,9 @@ IPV_IDENTITY_REUSE_PAGE:
     type: page
     pageId: page-ipv-reuse
   parent: END_JOURNEY
+  events:
+    next:
+      targetState: END_JOURNEY
 
 IPV_IDENTITY_REUSE_PAGE_TEST:
   response:
@@ -140,6 +143,11 @@ IPV_IDENTITY_START_PAGE:
           checkIfDisabled:
             f2f:
               targetState: MULTIPLE_DOC_CHECK_PAGE
+    end:
+      targetState: F2F_START_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_ANOTHER_WAY
 
 CRI_F2F:
   response:
