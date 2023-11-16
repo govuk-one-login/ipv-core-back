@@ -6,7 +6,13 @@ import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.*;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.TokenErrorResponse;
+import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -40,7 +46,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.*;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
 
 public class CriApiService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -70,7 +78,7 @@ public class CriApiService {
                 : null;
     }
 
-    public BearerAccessToken fetchAccessToken(String apiKey, CriCallbackRequest callbackRequest) {
+    public BearerAccessToken fetchAccessToken(String apiKey, CriCallbackRequest callbackRequest) throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
         var authorisationCode = callbackRequest.getAuthorizationCode();
         var criOAuthSessionItem =
@@ -149,7 +157,7 @@ public class CriApiService {
     }
 
     public VerifiableCredentialResponse fetchVerifiableCredential(
-            BearerAccessToken accessToken, String apiKey, CriCallbackRequest callbackRequest) {
+            BearerAccessToken accessToken, String apiKey, CriCallbackRequest callbackRequest) throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
         var criOAuthSessionItem =
                 criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
