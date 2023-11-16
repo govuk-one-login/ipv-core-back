@@ -60,6 +60,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
@@ -647,6 +649,36 @@ public class UserIdentityService {
                         })
                 .map(String::trim)
                 .toList();
+    }
+
+    public boolean areVcsCorrelated(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        if (!checkNameAndFamilyNameCorrelationInCredentials(userId)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
+
+            return false;
+        }
+
+        if (!checkBirthDateCorrelationInCredentials(userId)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
+
+            return false;
+        }
+        return true;
     }
 
     private void addLogMessage(VcStoreItem item, String error) {

@@ -73,7 +73,12 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS(1061, "Failed to parse successful VC Store items."),
     FAILED_TO_GENERATE_NINO_CLAIM(1062, "Failed to generate the NINO claim"),
     MISSING_IS_USER_INITIATED_PARAMETER(1059, "Missing isUserInitiated in request"),
-    MISSING_VTR(1063, "The 'vtr' claim is required and was not provided in the request.");
+    MISSING_VTR(1063, "The 'vtr' claim is required and was not provided in the request."),
+    NO_IPV_FOR_CRI_OAUTH_SESSION(1064, "No ipvSession for existing CriOAuthSession."),
+    FAILED_TO_GET_VALID_CREDENTIAL_STATUS(
+            1065, "Failed to get credential from issuer with valid status."),
+    INVALID_NUMBER_OF_ISSUERS_IN_VC_RESPONSE(
+            1066, "Incorrect number of CRI issuers in VC response from a CRI.");
 
     @JsonProperty("code")
     private final int code;

@@ -1,0 +1,63 @@
+plugins {
+	id "java"
+	id "idea"
+	id "jacoco"
+	id 'io.freefair.aspectj.post-compile-weaving' version '8.4'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
+			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			project(":libs:common-services"),
+			project(":libs:journey-uris"),
+			project(":libs:audit-service")
+	implementation project(path: ':libs:kms-es256-signer')
+	implementation project(path: ':libs:cimit-service')
+	implementation project(path: ':libs:cri-response-service')
+	implementation project(path: ':libs:verifiable-credentials')
+	implementation project(path: ':libs:gpg45-evaluator')
+	implementation project(path: ':libs:user-identity-service')
+	testImplementation 'junit:junit:4.13.1'
+
+	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
+			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
+	aspect('org.aspectj:aspectjrt') {
+		version {
+			strictly '1.9.8'
+		}
+	}
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
+			"org.mockito:mockito-junit-jupiter:5.7.0",
+			project(path: ':libs:common-services', configuration: 'tests')
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}
