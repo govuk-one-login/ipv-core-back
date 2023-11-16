@@ -328,7 +328,7 @@ PYI_CONFIRM_DELETE_DETAILS_PAGE:
     type: page
     pageId: pyi-confirm-delete-details
   events:
-    reset:
+    next:
       targetState:
         RESET_IDENTITY
     end:
