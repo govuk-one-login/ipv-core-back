@@ -47,7 +47,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
@@ -175,13 +174,9 @@ public class UserIdentityService {
             Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
             ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
 
-            if (configService.enabled(EXIT_CODES)) {
-                userIdentityBuilder.exitCode(getSuccessExitCode(contraIndicators));
-            }
+            userIdentityBuilder.exitCode(getSuccessExitCode(contraIndicators));
         } else {
-            if (configService.enabled(EXIT_CODES)) {
-                userIdentityBuilder.exitCode(getFailExitCode(contraIndicators));
-            }
+            userIdentityBuilder.exitCode(getFailExitCode(contraIndicators));
         }
 
         return userIdentityBuilder.build();

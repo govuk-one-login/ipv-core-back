@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -42,7 +43,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EXIT_CODES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -80,6 +80,10 @@ class UserIdentityServiceTest {
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().contraIndicatorsMap(new HashMap<>()).build();
     private UserIdentityService userIdentityService;
+    private final Map<ConfigurationVariable, String> paramsToMockForP2 =
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", EXIT_CODES_ALWAYS_REQUIRED, "🦆");
+    private final Map<ConfigurationVariable, String> paramsToMockForP0 =
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", CI_SCORING_THRESHOLD, "0");
 
     @BeforeEach
     void setUp() {
@@ -98,7 +102,7 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -140,7 +144,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -445,7 +449,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -476,7 +480,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -504,6 +508,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        mockParamStoreCalls(paramsToMockForP0);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -575,7 +580,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetPassportClaimWhenVotIsP2() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
 
         List<VcStoreItem> vcStoreItems =
@@ -613,6 +618,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        mockParamStoreCalls(paramsToMockForP0);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -634,7 +640,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -648,7 +654,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetNinoClaimWhenVotIsP2() throws Exception {
         // Arrange
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
 
         List<VcStoreItem> vcStoreItems =
@@ -684,6 +690,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        mockParamStoreCalls(paramsToMockForP0);
 
         // Act
         UserIdentity credentials =
@@ -698,9 +705,6 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoProperty()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
-
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -714,7 +718,7 @@ class UserIdentityServiceTest {
                                 VC_NINO_MISSING_SOCIAL_SECURITY_RECORD,
                                 Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -731,9 +735,6 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoVc()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
-
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -742,7 +743,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -759,9 +760,6 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldReturnEmptyNinoClaimWhenNinoVcIsUnsuccessful()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
-
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -772,7 +770,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1, NINO_CRI, VC_NINO_UNSUCCESSFUL, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -787,7 +785,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetSubClaimOnUserIdentity() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -798,7 +796,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -820,7 +818,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -909,6 +907,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        mockParamStoreCalls(paramsToMockForP0);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -988,7 +987,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -1013,6 +1012,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        mockParamStoreCalls(paramsToMockForP0);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -1036,7 +1036,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -1067,7 +1067,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()),
                         createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -1090,7 +1090,7 @@ class UserIdentityServiceTest {
                                 VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY,
                                 Instant.now()));
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -1132,16 +1132,14 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockParamStoreCalls(paramsToMockForP2);
         when(mockDataStore.getItems(anyString())).thenReturn(List.of());
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockConfigService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)).thenReturn("1");
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1156,15 +1154,13 @@ class UserIdentityServiceTest {
                 userIdentityService.generateUserIdentity(
                         USER_ID_1, "test-sub", "P2", contraIndicators);
 
-        assertEquals(List.of("1"), userIdentity.getExitCode());
+        assertEquals(List.of("🦆"), userIdentity.getExitCode());
     }
 
     @Test
     void generateUserIdentityShouldSetEmptyExitCodeWhenP2AndAlwaysRequiredCiNotPresent()
             throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)).thenReturn("1");
+        mockParamStoreCalls(paramsToMockForP2);
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
@@ -1176,8 +1172,6 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
-
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1195,28 +1189,14 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldNotSetExitCodeWhenP2AndExitCodesNotEnabled() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(false);
-
-        UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
-
-        assertNull(userIdentity.getExitCode());
-    }
-
-    @Test
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        mockParamStoreCalls(paramsToMockForP0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("1");
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1245,7 +1225,6 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1264,8 +1243,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
+        mockParamStoreCalls(paramsToMockForP0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1273,7 +1251,6 @@ class UserIdentityServiceTest {
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3"),
                                 "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("1");
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1293,23 +1270,9 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldNotSetExitCodeWhenBreachingCiThresholdAndExitCodesNotEnabled()
-            throws Exception {
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(false);
-
-        UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
-
-        assertNull(userIdentity.getExitCode());
-    }
-
-    @Test
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.enabled(EXIT_CODES)).thenReturn(true);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
         when(mockConfigService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
@@ -1425,5 +1388,10 @@ class UserIdentityServiceTest {
                 credentialIssuer ->
                         when(mockConfigService.getComponentId(credentialIssuer))
                                 .thenReturn(credentialIssuer));
+    }
+
+    private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
+        params.forEach(
+                (key, value) -> when(mockConfigService.getSsmParameter(key)).thenReturn(value));
     }
 }

@@ -2,8 +2,7 @@ package uk.gov.di.ipv.core.library.config;
 
 public enum CoreFeatureFlag implements FeatureFlag {
     UNUSED_PLACEHOLDER("unusedPlaceHolder"),
-    RESET_IDENTITY("resetIdentity"),
-    EXIT_CODES("exitCodes");
+    RESET_IDENTITY("resetIdentity");
 
     private final String name;
 
