@@ -313,10 +313,8 @@ public class UserIdentityService {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
             } catch (ParseException e) {
-                {
-                    throw new CredentialParseException(
-                            "Encountered a parsing error while attempting to parse VC store item");
-                }
+                throw new CredentialParseException(
+                        "Encountered a parsing error while attempting to parse VC store item");
             }
         }
 

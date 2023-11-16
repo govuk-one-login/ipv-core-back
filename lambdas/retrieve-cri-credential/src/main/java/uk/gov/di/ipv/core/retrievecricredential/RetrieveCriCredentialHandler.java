@@ -204,9 +204,7 @@ public class RetrieveCriCredentialHandler
                                 ? CriResourceRetrievedType.EMPTY.getType()
                                 : CriResourceRetrievedType.VC.getType());
                 processVerifiableCredentials(
-                        userId,
-                        credentialIssuerId,
-                        credentialIssuerConfig,
+                        criOAuthSessionItem,
                         ipAddress,
                         verifiableCredentials,
                         clientOAuthSessionItem,
@@ -290,9 +288,7 @@ public class RetrieveCriCredentialHandler
     }
 
     private void processVerifiableCredentials(
-            String userId,
-            String credentialIssuerId,
-            CredentialIssuerConfig credentialIssuerConfig,
+            CriOAuthSessionItem criOAuthSessionItem,
             String ipAddress,
             List<SignedJWT> verifiableCredentials,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -304,7 +300,10 @@ public class RetrieveCriCredentialHandler
 
         String issuer = null;
         for (SignedJWT vc : verifiableCredentials) {
-            verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
+            verifiableCredentialJwtValidator.validate(
+                    vc,
+                    configService.getCriConfig(criOAuthSessionItem),
+                    clientOAuthSessionItem.getUserId());
 
             boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
@@ -313,19 +312,21 @@ public class RetrieveCriCredentialHandler
             submitVcToCiStorage(vc, govukSigninJourneyId, ipAddress);
             postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
 
-            verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
+            verifiableCredentialService.persistUserCredentials(
+                    vc, criOAuthSessionItem.getCriId(), clientOAuthSessionItem.getUserId());
 
             issuer = vc.getJWTClaimsSet().getIssuer();
         }
 
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, issuer, true, null);
+        updateVisitedCredentials(
+                ipvSessionItem, criOAuthSessionItem.getCriId(), issuer, true, null);
 
         LOGGER.info(
                 new StringMapMessage()
                         .with(
                                 LOG_LAMBDA_RESULT.getFieldName(),
                                 "Successfully retrieved CRI credential.")
-                        .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
+                        .with(LOG_CRI_ID.getFieldName(), criOAuthSessionItem.getCriId()));
     }
 
     @Tracing

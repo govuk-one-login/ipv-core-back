@@ -150,7 +150,7 @@ public class BuildProvenUserIdentityDetailsHandler
     @Tracing
     private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
             List<VcStoreItem> credentialIssuerItems)
-            throws ProvenUserIdentityDetailsException, CredentialParseException, ParseException {
+            throws ProvenUserIdentityDetailsException, CredentialParseException {
         try {
             final Optional<IdentityClaim> identityClaim =
                     userIdentityService.findIdentityClaim(credentialIssuerItems);

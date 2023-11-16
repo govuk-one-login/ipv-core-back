@@ -184,36 +184,8 @@ public class CheckExistingIdentityHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            boolean dataCorrelates = vcDataCorrelates(userId);
-            if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F return - failed to correlate VC data");
-                LOGGER.info(message);
-
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser));
-
-                return JOURNEY_FAIL;
-            } else if (!dataCorrelates) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "VC data does not correlate so resetting identity."));
-
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser));
-
-                return JOURNEY_RESET_IDENTITY;
+            if (!vcDataCorrelates(userId)) {
+                return dataNotCorrelatedResponse(completedF2F(f2fRequest, f2fVc), auditEventUser);
             }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
@@ -238,39 +210,17 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL;
             }
 
-            if (matchedProfile.isPresent() && configService.enabled(RESET_IDENTITY.getName())) {
-                LOGGER.info("resetIdentity flag is enabled, reset users identity.");
-                return JOURNEY_RESET_IDENTITY;
-            }
-
             if (matchedProfile.isPresent()) {
-                auditService.sendAuditEvent(
+                AuditEvent profileMatchedAuditEvent =
                         buildProfileMatchedAuditEvent(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 matchedProfile.get(),
                                 gpg45Scores,
                                 credentials,
-                                ipAddress));
-
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Matched profile and within CI threshold so returning reuse journey.")
-                                .with(LOG_PROFILE.getFieldName(), matchedProfile.get().getLabel());
-                LOGGER.info(message);
-
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser));
-
-                ipvSessionItem.setVot(VOT_P2);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return JOURNEY_REUSE;
+                                ipAddress);
+                return matchedProfileResponse(
+                        profileMatchedAuditEvent, matchedProfile.get(), ipvSessionItem);
             }
 
             if (!credentials.isEmpty()) {
@@ -355,6 +305,72 @@ public class CheckExistingIdentityHandler
         }
     }
 
+    private Map<String, Object> matchedProfileResponse(
+            AuditEvent profileMatchedAuditEvent,
+            Gpg45Profile matchedProfile,
+            IpvSessionItem ipvSessionItem)
+            throws SqsException {
+        if (configService.enabled(RESET_IDENTITY.getName())) {
+            LOGGER.info("resetIdentity flag is enabled, reset users identity.");
+            return JOURNEY_RESET_IDENTITY;
+        }
+
+        auditService.sendAuditEvent(profileMatchedAuditEvent);
+
+        var message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Matched profile and within CI threshold so returning reuse journey.")
+                        .with(LOG_PROFILE.getFieldName(), matchedProfile.getLabel());
+        LOGGER.info(message);
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        profileMatchedAuditEvent.getUser()));
+
+        ipvSessionItem.setVot(VOT_P2);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+
+        return JOURNEY_REUSE;
+    }
+
+    private Map<String, Object> dataNotCorrelatedResponse(
+            boolean completedF2f, AuditEventUser auditEventUser) throws SqsException {
+        if (completedF2f) {
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "F2F return - failed to correlate VC data");
+            LOGGER.info(message);
+
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
+
+            return JOURNEY_FAIL;
+        } else {
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "VC data does not correlate so resetting identity."));
+
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
+
+            return JOURNEY_RESET_IDENTITY;
+        }
+    }
+
     private Optional<JourneyResponse> checkCiScoring(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -370,7 +386,7 @@ public class CheckExistingIdentityHandler
                         ipvSessionItem);
 
         contraIndicatorJourneyResponse.ifPresent(
-                (journeyResponse) -> {
+                journeyResponse -> {
                     StringMapMessage message = new StringMapMessage();
                     message.with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),

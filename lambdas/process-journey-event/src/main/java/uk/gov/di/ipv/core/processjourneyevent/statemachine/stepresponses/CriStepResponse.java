@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StepResponseException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,7 +52,7 @@ public class CriStepResponse implements StepResponse {
                             .with("criId", criId)
                             .with("context", context)
                             .with("scope", scope));
-            throw new RuntimeException(e);
+            throw new StepResponseException(e);
         }
     }
 }

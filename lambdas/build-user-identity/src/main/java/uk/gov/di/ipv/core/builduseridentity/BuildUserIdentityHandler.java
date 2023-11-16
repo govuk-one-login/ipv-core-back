@@ -252,8 +252,7 @@ public class BuildUserIdentityHandler
         return false;
     }
 
-    private <T> APIGatewayProxyResponseEvent serverErrorJsonResponse(
-            String errorHeader, Exception e) {
+    private APIGatewayProxyResponseEvent serverErrorJsonResponse(String errorHeader, Exception e) {
         LogHelper.logErrorMessage(errorHeader, e.getMessage());
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
