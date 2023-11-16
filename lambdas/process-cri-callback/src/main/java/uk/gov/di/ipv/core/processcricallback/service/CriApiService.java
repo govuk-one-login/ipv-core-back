@@ -78,7 +78,8 @@ public class CriApiService {
                 : null;
     }
 
-    public BearerAccessToken fetchAccessToken(String apiKey, CriCallbackRequest callbackRequest) throws CriApiException {
+    public BearerAccessToken fetchAccessToken(String apiKey, CriCallbackRequest callbackRequest)
+            throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
         var authorisationCode = callbackRequest.getAuthorizationCode();
         var criOAuthSessionItem =
@@ -157,7 +158,8 @@ public class CriApiService {
     }
 
     public VerifiableCredentialResponse fetchVerifiableCredential(
-            BearerAccessToken accessToken, String apiKey, CriCallbackRequest callbackRequest) throws CriApiException {
+            BearerAccessToken accessToken, String apiKey, CriCallbackRequest callbackRequest)
+            throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
         var criOAuthSessionItem =
                 criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());

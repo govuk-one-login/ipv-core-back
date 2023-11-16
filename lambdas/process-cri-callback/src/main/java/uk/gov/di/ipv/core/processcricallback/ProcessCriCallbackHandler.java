@@ -268,9 +268,9 @@ public class ProcessCriCallbackHandler
         } catch (CriApiException e) {
             LOGGER.error("Error retrieving access token or credential", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
         } finally {
             ipvSessionService.updateIpvSession(ipvSessionItem);
