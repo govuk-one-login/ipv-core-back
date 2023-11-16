@@ -8,6 +8,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.List;
+
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
@@ -22,6 +24,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private String state;
     private String userId;
     private String govukSigninJourneyId;
+    private List<String> vtr;
     private long ttl;
 
     @DynamoDbPartitionKey

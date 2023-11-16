@@ -50,6 +50,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setUserId(claimsSet.getSubject());
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
+        clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
 
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
