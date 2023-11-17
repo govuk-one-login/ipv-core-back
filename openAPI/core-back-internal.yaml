@@ -21,7 +21,7 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
-  /journey/cri/callback:
+  /journey/cri/callback-old:
     post:
       description: |
         Called when a user comes back to core on the frontend's callback endpoint, after visiting a CRI. Triggers a step
@@ -73,7 +73,7 @@ paths:
                   $bodyObj
                 #end
 
-  /cri/callback:
+  /journey/cri/callback:
     post:
       description: |
         Called when a user comes back to core on the frontend's callback endpoint, after visiting a CRI. Triggers a 

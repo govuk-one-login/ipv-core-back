@@ -1328,7 +1328,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-cri-oauth-request-${Environment}"
+      FunctionName: !Sub "process-cri-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallback::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -1339,7 +1339,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -1404,7 +1404,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /cri/process-cri-callback
+            Path: /journey/cri/callback
             Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
@@ -1581,7 +1581,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /journey/cri/callback
+            Path: /journey/cri/callback-old
             Method: POST
       Logging:
         Destinations:
