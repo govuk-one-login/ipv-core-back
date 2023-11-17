@@ -14,7 +14,7 @@
     "@aws-sdk/client-dynamodb": "3.451.0",
     "@aws-sdk/client-sns": "3.451.0",
     "@aws-sdk/client-sqs": "3.451.0",
-    "@aws-sdk/client-ssm": "3.451.0",
+    "@aws-sdk/client-ssm": "3.453.0",
     "@aws-sdk/lib-dynamodb": "3.451.0",
     "@swc/jest": "0.2.24",
     "@types/aws-lambda": "8.10.109",
