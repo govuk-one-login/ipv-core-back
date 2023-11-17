@@ -1329,7 +1329,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-cri-callback-${Environment}"
-      Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallback::handleRequest
+      Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler::handleRequest
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-cri-callback
