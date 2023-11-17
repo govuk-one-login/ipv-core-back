@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
+import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -41,7 +42,9 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -72,8 +75,11 @@ class InitialiseIpvSessionHandlerTest {
 
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
+    @Mock private ConfigService mockConfigService;
+    @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
+    @Mock private UserIdentityService mockUserIdentityService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
