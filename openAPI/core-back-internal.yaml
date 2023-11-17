@@ -96,12 +96,7 @@ paths:
             Fn::Sub: |
               #set($inputRoot = $input.path('$'))
               {
-                "input": "{
-                  \"ipvSessionId\": \"$input.params('ipv-session-id')\", 
-                  \"featureSet\": \"$input.params('feature-set')\", 
-                  \"ipAddress\": \"$input.params('ip-address')\" #foreach($key in $inputRoot.keySet()),
-                  \"$key\": \"$inputRoot.get($key)\"#end
-                }",
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
               }
         responses:
           default:
