@@ -164,8 +164,8 @@ class InitialiseIpvSessionHandlerTest {
     @MethodSource("getVtrTestValues")
     void shouldReturn200ForAllVtrValues(List<String> vtrList)
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-            JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
-            JarValidationException, SqsException {
+                    JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
+                    JarValidationException, SqsException {
         JWTClaimsSet.Builder claimsSet =
                 new JWTClaimsSet.Builder()
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))

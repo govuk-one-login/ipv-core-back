@@ -136,7 +136,6 @@ public class InitialiseIpvSessionHandler
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         ErrorResponse.MISSING_VTR.getMessage());
                 LOGGER.error(message);
-
             }
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
