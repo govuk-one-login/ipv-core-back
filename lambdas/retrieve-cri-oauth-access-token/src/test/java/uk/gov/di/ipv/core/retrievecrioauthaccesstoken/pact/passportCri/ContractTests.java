@@ -65,7 +65,12 @@ public class ContractTests {
 
     @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.uponReceiving("Valid auth code")
+        return builder
+                .given("dummyAuthCode is a valid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("dummyPassportComponentId is the passport CRI component ID")
+                .given("Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Valid auth code")
                 .path("/token")
                 .method("POST")
                 .body(
