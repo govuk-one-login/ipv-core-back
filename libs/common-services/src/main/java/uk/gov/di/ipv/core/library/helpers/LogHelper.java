@@ -31,6 +31,7 @@ public class LogHelper {
         LOG_ERROR_JOURNEY_RESPONSE("errorJourneyResponse"),
         LOG_FEATURE_SET("featureSet"),
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
+        LOG_IS_USER_INITIATED("isUserInitiated"),
         LOG_IPV_SESSION_ID("ipvSessionId"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
         LOG_JOURNEY_EVENT("journeyEvent"),
@@ -106,6 +107,10 @@ public class LogHelper {
         } else {
             attachFieldToLogs(LogField.LOG_GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId);
         }
+    }
+
+    public static void attachIsUserInitiatedToLogs(Boolean isUserInitiated) {
+        attachFieldToLogs(LogField.LOG_IS_USER_INITIATED, isUserInitiated.toString());
     }
 
     public static void logErrorMessage(String message, String errorDescription) {

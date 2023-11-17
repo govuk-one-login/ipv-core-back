@@ -144,6 +144,17 @@ public class RequestHelper {
         return scoreThreshold;
     }
 
+    public static Boolean getIsUserInitiated(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        Boolean isUserInitiated = request.getIsUserInitiated();
+        if (isUserInitiated == null) {
+            LOGGER.error("Missing isUserInitiated parameter in request");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER);
+        }
+        return isUserInitiated;
+    }
+
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);

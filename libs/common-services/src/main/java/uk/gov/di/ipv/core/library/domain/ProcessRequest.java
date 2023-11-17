@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class ProcessRequest extends JourneyRequest {
     private String scoreType;
     private Integer scoreThreshold;
+    private Boolean isUserInitiated;
 
     @Builder(builderMethodName = "processRequestBuilder")
     public ProcessRequest(
@@ -20,9 +21,11 @@ public class ProcessRequest extends JourneyRequest {
             String journey,
             String featureSet,
             String scoreType,
-            Integer scoreThreshold) {
+            Integer scoreThreshold,
+            Boolean isUserInitiated) {
         super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet);
         this.scoreType = scoreType;
         this.scoreThreshold = scoreThreshold;
+        this.isUserInitiated = isUserInitiated;
     }
 }

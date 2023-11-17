@@ -71,7 +71,8 @@ public enum ErrorResponse {
     MISSING_SCORE_THRESHOLD(1059, "Missing score type in request"),
     UNKNOWN_SCORE_TYPE(1060, "Unknown score type in request"),
     FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS(1061, "Failed to parse successful VC Store items."),
-    FAILED_TO_GENERATE_NINO_CLAIM(1062, "Failed to generate the NINO claim");
+    FAILED_TO_GENERATE_NINO_CLAIM(1062, "Failed to generate the NINO claim"),
+    MISSING_IS_USER_INITIATED_PARAMETER(1059, "Missing isUserInitiated in request");
 
     @JsonProperty("code")
     private final int code;
