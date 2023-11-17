@@ -72,7 +72,7 @@ public enum ErrorResponse {
     UNKNOWN_SCORE_TYPE(1060, "Unknown score type in request"),
     FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS(1061, "Failed to parse successful VC Store items."),
     FAILED_TO_GENERATE_NINO_CLAIM(1062, "Failed to generate the NINO claim"),
-    MISSING_VTR(1063, "The 'vtr' field is required and was not provided in the request.");
+    MISSING_VTR(1063, "The 'vtr' claim is required and was not provided in the request.");
 
     @JsonProperty("code")
     private final int code;
