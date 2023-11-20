@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -19,6 +20,9 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,6 +34,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -49,8 +54,11 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -95,6 +103,7 @@ class InitialiseIpvSessionHandlerTest {
                         .claim("redirect_uri", "http://example.com")
                         .claim("state", "test-state")
                         .claim("client_id", "test-client")
+                        .claim("vtr", List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
                         .build();
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
@@ -118,6 +127,7 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setState("test-state");
         clientOAuthSessionItem.setUserId("test-user-id");
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
+        clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
     }
 
     @Test
@@ -148,6 +158,67 @@ class InitialiseIpvSessionHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+    }
+
+    @ParameterizedTest
+    @MethodSource("getVtrTestValues")
+    void shouldReturn200ForAllVtrValues(List<String> vtrList)
+            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
+                    JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
+                    JarValidationException, SqsException {
+        JWTClaimsSet.Builder claimsSet =
+                new JWTClaimsSet.Builder()
+                        .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
+                        .issueTime(new Date())
+                        .notBeforeTime(new Date())
+                        .subject("test-user-id")
+                        .audience("test-audience")
+                        .issuer("test-issuer")
+                        .claim("response_type", "code")
+                        .claim("redirect_uri", "http://example.com")
+                        .claim("state", "test-state")
+                        .claim("client_id", "test-client");
+        if (vtrList != null) {
+            claimsSet.claim("vtr", vtrList);
+        }
+        signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet.build());
+        signedJWT.sign(new ECDSASigner(getPrivateKey()));
+        signedEncryptedJwt =
+                TestFixtures.createJweObject(
+                        new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
+                        signedJWT);
+
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+    }
+
+    private static Stream<Arguments> getVtrTestValues() {
+        return Stream.of(
+                Arguments.of((Object) null),
+                Arguments.of(Collections.emptyList()),
+                Arguments.of(List.of("", "")));
     }
 
     @Test

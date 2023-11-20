@@ -41,11 +41,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -54,6 +56,9 @@ public class InitialiseIpvSessionHandler
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
+    private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
+    private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
+    private static final String REQUEST_VTR_KEY = "vtr";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -118,10 +123,20 @@ public class InitialiseIpvSessionHandler
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
-            String govukSigninJourneyId = claimsSet.getStringClaim("govuk_signin_journey_id");
-            String emailAddress = claimsSet.getStringClaim("email_address");
+            String govukSigninJourneyId =
+                    claimsSet.getStringClaim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY);
+            String emailAddress = claimsSet.getStringClaim(REQUEST_EMAIL_ADDRESS_KEY);
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
+            if (vtr == null || vtr.isEmpty() || vtr.stream().allMatch(String::isEmpty)) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        ErrorResponse.MISSING_VTR.getMessage());
+                LOGGER.error(message);
+            }
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
             IpvSessionItem ipvSessionItem =
