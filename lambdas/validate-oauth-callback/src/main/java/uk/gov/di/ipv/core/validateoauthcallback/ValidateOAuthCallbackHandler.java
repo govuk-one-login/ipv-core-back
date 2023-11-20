@@ -337,8 +337,7 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest callbackRequest)
-            throws JsonProcessingException {
+    private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest callbackRequest) {
         return configService.getCredentialIssuerActiveConnectionConfig(
                 callbackRequest.getCredentialIssuerId());
     }

@@ -251,7 +251,7 @@ public class ConfigService {
     }
 
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
-            String credentialIssuerId) throws JsonProcessingException {
+            String credentialIssuerId) {
         return getCriConfigForConnection(
                 getActiveConnection(credentialIssuerId), credentialIssuerId);
     }
@@ -262,13 +262,20 @@ public class ConfigService {
                 criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
     }
 
-    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId)
-            throws JsonProcessingException {
+    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
         if (parameter != null) {
-            return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
+            try {
+                return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
+            } catch (JsonProcessingException e) {
+                LOGGER.error(
+                        "Failed to parse credential issuer configuration at parameter path {} because: {}",
+                        pathTemplate,
+                        e);
+                throw new RuntimeException(e);
+            }
         }
         Map<String, String> parameters = getSsmParameters(pathTemplate, false, criId, connection);
         if (parameters != null && !parameters.isEmpty()) {
