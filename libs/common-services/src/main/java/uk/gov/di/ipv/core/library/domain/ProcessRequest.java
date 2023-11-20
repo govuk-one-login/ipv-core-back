@@ -23,7 +23,7 @@ public class ProcessRequest extends JourneyRequest {
             String scoreType,
             Integer scoreThreshold,
             Boolean isUserInitiated) {
-        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet);
+        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet, isUserInitiated);
         this.scoreType = scoreType;
         this.scoreThreshold = scoreThreshold;
         this.isUserInitiated = isUserInitiated;
