@@ -256,8 +256,7 @@ public class ConfigService {
                 getActiveConnection(credentialIssuerId), credentialIssuerId);
     }
 
-    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem)
-            throws JsonProcessingException {
+    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
         return getCriConfigForConnection(
                 criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
     }

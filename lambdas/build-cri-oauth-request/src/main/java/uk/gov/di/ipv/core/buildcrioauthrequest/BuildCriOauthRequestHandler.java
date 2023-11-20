@@ -250,13 +250,6 @@ public class BuildCriOauthRequestHandler
                             HttpStatus.SC_BAD_REQUEST,
                             ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG)
                     .toObjectMap();
-        } catch (JsonProcessingException e) {
-            LogHelper.logErrorMessage("Failed to parse CRI configuration", e.getMessage());
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
-                            ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG)
-                    .toObjectMap();
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return new JourneyErrorResponse(
