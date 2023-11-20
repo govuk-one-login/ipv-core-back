@@ -84,6 +84,14 @@ class UserIdentityServiceTest {
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", EXIT_CODES_ALWAYS_REQUIRED, "🦆");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", CI_SCORING_THRESHOLD, "0");
+    private final Map<ConfigurationVariable, String> paramsToMockForP0WithNoCi =
+            Map.of(
+                    CORE_VTM_CLAIM,
+                    "mock-vtm-claim",
+                    CI_SCORING_THRESHOLD,
+                    "0",
+                    EXIT_CODES_NON_CI_BREACHING_P0,
+                    "🐧");
 
     @BeforeEach
     void setUp() {
@@ -508,7 +516,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        mockParamStoreCalls(paramsToMockForP0);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -618,7 +626,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        mockParamStoreCalls(paramsToMockForP0);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -690,7 +698,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        mockParamStoreCalls(paramsToMockForP0);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
         // Act
         UserIdentity credentials =
@@ -907,7 +915,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        mockParamStoreCalls(paramsToMockForP0);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -1012,7 +1020,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        mockParamStoreCalls(paramsToMockForP0);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
