@@ -126,7 +126,7 @@ public class ProcessCriCallbackHandler
             APIGatewayProxyRequestEvent input, Context context) {
         try {
             var callbackRequest = parseCallbackRequest(input);
-            validate(callbackRequest);
+            criCheckingService.validateCallbackRequest(callbackRequest);
 
             var journeyResponse = getJourneyResponse(callbackRequest);
 
@@ -158,12 +158,7 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (VerifiableCredentialException e) {
-            //            Removed because equal to below:
-            //            if (callbackRequest.getCredentialIssuerId().equals(DCMAW_CRI) &&
-            // e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
-            //                return buildErrorResponse(e, HttpStatus.SC_NOT_FOUND,
-            // e.getErrorResponse());
-            //            }
+            // Removed check for DCMAW because output is now equal
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         } catch (VerifiableCredentialResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
@@ -197,34 +192,6 @@ public class ProcessCriCallbackHandler
         }
     }
 
-    private void validate(CriCallbackRequest callbackRequest)
-            throws InvalidCriCallbackRequestException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        if (criId == null || criId.isBlank()) {
-            throw new InvalidCriCallbackRequestException(
-                    ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-        }
-        if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
-            throw new InvalidCriCallbackRequestException(
-                    ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-        }
-
-        var authorisationCode = callbackRequest.getAuthorizationCode();
-        if (authorisationCode == null || authorisationCode.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-
-        var ipvSessionId = callbackRequest.getIpvSessionId();
-        if (ipvSessionId == null || ipvSessionId.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        var criOAuthSessionId = callbackRequest.getState();
-        if (criOAuthSessionId == null || criOAuthSessionId.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
-        }
-    }
-
     public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
             throws SqsException, ParseException, JsonProcessingException,
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
@@ -241,7 +208,7 @@ public class ProcessCriCallbackHandler
                             ipvSessionItem.getClientOAuthSessionId());
             var criOAuthSessionItem =
                     criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
-            validateCriOauthSessionItem(criOAuthSessionItem, callbackRequest);
+            criCheckingService.validateCriOauthSessionItem(criOAuthSessionItem, callbackRequest);
             configService.setFeatureSet(callbackRequest.getFeatureSet());
 
             // Attach variables to logs
@@ -281,20 +248,6 @@ public class ProcessCriCallbackHandler
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
-        }
-    }
-
-    private void validateCriOauthSessionItem(
-            CriOAuthSessionItem criOAuthSessionItem, CriCallbackRequest callbackRequest)
-            throws HttpResponseExceptionWithErrorBody {
-        if (criOAuthSessionItem == null) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
-        }
-
-        if (!criOAuthSessionItem.getCriId().equals(callbackRequest.getCredentialIssuerId())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
     }
 

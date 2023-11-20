@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processcricallback.service;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -12,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.*;
@@ -28,6 +30,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCrede
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -125,6 +128,48 @@ public class CriCheckingService {
             case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
             default -> JOURNEY_ERROR;
         });
+    }
+
+    public void validateCallbackRequest(CriCallbackRequest callbackRequest)
+            throws InvalidCriCallbackRequestException {
+        var criId = callbackRequest.getCredentialIssuerId();
+        if (criId == null || criId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(
+                    ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+        }
+        if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
+            throw new InvalidCriCallbackRequestException(
+                    ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        }
+
+        var authorisationCode = callbackRequest.getAuthorizationCode();
+        if (authorisationCode == null || authorisationCode.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
+        }
+
+        var ipvSessionId = callbackRequest.getIpvSessionId();
+        if (ipvSessionId == null || ipvSessionId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
+        }
+
+        var criOAuthSessionId = callbackRequest.getState();
+        if (criOAuthSessionId == null || criOAuthSessionId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+    }
+
+    public void validateCriOauthSessionItem(
+            CriOAuthSessionItem criOAuthSessionItem, CriCallbackRequest callbackRequest)
+            throws HttpResponseExceptionWithErrorBody {
+        if (criOAuthSessionItem == null) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
+        }
+
+        if (!criOAuthSessionItem.getCriId().equals(callbackRequest.getCredentialIssuerId())) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
+        }
     }
 
     public void validateVcResponse(
