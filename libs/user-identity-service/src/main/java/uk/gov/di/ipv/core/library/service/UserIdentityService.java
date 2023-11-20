@@ -216,9 +216,9 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private boolean breachingCiThreshold(ContraIndicators contraIndicators) {
+    public boolean breachingCiThreshold(ContraIndicators contraIndicators) {
         return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
-                >= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)

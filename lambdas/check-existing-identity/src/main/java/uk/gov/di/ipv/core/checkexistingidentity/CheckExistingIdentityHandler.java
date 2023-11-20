@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -69,7 +70,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_UNCORREL
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
@@ -87,10 +89,12 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_PENDING_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_FAIL =
-            new JourneyResponse(JOURNEY_FAIL_PATH).toObjectMap();
+    private static final Map<String, Object> JOURNEY_F2F_FAIL =
+            new JourneyResponse(JOURNEY_F2F_FAIL_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     public static final String NAMES = "names";
     public static final String DATE_OF_BIRTH = "dob";
     public static final String VOT_P2 = "P2";
@@ -165,27 +169,40 @@ public class CheckExistingIdentityHandler
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem f2fVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            Optional<Map<String, Object>> f2fResponse = getFaceToFaceResponse(f2fRequest, f2fVc);
-            if (f2fResponse.isPresent()) {
-                return f2fResponse.get();
+            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && Objects.isNull(f2fVc);
+            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && !Objects.isNull(f2fVc);
+
+            // Incomplete F2F journey
+            if (isF2FIncomplete) {
+                return buildF2FIncompleteResponse(f2fRequest);
             }
 
-            Optional<JourneyResponse> ciScoringJourneyResponse =
-                    checkCiScoring(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            govukSigninJourneyId,
-                            ipAddress);
-            if (ciScoringJourneyResponse.isPresent()) {
-                return ciScoringJourneyResponse.get().toObjectMap();
+            var contraIndicators =
+                    ciMitService.getContraIndicatorsVC(
+                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+
+            // CI scoring failure
+            if (userIdentityService.breachingCiThreshold(contraIndicators)) {
+                ipvSessionItem.setCiFail(false);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+
+                return buildCiBreachingResponse(contraIndicators);
             }
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
+            // Credential correlation failure
             if (!vcDataCorrelates(userId)) {
-                return dataNotCorrelatedResponse(completedF2F(f2fRequest, f2fVc), auditEventUser);
+                return isF2FComplete
+                        ? buildF2FNotCorrelatedResponse(auditEventUser)
+                        : buildNotCorrelatedResponse(auditEventUser);
+            }
+
+            // Force reset
+            if (configService.enabled(RESET_IDENTITY.getName())) {
+                return buildForceResetResponse();
             }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
@@ -193,130 +210,179 @@ public class CheckExistingIdentityHandler
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
                             gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
-            if (matchedProfile.isEmpty() && completedF2F(f2fRequest, f2fVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F return - failed to match a profile.");
-                LOGGER.info(message);
-
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser));
-
-                return JOURNEY_FAIL;
+            // No profile match
+            if (matchedProfile.isEmpty()) {
+                return isF2FComplete
+                        ? buildF2FNoMatchResponse(auditEventUser)
+                        : buildNoMatchResponse(credentials, auditEventUser);
             }
 
-            if (matchedProfile.isPresent()) {
-                AuditEvent profileMatchedAuditEvent =
-                        buildProfileMatchedAuditEvent(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                matchedProfile.get(),
-                                gpg45Scores,
-                                credentials,
-                                ipAddress);
-                return matchedProfileResponse(
-                        profileMatchedAuditEvent, matchedProfile.get(), ipvSessionItem);
-            }
+            // Successful match
+            sendProfileMatchedAuditEvent(
+                    matchedProfile.get(), gpg45Scores, credentials, auditEventUser);
 
-            if (!credentials.isEmpty()) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to match profile so resetting identity.");
-                LOGGER.info(message);
+            ipvSessionItem.setVot(VOT_P2);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser));
-
-                return JOURNEY_RESET_IDENTITY;
-            }
-
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "New user so returning next.");
-            LOGGER.info(message);
-
-            return JOURNEY_NEXT;
+            return buildProfileMatchedResponse(matchedProfile.get(), auditEventUser);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error("Unable to parse existing credentials", e);
+            LOGGER.error(e.getErrorResponse().getMessage(), e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (CiRetrievalException e) {
-            LOGGER.error("Error when fetching CIs from storage system", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_GET_STORED_CIS)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (ParseException e) {
-            LOGGER.error("Unable to parse existing credentials", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
         } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error("Unable to determine type of credential", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, e);
         } catch (CredentialParseException e) {
-            LOGGER.error("Failed to parse successful VC Store items.", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
         } catch (ConfigException e) {
-            LOGGER.error("Configuration error", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
-            LOGGER.error("Unrecognised CI code received", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.UNRECOGNISED_CI_CODE)
-                    .toObjectMap();
+            return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         }
     }
 
-    private Map<String, Object> matchedProfileResponse(
-            AuditEvent profileMatchedAuditEvent,
-            Gpg45Profile matchedProfile,
-            IpvSessionItem ipvSessionItem)
-            throws SqsException {
-        if (configService.enabled(RESET_IDENTITY.getName())) {
-            LOGGER.info("resetIdentity flag is enabled, reset users identity.");
-            return JOURNEY_RESET_IDENTITY;
+    @Tracing
+    private Map<String, Object> buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
+        switch (faceToFaceRequest.getStatus()) {
+            case CriResponseService.STATUS_PENDING -> {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F cri pending verification."));
+                return JOURNEY_PENDING;
+            }
+            case CriResponseService.STATUS_ERROR -> {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
+                return JOURNEY_F2F_FAIL;
+            }
+            default -> {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F unexpected status: " + faceToFaceRequest.getStatus()));
+                return JOURNEY_F2F_FAIL;
+            }
+        }
+    }
+
+    private Map<String, Object> buildCiBreachingResponse(ContraIndicators contraIndicators)
+            throws CiRetrievalException, UnrecognisedCiException, ConfigException {
+        JourneyResponse journeyResponse = JOURNEY_FAIL_WITH_CI;
+
+        var cimitConfig = configService.getCimitConfig();
+        for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
+            if (cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated()) {
+                journeyResponse = new JourneyResponse(cimitConfig.get(ci.getCode()));
+                break;
+            }
         }
 
-        auditService.sendAuditEvent(profileMatchedAuditEvent);
+        StringMapMessage message = new StringMapMessage();
+        message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
+                .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), journeyResponse.toString());
+        LOGGER.info(message);
 
+        return journeyResponse.toObjectMap();
+    }
+
+    private Map<String, Object> buildF2FNotCorrelatedResponse(AuditEventUser auditEventUser)
+            throws SqsException {
+        var message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "F2F return - failed to correlate VC data");
+        LOGGER.info(message);
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
+
+        return JOURNEY_F2F_FAIL;
+    }
+
+    private Map<String, Object> buildNotCorrelatedResponse(AuditEventUser auditEventUser)
+            throws SqsException {
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "VC data does not correlate so resetting identity."));
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
+
+        return JOURNEY_RESET_IDENTITY;
+    }
+
+    private Map<String, Object> buildForceResetResponse() {
+        LOGGER.info("resetIdentity flag is enabled, reset users identity.");
+        return JOURNEY_RESET_IDENTITY;
+    }
+
+    private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
+            throws SqsException {
+        var message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "F2F return - failed to match a profile.");
+        LOGGER.info(message);
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
+
+        return JOURNEY_F2F_FAIL;
+    }
+
+    private Map<String, Object> buildNoMatchResponse(
+            List<SignedJWT> credentials, AuditEventUser auditEventUser) throws SqsException {
+        if (!credentials.isEmpty()) {
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Failed to match profile so resetting identity.");
+            LOGGER.info(message);
+
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
+
+            return JOURNEY_RESET_IDENTITY;
+        }
+        var message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "New user so returning next.");
+        LOGGER.info(message);
+
+        return JOURNEY_NEXT;
+    }
+
+    private Map<String, Object> buildProfileMatchedResponse(
+            Gpg45Profile matchedProfile, AuditEventUser auditEventUser) throws SqsException {
         var message =
                 new StringMapMessage()
                         .with(
@@ -329,122 +395,35 @@ public class CheckExistingIdentityHandler
                 new AuditEvent(
                         AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        profileMatchedAuditEvent.getUser()));
-
-        ipvSessionItem.setVot(VOT_P2);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
+                        auditEventUser));
 
         return JOURNEY_REUSE;
     }
 
-    private Map<String, Object> dataNotCorrelatedResponse(
-            boolean completedF2f, AuditEventUser auditEventUser) throws SqsException {
-        if (completedF2f) {
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "F2F return - failed to correlate VC data");
-            LOGGER.info(message);
-
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
-
-            return JOURNEY_FAIL;
-        } else {
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "VC data does not correlate so resetting identity."));
-
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
-
-            return JOURNEY_RESET_IDENTITY;
-        }
-    }
-
-    private Optional<JourneyResponse> checkCiScoring(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            String govukSigninJourneyId,
-            String ipAddress)
-            throws CiRetrievalException, UnrecognisedCiException, ConfigException {
-        final Optional<JourneyResponse> contraIndicatorJourneyResponse =
-                gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        ciMitService.getContraIndicatorsVC(
-                                clientOAuthSessionItem.getUserId(),
-                                govukSigninJourneyId,
-                                ipAddress),
-                        ipvSessionItem);
-
-        contraIndicatorJourneyResponse.ifPresent(
-                journeyResponse -> {
-                    StringMapMessage message = new StringMapMessage();
-                    message.with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Returning CI error response.")
-                            .with(
-                                    LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
-                                    journeyResponse.toString());
-                    LOGGER.info(message);
-                });
-
-        return contraIndicatorJourneyResponse;
+    private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
+        LOGGER.error(errorResponse.getMessage(), e);
+        return new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
+                .toObjectMap();
     }
 
     @Tracing
-    private Optional<Map<String, Object>> getFaceToFaceResponse(
-            CriResponseItem faceToFaceRequest, VcStoreItem faceToFaceVc) {
-        if (Objects.isNull(faceToFaceVc) && !Objects.isNull(faceToFaceRequest)) {
-            final String requestStatus = faceToFaceRequest.getStatus();
-            if (requestStatus.equals(CriResponseService.STATUS_PENDING)) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification."));
-
-                return Optional.of(JOURNEY_PENDING);
-            }
-            if (requestStatus.equals(CriResponseService.STATUS_ERROR)) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
-                return Optional.of(JOURNEY_FAIL);
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Tracing
-    private AuditEvent buildProfileMatchedAuditEvent(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
+    private void sendProfileMatchedAuditEvent(
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<SignedJWT> credentials,
-            String ipAddress)
-            throws ParseException {
-        AuditEventUser auditEventUser =
-                new AuditEventUser(
-                        clientOAuthSessionItem.getUserId(),
-                        ipvSessionItem.getIpvSessionId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-        return new AuditEvent(
-                AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                auditEventUser,
-                new AuditExtensionGpg45ProfileMatched(
-                        gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
+            AuditEventUser auditEventUser)
+            throws ParseException, SqsException {
+        var auditEvent =
+                new AuditEvent(
+                        AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionGpg45ProfileMatched(
+                                gpg45Profile,
+                                gpg45Scores,
+                                extractTxnIdsFromCredentials(credentials)));
+        auditService.sendAuditEvent(auditEvent);
     }
 
     @Tracing
@@ -488,9 +467,5 @@ public class CheckExistingIdentityHandler
             return false;
         }
         return true;
-    }
-
-    private boolean completedF2F(CriResponseItem request, VcStoreItem vc) {
-        return request != null && vc != null;
     }
 }

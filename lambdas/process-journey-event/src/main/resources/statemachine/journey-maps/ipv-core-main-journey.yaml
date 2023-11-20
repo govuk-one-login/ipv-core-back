@@ -85,9 +85,9 @@ CHECK_EXISTING_IDENTITY:
       targetState: IPV_IDENTITY_REUSE_PAGE
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
-    pyi-no-match:
+    fail-with-ci:
       targetState: PYI_NO_MATCH
-    fail:
+    f2f-fail:
       targetState: PYI_F2F_TECHNICAL
     error:
       targetState: ERROR
