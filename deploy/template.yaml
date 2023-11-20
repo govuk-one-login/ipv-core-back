@@ -1333,7 +1333,7 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-cri-callback
-      MemorySize: 3008
+      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.

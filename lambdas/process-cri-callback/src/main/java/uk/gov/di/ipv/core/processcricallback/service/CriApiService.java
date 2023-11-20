@@ -26,9 +26,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -68,23 +70,20 @@ public class CriApiService {
         this.criOAuthSessionService = criOAuthSessionService;
     }
 
-    public String getApiKey(CriCallbackRequest callbackRequest) {
-        var criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
-        var criConfig = configService.getCriConfig(criOAuthSessionItem);
-
+    private String getApiKey(
+            CredentialIssuerConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
         return criConfig.getRequiresApiKey()
                 ? configService.getCriPrivateApiKey(criOAuthSessionItem)
                 : null;
     }
 
-    public BearerAccessToken fetchAccessToken(String apiKey, CriCallbackRequest callbackRequest)
+    public BearerAccessToken fetchAccessToken(
+            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
         var authorisationCode = callbackRequest.getAuthorizationCode();
-        var criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
+        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         AuthorizationCode authorizationCode = new AuthorizationCode(authorisationCode);
         try {
@@ -158,12 +157,13 @@ public class CriApiService {
     }
 
     public VerifiableCredentialResponse fetchVerifiableCredential(
-            BearerAccessToken accessToken, String apiKey, CriCallbackRequest callbackRequest)
+            BearerAccessToken accessToken,
+            CriCallbackRequest callbackRequest,
+            CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
-        var criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
+        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());

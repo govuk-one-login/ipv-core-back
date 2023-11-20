@@ -189,7 +189,7 @@ public class UserIdentityService {
 
     private List<String> getFailExitCode(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
-        return breachingCiThreshold(contraIndicators)
+        return isBreachingCiThreshold(contraIndicators)
                 ? mapCisToExitCodes(contraIndicators)
                 : List.of(configService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0));
     }
@@ -221,7 +221,7 @@ public class UserIdentityService {
                 .toList();
     }
 
-    public boolean breachingCiThreshold(ContraIndicators contraIndicators) {
+    public boolean isBreachingCiThreshold(ContraIndicators contraIndicators) {
         return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
                 > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }

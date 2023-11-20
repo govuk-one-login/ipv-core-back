@@ -84,42 +84,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/journeyType"
+                type: "object"
       x-amazon-apigateway-integration:
-        type: "aws"
+        type: "aws_proxy"
         httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
-        requestTemplates:
-          application/json:
-            Fn::Sub: |
-              #set($inputRoot = $input.path('$'))
-              {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}"
-              }
-        responses:
-          default:
-            statusCode: 200
-            responseTemplates:
-              application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-
-                #if ($bodyObj.status == "SUCCEEDED")
-                  #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
-                  #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
-                  $bodyObj.output
-
-                #elseif ($bodyObj.status == "FAILED")
-                  #set($context.responseOverride.status = 500)
-                  {
-                    "cause": "$bodyObj.cause",
-                    "error": "$bodyObj.error"
-                  }
-                #else
-                  #set($context.responseOverride.status = 504)
-                  $bodyObj
-                #end
 
   /journey/{journeyStep}:
     post:

@@ -2,9 +2,10 @@ package uk.gov.di.ipv.core.processcricallback;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.oauth2.sdk.OAuth2Error;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +18,12 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
@@ -42,25 +43,21 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
+import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
+import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 import uk.gov.di.ipv.core.processcricallback.service.CriStoringService;
 
 import java.text.ParseException;
-import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 public class ProcessCriCallbackHandler
-        implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
-    private static final JourneyResponse JOURNEY_NOT_FOUND =
-            new JourneyResponse(JOURNEY_NOT_FOUND_PATH);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
-    private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
     private final ConfigService configService;
     private final CriApiService criApiService;
     private final CriStoringService criStoringService;
@@ -68,9 +65,6 @@ public class ProcessCriCallbackHandler
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-
-    private IpvSessionItem ipvSessionItem = null;
-    private CriOAuthSessionItem criOAuthSessionItem = null;
 
     public ProcessCriCallbackHandler(
             ConfigService configService,
@@ -115,7 +109,6 @@ public class ProcessCriCallbackHandler
                         auditService,
                         userIdentityService,
                         ciMitService,
-                        criOAuthSessionService,
                         verifiableCredentialJwtValidator);
         criStoringService =
                 new CriStoringService(
@@ -129,19 +122,127 @@ public class ProcessCriCallbackHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(CriCallbackRequest callbackRequest, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         try {
-            // Validate Callback Attributes
-            validateCallbackRequest(callbackRequest);
+            var callbackRequest = parseCallbackRequest(input);
+            validate(callbackRequest);
 
+            var journeyResponse = getJourneyResponse(callbackRequest);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+        } catch (ParseCriCallbackRequestException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_BAD_REQUEST,
+                    ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST);
+        } catch (InvalidCriCallbackRequestException e) {
+            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
+                LOGGER.error("Error in process cri callback lambda", e);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST,
+                        StepFunctionHelpers.generatePageOutputMap(
+                                "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID));
+            }
+            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+        } catch (JsonProcessingException | SqsException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } catch (ParseException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } catch (VerifiableCredentialException e) {
+            //            Removed because equal to below:
+            //            if (callbackRequest.getCredentialIssuerId().equals(DCMAW_CRI) &&
+            // e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+            //                return buildErrorResponse(e, HttpStatus.SC_NOT_FOUND,
+            // e.getErrorResponse());
+            //            }
+            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+        } catch (VerifiableCredentialResponseException e) {
+            return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
+        } catch (CiPutException | CiPostMitigationsException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+        } catch (CiRetrievalException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+        } catch (ConfigException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
+        } catch (CredentialParseException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
+        } catch (CriApiException e) {
+            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+        }
+    }
+
+    private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
+            throws ParseCriCallbackRequestException, InvalidCriCallbackRequestException {
+        try {
+            return objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new ParseCriCallbackRequestException(e);
+        }
+    }
+
+    private void validate(CriCallbackRequest callbackRequest)
+            throws InvalidCriCallbackRequestException {
+        var criId = callbackRequest.getCredentialIssuerId();
+        if (criId == null || criId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(
+                    ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+        }
+        if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
+            throw new InvalidCriCallbackRequestException(
+                    ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        }
+
+        var authorisationCode = callbackRequest.getAuthorizationCode();
+        if (authorisationCode == null || authorisationCode.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
+        }
+
+        var ipvSessionId = callbackRequest.getIpvSessionId();
+        if (ipvSessionId == null || ipvSessionId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
+        }
+
+        var criOAuthSessionId = callbackRequest.getState();
+        if (criOAuthSessionId == null || criOAuthSessionId.isBlank()) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+    }
+
+    public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
+            throws SqsException, ParseException, JsonProcessingException,
+                    HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
+                    CriApiException, VerifiableCredentialResponseException,
+                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+                    CredentialParseException {
+        IpvSessionItem ipvSessionItem = null;
+
+        try {
             // Get/ set session items/ config
-            criOAuthSessionItem = getValidCriOauthSessionItem(callbackRequest);
             ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
             var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
+            var criOAuthSessionItem =
+                    criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
+            validateCriOauthSessionItem(criOAuthSessionItem, callbackRequest);
             configService.setFeatureSet(callbackRequest.getFeatureSet());
-            var criConfig = configService.getCriConfig(criOAuthSessionItem);
 
             // Attach variables to logs
             LogHelper.attachGovukSigninJourneyIdToLogs(
@@ -158,13 +259,13 @@ public class ProcessCriCallbackHandler
             }
 
             // Retrieve, store and check cri credentials
-            var apiKey = criApiService.getApiKey(callbackRequest);
-            var accessToken = criApiService.fetchAccessToken(apiKey, callbackRequest);
+            var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
             var vcResponse =
-                    criApiService.fetchVerifiableCredential(accessToken, apiKey, callbackRequest);
+                    criApiService.fetchVerifiableCredential(
+                            accessToken, callbackRequest, criOAuthSessionItem);
 
             criCheckingService.validateVcResponse(
-                    vcResponse, callbackRequest, clientOAuthSessionItem);
+                    vcResponse, clientOAuthSessionItem, criOAuthSessionItem);
 
             switch (vcResponse.getCredentialStatus()) {
                 case CREATED -> criStoringService.storeCreatedVcs(
@@ -174,144 +275,18 @@ public class ProcessCriCallbackHandler
                         callbackRequest, clientOAuthSessionItem);
             }
 
-            var journeyResponse =
-                    criCheckingService.checkVcResponse(
-                            vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
-
-            return journeyResponse.toObjectMap();
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logErrorMessage(
-                    "Error in process cri callback lambda",
-                    errorResponse.getCode(),
-                    errorResponse.getMessage());
-
-            return switch (errorResponse) {
-                case INVALID_OAUTH_STATE -> StepFunctionHelpers.generatePageOutputMap(
-                        "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID);
-                case NO_IPV_FOR_CRI_OAUTH_SESSION -> {
-                    var pageOutput =
-                            StepFunctionHelpers.generatePageOutputMap(
-                                    "error",
-                                    HttpStatus.SC_UNAUTHORIZED,
-                                    PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
-                    pageOutput.put(
-                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
-                    yield pageOutput;
-                }
-                default -> StepFunctionHelpers.generateErrorOutputMap(
-                        HttpStatus.SC_BAD_REQUEST, errorResponse);
-            };
-        } catch (JsonProcessingException | SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-
-            var visitedCri =
-                    new VisitedCredentialIssuerDetailsDto(
-                            callbackRequest.getCredentialIssuerId(),
-                            null,
-                            false,
-                            OAuth2Error.SERVER_ERROR_CODE);
-
-            ipvSessionItem.addVisitedCredentialIssuerDetails(visitedCri);
-
-            return JOURNEY_ERROR.toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error("Unable to get JWT claims set", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
-        } catch (VerifiableCredentialException
-                | VerifiableCredentialResponseException
-                | CiPutException
-                | CiPostMitigationsException e) {
-            var visitedCri =
-                    new VisitedCredentialIssuerDetailsDto(
-                            callbackRequest.getCredentialIssuerId(),
-                            null,
-                            false,
-                            OAuth2Error.SERVER_ERROR_CODE);
-
-            ipvSessionItem.addVisitedCredentialIssuerDetails(visitedCri);
-
-            if (callbackRequest.getCredentialIssuerId().equals(DCMAW_CRI)
-                    && e instanceof VerifiableCredentialException vce
-                    && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
-                LogHelper.logErrorMessage(
-                        "404 received from DCMAW CRI", vce.getErrorResponse().getMessage());
-                return JOURNEY_NOT_FOUND.toObjectMap();
-            }
-
-            return JOURNEY_ERROR.toObjectMap();
-        } catch (CiRetrievalException e) {
-            LOGGER.error("Error when fetching CIs from storage system", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_GET_STORED_CIS)
-                    .toObjectMap();
-        } catch (ConfigException e) {
-            LOGGER.error("Configuration error", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
-                    .toObjectMap();
-        } catch (CredentialParseException e) {
-            LOGGER.error("Failed to parse successful VC Store items.", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
-                    .toObjectMap();
-        } catch (CriApiException e) {
-            LOGGER.error("Error retrieving access token or credential", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
-                    .toObjectMap();
+            return criCheckingService.checkVcResponse(
+                    vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
         } finally {
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            if (ipvSessionItem != null) {
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+            }
         }
     }
 
-    private void validateCallbackRequest(CriCallbackRequest callbackRequest)
+    private void validateCriOauthSessionItem(
+            CriOAuthSessionItem criOAuthSessionItem, CriCallbackRequest callbackRequest)
             throws HttpResponseExceptionWithErrorBody {
-        var criId = callbackRequest.getCredentialIssuerId();
-        if (criId.isBlank()) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-        }
-        if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-        }
-
-        var authorisationCode = callbackRequest.getAuthorizationCode();
-        if (authorisationCode.isBlank()) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-
-        var ipvSessionId = callbackRequest.getIpvSessionId();
-        if (ipvSessionId.isBlank()) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        var criOAuthSessionId = callbackRequest.getState();
-        if (criOAuthSessionId.isBlank()) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
-        }
-    }
-
-    private CriOAuthSessionItem getValidCriOauthSessionItem(CriCallbackRequest callbackRequest)
-            throws HttpResponseExceptionWithErrorBody {
-        CriOAuthSessionItem criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
         if (criOAuthSessionItem == null) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
@@ -321,6 +296,14 @@ public class ProcessCriCallbackHandler
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
-        return criOAuthSessionItem;
+    }
+
+    private APIGatewayProxyResponseEvent buildErrorResponse(
+            Exception e, int status, ErrorResponse errorResponse) {
+        LOGGER.error(errorResponse.getMessage(), e);
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                status,
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH, status, errorResponse, e.getMessage()));
     }
 }

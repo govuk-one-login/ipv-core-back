@@ -14,17 +14,14 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.*;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
@@ -35,7 +32,6 @@ import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
@@ -70,7 +66,6 @@ public class CriCheckingService {
     private final AuditService auditService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
-    private final CriOAuthSessionService criOAuthSessionService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
 
     @ExcludeFromGeneratedCoverageReport
@@ -79,17 +74,15 @@ public class CriCheckingService {
             AuditService auditService,
             UserIdentityService userIdentityService,
             CiMitService ciMitService,
-            CriOAuthSessionService criOAuthSessionService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
-        this.criOAuthSessionService = criOAuthSessionService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
     }
 
-    public Map<String, Object> handleCallbackError(
+    public JourneyResponse handleCallbackError(
             CriCallbackRequest callbackRequest,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
@@ -128,22 +121,18 @@ public class CriCheckingService {
         LogHelper.logCriOauthError("OAuth error received from CRI", error, errorDescription, criId);
 
         return (switch (error) {
-                    case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
-                    case OAuth2Error
-                            .TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
-                    default -> JOURNEY_ERROR;
-                })
-                .toObjectMap();
+            case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
+            case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
+            default -> JOURNEY_ERROR;
+        });
     }
 
     public void validateVcResponse(
             VerifiableCredentialResponse vcResponse,
-            CriCallbackRequest callbackRequest,
-            ClientOAuthSessionItem clientOAuthSessionItem)
-            throws VerifiableCredentialResponseException {
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            CriOAuthSessionItem criOAuthSessionItem)
+            throws VerifiableCredentialResponseException, VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
-        var criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
 
         if (!vcResponse.getUserId().equals(userId)) {
@@ -152,11 +141,11 @@ public class CriCheckingService {
                     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE);
         }
 
-        vcResponse
-                .getVerifiableCredentials()
-                .forEach((vc) -> verifiableCredentialJwtValidator.validate(vc, criConfig, userId));
+        var vcs = vcResponse.getVerifiableCredentials();
+        for (var vc : vcs) {
+            verifiableCredentialJwtValidator.validate(vc, criConfig, userId);
+        }
     }
-    ;
 
     public JourneyResponse checkVcResponse(
             VerifiableCredentialResponse vcResponse,
@@ -164,14 +153,14 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, ParseException {
+                    ParseException, CredentialParseException {
         var ipAddress = callbackRequest.getIpAddress();
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         var cis = ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress);
 
-        if (userIdentityService.breachingCiThreshold(cis)) {
+        if (userIdentityService.isBreachingCiThreshold(cis)) {
             ipvSessionItem.setCiFail(true); // TODO: Remove ciFail flag in PYIC-3797
 
             var cimitConfig = configService.getCimitConfig();
