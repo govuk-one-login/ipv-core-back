@@ -2,7 +2,8 @@ package uk.gov.di.ipv.core.library.verifiablecredential.exception;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 
-public class VerifiableCredentialResponseException extends Exception {
+// Should extend exception to be checkable?
+public class VerifiableCredentialResponseException extends RuntimeException {
 
     private final ErrorResponse errorResponse;
 

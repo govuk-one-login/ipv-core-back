@@ -1581,7 +1581,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /journey/cri/callback-old
+            Path: /journey/cri/callback
             Method: POST
       Logging:
         Destinations:
