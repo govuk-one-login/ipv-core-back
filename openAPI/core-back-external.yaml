@@ -59,8 +59,7 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json:
-                Fn::ToJsonString:
-                  Fn::FindInMap: [ EnvironmentConfiguration, !Ref AWS::AccountId, jwksJson ]
+                Fn::FindInMap: [ EnvironmentConfiguration, !Ref AWS::AccountId, jwksJson ]
 
   /healthcheck:
     get:
