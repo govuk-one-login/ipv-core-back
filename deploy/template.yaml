@@ -119,7 +119,7 @@ Mappings:
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs_-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"},{"kty":"EC","use":"sig","crv":"P-256","x":"-9ZDHkPEjXmrw9LUeM7AvXZCCgqQiac7IJq5vVKlEtg","y":"3AIZRCWvBZj_9poUFM3tt7rA8MmoG_dtSs5AJ_gLrcA","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs_-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"},{"kty":"EC","use":"sig","crv":"P-256","x":"-9ZDHkPEjXmrw9LUeM7AvXZCCgqQiac7IJq5vVKlEtg","y":"3AIZRCWvBZj_9poUFM3tt7rA8MmoG_dtSs5AJ_gLrcA","alg":"ES256"}]}
     "175872367215": # Core dev02
       provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
@@ -132,7 +132,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"78GbNJ8VgcyUYnK76UzFoGzRSfZvyY_Jp5MoOWMd5-RGXNc9WXbYEhS2Hbk0S2TKTuElc288dvr5alKDUunRKcYKlz6U6je9L2VSFfWkjtl2Wf6HqtqQLthx_EwdrIXeZ7GixMHwOyT0siqN3329xUmHfII3p9kr7Uy7of_Ve1yxiziywbDMHjbL1B96t8sT1msUzU8MeGavq6sB0_4HPghCCEh14vrpHfQPOM0J3ajZb2wy4cO8wehvq15ZM0Kv05jqbhi8b7uUI4JRBohjea2l9Ngirz-tUEJu6W3MEZeik4fVyYq64K1nsHgyHme3IwVaCmSQpzTHFEaKE30XCw"},{"kty":"EC","use":"sig","crv":"P-256","x":"fGDnWQYfwc7xiG67CITU0SSZsSXW823L4CsC4pkMw1s","y":"NT0xTxmDxuPwy0lGXv-r7KaQNJB0ZFDyBQ7dWBO9nbg","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"78GbNJ8VgcyUYnK76UzFoGzRSfZvyY_Jp5MoOWMd5-RGXNc9WXbYEhS2Hbk0S2TKTuElc288dvr5alKDUunRKcYKlz6U6je9L2VSFfWkjtl2Wf6HqtqQLthx_EwdrIXeZ7GixMHwOyT0siqN3329xUmHfII3p9kr7Uy7of_Ve1yxiziywbDMHjbL1B96t8sT1msUzU8MeGavq6sB0_4HPghCCEh14vrpHfQPOM0J3ajZb2wy4cO8wehvq15ZM0Kv05jqbhi8b7uUI4JRBohjea2l9Ngirz-tUEJu6W3MEZeik4fVyYq64K1nsHgyHme3IwVaCmSQpzTHFEaKE30XCw"},{"kty":"EC","use":"sig","crv":"P-256","x":"fGDnWQYfwc7xiG67CITU0SSZsSXW823L4CsC4pkMw1s","y":"NT0xTxmDxuPwy0lGXv-r7KaQNJB0ZFDyBQ7dWBO9nbg","alg":"ES256"}]}
     "457601271792": # Build
       provisionedConcurrency: 1
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
@@ -145,7 +145,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"nel7ibmSTaXWhwEAdqKTiEVcxsYgv6CdXaz90aVN7IorlaCeNj0j06OsA4zdmWEjj21wEZULsxPoZo5N_tsQ7NtOnOkcnDc-g_Nbpt0jelzJSbFRkx3kwXy8YIYKR_myNbiHNTTc7S6GkQRg0N1MPWtzoEKYJs41AN4onrsvUzgpCypWwPy2-ppsaDvms_11YA7A7x3zHj9oKCPJ_uk_0MV3vZAxCxbiPb9ABGWcoGQ5QKGfv40ylBsEdOhE3w-3SAAQIrrHyMRGGiPxcNO161XVL-lOnYt93FgEe16LgpfE22UdENfHnG0UQaTgph1Dm24oqn7qpPTY2DfER5HCKQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"LQJYHsycIM86SCSA2oKk3j-RLGRspmo1Nng1kAz9jK4","y":"l209YmiEqStMlQhz63NASWlV1MtvmPDIWMB0yUnofJA","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"nel7ibmSTaXWhwEAdqKTiEVcxsYgv6CdXaz90aVN7IorlaCeNj0j06OsA4zdmWEjj21wEZULsxPoZo5N_tsQ7NtOnOkcnDc-g_Nbpt0jelzJSbFRkx3kwXy8YIYKR_myNbiHNTTc7S6GkQRg0N1MPWtzoEKYJs41AN4onrsvUzgpCypWwPy2-ppsaDvms_11YA7A7x3zHj9oKCPJ_uk_0MV3vZAxCxbiPb9ABGWcoGQ5QKGfv40ylBsEdOhE3w-3SAAQIrrHyMRGGiPxcNO161XVL-lOnYt93FgEe16LgpfE22UdENfHnG0UQaTgph1Dm24oqn7qpPTY2DfER5HCKQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"LQJYHsycIM86SCSA2oKk3j-RLGRspmo1Nng1kAz9jK4","y":"l209YmiEqStMlQhz63NASWlV1MtvmPDIWMB0yUnofJA","alg":"ES256"}]}
     "335257547869": # Staging
       provisionedConcurrency: 1
       cimitAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -158,7 +158,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"yB5V0Tc9KEV5_zGUHLu0ZVX0xbDhCyaNwWjJILV0pJE-HmAUc8Azc42MY9mAm0D3LYF8PcWsBa1cIgJF6z7jLoM43PR_BZafvYeW7GwIun-pugSQO5ljKzUId42ydh0ynwEXJEoMQd3p4e_EF4UtyGCV108TgoqDvD50dtqNOw1wBsfbq4rUaRTxhpJLIo8tujmGpf1YVWymQEk-FlyNLlZL4UE_eEyp-qztIsVXJfyhcC_ezrr5e0FnZ1U0iJavhdmBqmIaLi3SjNawNdEQRWDJd2Fit4x9bFIqpZKqc1pGLu39UEaHLzRgi0hVDQhG5A7LpErOMjWquS2lmkwa3w"},{"kty":"EC","use":"sig","crv":"P-256","x":"ke1TMFqMoFyxx5yzNtQQll4vOrxvTtPJCHnS4j8zh2U","y":"qDK_H8AzJKaHmMshx9Ljv-0tzNkWa-JEGS2mdtJR1OA","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"yB5V0Tc9KEV5_zGUHLu0ZVX0xbDhCyaNwWjJILV0pJE-HmAUc8Azc42MY9mAm0D3LYF8PcWsBa1cIgJF6z7jLoM43PR_BZafvYeW7GwIun-pugSQO5ljKzUId42ydh0ynwEXJEoMQd3p4e_EF4UtyGCV108TgoqDvD50dtqNOw1wBsfbq4rUaRTxhpJLIo8tujmGpf1YVWymQEk-FlyNLlZL4UE_eEyp-qztIsVXJfyhcC_ezrr5e0FnZ1U0iJavhdmBqmIaLi3SjNawNdEQRWDJd2Fit4x9bFIqpZKqc1pGLu39UEaHLzRgi0hVDQhG5A7LpErOMjWquS2lmkwa3w"},{"kty":"EC","use":"sig","crv":"P-256","x":"ke1TMFqMoFyxx5yzNtQQll4vOrxvTtPJCHnS4j8zh2U","y":"qDK_H8AzJKaHmMshx9Ljv-0tzNkWa-JEGS2mdtJR1OA","alg":"ES256"}]}
     "991138514218": # Integration
       provisionedConcurrency: 1
       cimitAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -171,7 +171,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"zgTML6YZ-XUEPQprWBlWoZ9FwasmRGsdLHLgAhyNWDw4PtYaihhpSOxoI-86IeO1qAe1nfqrFGW-X37jxDBzclY_TxQkivEQqLCWmohuFcpn5dxz6SSC-WFhwLtedC8gXUv1JP4E0mgr7OKWh7t3RQcpGyTaAGXh2wywZXytVOLDcwwPb0PeFiC8MR0A8tIpYyx1yXjKcs1Aga8Xy0HFV9pU5gbB7a_XLl7j3CHePsfImYi4wG17y-jbN7-vF3GDpAqyRa78ctTZT9_WBWzPcX8yiRmHf7ID9br2MsdrTO9YyVWfI0z7OZB1GnNe5lJhGBXvd3xg4UjWbnHikliENQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"BTQgVB54DOIp54xdUIX4HkT_zBv6GuWLWTTNGq2MytI","y":"LQQjlydKN1HWdRPpPijRNlBkn-jh83g0ARb26k6YXuo","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"zgTML6YZ-XUEPQprWBlWoZ9FwasmRGsdLHLgAhyNWDw4PtYaihhpSOxoI-86IeO1qAe1nfqrFGW-X37jxDBzclY_TxQkivEQqLCWmohuFcpn5dxz6SSC-WFhwLtedC8gXUv1JP4E0mgr7OKWh7t3RQcpGyTaAGXh2wywZXytVOLDcwwPb0PeFiC8MR0A8tIpYyx1yXjKcs1Aga8Xy0HFV9pU5gbB7a_XLl7j3CHePsfImYi4wG17y-jbN7-vF3GDpAqyRa78ctTZT9_WBWzPcX8yiRmHf7ID9br2MsdrTO9YyVWfI0z7OZB1GnNe5lJhGBXvd3xg4UjWbnHikliENQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"BTQgVB54DOIp54xdUIX4HkT_zBv6GuWLWTTNGq2MytI","y":"LQQjlydKN1HWdRPpPijRNlBkn-jh83g0ARb26k6YXuo","alg":"ES256"}]}
     "075701497069": # Production
       provisionedConcurrency: 1
       cimitAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -184,7 +184,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"4K_6GH__FQSD6Yk_5nKYzRCwrYcQy7wGHH2cZ7EXo_9-SNRcbQlzd-NVTplIk9x7-t7g8U36z_I8CM_woGgJzM8DNREecxH_4YEYKOqbqHSnK7iICJ18Wfb-mNr20Dt-Ik1oQja6aKPqIj4Jl4WW0vHMhDfUNP_iOi3zhNJsTZwYjVQWqLzmWfAqO_61d2XbLDIgubKqAtTFWnxeXuBUVZAbq03qmvzyekRUvZtck7JuQUa9mj2gJC0YPLoLDM-j0QDGWrPnDA2L2VmmF1wnrbeA0zSUxxfdffFH_L0cTgzdTQtv6iGQrkfHnTTk1TQe0-wxJEQz5FlcXYl6qSrhsw"},{"kty":"EC","use":"sig","crv":"P-256","x":"UPvU5NPmELrWiWSMVfDD7G8u3EJYryqPIZ46W9MAlRc","y":"r77F2-KPhpvTIGEWgt5SmavSvBUHCqWUxD6RG_FJHVk","alg":"ES256"}]}'
+      jwksJson: {"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"4K_6GH__FQSD6Yk_5nKYzRCwrYcQy7wGHH2cZ7EXo_9-SNRcbQlzd-NVTplIk9x7-t7g8U36z_I8CM_woGgJzM8DNREecxH_4YEYKOqbqHSnK7iICJ18Wfb-mNr20Dt-Ik1oQja6aKPqIj4Jl4WW0vHMhDfUNP_iOi3zhNJsTZwYjVQWqLzmWfAqO_61d2XbLDIgubKqAtTFWnxeXuBUVZAbq03qmvzyekRUvZtck7JuQUa9mj2gJC0YPLoLDM-j0QDGWrPnDA2L2VmmF1wnrbeA0zSUxxfdffFH_L0cTgzdTQtv6iGQrkfHnTTk1TQe0-wxJEQz5FlcXYl6qSrhsw"},{"kty":"EC","use":"sig","crv":"P-256","x":"UPvU5NPmELrWiWSMVfDD7G8u3EJYryqPIZ46W9MAlRc","y":"r77F2-KPhpvTIGEWgt5SmavSvBUHCqWUxD6RG_FJHVk","alg":"ES256"}]}
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
