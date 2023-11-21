@@ -119,7 +119,7 @@ Mappings:
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"nel7ibmSTaXWhwEAdqKTiEVcxsYgv6CdXaz90aVN7IorlaCeNj0j06OsA4zdmWEjj21wEZULsxPoZo5N_tsQ7NtOnOkcnDc-g_Nbpt0jelzJSbFRkx3kwXy8YIYKR_myNbiHNTTc7S6GkQRg0N1MPWtzoEKYJs41AN4onrsvUzgpCypWwPy2-ppsaDvms_11YA7A7x3zHj9oKCPJ_uk_0MV3vZAxCxbiPb9ABGWcoGQ5QKGfv40ylBsEdOhE3w-3SAAQIrrHyMRGGiPxcNO161XVL-lOnYt93FgEe16LgpfE22UdENfHnG0UQaTgph1Dm24oqn7qpPTY2DfER5HCKQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"LQJYHsycIM86SCSA2oKk3j-RLGRspmo1Nng1kAz9jK4","y":"l209YmiEqStMlQhz63NASWlV1MtvmPDIWMB0yUnofJA","alg":"ES256"}]}'
+      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs_-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"},{"kty":"EC","use":"sig","crv":"P-256","x":"-9ZDHkPEjXmrw9LUeM7AvXZCCgqQiac7IJq5vVKlEtg","y":"3AIZRCWvBZj_9poUFM3tt7rA8MmoG_dtSs5AJ_gLrcA","alg":"ES256"}]}'
     "175872367215": # Core dev02
       provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
@@ -132,7 +132,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
-      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"nel7ibmSTaXWhwEAdqKTiEVcxsYgv6CdXaz90aVN7IorlaCeNj0j06OsA4zdmWEjj21wEZULsxPoZo5N_tsQ7NtOnOkcnDc-g_Nbpt0jelzJSbFRkx3kwXy8YIYKR_myNbiHNTTc7S6GkQRg0N1MPWtzoEKYJs41AN4onrsvUzgpCypWwPy2-ppsaDvms_11YA7A7x3zHj9oKCPJ_uk_0MV3vZAxCxbiPb9ABGWcoGQ5QKGfv40ylBsEdOhE3w-3SAAQIrrHyMRGGiPxcNO161XVL-lOnYt93FgEe16LgpfE22UdENfHnG0UQaTgph1Dm24oqn7qpPTY2DfER5HCKQ"},{"kty":"EC","use":"sig","crv":"P-256","x":"LQJYHsycIM86SCSA2oKk3j-RLGRspmo1Nng1kAz9jK4","y":"l209YmiEqStMlQhz63NASWlV1MtvmPDIWMB0yUnofJA","alg":"ES256"}]}'
+      jwksJson: '{"keys":[{"kty":"RSA","e":"AQAB","use":"enc","alg":"RS256","n":"78GbNJ8VgcyUYnK76UzFoGzRSfZvyY_Jp5MoOWMd5-RGXNc9WXbYEhS2Hbk0S2TKTuElc288dvr5alKDUunRKcYKlz6U6je9L2VSFfWkjtl2Wf6HqtqQLthx_EwdrIXeZ7GixMHwOyT0siqN3329xUmHfII3p9kr7Uy7of_Ve1yxiziywbDMHjbL1B96t8sT1msUzU8MeGavq6sB0_4HPghCCEh14vrpHfQPOM0J3ajZb2wy4cO8wehvq15ZM0Kv05jqbhi8b7uUI4JRBohjea2l9Ngirz-tUEJu6W3MEZeik4fVyYq64K1nsHgyHme3IwVaCmSQpzTHFEaKE30XCw"},{"kty":"EC","use":"sig","crv":"P-256","x":"fGDnWQYfwc7xiG67CITU0SSZsSXW823L4CsC4pkMw1s","y":"NT0xTxmDxuPwy0lGXv-r7KaQNJB0ZFDyBQ7dWBO9nbg","alg":"ES256"}]}'
     "457601271792": # Build
       provisionedConcurrency: 1
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
