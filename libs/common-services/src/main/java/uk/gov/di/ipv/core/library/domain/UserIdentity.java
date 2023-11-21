@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
@@ -54,7 +52,6 @@ public class UserIdentity {
 
     @JsonProperty private String vtm;
 
-    @JsonInclude(Include.NON_NULL)
     @JsonProperty(EXIT_CODE_NAME)
     private List<String> exitCode;
 

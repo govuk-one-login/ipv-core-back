@@ -32,3 +32,14 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [ "version-update:semver-patch" ]
+    groups:
+      aws:
+        patterns:
+          - "@aws-*"
+      babel:
+        patterns:
+          - "@babel/*"
+      eslint:
+        patterns:
+          - "eslint-*"
+          - "@typescript-eslint/*"
