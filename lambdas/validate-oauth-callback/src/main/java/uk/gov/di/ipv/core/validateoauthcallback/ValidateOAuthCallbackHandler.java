@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.validateoauthcallback;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -211,17 +210,6 @@ public class ValidateOAuthCallbackHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return JOURNEY_ERROR;
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse CRI configuration because: {}", e.getMessage());
-
-            setVisitedCredentials(
-                    ipvSessionItem,
-                    criOAuthSessionItem.getCriId(),
-                    false,
-                    OAuth2Error.SERVER_ERROR_CODE);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            return JOURNEY_ERROR;
         }
     }
 
@@ -284,7 +272,7 @@ public class ValidateOAuthCallbackHandler
     @Tracing
     private void validate(
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
-            throws HttpResponseExceptionWithErrorBody, JsonProcessingException {
+            throws HttpResponseExceptionWithErrorBody {
 
         if (StringUtils.isBlank(callbackRequest.getAuthorizationCode())) {
             throw new HttpResponseExceptionWithErrorBody(
