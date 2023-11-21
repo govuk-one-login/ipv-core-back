@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -242,10 +243,16 @@ public class ProcessCriCallbackHandler
 
             if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
                 criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
-                criStoringService.storeCriResponse(
-                        callbackRequest, clientOAuthSessionItem);
+                criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
             } else {
-                vcResponse.getVerifiableCredentials().forEach((vc) -> verifiableCredentialJwtValidator.validate(vc, configService.getCriConfig(criOAuthSessionItem), clientOAuthSessionItem.getUserId()));
+                vcResponse
+                        .getVerifiableCredentials()
+                        .forEach(
+                                (vc) ->
+                                        verifiableCredentialJwtValidator.validate(
+                                                vc,
+                                                configService.getCriConfig(criOAuthSessionItem),
+                                                clientOAuthSessionItem.getUserId()));
                 criStoringService.storeCreatedVcs(
                         vcResponse, callbackRequest, clientOAuthSessionItem);
             }
@@ -254,6 +261,12 @@ public class ProcessCriCallbackHandler
                     vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
         } finally {
             if (ipvSessionItem != null) {
+                ipvSessionItem.addVisitedCredentialIssuerDetails(
+                        new VisitedCredentialIssuerDetailsDto(
+                                callbackRequest.getCredentialIssuerId(),
+                                null,
+                                false,
+                                null)); // TODO: Only need criId until we remove in PYIC-3799
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
         }

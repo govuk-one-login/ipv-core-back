@@ -21,7 +21,7 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
-  /journey/cri/callback-old:
+  /journey/cri/callback:
     post:
       description: |
         Called when a user comes back to core on the frontend's callback endpoint, after visiting a CRI. Triggers a step
@@ -35,62 +35,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
-        type: "aws"
-        credentials:
-          Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
-        passthroughBehavior: "when_no_match"
-        requestTemplates:
-          application/json:
-            Fn::Sub: |
-              #set($inputRoot = $input.path('$'))
-              {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
-              }
-        responses:
-          default:
-            statusCode: 200
-            responseTemplates:
-              application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-
-                #if ($bodyObj.status == "SUCCEEDED")
-                  #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
-                  #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
-                  $bodyObj.output
-
-                #elseif ($bodyObj.status == "FAILED")
-                  #set($context.responseOverride.status = 500)
+        'Fn::If':
+          - IsSubscriptionEnviroment
+          - type: "aws"
+            credentials:
+              Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
+            httpMethod: "POST"
+            uri:
+              Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
+            passthroughBehavior: "when_no_match"
+            requestTemplates:
+              application/json:
+                Fn::Sub: |
+                  #set($inputRoot = $input.path('$'))
                   {
-                    "cause": "$bodyObj.cause",
-                    "error": "$bodyObj.error"
+                    "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
+                    "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
                   }
-                #else
-                  #set($context.responseOverride.status = 504)
-                  $bodyObj
-                #end
-
-  /journey/cri/callback:
-    post:
-      description: |
-        Called when a user comes back to core on the frontend's callback endpoint, after visiting a CRI. Triggers a 
-        lambda for validating the oauth callback, retrieving the access token and fetching the credential.
-      responses:
-        200:
-          description: "Returns a journey or error response"
-          content:
-            application/json:
-              schema:
-                type: "object"
-      x-amazon-apigateway-integration:
-        type: "aws_proxy"
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
+            responses:
+              default:
+                statusCode: 200
+                responseTemplates:
+                  application/json: |
+                    #set ($bodyObj = $util.parseJson($input.body))
+    
+                    #if ($bodyObj.status == "SUCCEEDED")
+                      #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
+                      #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
+                      $bodyObj.output
+    
+                    #elseif ($bodyObj.status == "FAILED")
+                      #set($context.responseOverride.status = 500)
+                      {
+                        "cause": "$bodyObj.cause",
+                        "error": "$bodyObj.error"
+                      }
+                    #else
+                      #set($context.responseOverride.status = 504)
+                      $bodyObj
+                    #end
+          - type: "aws_proxy"
+            httpMethod: "POST"
+            uri:
+              Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
+            passthroughBehavior: "when_no_match"
 
   /journey/{journeyStep}:
     post:

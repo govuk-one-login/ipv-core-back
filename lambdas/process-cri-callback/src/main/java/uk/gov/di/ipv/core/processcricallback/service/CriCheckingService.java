@@ -173,8 +173,7 @@ public class CriCheckingService {
     }
 
     public void validatePendingVcResponse(
-            VerifiableCredentialResponse vcResponse,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            VerifiableCredentialResponse vcResponse, ClientOAuthSessionItem clientOAuthSessionItem)
             throws VerifiableCredentialResponseException, VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
 

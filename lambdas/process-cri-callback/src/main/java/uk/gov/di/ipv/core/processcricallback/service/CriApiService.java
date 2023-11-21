@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
@@ -60,9 +59,7 @@ public class CriApiService {
     private final JWSSigner signer;
 
     @ExcludeFromGeneratedCoverageReport
-    public CriApiService(
-            ConfigService configService,
-            JWSSigner signer) {
+    public CriApiService(ConfigService configService, JWSSigner signer) {
         this.configService = configService;
         this.signer = signer;
     }
