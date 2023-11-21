@@ -52,7 +52,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED;
 
 @WireMockTest(httpPort = ConfigService.LOCALHOST_PORT)
 @ExtendWith(MockitoExtension.class)
@@ -135,7 +137,8 @@ class ConfigServiceTest {
         private final String jsonCredentialIssuerConfig =
                 String.format(
                         "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
-                        EC_PRIVATE_KEY_JWK, RSA_ENCRYPTION_PUBLIC_JWK);
+                        EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
+                        RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
 
         private final CredentialIssuerConfig expectedBaseCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -181,8 +184,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStoreSingleParameter()
-                throws JsonProcessingException {
+        void shouldGetCredentialIssuerFromParameterStoreSingleParameter() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
@@ -197,8 +199,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStoreMultipleParameters()
-                throws JsonProcessingException {
+        void shouldGetCredentialIssuerFromParameterStoreMultipleParameters() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
@@ -216,7 +217,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void getCriConfigShouldGetConfigForCriOauthSessionItem() throws JsonProcessingException {
+        void getCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
@@ -244,7 +245,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldApplyFeatureSetOverridesOnActiveConfiguration() throws JsonProcessingException {
+        void shouldApplyFeatureSetOverridesOnActiveConfiguration() {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
@@ -266,7 +267,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldOverrideActiveConfigurationForAFeatureSet() throws JsonProcessingException {
+        void shouldOverrideActiveConfigurationForAFeatureSet() {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
@@ -283,8 +284,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration()
-                throws JsonProcessingException {
+        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration() {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
