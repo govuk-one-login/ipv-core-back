@@ -950,7 +950,7 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
-        userIdentityService.deleteVcStoreItems("a-users-id");
+        userIdentityService.deleteVcStoreItems("a-users-id", true);
 
         verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
         verify(mockDataStore).delete("a-users-id", FRAUD_CRI);

@@ -36,6 +36,7 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_JOURNEY = "journey/reset-identity";
+    private static final Boolean IS_USER_INITIATED = true;
     private static final JourneyRequest event =
             JourneyRequest.builder()
                     .ipvSessionId(TEST_SESSION_ID)
@@ -43,6 +44,7 @@ public class ResetIdentityHandlerTest {
                     .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                     .journey(TEST_JOURNEY)
                     .featureSet(TEST_FEATURE_SET)
+                    .isUserInitiated(IS_USER_INITIATED)
                     .build();
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
@@ -83,7 +85,7 @@ public class ResetIdentityHandlerTest {
                 objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
-        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
+        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID, IS_USER_INITIATED);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }

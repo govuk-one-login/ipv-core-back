@@ -117,7 +117,7 @@ public class UserIdentityService {
         return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
     }
 
-    public void deleteVcStoreItems(String userId) {
+    public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
         if (!vcStoreItems.isEmpty()) {
             var message =
@@ -127,7 +127,11 @@ public class UserIdentityService {
                                     "Deleting existing issued VCs.")
                             .with(
                                     LogHelper.LogField.LOG_NUMBER_OF_VCS.getFieldName(),
-                                    String.valueOf(vcStoreItems.size()));
+                                    String.valueOf(vcStoreItems.size()))
+                            .with(
+                                    LogHelper.LogField.LOG_IS_USER_INITIATED.getFieldName(),
+                                    String.valueOf(isUserInitiated)
+                            );
             LOGGER.info(message);
         }
         for (VcStoreItem item : vcStoreItems) {
