@@ -51,18 +51,14 @@ paths:
               schema:
                 type: "object"
       x-amazon-apigateway-integration:
-        type: "aws"
-        httpMethod: "GET"
-        uri:
-          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:ssm:action/GetParametersByPath&Path=/deploy/core/outputs/'
-        credentials:
-          Fn::GetAtt: ["JWKSParamRole", "Arn"]
+        type: "MOCK"
+        requestTemplates:
+          application/json: "{\"statusCode\":200}"
         responses:
-          default:
-            statusCode: "200"
+          200:
+            statusCode: 200
             responseTemplates:
-              application/json: "#set($inputRoot = $input.path('$')){\"keys\":[#foreach($elem in $inputRoot.GetParametersByPathResponse.GetParametersByPathResult.Parameters)$elem.Value#if($foreach.hasNext),#end#end]}"
-        passthroughBehavior: "when_no_match"
+              application/json: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, jwksJson ]
 
   /healthcheck:
     get:
