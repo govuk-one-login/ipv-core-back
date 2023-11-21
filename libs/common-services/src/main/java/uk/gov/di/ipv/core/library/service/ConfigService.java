@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -269,22 +270,19 @@ public class ConfigService {
             try {
                 return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
             } catch (JsonProcessingException e) {
-                LOGGER.error(
-                        "Failed to parse credential issuer configuration at parameter path {} because: {}",
-                        pathTemplate,
-                        e);
-                throw new RuntimeException(e);
+                throw new ConfigParseException(
+                        String.format(
+                                "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
+                                pathTemplate, e));
             }
         }
         Map<String, String> parameters = getSsmParameters(pathTemplate, false, criId, connection);
         if (parameters != null && !parameters.isEmpty()) {
             return objectMapper.convertValue(parameters, CredentialIssuerConfig.class);
-        } else {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
         }
+        throw new NoConfigForConnectionException(
+                String.format(
+                        "No config found for connection: '%s' and criId: '%s'", connection, criId));
     }
 
     public String getActiveConnection(String credentialIssuerId) {
