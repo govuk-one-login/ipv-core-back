@@ -102,8 +102,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceiveSuccessResponseOnSuccessfulRequest()
-            throws SqsException {
+    void shouldReceiveSuccessResponseOnSuccessfulRequest() throws SqsException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         JSONObject testCredential = new JSONObject();
@@ -189,8 +188,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldThrowJourneyErrorIfSqsExceptionIsThrown()
-            throws SqsException {
+    void shouldThrowJourneyErrorIfSqsExceptionIsThrown() throws SqsException {
         mockServiceCallsAndSessionItem();
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
@@ -236,8 +234,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException()
-            throws SqsException {
+    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws SqsException {
         mockServiceCallsAndSessionItem();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -268,8 +265,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey()
-            throws URISyntaxException {
+    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey() throws URISyntaxException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
         CredentialIssuerConfig testCriNotRequiringApiKey =
                 new CredentialIssuerConfig(

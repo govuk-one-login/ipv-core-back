@@ -245,8 +245,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfVisitedCri()
-            throws ParseException {
+    void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
         mockServiceCalls();
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
@@ -669,8 +668,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse()
-            throws SqsException {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() throws SqsException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
