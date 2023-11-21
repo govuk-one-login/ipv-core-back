@@ -172,23 +172,16 @@ public class CriCheckingService {
         }
     }
 
-    public void validateVcResponse(
+    public void validatePendingVcResponse(
             VerifiableCredentialResponse vcResponse,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            CriOAuthSessionItem criOAuthSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem)
             throws VerifiableCredentialResponseException, VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
-        var criConfig = configService.getCriConfig(criOAuthSessionItem);
 
         if (!vcResponse.getUserId().equals(userId)) {
             throw new VerifiableCredentialResponseException(
                     HTTPResponse.SC_SERVER_ERROR,
                     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE);
-        }
-
-        var vcs = vcResponse.getVerifiableCredentials();
-        for (var vc : vcs) {
-            verifiableCredentialJwtValidator.validate(vc, criConfig, userId);
         }
     }
 

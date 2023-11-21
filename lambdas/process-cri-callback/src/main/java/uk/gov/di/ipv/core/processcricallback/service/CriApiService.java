@@ -58,16 +58,13 @@ public class CriApiService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final JWSSigner signer;
-    private final CriOAuthSessionService criOAuthSessionService;
 
     @ExcludeFromGeneratedCoverageReport
     public CriApiService(
             ConfigService configService,
-            JWSSigner signer,
-            CriOAuthSessionService criOAuthSessionService) {
+            JWSSigner signer) {
         this.configService = configService;
         this.signer = signer;
-        this.criOAuthSessionService = criOAuthSessionService;
     }
 
     private String getApiKey(
@@ -182,6 +179,7 @@ public class CriApiService {
 
         try {
             HTTPResponse response = credentialRequest.send();
+
             if (!response.indicatesSuccess()) {
                 LogHelper.logErrorMessage(
                         "Error retrieving credential",

@@ -1346,6 +1346,54 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+          CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1353,19 +1401,6 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1380,11 +1415,30 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/connections/*/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - Statement:
+#            - Sid: EnforceStayinSpecificVpc
+#              Effect: Allow
+#              Action:
+#                - 'lambda:CreateFunction'
+#                - 'lambda:UpdateFunctionConfiguration'
+#              Resource:
+#                - "*"
+#              Condition:
+#                StringEquals:
+#                  "lambda:VpcIds":
+#                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsSigningKeyPermission
               Effect: Allow
               Action:
@@ -1398,6 +1452,69 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: invokePutCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
+            - Sid: invokeGetContraIndicatorCredentialFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
+            - Sid: invokePostCiMitigationFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api

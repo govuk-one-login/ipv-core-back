@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -63,12 +64,14 @@ public class ProcessCriCallbackHandler
     private final CriCheckingService criCheckingService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     public ProcessCriCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriApiService vcFetchingService,
             CriStoringService criStoringService,
@@ -79,6 +82,7 @@ public class ProcessCriCallbackHandler
         this.criCheckingService = criCheckingService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         VcHelper.setConfigService(this.configService);
     }
@@ -88,6 +92,7 @@ public class ProcessCriCallbackHandler
         configService = new ConfigService();
         ipvSessionService = new IpvSessionService(configService);
         criOAuthSessionService = new CriOAuthSessionService(configService);
+        verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
 
         var userIdentityService = new UserIdentityService(configService);
@@ -101,7 +106,7 @@ public class ProcessCriCallbackHandler
         signer.setKeyId(configService.getSigningKeyId());
         VcHelper.setConfigService(configService);
 
-        criApiService = new CriApiService(configService, signer, criOAuthSessionService);
+        criApiService = new CriApiService(configService, signer);
         criCheckingService =
                 new CriCheckingService(
                         configService,
@@ -185,7 +190,12 @@ public class ProcessCriCallbackHandler
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
             throws ParseCriCallbackRequestException, InvalidCriCallbackRequestException {
         try {
-            return objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
+            var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
+            callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
+            callbackRequest.setFeatureSet(input.getHeaders().get("feature-set"));
+            callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
+
+            return callbackRequest;
         } catch (JsonProcessingException e) {
             throw new ParseCriCallbackRequestException(e);
         }
@@ -230,15 +240,14 @@ public class ProcessCriCallbackHandler
                     criApiService.fetchVerifiableCredential(
                             accessToken, callbackRequest, criOAuthSessionItem);
 
-            criCheckingService.validateVcResponse(
-                    vcResponse, clientOAuthSessionItem, criOAuthSessionItem);
-
-            switch (vcResponse.getCredentialStatus()) {
-                case CREATED -> criStoringService.storeCreatedVcs(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
-
-                case PENDING -> criStoringService.storeCriResponse(
+            if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
+                criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
+                criStoringService.storeCriResponse(
                         callbackRequest, clientOAuthSessionItem);
+            } else {
+                vcResponse.getVerifiableCredentials().forEach((vc) -> verifiableCredentialJwtValidator.validate(vc, configService.getCriConfig(criOAuthSessionItem), clientOAuthSessionItem.getUserId()));
+                criStoringService.storeCreatedVcs(
+                        vcResponse, callbackRequest, clientOAuthSessionItem);
             }
 
             return criCheckingService.checkVcResponse(
