@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -205,7 +206,7 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(null);
+                    .thenThrow(ParameterNotFoundException.builder().build());
             when(ssmProvider.getMultiple(
                             "/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenReturn(baseCredentialIssuerConfig);
@@ -237,7 +238,7 @@ class ConfigServiceTest {
         void getCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(null);
+                    .thenThrow(ParameterNotFoundException.builder().build());
 
             assertThrows(
                     NoConfigForConnectionException.class,
@@ -249,6 +250,8 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenThrow(ParameterNotFoundException.builder().build());
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
@@ -271,6 +274,8 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/main"))
+                    .thenThrow(ParameterNotFoundException.builder().build());
             when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
                     .thenReturn(Map.of("activeConnection", "main"));
             when(ssmProvider.getMultiple(
@@ -288,6 +293,8 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/main"))
+                    .thenThrow(ParameterNotFoundException.builder().build());
             when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
                     .thenReturn(Map.of("activeConnection", "main"));
             when(ssmProvider.getMultiple(
