@@ -306,6 +306,7 @@ public class LambdaHandler {
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
                 .scoreType((String) lambdaInput.get("scoreType"))
                 .scoreThreshold((int) lambdaInput.get("scoreThreshold"))
+                .isUserInitiated((boolean) lambdaInput.get("isUserInitiated"))
                 .build();
     }
 

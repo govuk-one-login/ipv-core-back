@@ -73,7 +73,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "isUserInitiated.$": "$.lambdaInput.isUserInitiated"
       },
       "Next": "ProcessNextJourney"
     },

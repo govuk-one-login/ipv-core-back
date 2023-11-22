@@ -83,6 +83,9 @@ CHECK_EXISTING_IDENTITY:
       targetState: RESET_IDENTITY
     reuse:
       targetState: IPV_IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
     pyi-no-match:
@@ -98,6 +101,8 @@ RESET_IDENTITY:
   response:
     type: process
     lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -107,6 +112,9 @@ IPV_IDENTITY_REUSE_PAGE:
     type: page
     pageId: page-ipv-reuse
   parent: END_JOURNEY
+  events:
+    next:
+      targetState: END_JOURNEY
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
@@ -331,6 +339,61 @@ CRI_EXPERIAN_KBV:
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
+
+# User initiated details delete
+IPV_IDENTITY_REUSE_PAGE_TEST:
+  response:
+    type: page
+    pageId: page-ipv-reuse
+  parent: END_JOURNEY
+  events:
+    next:
+      targetState:
+        PYI_NEW_DETAILS_PAGE
+
+PYI_NEW_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-new-details
+  events:
+    next:
+      targetState:
+        PYI_CONFIRM_DELETE_DETAILS_PAGE
+    end:
+      targetState:
+        IPV_IDENTITY_REUSE_PAGE
+
+PYI_CONFIRM_DELETE_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-confirm-delete-details
+  events:
+    next:
+      targetState:
+        RESET_IDENTITY_USER_INITIATED
+    end:
+      targetState:
+        IPV_IDENTITY_REUSE_PAGE
+
+RESET_IDENTITY_USER_INITIATED:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: true
+  events:
+    next:
+      targetState: PYI_DETAILS_DELETED_PAGE
+
+PYI_DETAILS_DELETED_PAGE:
+  response:
+    type: page
+    pageId: pyi-details-deleted
+  events:
+    next:
+      targetState:
+        IPV_IDENTITY_START_PAGE
+
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:

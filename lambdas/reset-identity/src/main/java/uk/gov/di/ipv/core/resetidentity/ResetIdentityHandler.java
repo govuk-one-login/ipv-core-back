@@ -71,6 +71,8 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
         try {
             String ipvSessionId = getIpvSessionId(event);
             String featureSet = RequestHelper.getFeatureSet(event);
+            Boolean isUserInitiated = RequestHelper.getIsUserInitiated(event);
+
             configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -80,7 +82,7 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            userIdentityService.deleteVcStoreItems(userId);
+            userIdentityService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             return JOURNEY_NEXT;
