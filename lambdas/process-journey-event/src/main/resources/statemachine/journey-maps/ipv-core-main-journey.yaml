@@ -589,6 +589,8 @@ MITIGATION_01:
   response:
     type: process
     lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
   events:
     next:
       targetState: MITIGATION_01_IDENTITY_START_PAGE
