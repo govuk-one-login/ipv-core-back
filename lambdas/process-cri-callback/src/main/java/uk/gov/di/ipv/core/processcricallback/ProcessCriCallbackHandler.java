@@ -131,7 +131,6 @@ public class ProcessCriCallbackHandler
             APIGatewayProxyRequestEvent input, Context context) {
         try {
             var callbackRequest = parseCallbackRequest(input);
-            criCheckingService.validateCallbackRequest(callbackRequest);
 
             var journeyResponse = getJourneyResponse(callbackRequest);
 
@@ -204,10 +203,10 @@ public class ProcessCriCallbackHandler
 
     public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
             throws SqsException, ParseException, JsonProcessingException,
-                    HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
-                    CriApiException, VerifiableCredentialResponseException,
-                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    CredentialParseException {
+            HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
+            CriApiException, VerifiableCredentialResponseException,
+            VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+            CredentialParseException, InvalidCriCallbackRequestException {
         IpvSessionItem ipvSessionItem = null;
 
         try {
@@ -229,11 +228,12 @@ public class ProcessCriCallbackHandler
             LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
             LogHelper.attachComponentIdToLogs(configService);
 
-            // Check for callback error
+            // Validate callback request
             if (callbackRequest.getError() != null) {
                 return criCheckingService.handleCallbackError(
                         callbackRequest, clientOAuthSessionItem, ipvSessionItem);
             }
+            criCheckingService.validateCallbackRequest(callbackRequest);
 
             // Retrieve, store and check cri credentials
             var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
