@@ -668,8 +668,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse()
-            throws ParseException, SqsException {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() throws SqsException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -711,7 +710,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser() throws SqsException {
+    void shouldReturnErrorJourneyOnPendingCriResponseWithMismatchedUser() {
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
                         testPassportIssuer,

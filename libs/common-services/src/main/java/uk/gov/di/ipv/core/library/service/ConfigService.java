@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
@@ -24,6 +25,7 @@ import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -264,16 +266,25 @@ public class ConfigService {
     public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        Map<String, String> result = getSsmParameters(pathTemplate, false, criId, connection);
-
-        if (result == null || result.isEmpty()) {
+        try {
+            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+            return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
+        } catch (ParameterNotFoundException e) {
+            Map<String, String> parameters =
+                    getSsmParameters(pathTemplate, false, criId, connection);
+            if (parameters != null && !parameters.isEmpty()) {
+                return objectMapper.convertValue(parameters, CredentialIssuerConfig.class);
+            }
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",
                             connection, criId));
+        } catch (JsonProcessingException e) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
+                            pathTemplate, e));
         }
-
-        return objectMapper.convertValue(result, CredentialIssuerConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
