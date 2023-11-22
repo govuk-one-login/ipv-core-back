@@ -162,10 +162,10 @@ class InitialiseIpvSessionHandlerTest {
 
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
-    void shouldReturn200ForAllVtrValues(List<String> vtrList)
+    void shouldReturn400IfMissingVtr(List<String> vtrList)
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
-                    JarValidationException, SqsException {
+                    JarValidationException {
         JWTClaimsSet.Builder claimsSet =
                 new JWTClaimsSet.Builder()
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
@@ -190,10 +190,6 @@ class InitialiseIpvSessionHandlerTest {
 
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
-                .thenReturn(clientOAuthSessionItem);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -207,11 +203,9 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_VTR.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_VTR.getMessage(), responseBody.get("message"));
     }
 
     private static Stream<Arguments> getVtrTestValues() {

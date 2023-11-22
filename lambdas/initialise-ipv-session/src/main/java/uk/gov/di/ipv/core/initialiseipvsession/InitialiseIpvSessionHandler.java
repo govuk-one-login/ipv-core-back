@@ -136,7 +136,10 @@ public class InitialiseIpvSessionHandler
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         ErrorResponse.MISSING_VTR.getMessage());
                 LOGGER.error(message);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
+
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
             IpvSessionItem ipvSessionItem =
