@@ -370,12 +370,12 @@ PYI_CONFIRM_DELETE_DETAILS_PAGE:
   events:
     next:
       targetState:
-        RESET_IDENTITY_V2
+        RESET_IDENTITY_USER_INITIATED
     end:
       targetState:
         IPV_IDENTITY_REUSE_PAGE
 
-RESET_IDENTITY_V2:
+RESET_IDENTITY_USER_INITIATED:
   response:
     type: process
     lambda: reset-identity

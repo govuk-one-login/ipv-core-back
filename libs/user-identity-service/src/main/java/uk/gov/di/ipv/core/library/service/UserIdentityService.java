@@ -129,8 +129,7 @@ public class UserIdentityService {
                                     String.valueOf(vcStoreItems.size()))
                             .with(
                                     LogHelper.LogField.LOG_IS_USER_INITIATED.getFieldName(),
-                                    String.valueOf(isUserInitiated)
-                            );
+                                    String.valueOf(isUserInitiated));
             LOGGER.info(message);
         }
         for (VcStoreItem item : vcStoreItems) {
