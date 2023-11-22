@@ -45,6 +45,7 @@ public class LambdaHandler {
     public static final String IP_ADDRESS = "ip-address";
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
+    public static final String IS_USER_INITIATED = "is-user-initiated";
 
     private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
     private ProcessJourneyEventHandler processJourneyEventHandler;
@@ -254,6 +255,7 @@ public class LambdaHandler {
                 .ipAddress(request.headers(IP_ADDRESS))
                 .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
                 .featureSet(request.headers(FEATURE_SET))
+                .isUserInitiated(Boolean.valueOf(request.headers(IS_USER_INITIATED)))
                 .journey(journey)
                 .build();
     }
