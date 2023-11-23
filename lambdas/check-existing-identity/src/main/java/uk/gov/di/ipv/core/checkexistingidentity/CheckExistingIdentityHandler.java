@@ -276,7 +276,7 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildCiBreachingResponse(ContraIndicators contraIndicators)
-            throws CiRetrievalException, UnrecognisedCiException, ConfigException {
+            throws UnrecognisedCiException, ConfigException {
         JourneyResponse journeyResponse = JOURNEY_FAIL_WITH_CI;
 
         var cimitConfig = configService.getCimitConfig();
