@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ACCOUNT_INTERVENTIONS;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
 
 public class ClientOAuthSessionDetailsService {
@@ -48,10 +49,14 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
         clientOAuthSessionItem.setState(claimsSet.getStringClaim("state"));
         clientOAuthSessionItem.setUserId(claimsSet.getSubject());
-        clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
+
+        if (configService.enabled(ACCOUNT_INTERVENTIONS.getName())) {
+            clientOAuthSessionItem.setReproveIdentity(
+                    claimsSet.getBooleanClaim("reprove_identity"));
+        }
 
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
