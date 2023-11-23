@@ -200,6 +200,12 @@ public class CheckExistingIdentityHandler
                         : buildNotCorrelatedResponse(auditEventUser);
             }
 
+            // Reset identity if reprove is true.
+            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (reproveIdentity) {
+                return buildForceResetResponse();
+            }
+
             // Force reset
             if (configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse();

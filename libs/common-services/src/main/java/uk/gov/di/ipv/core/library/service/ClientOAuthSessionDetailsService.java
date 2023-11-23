@@ -48,6 +48,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
         clientOAuthSessionItem.setState(claimsSet.getStringClaim("state"));
         clientOAuthSessionItem.setUserId(claimsSet.getSubject());
+        clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
@@ -71,6 +72,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionErrorItem.setState(state);
         clientOAuthSessionErrorItem.setUserId(null);
         clientOAuthSessionErrorItem.setGovukSigninJourneyId(govukSigninJourneyId);
+        clientOAuthSessionErrorItem.setReproveIdentity(false);
 
         dataStore.create(clientOAuthSessionErrorItem, BACKEND_SESSION_TTL);
 
