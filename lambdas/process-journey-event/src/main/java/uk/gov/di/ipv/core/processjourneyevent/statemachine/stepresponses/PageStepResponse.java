@@ -12,8 +12,12 @@ import java.util.Map;
 public class PageStepResponse implements StepResponse {
 
     private String pageId;
+    private String context = "";
 
     public Map<String, Object> value() {
-        return Map.of("page", pageId);
+        return Map.of(
+                "page", pageId,
+                "context", context
+        );
     }
 }

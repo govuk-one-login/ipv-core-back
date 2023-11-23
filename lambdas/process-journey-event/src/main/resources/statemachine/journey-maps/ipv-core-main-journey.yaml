@@ -252,6 +252,7 @@ PYI_CRI_ESCAPE:
   response:
     type: page
     pageId: pyi-cri-escape
+    context: no-photo-id
   events:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
@@ -264,6 +265,7 @@ PYI_CRI_ESCAPE_NO_F2F:
   response:
     type: page
     pageId: pyi-cri-escape-no-f2f
+    context: no-photo-id
   events:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
@@ -525,6 +527,8 @@ CRI_HMRC_KBV_J6:
     criId: hmrcKbv
   parent: CRI_STATE
   events:
+    enhanced-verification:
+      targetState: MITIGATION_03_OPTIONS
     end:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
@@ -655,6 +659,17 @@ MITIGATION_01_PYI_POST_OFFICE:
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_03_OPTIONS:
+  response:
+    type: page
+    pageId: pyi-suggest-other-options-no-f2f
+    context: no-photo-id
+  events:
+    next:
+      targetState: CRI_DCMAW_PYI_ESCAPE
     end:
       targetState: PYI_ANOTHER_WAY
 

@@ -123,7 +123,7 @@ public class ProcessJourneyEventHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value();
+            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "error").value();
         }
 
         try {
