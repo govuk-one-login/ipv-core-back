@@ -17,7 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.*;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
@@ -75,7 +79,11 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -102,12 +110,13 @@ class CheckExistingIdentityHandlerTest {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse("/journey/reset-identity");
-    private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
+            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
+    private static final JourneyResponse JOURNEY_PENDING =
+            new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
-            new JourneyResponse("/journey/f2f-fail");
+            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
