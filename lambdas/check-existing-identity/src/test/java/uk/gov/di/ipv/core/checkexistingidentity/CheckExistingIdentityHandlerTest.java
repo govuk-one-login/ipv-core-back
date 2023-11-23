@@ -197,6 +197,7 @@ class CheckExistingIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
+                        .reproveIdentity(false)
                         .build();
     }
 
