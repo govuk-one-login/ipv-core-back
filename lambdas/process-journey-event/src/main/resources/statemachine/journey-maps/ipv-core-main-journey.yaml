@@ -112,9 +112,6 @@ IPV_IDENTITY_REUSE_PAGE:
     type: page
     pageId: page-ipv-reuse
   parent: END_JOURNEY
-  events:
-    next:
-      targetState: END_JOURNEY
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
