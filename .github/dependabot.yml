@@ -41,5 +41,6 @@ updates:
           - "@babel/*"
       eslint:
         patterns:
+          - "eslint"
           - "eslint-*"
           - "@typescript-eslint/*"

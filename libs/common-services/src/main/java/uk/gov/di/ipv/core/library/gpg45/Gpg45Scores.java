@@ -97,14 +97,13 @@ public class Gpg45Scores {
                             List<Gpg45Scores.Evidence> missingEvidence = new ArrayList<>();
 
                             while (!requiredEvidences.isEmpty()) {
-                                if (!acquiredEvidences.isEmpty()) {
-                                    if (acquiredEvidences
-                                            .get(0)
-                                            .satisfies(requiredEvidences.get(0))) {
-                                        requiredEvidences.remove(0);
-                                        acquiredEvidences.remove(0);
-                                        continue;
-                                    }
+                                if (!acquiredEvidences.isEmpty()
+                                        && acquiredEvidences
+                                                .get(0)
+                                                .satisfies(requiredEvidences.get(0))) {
+                                    requiredEvidences.remove(0);
+                                    acquiredEvidences.remove(0);
+                                    continue;
                                 }
 
                                 missingEvidence.add(requiredEvidences.remove(0));

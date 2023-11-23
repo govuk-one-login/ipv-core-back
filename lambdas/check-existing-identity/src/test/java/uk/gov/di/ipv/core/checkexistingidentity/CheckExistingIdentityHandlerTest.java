@@ -17,10 +17,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -76,7 +79,11 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -103,11 +110,13 @@ class CheckExistingIdentityHandlerTest {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse("/journey/reset-identity");
-    private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
-    private static final JourneyResponse JOURNEY_FAIL = new JourneyResponse("/journey/fail");
+            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
+    private static final JourneyResponse JOURNEY_PENDING =
+            new JourneyResponse(JOURNEY_PENDING_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL =
+            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -239,8 +248,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
                 .thenReturn(true);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
@@ -426,7 +433,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -462,7 +469,7 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
-        assertEquals(JOURNEY_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -496,7 +503,7 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
-        assertEquals(JOURNEY_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -524,7 +531,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -751,9 +758,23 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnCiJourneyResponseIfPresent() throws Exception {
+        var testCiCode = "TEST01";
+        var testJourneyResponse = "/journey/test-response";
+        var testContraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        testCiCode,
+                                        ContraIndicator.builder().code(testCiCode).build()))
+                        .build();
+        var testCimitConfig = Map.of(testCiCode, testJourneyResponse);
+
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH)));
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(configService.getCimitConfig()).thenReturn(testCimitConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -763,7 +784,41 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_PYI_NO_MATCH_PATH, response.getJourney());
+        assertEquals(testJourneyResponse, response.getJourney());
+    }
+
+    @Test
+    void shouldNotReturnCiJourneyResponseForMitigatedCi() throws Exception {
+        var testCiCode = "TEST01";
+        var testJourneyResponse = "/journey/test-response";
+        var testContraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        testCiCode,
+                                        ContraIndicator.builder()
+                                                .code(testCiCode)
+                                                .mitigation(List.of(Mitigation.builder().build()))
+                                                .build()))
+                        .build();
+        var testCimitConfig = Map.of(testCiCode, testJourneyResponse);
+
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(configService.getCimitConfig()).thenReturn(testCimitConfig);
+
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyResponse response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.getJourney());
     }
 
     @Test
@@ -790,7 +845,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
+        when(userIdentityService.breachingCiThreshold(any())).thenReturn(true);
+        when(configService.getCimitConfig())
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -807,7 +863,8 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(any(), any()))
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))

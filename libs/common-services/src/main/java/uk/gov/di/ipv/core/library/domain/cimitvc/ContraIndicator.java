@@ -16,4 +16,8 @@ public class ContraIndicator {
     private final List<String> txn;
     private final List<Mitigation> mitigation;
     private final List<Mitigation> incompleteMitigation;
+
+    public boolean isMitigated() {
+        return mitigation != null && !mitigation.isEmpty();
+    }
 }
