@@ -107,6 +107,17 @@ public class CheckExistingIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
+    private static final Map<Class<?>, ErrorResponse> ERROR_RESPONSE_MAP =
+            Map.of(
+                    CiRetrievalException.class, ErrorResponse.FAILED_TO_GET_STORED_CIS,
+                    ConfigException.class, ErrorResponse.FAILED_TO_PARSE_CONFIG,
+                    CredentialParseException.class,
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS,
+                    ParseException.class, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS,
+                    SqsException.class, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
+                    UnknownEvidenceTypeException.class,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE,
+                    UnrecognisedCiException.class, ErrorResponse.UNRECOGNISED_CI_CODE);
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -230,20 +241,14 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (CiRetrievalException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
-        } catch (ParseException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
-        } catch (UnknownEvidenceTypeException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
-        } catch (SqsException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, e);
-        } catch (CredentialParseException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
-        } catch (ConfigException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
-        } catch (UnrecognisedCiException e) {
-            return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
+        } catch (CiRetrievalException
+                | ParseException
+                | UnknownEvidenceTypeException
+                | SqsException
+                | CredentialParseException
+                | ConfigException
+                | UnrecognisedCiException e) {
+            return buildErrorResponse(e);
         }
     }
 
@@ -400,8 +405,10 @@ public class CheckExistingIdentityHandler
         return JOURNEY_REUSE;
     }
 
-    private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
+    private Map<String, Object> buildErrorResponse(Exception e) {
+        ErrorResponse errorResponse = ERROR_RESPONSE_MAP.get(e.getClass());
         LOGGER.error(errorResponse.getMessage(), e);
+
         return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();
