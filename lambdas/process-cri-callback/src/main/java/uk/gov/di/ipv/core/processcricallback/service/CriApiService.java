@@ -182,7 +182,7 @@ public class CriApiService {
                         "Error retrieving credential",
                         response.getStatusCode(),
                         response.getStatusMessage());
-                if (criId.equals(DCMAW_CRI)
+                if (DCMAW_CRI.equals(criId)
                         && response.getStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                     throw new CriApiException(
                             HTTPResponse.SC_NOT_FOUND,

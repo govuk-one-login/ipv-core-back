@@ -2,10 +2,10 @@ package uk.gov.di.ipv.core.processcricallback.service;
 
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.util.CollectionUtils;
-import org.apache.http.HttpStatus;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
@@ -69,20 +68,17 @@ public class CriCheckingService {
     private final AuditService auditService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
-    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
             ConfigService configService,
             AuditService auditService,
             UserIdentityService userIdentityService,
-            CiMitService ciMitService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
+            CiMitService ciMitService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
-        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
     }
 
     public JourneyResponse handleCallbackError(
@@ -130,45 +126,75 @@ public class CriCheckingService {
         });
     }
 
-    public void validateCallbackRequest(CriCallbackRequest callbackRequest)
+    public void validateSessionIds(CriCallbackRequest callbackRequest)
             throws InvalidCriCallbackRequestException {
+        var ipvSessionId = callbackRequest.getIpvSessionId();
+        var criOAuthSessionId = callbackRequest.getState();
+
+        if (StringUtils.isBlank(ipvSessionId)) {
+            if (!StringUtils.isBlank(criOAuthSessionId)) {
+                throw new InvalidCriCallbackRequestException(
+                        ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION);
+            }
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+    }
+
+    public void validateCallbackRequest(
+            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
+            throws InvalidCriCallbackRequestException {
+        var ipvSessionId = callbackRequest.getIpvSessionId();
         var criId = callbackRequest.getCredentialIssuerId();
-        if (criId == null || criId.isBlank()) {
+        var state = callbackRequest.getState();
+        var authorisationCode = callbackRequest.getAuthorizationCode();
+
+        if (StringUtils.isBlank(authorisationCode)) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
+        }
+        if (StringUtils.isBlank(criId)) {
             throw new InvalidCriCallbackRequestException(
                     ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+        }
+        if (StringUtils.isBlank(ipvSessionId)) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
+        }
+        if (StringUtils.isBlank(state)) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+        var persistedOauthState = getPersistedOauthState(criOAuthSessionItem);
+        if (!callbackRequest
+                .getState()
+                .equals(persistedOauthState)) { // might be ipvSessionItem.getCriOAuthSessionId() !=
+            // null ? ... : null
+            throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
         if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
             throw new InvalidCriCallbackRequestException(
                     ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
-
-        var authorisationCode = callbackRequest.getAuthorizationCode();
-        if (authorisationCode == null || authorisationCode.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-
-        var ipvSessionId = callbackRequest.getIpvSessionId();
-        if (ipvSessionId == null || ipvSessionId.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        var criOAuthSessionId = callbackRequest.getState();
-        if (criOAuthSessionId == null || criOAuthSessionId.isBlank()) {
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
-        }
     }
 
-    public void validateCriOauthSessionItem(
-            CriOAuthSessionItem criOAuthSessionItem, CriCallbackRequest callbackRequest)
-            throws HttpResponseExceptionWithErrorBody {
-        if (criOAuthSessionItem == null) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
+    @Tracing
+    private String getPersistedOauthState(CriOAuthSessionItem criOAuthSessionItem) {
+        if (criOAuthSessionItem != null) {
+            return criOAuthSessionItem.getCriOAuthSessionId();
         }
+        return null;
+    }
 
-        if (!criOAuthSessionItem.getCriId().equals(callbackRequest.getCredentialIssuerId())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
+    public void validateOAuthForError(
+            CriCallbackRequest callbackRequest,
+            CriOAuthSessionItem criOAuthSessionItem,
+            IpvSessionItem ipvSessionItem)
+            throws InvalidCriCallbackRequestException {
+        if (ipvSessionItem.getCriOAuthSessionId() == null
+                || criOAuthSessionItem
+                        == null // this is essentially ipvSessionItem.getCriOAuthSessionId() != null
+                // ?
+                || !criOAuthSessionItem
+                        .getCriId()
+                        .equals(callbackRequest.getCredentialIssuerId())) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
     }
 
@@ -200,10 +226,11 @@ public class CriCheckingService {
         if (userIdentityService.isBreachingCiThreshold(cis)) {
             ipvSessionItem.setCiFail(true); // TODO: Remove ciFail flag in PYIC-3797
 
+            // Try to mitigate an unmitigated ci to resolve the threshold breach
             var cimitConfig = configService.getCimitConfig();
             for (var ci : cis.getContraIndicatorsMap().values()) {
-                if (cimitConfig.containsKey(ci.getCode())
-                        && CollectionUtils.isEmpty(ci.getMitigation())) {
+                if (ciMitService.isCiMitigatable(ci)
+                        && !userIdentityService.isBreachingCiThresholdIfMitigated(ci, cis)) {
                     return new JourneyResponse(cimitConfig.get(ci.getCode()));
                 }
             }

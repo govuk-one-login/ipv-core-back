@@ -124,6 +124,10 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
+  IsBuild: !Equals [ !Ref Environment, build ]
+  IsDevOrBuild: !Or
+    - !Condition IsDevelopment
+    - !Condition IsBuild
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -1344,6 +1348,7 @@ Resources:
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
@@ -1401,6 +1406,9 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
+        - VPCAccessPolicy: { }
+        - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1428,17 +1436,17 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - Statement:
-#            - Sid: EnforceStayinSpecificVpc
-#              Effect: Allow
-#              Action:
-#                - 'lambda:CreateFunction'
-#                - 'lambda:UpdateFunctionConfiguration'
-#              Resource:
-#                - "*"
-#              Condition:
-#                StringEquals:
-#                  "lambda:VpcIds":
-#                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsSigningKeyPermission
               Effect: Allow
               Action:

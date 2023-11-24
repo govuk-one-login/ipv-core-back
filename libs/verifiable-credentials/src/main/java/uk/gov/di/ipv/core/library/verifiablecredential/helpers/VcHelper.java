@@ -66,6 +66,8 @@ public class VcHelper {
     }
 
     public static boolean isSuccessfulVcs(List<SignedJWT> vcs) throws ParseException {
+        if (vcs == null) return true;
+
         for (SignedJWT vc : vcs) {
             if (!VcHelper.isSuccessfulVc(vc)) {
                 return false;

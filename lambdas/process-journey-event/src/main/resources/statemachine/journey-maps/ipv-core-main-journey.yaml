@@ -684,6 +684,11 @@ CRI_DCMAW_PYI_ESCAPE:
     criId: dcmaw
   parent: CRI_STATE
   events:
+    next:
+      targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     not-found:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:

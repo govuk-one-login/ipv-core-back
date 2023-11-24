@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +30,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
@@ -134,6 +136,11 @@ public class CiMitService {
     public ContraIndicators getContraIndicators(SignedJWT contraIndicatorsVc)
             throws CiRetrievalException {
         return mapToContraIndicators(parseContraIndicatorEvidence(contraIndicatorsVc));
+    }
+
+    public boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
+        var cimitConfig = configService.getCimitConfig();
+        return cimitConfig.containsKey(ci.getCode()) && CollectionUtils.isEmpty(ci.getMitigation());
     }
 
     public SignedJWT getContraIndicatorsVCJwt(

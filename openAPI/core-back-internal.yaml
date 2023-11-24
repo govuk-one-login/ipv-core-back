@@ -36,7 +36,12 @@ paths:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
         'Fn::If':
-          - IsSubscriptionEnviroment
+          - IsDevOrBuild
+          - type: "aws_proxy"
+            httpMethod: "POST"
+            uri:
+              Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
+            passthroughBehavior: "when_no_match"
           - type: "aws"
             credentials:
               Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
@@ -74,11 +79,6 @@ paths:
                       #set($context.responseOverride.status = 504)
                       $bodyObj
                     #end
-          - type: "aws_proxy"
-            httpMethod: "POST"
-            uri:
-              Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
-            passthroughBehavior: "when_no_match"
 
   /journey/{journeyStep}:
     post:

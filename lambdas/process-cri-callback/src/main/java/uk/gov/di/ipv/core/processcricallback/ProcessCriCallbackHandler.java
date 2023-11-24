@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,13 +53,18 @@ import uk.gov.di.ipv.core.processcricallback.service.CriStoringService;
 
 import java.text.ParseException;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 public class ProcessCriCallbackHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
+    private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
+    private static final JourneyResponse JOURNEY_NOT_FOUND =
+            new JourneyResponse(JOURNEY_NOT_FOUND_PATH);
     private final ConfigService configService;
     private final CriApiService criApiService;
     private final CriStoringService criStoringService;
@@ -99,7 +105,6 @@ public class ProcessCriCallbackHandler
         var userIdentityService = new UserIdentityService(configService);
         var auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         var verifiableCredentialService = new VerifiableCredentialService(configService);
-        var verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         var ciMitService = new CiMitService(configService);
         var criResponseService = new CriResponseService(configService);
         var signer = new KmsEs256Signer();
@@ -110,11 +115,7 @@ public class ProcessCriCallbackHandler
         criApiService = new CriApiService(configService, signer);
         criCheckingService =
                 new CriCheckingService(
-                        configService,
-                        auditService,
-                        userIdentityService,
-                        ciMitService,
-                        verifiableCredentialJwtValidator);
+                        configService, auditService, userIdentityService, ciMitService);
         criStoringService =
                 new CriStoringService(
                         configService,
@@ -129,8 +130,10 @@ public class ProcessCriCallbackHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        CriCallbackRequest callbackRequest = null;
+
         try {
-            var callbackRequest = parseCallbackRequest(input);
+            callbackRequest = parseCallbackRequest(input);
 
             var journeyResponse = getJourneyResponse(callbackRequest);
 
@@ -141,15 +144,24 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST);
         } catch (InvalidCriCallbackRequestException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
-        } catch (HttpResponseExceptionWithErrorBody e) {
+            if (e.getErrorResponse() == ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION) {
+                LOGGER.error(e.getErrorResponse(), e);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_UNAUTHORIZED,
+                        StepFunctionHelpers.generatePageOutputMap(
+                                "error",
+                                HttpStatus.SC_UNAUTHORIZED,
+                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID));
+            }
             if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
-                LOGGER.error("Error in process cri callback lambda", e);
+                LOGGER.error(e.getErrorResponse(), e);
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST,
                         StepFunctionHelpers.generatePageOutputMap(
                                 "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID));
             }
+            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+        } catch (HttpResponseExceptionWithErrorBody e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (JsonProcessingException | SqsException e) {
             return buildErrorResponse(
@@ -162,10 +174,9 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (VerifiableCredentialException e) {
-            // Removed check for DCMAW because output is now equal
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         } catch (VerifiableCredentialResponseException e) {
-            return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
+            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         } catch (CiPutException | CiPostMitigationsException e) {
             return buildErrorResponse(
                     e,
@@ -183,6 +194,13 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         } catch (CriApiException e) {
+            if (DCMAW_CRI.equals(callbackRequest.getCredentialIssuerId())
+                    && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+                LogHelper.logErrorMessage(
+                        "404 received from DCMAW CRI", e.getErrorResponse().getMessage());
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
+            }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         }
     }
@@ -203,21 +221,27 @@ public class ProcessCriCallbackHandler
 
     public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
             throws SqsException, ParseException, JsonProcessingException,
-            HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
-            CriApiException, VerifiableCredentialResponseException,
-            VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-            CredentialParseException, InvalidCriCallbackRequestException {
+                    HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
+                    CriApiException, VerifiableCredentialResponseException,
+                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+                    CredentialParseException, InvalidCriCallbackRequestException {
         IpvSessionItem ipvSessionItem = null;
 
         try {
+            // Validate callback sessions
+            criCheckingService.validateSessionIds(callbackRequest);
+
             // Get/ set session items/ config
             ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
+
             var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
             var criOAuthSessionItem =
-                    criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
-            criCheckingService.validateCriOauthSessionItem(criOAuthSessionItem, callbackRequest);
+                    ipvSessionItem.getCriOAuthSessionId() != null
+                            ? criOAuthSessionService.getCriOauthSessionItem(
+                                    ipvSessionItem.getCriOAuthSessionId())
+                            : null;
             configService.setFeatureSet(callbackRequest.getFeatureSet());
 
             // Attach variables to logs
@@ -230,10 +254,12 @@ public class ProcessCriCallbackHandler
 
             // Validate callback request
             if (callbackRequest.getError() != null) {
+                criCheckingService.validateOAuthForError(
+                        callbackRequest, criOAuthSessionItem, ipvSessionItem);
                 return criCheckingService.handleCallbackError(
                         callbackRequest, clientOAuthSessionItem, ipvSessionItem);
             }
-            criCheckingService.validateCallbackRequest(callbackRequest);
+            criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
 
             // Retrieve, store and check cri credentials
             var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);

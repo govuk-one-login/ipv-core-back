@@ -91,8 +91,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
-    public static final String NAMES = "names";
-    public static final String DATE_OF_BIRTH = "dob";
     public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
@@ -178,7 +176,7 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             // CI scoring failure
-            if (userIdentityService.breachingCiThreshold(contraIndicators)) {
+            if (userIdentityService.isBreachingCiThreshold(contraIndicators)) {
                 ipvSessionItem.setCiFail(false);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -224,7 +222,7 @@ public class CheckExistingIdentityHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(e.getErrorResponse().getMessage(), e);
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -399,7 +397,7 @@ public class CheckExistingIdentityHandler
     private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
         LOGGER.error(errorResponse.getMessage(), e);
         return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
+                JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();
     }
 
@@ -437,3 +435,4 @@ public class CheckExistingIdentityHandler
         }
         return txnIds;
     }
+}

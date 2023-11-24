@@ -226,6 +226,17 @@ public class UserIdentityService {
                 > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
+    public boolean isBreachingCiThresholdIfMitigated(ContraIndicator ci, ContraIndicators cis) {
+        var scoreOnceMitigated =
+                cis.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
+                        + configService
+                                .getContraIndicatorConfigMap()
+                                .get(ci.getCode())
+                                .getCheckedScore();
+        var threshold = Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+        return scoreOnceMitigated > threshold; // This will be commonised
+    }
+
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)
             throws CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems = new ArrayList<>();
