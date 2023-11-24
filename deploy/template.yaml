@@ -10,8 +10,45 @@ Globals:
       ApplyOn: !If [IsDevelopment, PublishedVersions, None]
     Architectures:
       - !If [ IsDevelopment, x86_64, arm64 ]
+    MemorySize: !If [IsDevelopment, 1024, 3072]
+    Runtime: java17
     Environment:
       Variables:
+        AWS_LAMBDA_EXEC_WRAPPER: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - /opt/dynatrace
+        DT_CONNECTION_AUTH_TOKEN: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}'
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        DT_CONNECTION_BASE_URL: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_BASE_URL}}'
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        DT_CLUSTER_ID: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CLUSTER_ID}}'
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        DT_LOG_COLLECTION_AUTH_TOKEN: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_LOG_COLLECTION_AUTH_TOKEN}}'
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        DT_TENANT: !If
+          - IsDevelopment
+          - !Ref AWS::NoValue
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_TENANT}}'
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: "true"
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
         POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
         POWERTOOLS_TRACER_CAPTURE_ERROR: false
@@ -27,6 +64,13 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
+    Layers:
+      - !If
+        - IsDevelopment
+        - !Ref AWS::NoValue
+        - !Sub
+          - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # or NODEJS_LAYER or PYTHON_LAYER
+          - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
 
 Parameters:
   Environment:
@@ -119,6 +163,7 @@ Mappings:
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -151,6 +196,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -183,6 +229,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -215,6 +262,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -247,6 +295,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -279,6 +328,7 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
       asyncCriLambdaTimeout: 30
+      dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
       jwksJson: |
         {
           "keys": [
@@ -571,10 +621,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issue-client-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -655,10 +703,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-client-oauth-response-${Environment}"
       Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -748,10 +794,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "initialise-ipv-session-${Environment}"
       Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -850,10 +894,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "retrieve-cri-oauth-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-oauth-access-token
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -997,10 +1039,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "retrieve-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.retrievecricredential.RetrieveCriCredentialHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-credential
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1184,10 +1224,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-cri-oauth-request-${Environment}"
       Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
-      MemorySize: 3008
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1292,10 +1330,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1636,10 +1672,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-journey-event-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1713,10 +1747,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
       Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1802,10 +1834,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "validate-oauth-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/validate-oauth-callback
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1902,10 +1932,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-proven-user-identity-details-${Environment}"
       Handler: uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1993,10 +2021,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-existing-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -2121,10 +2147,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "reset-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/reset-identity
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -2210,10 +2234,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-async-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
-      MemorySize: 2048
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
       Tracing: Active
       Environment:
@@ -2410,10 +2432,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-ci-score-${Environment}"
       Handler: uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-ci-score
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -2523,10 +2543,8 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-gpg45-score-${Environment}"
       Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
-      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-gpg45-score
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
