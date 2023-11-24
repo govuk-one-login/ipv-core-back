@@ -202,8 +202,10 @@ public class CheckExistingIdentityHandler
             }
 
             // Reset identity if reprove is true.
-            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (configService.enabled(ACCOUNT_INTERVENTIONS.getName()) && reproveIdentity) {
+            String reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (configService.enabled(ACCOUNT_INTERVENTIONS.getName())
+                    && !Objects.isNull(reproveIdentity)
+                    && reproveIdentity.equals("true")) {
                 return buildForceResetResponse();
             }
 

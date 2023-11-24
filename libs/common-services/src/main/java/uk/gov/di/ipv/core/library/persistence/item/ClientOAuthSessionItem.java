@@ -24,7 +24,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private String state;
     private String userId;
     private String govukSigninJourneyId;
-    private Boolean reproveIdentity;
+    private String reproveIdentity;
     private List<String> vtr;
     private long ttl;
 
