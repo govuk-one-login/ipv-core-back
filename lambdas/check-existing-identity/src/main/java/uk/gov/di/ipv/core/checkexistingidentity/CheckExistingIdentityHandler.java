@@ -222,7 +222,7 @@ public class CheckExistingIdentityHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(e.getErrorResponse().getMessage(), e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -397,7 +397,7 @@ public class CheckExistingIdentityHandler
     private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
         LOGGER.error(errorResponse.getMessage(), e);
         return new JourneyErrorResponse(
-                JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
+                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();
     }
 

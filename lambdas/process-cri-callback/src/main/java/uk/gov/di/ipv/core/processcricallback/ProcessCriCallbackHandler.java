@@ -274,8 +274,7 @@ public class ProcessCriCallbackHandler
                 vcResponse
                         .getVerifiableCredentials()
                         .forEach(
-                                (vc) ->
-                                {
+                                (vc) -> {
                                     assert criOAuthSessionItem != null;
                                     verifiableCredentialJwtValidator.validate(
                                             vc,

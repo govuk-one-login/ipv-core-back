@@ -13,7 +13,6 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -39,11 +38,9 @@ import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 
 import java.io.IOException;
-import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -93,8 +90,7 @@ public class CriApiService {
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             SecureTokenHelper.generate());
-            var signedClientJwt =
-                    JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
+            var signedClientJwt = JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 
@@ -136,8 +132,7 @@ public class CriApiService {
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
 
-            var token =
-                    tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
+            var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
             LOGGER.info("Auth Code exchanged for Access Token.");
             return token;
         } catch (IOException | ParseException | JOSEException e) {
@@ -232,8 +227,7 @@ public class CriApiService {
         var vcResponse =
                 OBJECT_MAPPER.readValue(responseString, VerifiableCredentialResponseDto.class);
         var vcResponseBuilder =
-                        VerifiableCredentialResponse.builder()
-                                .userId(vcResponse.getUserId());
+                VerifiableCredentialResponse.builder().userId(vcResponse.getUserId());
         if (vcResponse.getVerifiableCredentials() != null) {
             var vcJwts = new ArrayList<SignedJWT>();
             for (var vc : vcResponse.getVerifiableCredentials()) {
@@ -243,8 +237,7 @@ public class CriApiService {
         }
         if (vcResponse.getCredentialStatus() != null) {
             vcResponseBuilder.credentialStatus(
-                    VerifiableCredentialStatus.fromStatusString(
-                            vcResponse.getCredentialStatus()));
+                    VerifiableCredentialStatus.fromStatusString(vcResponse.getCredentialStatus()));
         }
         return vcResponseBuilder.build();
     }
