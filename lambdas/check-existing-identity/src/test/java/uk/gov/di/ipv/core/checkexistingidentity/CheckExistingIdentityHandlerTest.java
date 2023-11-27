@@ -773,7 +773,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
         when(configService.getCimitConfig()).thenReturn(testCimitConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -807,7 +807,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
         when(configService.getCimitConfig()).thenReturn(testCimitConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -845,7 +845,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.breachingCiThreshold(any())).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(configService.getCimitConfig())
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
