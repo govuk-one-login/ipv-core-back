@@ -189,8 +189,7 @@ public class CriCheckingService {
             throws InvalidCriCallbackRequestException {
         if (ipvSessionItem.getCriOAuthSessionId() == null
                 || criOAuthSessionItem
-                        == null // this is essentially ipvSessionItem.getCriOAuthSessionId() != null
-                // ?
+                        == null
                 || !criOAuthSessionItem
                         .getCriId()
                         .equals(callbackRequest.getCredentialIssuerId())) {

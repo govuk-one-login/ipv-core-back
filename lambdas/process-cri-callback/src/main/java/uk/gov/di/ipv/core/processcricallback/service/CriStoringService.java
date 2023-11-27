@@ -75,7 +75,7 @@ public class CriStoringService {
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         callbackRequest.getIpAddress());
 
-        VerifiableCredentialResponseDto vcResponseDto =
+        var vcResponseDto =
                 VerifiableCredentialResponseDto.builder()
                         .userId(userId)
                         .credentialStatus(VerifiableCredentialStatus.PENDING.getStatus())

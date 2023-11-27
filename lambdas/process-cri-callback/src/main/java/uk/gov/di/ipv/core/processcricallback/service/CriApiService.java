@@ -79,10 +79,10 @@ public class CriApiService {
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
-        AuthorizationCode authorizationCode = new AuthorizationCode(authorisationCode);
+        var authorizationCode = new AuthorizationCode(authorisationCode);
         try {
-            OffsetDateTime dateTime = OffsetDateTime.now();
-            ClientAuthClaims clientAuthClaims =
+            var dateTime = OffsetDateTime.now();
+            var clientAuthClaims =
                     new ClientAuthClaims(
                             criConfig.getClientId(),
                             criConfig.getClientId(),
@@ -93,20 +93,18 @@ public class CriApiService {
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             SecureTokenHelper.generate());
-            SignedJWT signedClientJwt =
+            var signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
+            var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
+            var redirectionUri = criConfig.getClientCallbackUrl();
 
-            ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
-
-            URI redirectionUri = criConfig.getClientCallbackUrl();
-
-            TokenRequest tokenRequest =
+            var tokenRequest =
                     new TokenRequest(
                             criConfig.getTokenUrl(),
                             clientAuthentication,
                             new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
-            HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
+            var httpRequest = tokenRequest.toHTTPRequest();
             if (apiKey != null) {
                 var message =
                         new StringMapMessage()
@@ -118,12 +116,12 @@ public class CriApiService {
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }
 
-            HTTPResponse httpResponse = httpRequest.send();
-            TokenResponse tokenResponse = TokenResponse.parse(httpResponse);
+            var httpResponse = httpRequest.send();
+            var tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
-                TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
-                ErrorObject errorObject =
+                var errorResponse = tokenResponse.toErrorResponse();
+                var errorObject =
                         Objects.requireNonNullElse(
                                 errorResponse.getErrorObject(),
                                 new ErrorObject("unknown", "unknown"));
@@ -138,7 +136,7 @@ public class CriApiService {
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
 
-            BearerAccessToken token =
+            var token =
                     tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
             LOGGER.info("Auth Code exchanged for Access Token.");
             return token;
@@ -159,7 +157,7 @@ public class CriApiService {
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
-        HTTPRequest credentialRequest =
+        var credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
 
         if (apiKey != null) {
@@ -175,7 +173,7 @@ public class CriApiService {
         credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
 
         try {
-            HTTPResponse response = credentialRequest.send();
+            var response = credentialRequest.send();
 
             if (!response.indicatesSuccess()) {
                 LogHelper.logErrorMessage(
@@ -193,10 +191,10 @@ public class CriApiService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            String responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
+            var responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
-                SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
-                VerifiableCredentialResponse verifiableCredentialResponse =
+                var vcJwt = (SignedJWT) response.getContentAsJWT();
+                var verifiableCredentialResponse =
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(Collections.singletonList(vcJwt))
                                 .build();
@@ -204,7 +202,7 @@ public class CriApiService {
                 return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
-                VerifiableCredentialResponse verifiableCredentialResponse =
+                var verifiableCredentialResponse =
                         getVerifiableCredentialResponseForApplicationJson(response.getContent());
                 LOGGER.info("Verifiable Credential retrieved from json response.");
                 return verifiableCredentialResponse;
@@ -231,24 +229,23 @@ public class CriApiService {
 
     private VerifiableCredentialResponse getVerifiableCredentialResponseForApplicationJson(
             String responseString) throws JsonProcessingException, java.text.ParseException {
-        VerifiableCredentialResponseDto verifiableCredentialResponse =
+        var vcResponse =
                 OBJECT_MAPPER.readValue(responseString, VerifiableCredentialResponseDto.class);
-        VerifiableCredentialResponse.VerifiableCredentialResponseBuilder
-                verifiableCredentialResponseBuilder =
+        var vcResponseBuilder =
                         VerifiableCredentialResponse.builder()
-                                .userId(verifiableCredentialResponse.getUserId());
-        if (verifiableCredentialResponse.getVerifiableCredentials() != null) {
-            List<SignedJWT> vcJwts = new ArrayList<>();
-            for (String vc : verifiableCredentialResponse.getVerifiableCredentials()) {
+                                .userId(vcResponse.getUserId());
+        if (vcResponse.getVerifiableCredentials() != null) {
+            var vcJwts = new ArrayList<SignedJWT>();
+            for (var vc : vcResponse.getVerifiableCredentials()) {
                 vcJwts.add(SignedJWT.parse(vc));
             }
-            verifiableCredentialResponseBuilder.verifiableCredentials(vcJwts);
+            vcResponseBuilder.verifiableCredentials(vcJwts);
         }
-        if (verifiableCredentialResponse.getCredentialStatus() != null) {
-            verifiableCredentialResponseBuilder.credentialStatus(
+        if (vcResponse.getCredentialStatus() != null) {
+            vcResponseBuilder.credentialStatus(
                     VerifiableCredentialStatus.fromStatusString(
-                            verifiableCredentialResponse.getCredentialStatus()));
+                            vcResponse.getCredentialStatus()));
         }
-        return verifiableCredentialResponseBuilder.build();
+        return vcResponseBuilder.build();
     }
 }

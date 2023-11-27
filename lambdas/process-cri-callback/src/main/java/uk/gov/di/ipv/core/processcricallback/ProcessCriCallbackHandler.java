@@ -275,10 +275,13 @@ public class ProcessCriCallbackHandler
                         .getVerifiableCredentials()
                         .forEach(
                                 (vc) ->
-                                        verifiableCredentialJwtValidator.validate(
-                                                vc,
-                                                configService.getCriConfig(criOAuthSessionItem),
-                                                clientOAuthSessionItem.getUserId()));
+                                {
+                                    assert criOAuthSessionItem != null;
+                                    verifiableCredentialJwtValidator.validate(
+                                            vc,
+                                            configService.getCriConfig(criOAuthSessionItem),
+                                            clientOAuthSessionItem.getUserId());
+                                });
                 criStoringService.storeCreatedVcs(
                         vcResponse, callbackRequest, clientOAuthSessionItem);
             }
@@ -292,7 +295,7 @@ public class ProcessCriCallbackHandler
                                 callbackRequest.getCredentialIssuerId(),
                                 null,
                                 false,
-                                null)); // TODO: Only need criId until we remove in PYIC-3799
+                                null)); // TODO: Only need until we remove in PYIC-3799
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
         }
