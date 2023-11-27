@@ -533,7 +533,6 @@ public class UserIdentityService {
     }
 
     public String getCredentialIssuerIfSingleValidEvidence(List<VcStoreItem> vcStoreItems) {
-        LOGGER.info(vcStoreItems.toString());
         Map<String, Long> issuerCountMap =
                 vcStoreItems.stream()
                         .filter(
