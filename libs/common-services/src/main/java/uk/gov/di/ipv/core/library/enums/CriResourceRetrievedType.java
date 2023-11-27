@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.enums;
+package uk.gov.di.ipv.core.library.enums;
 
 import lombok.Getter;
 

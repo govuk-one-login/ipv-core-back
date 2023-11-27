@@ -16,9 +16,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -42,13 +44,11 @@ import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCrede
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
-import uk.gov.di.ipv.core.processcricallback.service.CriStoringService;
 
 import java.text.ParseException;
 

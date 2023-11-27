@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +16,10 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -27,8 +30,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.processcricallback.enums.CriResourceRetrievedType;
 
 import java.text.ParseException;
 import java.util.List;
@@ -98,7 +99,7 @@ public class CriStoringService {
             CriCallbackRequest callbackRequest,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException, ParseException, JsonProcessingException, CiPutException,
-                    CiPostMitigationsException {
+                    CiPostMitigationsException, VerifiableCredentialException {
         var criId = callbackRequest.getCredentialIssuerId();
         var ipAddress = callbackRequest.getIpAddress();
         var userId = clientOAuthSessionItem.getUserId();

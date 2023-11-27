@@ -9,8 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -22,12 +24,10 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
-import uk.gov.di.ipv.core.processcricallback.service.CriStoringService;
 
 import java.util.List;
 
@@ -118,7 +118,12 @@ public class ProcessCriCallbackHandlerTest {
         verify(mockCriCheckingService)
                 .validateCallbackRequest(eq(callbackRequest), eq(criOAuthSessionItem));
         verify(mockCriStoringService)
-                .storeCreatedVcs(eq(vcResponse), eq(callbackRequest), eq(clientOAuthSessionItem));
+                .storeVcs(
+                        callbackRequest.getCredentialIssuerId(),
+                        callbackRequest.getIpAddress(),
+                        ipvSessionItem.getIpvSessionId(),
+                        vcResponse.getVerifiableCredentials(),
+                        clientOAuthSessionItem);
         verify(mockIpvSessionService).updateIpvSession(any(IpvSessionItem.class));
     }
 
