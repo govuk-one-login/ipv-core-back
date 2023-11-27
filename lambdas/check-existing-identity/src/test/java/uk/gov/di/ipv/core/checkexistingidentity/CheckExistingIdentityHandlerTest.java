@@ -456,7 +456,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -479,7 +479,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseForFaceToFaceIfNamesDoNotCorrelate() throws Exception {
+    void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
@@ -489,7 +489,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -512,39 +512,13 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseForFaceToFaceIfBirthDatesDoNotCorrelate() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
-                .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
-        CriResponseItem criResponseItem =
-                createCriResponseStoreItem(
-                        TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
     void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -552,35 +526,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
-
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any()))
-                .thenThrow(new CredentialParseException("Oops"));
-
-        JourneyErrorResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
-                journeyResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
-                journeyResponse.getMessage());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -684,37 +629,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfCredentialParseExceptionFromAreVcsCorrelated() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any()))
-                .thenThrow(
-                        new CredentialParseException("Failed to parse successful VC Store items."));
-
-        JourneyErrorResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
-                journeyResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
-                journeyResponse.getMessage());
-
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturn500IfCredentialParseExceptionFromCheckBirthDateCorrelationInCredentials()
-            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
