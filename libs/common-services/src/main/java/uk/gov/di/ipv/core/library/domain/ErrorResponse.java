@@ -75,11 +75,7 @@ public enum ErrorResponse {
     MISSING_IS_USER_INITIATED_PARAMETER(1063, "Missing isUserInitiated in request"),
     MISSING_VTR(1064, "The 'vtr' claim is required and was not provided in the request."),
     NO_IPV_FOR_CRI_OAUTH_SESSION(1065, "No ipvSession for existing CriOAuthSession."),
-    FAILED_TO_GET_VALID_CREDENTIAL_STATUS(
-            1066, "Failed to get credential from issuer with valid status."),
-    INVALID_NUMBER_OF_ISSUERS_IN_VC_RESPONSE(
-            1067, "Incorrect number of CRI issuers in VC response from a CRI."),
-    FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1068, "Failed to parse cri callback request.");
+    FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1066, "Failed to parse cri callback request.");
 
     @JsonProperty("code")
     private final int code;

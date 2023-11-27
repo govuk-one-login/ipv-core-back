@@ -140,7 +140,7 @@ public class CiMitService {
 
     public boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        return cimitConfig.containsKey(ci.getCode()) && CollectionUtils.isEmpty(ci.getMitigation());
+        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
     }
 
     public SignedJWT getContraIndicatorsVCJwt(

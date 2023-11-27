@@ -234,7 +234,7 @@ public class UserIdentityService {
                                 .get(ci.getCode())
                                 .getCheckedScore();
         var threshold = Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
-        return scoreOnceMitigated > threshold; // This will be commonised
+        return scoreOnceMitigated > threshold;
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)
