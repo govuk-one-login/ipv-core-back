@@ -39,6 +39,7 @@ import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -525,6 +526,41 @@ public class UserIdentityService {
             }
         }
         return false;
+    }
+
+    private boolean isNonZeroInt(JsonNode node) {
+        return node.isInt() && node.asInt() != 0;
+    }
+
+    public String getCredentialIssuerIfSingleValidEvidence(List<VcStoreItem> vcStoreItems) {
+        LOGGER.info(vcStoreItems.toString());
+        Map<String, Long> issuerCountMap =
+                vcStoreItems.stream()
+                        .filter(
+                                item -> {
+                                    try {
+                                        JsonNode vcEvidenceNode =
+                                                getVCClaimNode(item.getCredential(), VC_EVIDENCE);
+                                        return ((vcEvidenceNode.size() > 0)
+                                                && isNonZeroInt(
+                                                        vcEvidenceNode
+                                                                .get(0)
+                                                                .path(VC_EVIDENCE_VALIDITY))
+                                                && isNonZeroInt(
+                                                        vcEvidenceNode
+                                                                .get(0)
+                                                                .path(VC_EVIDENCE_STRENGTH)));
+                                    } catch (CredentialParseException e) {
+                                        return false;
+                                    }
+                                })
+                        .map(item -> item.getCredentialIssuer())
+                        .collect(Collectors.groupingBy(issuer -> issuer, Collectors.counting()));
+        if (issuerCountMap.size() == 1
+                && issuerCountMap.values().stream().anyMatch(count -> count >= 1)) {
+            return issuerCountMap.keySet().stream().findFirst().orElse(null);
+        }
+        return null;
     }
 
     public boolean checkBirthDateCorrelationInCredentials(String userId)

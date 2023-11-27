@@ -90,7 +90,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("http://www.example.com/credential-issuers/callback/criId"),
-                        true);
+                        true,
+                        false);
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
@@ -277,6 +278,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("http://www.example.com/credential-issuers/callback/criId"),
+                        false,
                         false);
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(testCriNotRequiringApiKey);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);

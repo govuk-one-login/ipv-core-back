@@ -131,7 +131,8 @@ class CheckExistingIdentityHandlerTest {
                             "test-encryption-jwk",
                             "test-audience",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
 
             claimedIdentityConfig =
                     new CredentialIssuerConfig(
@@ -143,7 +144,8 @@ class CheckExistingIdentityHandlerTest {
                             "test-encryption-jwk",
                             "test-claimed-identity",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

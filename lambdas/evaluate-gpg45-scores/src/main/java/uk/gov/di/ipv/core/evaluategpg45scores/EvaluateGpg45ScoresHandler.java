@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -145,7 +146,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             return checkForMatchingGpg45Profile(
-                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -222,6 +223,7 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
+            String userId,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
@@ -232,7 +234,7 @@ public class EvaluateGpg45ScoresHandler
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
                         gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
-        if (matchedProfile.isPresent()) {
+        if (matchedProfile.isPresent() && !checkRequiresAdditionalEvidence(userId)) {
             auditService.sendAuditEvent(
                     buildProfileMatchedAuditEvent(
                             ipvSessionItem,
@@ -257,6 +259,29 @@ public class EvaluateGpg45ScoresHandler
 
             return JOURNEY_NEXT;
         }
+    }
+
+    private boolean checkRequiresAdditionalEvidence(String userId) {
+        List<VcStoreItem> vcStoreItems = userIdentityService.getVcStoreItems(userId);
+        if (!vcStoreItems.isEmpty()) {
+            String credentialIssuer =
+                    userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+            if (credentialIssuer != null) {
+                boolean requiresAdditionalEvidence =
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(credentialIssuer)
+                                .isRequiresAdditionalEvidence();
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "This credential, which contains the only valid evidence, must not any GPG45 profile.")
+                                .with("credentialIssuer", credentialIssuer)
+                                .with("requiresAdditionalEvidence", requiresAdditionalEvidence));
+                return requiresAdditionalEvidence;
+            }
+        }
+        return false;
     }
 
     @Tracing

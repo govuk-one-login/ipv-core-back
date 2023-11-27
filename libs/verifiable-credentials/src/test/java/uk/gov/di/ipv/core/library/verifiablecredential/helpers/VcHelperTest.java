@@ -51,7 +51,8 @@ class VcHelperTest {
                             "test-encryption-jwk",
                             "https://review-a.integration.account.gov.uk",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
             claimedIdentityConfig =
                     new CredentialIssuerConfig(
                             new URI("http://example.com/token"),
@@ -62,7 +63,8 @@ class VcHelperTest {
                             "test-encryption-jwk",
                             "https://review-c.integration.account.gov.uk",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

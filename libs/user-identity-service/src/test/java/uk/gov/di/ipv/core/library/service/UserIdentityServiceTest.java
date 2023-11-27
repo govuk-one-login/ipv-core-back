@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,9 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.text.ParseException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,13 +49,16 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_MISSING_ADDRESS_PROPERTY;
@@ -1378,6 +1384,88 @@ class UserIdentityServiceTest {
         Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
 
         assertEquals(Optional.of(true), isValid);
+    }
+
+    @Test
+    void shouldReturnNullForEmptyVcStoreItems() {
+        List<VcStoreItem> vcStoreItems = Collections.emptyList();
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertNull(credentialIssuer);
+    }
+
+    @Test
+    void shouldReturnNullForMultipleValidEvidence() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertNull(credentialIssuer);
+    }
+
+    @Test
+    void shouldReturnCredentialIssuerForMultipleValidEvidenceAndSingleCredentialIssuer() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1A_F2F_VC, Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertEquals(credentialIssuer, DCMAW_CRI);
+    }
+
+    @Test
+    void shouldReturnCredentialIssuerForSingleValidEvidenceAndSingleCredentialIssuer() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertEquals(credentialIssuer, DCMAW_CRI);
+    }
+
+    @Test
+    void shouldReturnNullWithAllInValidEvidence() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertNull(credentialIssuer);
+    }
+
+    @Test
+    void shouldReturnNullForCredentialParseException()
+            throws JsonProcessingException, ParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1, FRAUD_CRI, "Invalid credential", Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, "Invalid credential", Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertNull(credentialIssuer);
     }
 
     private VcStoreItem createVcStoreItem(

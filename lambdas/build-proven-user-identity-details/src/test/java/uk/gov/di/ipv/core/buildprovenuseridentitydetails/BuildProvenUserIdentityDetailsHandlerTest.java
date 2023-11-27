@@ -500,7 +500,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 "test-jwk",
                 componentId,
                 URI.create("https://example.com/callback"),
-                true);
+                true,
+                false);
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

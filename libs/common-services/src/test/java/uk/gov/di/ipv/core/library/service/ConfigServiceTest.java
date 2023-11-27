@@ -151,7 +151,8 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "https://testComponentId",
                         URI.create("https://testClientCallBackUrl"),
-                        true);
+                        true,
+                        false);
 
         private final Map<String, String> featureSetCredentialIssuerConfig =
                 Map.of(
@@ -169,6 +170,7 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "https://testComponentId",
                         URI.create("https://testClientCallBackUrl"),
+                        false,
                         false);
 
         private void checkCredentialIssuerConfig(
@@ -181,7 +183,7 @@ class ConfigServiceTest {
             assertEquals(expected.getEncryptionKeyString(), actual.getEncryptionKeyString());
             assertEquals(expected.getComponentId(), actual.getComponentId());
             assertEquals(expected.getClientCallbackUrl(), actual.getClientCallbackUrl());
-            assertEquals(expected.getRequiresApiKey(), actual.getRequiresApiKey());
+            assertEquals(expected.isRequiresApiKey(), actual.isRequiresApiKey());
         }
 
         @Test

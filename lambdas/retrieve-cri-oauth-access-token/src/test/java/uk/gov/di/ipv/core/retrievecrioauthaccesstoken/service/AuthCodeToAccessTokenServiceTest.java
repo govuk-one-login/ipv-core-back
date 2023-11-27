@@ -193,7 +193,8 @@ class AuthCodeToAccessTokenServiceTest {
                         "http://localhost:"
                                 + wmRuntimeInfo.getHttpPort()
                                 + "/credential-issuer/callback?id=StubPassport"),
-                true);
+                true,
+                false);
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
