@@ -55,7 +55,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ACCOUNT_INTERVENTIONS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -203,9 +202,7 @@ public class CheckExistingIdentityHandler
 
             // Reset identity if reprove is true.
             String reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (configService.enabled(ACCOUNT_INTERVENTIONS.getName())
-                    && !Objects.isNull(reproveIdentity)
-                    && reproveIdentity.equals("true")) {
+            if (!Objects.isNull(reproveIdentity) && reproveIdentity.equals("true")) {
                 return buildForceResetResponse();
             }
 
