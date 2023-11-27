@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -281,16 +282,13 @@ public class ProcessCriCallbackHandler
                 criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
                 criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
             } else {
-                vcResponse
-                        .getVerifiableCredentials()
-                        .forEach(
-                                (vc) -> {
-                                    assert criOAuthSessionItem != null;
-                                    verifiableCredentialJwtValidator.validate(
-                                            vc,
-                                            configService.getCriConfig(criOAuthSessionItem),
-                                            clientOAuthSessionItem.getUserId());
-                                });
+                for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
+                    assert criOAuthSessionItem != null;
+                    verifiableCredentialJwtValidator.validate(
+                            vc,
+                            configService.getCriConfig(criOAuthSessionItem),
+                            clientOAuthSessionItem.getUserId());
+                }
                 criStoringService.storeCreatedVcs(
                         vcResponse, callbackRequest, clientOAuthSessionItem);
             }

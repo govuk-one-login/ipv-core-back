@@ -78,7 +78,8 @@ public class VerifiableCredentialJwtValidator {
         validateClaimsSet(verifiableCredential, componentId, userId);
     }
 
-    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {
+    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey)
+            throws VerifiableCredentialException {
         SignedJWT concatSignatureVerifiableCredential;
         try {
             concatSignatureVerifiableCredential =
@@ -125,7 +126,8 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateClaimsSet(
-            SignedJWT verifiableCredential, String componentId, String userId) {
+            SignedJWT verifiableCredential, String componentId, String userId)
+            throws VerifiableCredentialException {
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
                 new DefaultJWTClaimsVerifier<>(
                         new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build(),
@@ -141,7 +143,8 @@ public class VerifiableCredentialJwtValidator {
         }
     }
 
-    private void validateCiCodes(SignedJWT verifiableCredential) {
+    private void validateCiCodes(SignedJWT verifiableCredential)
+            throws VerifiableCredentialException {
         Map<String, ContraIndicatorConfig> contraIndicatorConfigMap =
                 configService.getContraIndicatorConfigMap();
 
@@ -178,7 +181,7 @@ public class VerifiableCredentialJwtValidator {
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
-        } catch (ParseException e) {
+        } catch (ParseException | VerifiableCredentialException e) {
             LOGGER.error("Failed to parse verifiable credential claims set: {}", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,

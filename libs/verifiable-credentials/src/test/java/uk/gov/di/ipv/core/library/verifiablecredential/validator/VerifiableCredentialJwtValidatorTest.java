@@ -63,7 +63,7 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     @Test
-    void validatesValidVerifiableCredentialsSuccessfully() {
+    void validatesValidVerifiableCredentialsSuccessfully() throws Exception {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
@@ -123,8 +123,7 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     @Test
-    void validatesValidVerifiableCredentialsWithDerSignatureSuccessfully()
-            throws JOSEException, ParseException {
+    void validatesValidVerifiableCredentialsWithDerSignatureSuccessfully() throws Exception {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
@@ -168,7 +167,7 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     @Test
-    void validatesValidVCSuccessfully() throws ParseException {
+    void validatesValidVCSuccessfully() throws Exception {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);

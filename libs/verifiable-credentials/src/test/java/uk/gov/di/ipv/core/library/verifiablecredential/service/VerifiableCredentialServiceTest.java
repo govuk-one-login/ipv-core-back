@@ -308,6 +308,7 @@ class VerifiableCredentialServiceTest {
         verify(mockDataStore, Mockito.times(0)).create(any(), any());
     }
 
+    
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
                 KeyFactory.getInstance("EC")
