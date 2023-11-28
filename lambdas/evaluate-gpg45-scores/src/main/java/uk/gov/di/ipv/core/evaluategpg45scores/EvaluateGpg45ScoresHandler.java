@@ -275,7 +275,7 @@ public class EvaluateGpg45ScoresHandler
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "This credential, which contains the only valid evidence, should not any GPG45 profile.")
+                                        "GPG45 profile should not not be set for this credential.")
                                 .with("credentialIssuer", credentialIssuer)
                                 .with("requiresAdditionalEvidence", requiresAdditionalEvidence));
                 return requiresAdditionalEvidence;
