@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -94,25 +93,19 @@ public class CriStoringService {
                 CriResourceRetrievedType.PENDING.getType(), criId, auditEventUser);
     }
 
-    public void storeCreatedVcs(
-            VerifiableCredentialResponse vcResponse,
-            CriCallbackRequest callbackRequest,
+    public void storeVcs(
+            String criId,
+            String ipAddress,
+            String ipvSessionId,
+            List<SignedJWT> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException, ParseException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException, VerifiableCredentialException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var ipAddress = callbackRequest.getIpAddress();
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         var auditEventUser =
-                new AuditEventUser(
-                        userId,
-                        callbackRequest.getIpvSessionId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-
-        var vcs = vcResponse.getVerifiableCredentials();
+                new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
         for (SignedJWT vc : vcs) {
             auditService.sendAuditEvent(

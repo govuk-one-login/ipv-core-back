@@ -1,5 +1,5 @@
 plugins {
-	id 'java'
+	id 'java-library'
 	id "idea"
 	id "jacoco"
 }
@@ -14,8 +14,9 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
-			project(":libs:cri-response-service"),
 			project(":libs:verifiable-credentials")
+
+	api project(":libs:cri-response-service")
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0',
 			"org.mockito:mockito-junit-jupiter:5.7.0",

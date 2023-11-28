@@ -283,14 +283,24 @@ public class ProcessCriCallbackHandler
                 criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
             } else {
                 for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
-                    assert criOAuthSessionItem != null;
-                    verifiableCredentialJwtValidator.validate(
-                            vc,
-                            configService.getCriConfig(criOAuthSessionItem),
-                            clientOAuthSessionItem.getUserId());
+                    if (criOAuthSessionItem == null) {
+                        // We should never get here due to earlier null checks.
+                        // This is to satisfy a compile time warning
+                        throw new InvalidCriCallbackRequestException(
+                                ErrorResponse.INVALID_OAUTH_STATE);
+                    } else {
+                        verifiableCredentialJwtValidator.validate(
+                                vc,
+                                configService.getCriConfig(criOAuthSessionItem),
+                                clientOAuthSessionItem.getUserId());
+                    }
                 }
-                criStoringService.storeCreatedVcs(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
+                criStoringService.storeVcs(
+                        callbackRequest.getCredentialIssuerId(),
+                        callbackRequest.getIpAddress(),
+                        callbackRequest.getIpvSessionId(),
+                        vcResponse.getVerifiableCredentials(),
+                        clientOAuthSessionItem);
             }
 
             return criCheckingService.checkVcResponse(

@@ -322,4 +322,28 @@ class RequestHelperTest {
                 ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
+
+    @Test
+    void getJourneyTypeShouldReturnJourneyType() throws HttpResponseExceptionWithErrorBody {
+        ProcessRequest processRequest =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("journeyType", "reuse"))
+                        .build();
+        assertEquals("reuse", RequestHelper.getJourneyType(processRequest));
+    }
+
+    @Test
+    void getJourneyTypeShouldThrowIfJourneyTypeIsNull() {
+        ProcessRequest processRequest = new ProcessRequest();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getJourneyType(processRequest));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_TYPE.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
 }

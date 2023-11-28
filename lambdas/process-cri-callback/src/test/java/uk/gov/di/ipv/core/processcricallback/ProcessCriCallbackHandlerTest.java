@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -121,7 +120,7 @@ public class ProcessCriCallbackHandlerTest {
                 .storeVcs(
                         callbackRequest.getCredentialIssuerId(),
                         callbackRequest.getIpAddress(),
-                        ipvSessionItem.getIpvSessionId(),
+                        callbackRequest.getIpvSessionId(),
                         vcResponse.getVerifiableCredentials(),
                         clientOAuthSessionItem);
         verify(mockIpvSessionService).updateIpvSession(any(IpvSessionItem.class));
@@ -233,7 +232,7 @@ public class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         doThrow(
-                        new VerifiableCredentialException(
+                        new CriApiException(
                                 HTTPResponse.SC_BAD_REQUEST,
                                 ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE))
                 .when(mockCriApiService)
@@ -244,7 +243,7 @@ public class ProcessCriCallbackHandlerTest {
 
         // Act & Assert
         assertThrows(
-                VerifiableCredentialException.class,
+                CriApiException.class,
                 () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
     }
 

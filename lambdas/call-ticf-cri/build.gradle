@@ -10,9 +10,17 @@ repositories {
 }
 
 dependencies {
-	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
+	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
+			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
-			project(":libs:common-services")
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			project(":libs:audit-service"),
+			project(":libs:cimit-service"),
+			project(":libs:common-services"),
+			project(":libs:cri-storing-service"),
+			project(':libs:journey-uris'),
+			project(":libs:user-identity-service"),
+			project(":libs:verifiable-credentials")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
@@ -24,7 +32,9 @@ dependencies {
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.7.0",
-			testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+			project(path: ':libs:common-services', configuration: 'tests')
+
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 java {
