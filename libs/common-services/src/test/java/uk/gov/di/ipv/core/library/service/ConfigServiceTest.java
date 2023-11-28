@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.gson.Gson;
+import com.nimbusds.jose.jwk.ECKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,6 +27,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.dto.BackEndCriConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
@@ -141,6 +143,11 @@ class ConfigServiceTest {
                         EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
                         RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
 
+        private final String backEndJsonCriConfig =
+                String.format(
+                        "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
+                        EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED);
+
         private final CredentialIssuerConfig expectedBaseCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         URI.create("https://testTokenUrl"),
@@ -227,6 +234,23 @@ class ConfigServiceTest {
             assertThrows(
                     NoConfigForConnectionException.class,
                     () -> configService.getCriConfigForConnection("stub", "passportCri"));
+        }
+
+        @Test
+        void getBackEndCriConfigShouldReturnABackEndCriConfig() throws Exception {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(backEndJsonCriConfig);
+
+            BackEndCriConfig backEndCriConfig = configService.getBackEndCriConfig("passportCri");
+
+            assertEquals("https://testComponentId", backEndCriConfig.getComponentId());
+            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), backEndCriConfig.getSigningKey());
+            assertEquals(new URI("https://testCredentialUrl"), backEndCriConfig.getCredentialUrl());
+            assertTrue(backEndCriConfig.requiresApiKey());
         }
 
         @Test

@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.dto.BackEndCriConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
@@ -242,22 +243,11 @@ public class ConfigService {
     }
 
     public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
-        final String pathTemplate =
-                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        try {
-            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
-            return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
-        } catch (ParameterNotFoundException e) {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
-        } catch (JsonProcessingException e) {
-            throw new ConfigParseException(
-                    String.format(
-                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
-                            pathTemplate, e));
-        }
+        return getCriConfigForType(connection, criId, CredentialIssuerConfig.class);
+    }
+
+    public BackEndCriConfig getBackEndCriConfig(String criId) {
+        return getCriConfigForType(getActiveConnection(criId), criId, BackEndCriConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
@@ -380,5 +370,22 @@ public class ConfigService {
         }
     }
 
+    private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
+        try {
+            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+            return objectMapper.readValue(parameter, configType);
+        } catch (ParameterNotFoundException e) {
+            throw new NoConfigForConnectionException(
+                    String.format(
+                            "No config found for connection: '%s' and criId: '%s'",
+                            connection, criId));
+        } catch (JsonProcessingException e) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
+                            pathTemplate, e));
+        }
     }
 }

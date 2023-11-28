@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -47,9 +47,7 @@ public class VerifiableCredentialJwtValidator {
     }
 
     public void validate(
-            SignedJWT verifiableCredential,
-            CredentialIssuerConfig credentialIssuerConfig,
-            String userId)
+            SignedJWT verifiableCredential, CriConfig credentialIssuerConfig, String userId)
             throws VerifiableCredentialException {
         LOGGER.info("Validating Verifiable Credential.");
         ECKey signingKey;
