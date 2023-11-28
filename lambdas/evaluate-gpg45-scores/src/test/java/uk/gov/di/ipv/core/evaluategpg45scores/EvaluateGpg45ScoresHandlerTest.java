@@ -58,7 +58,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.VOT_P2;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
@@ -593,15 +593,15 @@ class EvaluateGpg45ScoresHandlerTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1A_F2F_VC, Instant.now()));
+                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1A_F2F_VC, Instant.now()));
         when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
 
         when(userIdentityService.getCredentialIssuerIfSingleValidEvidence(any()))
-                .thenReturn(DCMAW_CRI);
+                .thenReturn(BAV_CRI);
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
-        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+        when(configService.getCredentialIssuerActiveConnectionConfig(BAV_CRI))
                 .thenReturn(claimedIdentityConfig);
 
         JourneyResponse response =
@@ -620,7 +620,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNextIfMultipleValidEvidence() throws Exception {
+    void shouldReturnJourneyEndIfMultipleValidEvidence() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -633,7 +633,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
                         createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC, Instant.now()));
         when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
 
@@ -659,7 +659,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNextIfSingleValidEvidenceAndNotRequiresAdditionalEvidenceConfig()
+    void shouldReturnJourneyEndIfSingleValidEvidenceAndNotRequiresAdditionalEvidenceConfig()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
@@ -673,15 +673,15 @@ class EvaluateGpg45ScoresHandlerTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1A_F2F_VC, Instant.now()));
+                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1A_F2F_VC, Instant.now()));
         when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
 
         when(userIdentityService.getCredentialIssuerIfSingleValidEvidence(any()))
-                .thenReturn(DCMAW_CRI);
+                .thenReturn(BAV_CRI);
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
-        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+        when(configService.getCredentialIssuerActiveConnectionConfig(BAV_CRI))
                 .thenReturn(claimedIdentityConfig);
 
         JourneyResponse response =

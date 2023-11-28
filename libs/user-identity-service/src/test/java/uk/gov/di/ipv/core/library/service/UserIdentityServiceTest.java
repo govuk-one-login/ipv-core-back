@@ -1397,7 +1397,18 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnNullForMultipleValidEvidence() {
+    void shouldReturnNullForSingleEmptyVcStoreItem() {
+        List<VcStoreItem> vcStoreItems =
+                Collections.singletonList(createVcStoreItem(USER_ID_1, BAV_CRI, "", Instant.now()));
+
+        String credentialIssuer =
+                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+
+        assertNull(credentialIssuer);
+    }
+
+    @Test
+    void shouldReturnNullForMultipleValidEvidenceWithDifferentCredentialIssuers() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1405,7 +1416,7 @@ class UserIdentityServiceTest {
                                 PASSPORT_CRI,
                                 VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                                 Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
 
         String credentialIssuer =
@@ -1418,24 +1429,24 @@ class UserIdentityServiceTest {
     void shouldReturnCredentialIssuerForMultipleValidEvidenceAndSingleCredentialIssuer() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, M1A_F2F_VC, Instant.now()));
+                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, BAV_CRI, M1A_F2F_VC, Instant.now()));
 
         String credentialIssuer =
                 userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
 
-        assertEquals(credentialIssuer, DCMAW_CRI);
+        assertEquals(credentialIssuer, BAV_CRI);
     }
 
     @Test
     void shouldReturnCredentialIssuerForSingleValidEvidenceAndSingleCredentialIssuer() {
         List<VcStoreItem> vcStoreItems =
-                List.of(createVcStoreItem(USER_ID_1, DCMAW_CRI, M1B_DCMAW_VC, Instant.now()));
+                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
 
         String credentialIssuer =
                 userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
 
-        assertEquals(credentialIssuer, DCMAW_CRI);
+        assertEquals(credentialIssuer, BAV_CRI);
     }
 
     @Test
@@ -1457,8 +1468,7 @@ class UserIdentityServiceTest {
             throws JsonProcessingException, ParseException {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, FRAUD_CRI, "Invalid credential", Instant.now()),
+                        createVcStoreItem(USER_ID_1, BAV_CRI, "Invalid credential", Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1, DCMAW_CRI, "Invalid credential", Instant.now()));
 

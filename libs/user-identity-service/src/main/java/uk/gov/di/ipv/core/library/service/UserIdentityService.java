@@ -532,27 +532,21 @@ public class UserIdentityService {
         return node.isInt() && node.asInt() != 0;
     }
 
+    private boolean isValidEvidence(VcStoreItem item) {
+        try {
+            JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
+            return ((vcEvidenceNode.size() > 0)
+                    && isNonZeroInt(vcEvidenceNode.get(0).path(VC_EVIDENCE_VALIDITY))
+                    && isNonZeroInt(vcEvidenceNode.get(0).path(VC_EVIDENCE_STRENGTH)));
+        } catch (CredentialParseException e) {
+            return false;
+        }
+    }
+
     public String getCredentialIssuerIfSingleValidEvidence(List<VcStoreItem> vcStoreItems) {
         Map<String, Long> issuerCountMap =
                 vcStoreItems.stream()
-                        .filter(
-                                item -> {
-                                    try {
-                                        JsonNode vcEvidenceNode =
-                                                getVCClaimNode(item.getCredential(), VC_EVIDENCE);
-                                        return ((vcEvidenceNode.size() > 0)
-                                                && isNonZeroInt(
-                                                        vcEvidenceNode
-                                                                .get(0)
-                                                                .path(VC_EVIDENCE_VALIDITY))
-                                                && isNonZeroInt(
-                                                        vcEvidenceNode
-                                                                .get(0)
-                                                                .path(VC_EVIDENCE_STRENGTH)));
-                                    } catch (CredentialParseException e) {
-                                        return false;
-                                    }
-                                })
+                        .filter(item -> isValidEvidence(item))
                         .map(item -> item.getCredentialIssuer())
                         .collect(Collectors.groupingBy(issuer -> issuer, Collectors.counting()));
         if (issuerCountMap.size() == 1
