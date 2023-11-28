@@ -160,6 +160,12 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem.getClientOAuthSessionId());
             String userId = clientOAuthSessionItem.getUserId();
 
+            // Reset identity if reprove is true.
+            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (!Objects.isNull(reproveIdentity) && reproveIdentity) {
+                return buildForceResetResponse();
+            }
+
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -198,12 +204,6 @@ public class CheckExistingIdentityHandler
                 return isF2FComplete
                         ? buildF2FNotCorrelatedResponse(auditEventUser)
                         : buildNotCorrelatedResponse(auditEventUser);
-            }
-
-            // Reset identity if reprove is true.
-            String reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (!Objects.isNull(reproveIdentity) && reproveIdentity.equals("true")) {
-                return buildForceResetResponse();
             }
 
             // Force reset
