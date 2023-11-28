@@ -15,5 +15,4 @@ public class JourneyRequest {
     private String clientOAuthSessionId;
     private String journey;
     private String featureSet;
-    private Boolean isUserInitiated;
 }

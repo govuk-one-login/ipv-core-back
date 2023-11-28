@@ -124,7 +124,13 @@ public class RequestHelper {
 
     public static String getScoreType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        String scoreType = request.getScoreType();
+        Map<String, Object> lambdaInput = request.getLambdaInput();
+        if (lambdaInput == null) {
+            LOGGER.error("Missing lambdaInput map");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_TYPE);
+        }
+        String scoreType = (String) request.getLambdaInput().get("scoreType");
         if (scoreType == null) {
             LOGGER.error("Missing score type in request");
             throw new HttpResponseExceptionWithErrorBody(
@@ -135,7 +141,13 @@ public class RequestHelper {
 
     public static Integer getScoreThreshold(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        Integer scoreThreshold = request.getScoreThreshold();
+        Map<String, Object> lambdaInput = request.getLambdaInput();
+        if (lambdaInput == null) {
+            LOGGER.error("Missing lambdaInput map");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_THRESHOLD);
+        }
+        Integer scoreThreshold = (Integer) lambdaInput.get("scoreThreshold");
         if (scoreThreshold == null) {
             LOGGER.error("Missing score threshold in request");
             throw new HttpResponseExceptionWithErrorBody(
@@ -144,9 +156,32 @@ public class RequestHelper {
         return scoreThreshold;
     }
 
-    public static Boolean getIsUserInitiated(JourneyRequest request)
+    public static String getJourneyType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        Boolean isUserInitiated = request.getIsUserInitiated();
+        Map<String, Object> lambdaInput = request.getLambdaInput();
+        if (lambdaInput == null) {
+            LOGGER.error("Missing lambdaInput map");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_JOURNEY_TYPE);
+        }
+        String journeyType = (String) lambdaInput.get("journeyType");
+        if (journeyType == null) {
+            LOGGER.error("Missing journey type in request");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_JOURNEY_TYPE);
+        }
+        return journeyType;
+    }
+
+    public static Boolean getIsUserInitiated(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        Map<String, Object> lambdaInput = request.getLambdaInput();
+        if (lambdaInput == null) {
+            LOGGER.error("Missing lambdaInput map");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER);
+        }
+        Boolean isUserInitiated = (Boolean) lambdaInput.get("isUserInitiated");
         if (isUserInitiated == null) {
             LOGGER.error("Missing isUserInitiated parameter in request");
             throw new HttpResponseExceptionWithErrorBody(

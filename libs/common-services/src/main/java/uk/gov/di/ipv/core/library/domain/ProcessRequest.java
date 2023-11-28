@@ -5,13 +5,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
 public class ProcessRequest extends JourneyRequest {
-    private String scoreType;
-    private Integer scoreThreshold;
-    private Boolean isUserInitiated;
+    private Map<String, Object> lambdaInput;
 
     @Builder(builderMethodName = "processRequestBuilder")
     public ProcessRequest(
@@ -20,12 +20,8 @@ public class ProcessRequest extends JourneyRequest {
             String clientOAuthSessionId,
             String journey,
             String featureSet,
-            String scoreType,
-            Integer scoreThreshold,
-            Boolean isUserInitiated) {
-        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet, isUserInitiated);
-        this.scoreType = scoreType;
-        this.scoreThreshold = scoreThreshold;
-        this.isUserInitiated = isUserInitiated;
+            Map<String, Object> lambdaInput) {
+        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet);
+        this.lambdaInput = lambdaInput;
     }
 }

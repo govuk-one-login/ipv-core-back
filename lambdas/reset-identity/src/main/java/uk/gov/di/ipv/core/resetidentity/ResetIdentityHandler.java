@@ -8,8 +8,8 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -28,7 +28,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
-public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
+public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
@@ -65,7 +65,7 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
         LogHelper.attachComponentIdToLogs(configService);
 
         try {

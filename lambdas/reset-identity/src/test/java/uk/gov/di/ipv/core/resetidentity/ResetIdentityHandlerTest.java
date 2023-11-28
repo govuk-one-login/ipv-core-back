@@ -8,8 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -18,6 +18,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,15 +38,15 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_JOURNEY = "journey/reset-identity";
-    private static final Boolean IS_USER_INITIATED = true;
-    private static final JourneyRequest event =
-            JourneyRequest.builder()
+    private static final String IS_USER_INITIATED = "isUserInitiated";
+    private static final ProcessRequest event =
+            ProcessRequest.processRequestBuilder()
                     .ipvSessionId(TEST_SESSION_ID)
                     .ipAddress(TEST_CLIENT_SOURCE_IP)
                     .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                     .journey(TEST_JOURNEY)
                     .featureSet(TEST_FEATURE_SET)
-                    .isUserInitiated(IS_USER_INITIATED)
+                    .lambdaInput(Map.of(IS_USER_INITIATED, true))
                     .build();
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
@@ -85,7 +87,7 @@ public class ResetIdentityHandlerTest {
                 objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
-        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID, IS_USER_INITIATED);
+        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID, true);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }

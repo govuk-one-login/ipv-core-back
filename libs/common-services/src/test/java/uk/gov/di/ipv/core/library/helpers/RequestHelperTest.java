@@ -278,7 +278,9 @@ class RequestHelperTest {
     @Test
     void getScoreTypeShouldReturnScoreType() throws HttpResponseExceptionWithErrorBody {
         ProcessRequest processRequest =
-                ProcessRequest.processRequestBuilder().scoreType("fraud").build();
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("scoreType", "fraud"))
+                        .build();
         assertEquals("fraud", RequestHelper.getScoreType(processRequest));
     }
 
@@ -300,7 +302,9 @@ class RequestHelperTest {
     @Test
     void getScoreThresholdShouldReturnScoreThreshold() throws HttpResponseExceptionWithErrorBody {
         ProcessRequest processRequest =
-                ProcessRequest.processRequestBuilder().scoreThreshold(2).build();
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("scoreThreshold", 2))
+                        .build();
         assertEquals(2, RequestHelper.getScoreThreshold(processRequest));
     }
 
