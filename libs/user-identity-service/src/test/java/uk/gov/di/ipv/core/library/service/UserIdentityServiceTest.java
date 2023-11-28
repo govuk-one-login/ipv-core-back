@@ -20,18 +20,12 @@ import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
-import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.exceptions.*;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,9 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
@@ -1456,6 +1448,47 @@ class UserIdentityServiceTest {
                 Arguments.of(3, 7, 12),
                 Arguments.of(1, 7, 20),
                 Arguments.of(101, 201, 350));
+    }
+
+    @Test
+    void isBreachingCiThresholdIfMitigatedShouldReturnTrueWhenScoreExceedsThreshold() {
+        ContraIndicator ci1 =
+                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicator ci2 =
+                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicators cis =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
+                        .build();
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 4, -3, "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 9, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("9");
+
+        assertTrue(userIdentityService.isBreachingCiThresholdIfMitigated(ci1, cis));
+        assertFalse(userIdentityService.isBreachingCiThresholdIfMitigated(ci2, cis));
+    }
+
+    @Test
+    void isBreachingCiThresholdIfMitigatedShouldReturnFalseWhenScoreEqualsThreshold() {
+        ContraIndicator ci1 =
+                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicator ci2 =
+                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicators cis =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
+                        .build();
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 5, -5, "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 5, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        assertFalse(userIdentityService.isBreachingCiThresholdIfMitigated(ci1, cis));
     }
 
     private VcStoreItem createVcStoreItem(

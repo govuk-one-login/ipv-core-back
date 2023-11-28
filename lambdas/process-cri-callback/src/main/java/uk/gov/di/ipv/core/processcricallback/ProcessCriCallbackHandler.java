@@ -80,11 +80,11 @@ public class ProcessCriCallbackHandler
             CriOAuthSessionService criOAuthSessionService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CriApiService vcFetchingService,
+            CriApiService criApiService,
             CriStoringService criStoringService,
             CriCheckingService criCheckingService) {
         this.configService = configService;
-        this.criApiService = vcFetchingService;
+        this.criApiService = criApiService;
         this.criStoringService = criStoringService;
         this.criCheckingService = criCheckingService;
         this.ipvSessionService = ipvSessionService;

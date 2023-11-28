@@ -72,11 +72,50 @@ public class CriApiService {
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
+        var criConfig = configService.getCriConfig(criOAuthSessionItem);
+
+        try {
+            var httpRequest = buildfetchAccessTokenRequest(callbackRequest, criOAuthSessionItem);
+            var httpResponse = httpRequest.send();
+            var tokenResponse = TokenResponse.parse(httpResponse);
+
+            if (tokenResponse instanceof TokenErrorResponse) {
+                var errorResponse = tokenResponse.toErrorResponse();
+                var errorObject =
+                        Objects.requireNonNullElse(
+                                errorResponse.getErrorObject(),
+                                new ErrorObject("unknown", "unknown"));
+                LOGGER.error(
+                        "Failed to exchange token with credential issuer with ID '{}' at '{}'. Code: '{}', Description: {}, HttpStatus code: {}",
+                        criId,
+                        criConfig.getTokenUrl(),
+                        errorObject.getCode(),
+                        errorObject.getDescription(),
+                        errorObject.getHTTPStatusCode());
+                throw new CriApiException(
+                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
+            }
+
+            var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
+            LOGGER.info("Auth Code exchanged for Access Token.");
+            return token;
+        } catch (IOException | ParseException e) {
+            LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
+            throw new CriApiException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+        }
+    }
+
+    public HTTPRequest buildfetchAccessTokenRequest(
+            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
+            throws CriApiException {
+        var criId = callbackRequest.getCredentialIssuerId();
         var authorisationCode = callbackRequest.getAuthorizationCode();
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
-
         var authorizationCode = new AuthorizationCode(authorisationCode);
+
         try {
             var dateTime = OffsetDateTime.now();
             var clientAuthClaims =
@@ -112,30 +151,8 @@ public class CriApiService {
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }
 
-            var httpResponse = httpRequest.send();
-            var tokenResponse = TokenResponse.parse(httpResponse);
-
-            if (tokenResponse instanceof TokenErrorResponse) {
-                var errorResponse = tokenResponse.toErrorResponse();
-                var errorObject =
-                        Objects.requireNonNullElse(
-                                errorResponse.getErrorObject(),
-                                new ErrorObject("unknown", "unknown"));
-                LOGGER.error(
-                        "Failed to exchange token with credential issuer with ID '{}' at '{}'. Code: '{}', Description: {}, HttpStatus code: {}",
-                        criId,
-                        criConfig.getTokenUrl(),
-                        errorObject.getCode(),
-                        errorObject.getDescription(),
-                        errorObject.getHTTPStatusCode());
-                throw new CriApiException(
-                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
-            }
-
-            var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-            LOGGER.info("Auth Code exchanged for Access Token.");
-            return token;
-        } catch (IOException | ParseException | JOSEException e) {
+            return httpRequest;
+        } catch (JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CriApiException(
                     HTTPResponse.SC_SERVER_ERROR,
@@ -149,23 +166,9 @@ public class CriApiService {
             CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
-        var criConfig = configService.getCriConfig(criOAuthSessionItem);
-        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
-
         var credentialRequest =
-                new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
-
-        if (apiKey != null) {
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "CRI has API key, sending key in header for credential request.")
-                            .with(LOG_CRI_ID.getFieldName(), criId));
-            credentialRequest.setHeader(API_KEY_HEADER, apiKey);
-        }
-
-        credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
+                buildFetchVerifiableCredentialRequest(
+                        accessToken, callbackRequest, criOAuthSessionItem);
 
         try {
             var response = credentialRequest.send();
@@ -220,6 +223,33 @@ public class CriApiService {
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         }
+    }
+
+    public HTTPRequest buildFetchVerifiableCredentialRequest(
+            BearerAccessToken accessToken,
+            CriCallbackRequest callbackRequest,
+            CriOAuthSessionItem criOAuthSessionItem) {
+        var criId = callbackRequest.getCredentialIssuerId();
+        var criConfig = configService.getCriConfig(criOAuthSessionItem);
+        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
+
+        LOGGER.error("HALLO, {} {} {}", criId, criConfig, apiKey);
+
+        var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
+
+        if (apiKey != null) {
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "CRI has API key, sending key in header for credential request.")
+                            .with(LOG_CRI_ID.getFieldName(), criId));
+            request.setHeader(API_KEY_HEADER, apiKey);
+        }
+
+        request.setAuthorization(accessToken.toAuthorizationHeader());
+
+        return request;
     }
 
     private VerifiableCredentialResponse getVerifiableCredentialResponseForApplicationJson(

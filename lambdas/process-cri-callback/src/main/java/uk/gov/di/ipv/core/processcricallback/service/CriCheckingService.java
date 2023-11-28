@@ -162,10 +162,7 @@ public class CriCheckingService {
             throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
         }
         var persistedOauthState = getPersistedOauthState(criOAuthSessionItem);
-        if (!callbackRequest
-                .getState()
-                .equals(persistedOauthState)) { // might be ipvSessionItem.getCriOAuthSessionId() !=
-            // null ? ... : null
+        if (!callbackRequest.getState().equals(persistedOauthState)) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
         if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {
@@ -189,6 +186,7 @@ public class CriCheckingService {
             throws InvalidCriCallbackRequestException {
         if (ipvSessionItem.getCriOAuthSessionId() == null
                 || criOAuthSessionItem == null
+                || criOAuthSessionItem.getCriId() == null
                 || !criOAuthSessionItem
                         .getCriId()
                         .equals(callbackRequest.getCredentialIssuerId())) {

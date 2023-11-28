@@ -59,6 +59,7 @@ public class CriStoringService {
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.ciMitService = ciMitService;
+        VcHelper.setConfigService(configService);
     }
 
     public void storeCriResponse(
