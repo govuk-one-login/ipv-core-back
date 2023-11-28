@@ -402,6 +402,20 @@ class ConfigServiceTest {
     }
 
     @Test
+    void getCriPrivateApiKeyForActiveConnectionShouldReturnApiKeySecret() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
+        when(secretsProvider.get("test/credential-issuers/ukPassport/connections/stub/api-key"))
+                .thenReturn(gson.toJson(apiKeySecret));
+        when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
+                .thenReturn("stub");
+
+        String apiKey = configService.getCriPrivateApiKeyForActiveConnection("ukPassport");
+
+        assertEquals("api-key-value", apiKey);
+    }
+
+    @Test
     void shouldGetSecretValueFromSecretsManager() {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
         when(secretsProvider.get(any())).thenReturn(gson.toJson(apiKeySecret));
