@@ -91,12 +91,9 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
-
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
-
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -107,7 +104,6 @@ class CheckExistingIdentityHandlerTest {
     private static CredentialIssuerConfig addressConfig = null;
     private static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
-
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
@@ -197,6 +193,7 @@ class CheckExistingIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
+                        .reproveIdentity(false)
                         .build();
     }
 
@@ -251,6 +248,25 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+    }
+
+    @Test
+    void shouldReturnJourneyResetIdentityIfReApproveFlagIsReceived() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setReproveIdentity(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(

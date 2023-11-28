@@ -51,6 +51,9 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
+        Boolean reproveIdentity =
+                Boolean.parseBoolean(claimsSet.getStringClaim("reprove_identity"));
+        clientOAuthSessionItem.setReproveIdentity(reproveIdentity);
 
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
@@ -71,6 +74,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionErrorItem.setState(state);
         clientOAuthSessionErrorItem.setUserId(null);
         clientOAuthSessionErrorItem.setGovukSigninJourneyId(govukSigninJourneyId);
+        clientOAuthSessionErrorItem.setReproveIdentity(null);
 
         dataStore.create(clientOAuthSessionErrorItem, BACKEND_SESSION_TTL);
 
