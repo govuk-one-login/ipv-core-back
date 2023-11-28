@@ -94,6 +94,43 @@ public class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource
+    void shouldHandleSameContextForSamePage(IpvJourneyTypes journeyType) throws IOException {
+        var stateMachineInitializer = new StateMachineInitializer(journeyType);
+        var stateMachine = stateMachineInitializer.initialize();
+
+        Map<String, List<String>> expectedStateContexts = new HashMap<>();
+
+        expectedStateContexts.put(
+                "no-photo-id", List.of(
+                        "PYI_CRI_ESCAPE",
+                        "PYI_CRI_ESCAPE_NO_F2F",
+                        "MITIGATION_03_OPTIONS"
+                )
+        );
+
+        var pageContextMap = new HashMap<String, List<StateAndEvents>>();
+        findPageSpecificContexts(stateMachine, pageContextMap);
+
+        var missingContexts = new HashMap<>();
+
+        for (var expectedContext : expectedStateContexts.keySet()) {
+
+            for (var event : pageContextMap.get(expectedContext)) {
+                if (!expectedStateContexts.get(expectedContext).contains(event.state)) {
+                    missingContexts.put(event.state, expectedContext);
+                }
+            }
+        }
+
+        assertTrue(missingContexts.isEmpty(), String.format(
+                "%s states are missing expected contexts: %s",
+                missingContexts.keySet(),
+                missingContexts.values()
+        ));
+    }
+
+    @ParameterizedTest
+    @EnumSource
     void shouldMatchNestedJourneyEntryEvents(IpvJourneyTypes journeyType) throws IOException {
         var stateMachineInitialiser = new StateMachineInitializer(journeyType);
 
@@ -223,6 +260,32 @@ public class JourneyMapTest {
             }
         }
     }
+
+
+    private void findPageSpecificContexts(
+            Map<String, State> stateMachine, HashMap<String, List<StateAndEvents>> pageContextMap) {
+
+        for (var key : stateMachine.keySet()) {
+            var state = stateMachine.get(key);
+
+            if (state instanceof BasicState basicState) {
+                var response = basicState.getResponse();
+
+                if (response instanceof PageStepResponse pageStepResponse) {
+                    var context = (String) pageStepResponse.value().get("context");
+                    var pageEvents = basicState.getEvents().keySet();
+
+                    pageContextMap.computeIfAbsent(context, k -> new ArrayList<>())
+                            .add(new StateAndEvents(key, pageEvents));
+                }
+            } else if (state instanceof NestedJourneyInvokeState nestedState) {
+                var nestedStateMachine =
+                        nestedState.getNestedJourneyDefinition().getNestedJourneyStates();
+                findPageSpecificStatesAndEvents(nestedStateMachine, pageContextMap);
+            }
+        }
+    }
+
 
     public record StateAndEvents(String state, Set<String> events) {}
 }
