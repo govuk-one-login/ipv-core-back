@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -146,7 +145,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             return checkForMatchingGpg45Profile(
-                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -223,18 +222,18 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
-            String userId,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
-            throws UnknownEvidenceTypeException, ParseException, SqsException {
+            throws UnknownEvidenceTypeException, ParseException, SqsException,
+                    CredentialParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         Optional<Gpg45Profile> matchedProfile =
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
                         gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
-        if (matchedProfile.isPresent() && !checkRequiresAdditionalEvidence(userId)) {
+        if (matchedProfile.isPresent() && !checkRequiresAdditionalEvidence(credentials)) {
             auditService.sendAuditEvent(
                     buildProfileMatchedAuditEvent(
                             ipvSessionItem,
@@ -261,12 +260,13 @@ public class EvaluateGpg45ScoresHandler
         }
     }
 
-    private boolean checkRequiresAdditionalEvidence(String userId) {
-        List<VcStoreItem> vcStoreItems = userIdentityService.getVcStoreItems(userId);
-        if (!vcStoreItems.isEmpty()) {
-            String credentialIssuer =
-                    userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-            if (credentialIssuer != null) {
+    private boolean checkRequiresAdditionalEvidence(List<SignedJWT> credentials)
+            throws ParseException {
+        if (!credentials.isEmpty()) {
+            List<SignedJWT> evidenceCredentials =
+                    userIdentityService.filterValidCredentials(credentials);
+            if (evidenceCredentials.size() == 1) {
+                var credentialIssuer = evidenceCredentials.get(0).getJWTClaimsSet().getIssuer();
                 boolean requiresAdditionalEvidence =
                         configService
                                 .getCredentialIssuerActiveConnectionConfig(credentialIssuer)

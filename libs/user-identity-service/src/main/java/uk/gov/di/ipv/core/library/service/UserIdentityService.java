@@ -39,7 +39,6 @@ import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -312,7 +311,7 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if (isEvidenceVc(vcStoreItem)
+                if (isEvidenceVc(vcStoreItem.getCredential(), false)
                         && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
@@ -517,43 +516,34 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private boolean isEvidenceVc(VcStoreItem item) throws CredentialParseException {
-        JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
+    private boolean isEvidenceVc(String credential, boolean isNonZero)
+            throws CredentialParseException {
+        JsonNode vcEvidenceNode = getVCClaimNode(credential, VC_EVIDENCE);
         for (JsonNode evidence : vcEvidenceNode) {
             if (evidence.path(VC_EVIDENCE_VALIDITY).isInt()
                     && evidence.path(VC_EVIDENCE_STRENGTH).isInt()) {
+                if (isNonZero
+                        && (evidence.path(VC_EVIDENCE_VALIDITY).asInt() == 0
+                                || evidence.path(VC_EVIDENCE_STRENGTH).asInt() == 0)) {
+                    return false;
+                }
                 return true;
             }
         }
         return false;
     }
 
-    private boolean isNonZeroInt(JsonNode node) {
-        return node.isInt() && node.asInt() != 0;
-    }
-
-    private boolean isValidEvidence(VcStoreItem item) {
-        try {
-            JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
-            return ((vcEvidenceNode.size() > 0)
-                    && isNonZeroInt(vcEvidenceNode.get(0).path(VC_EVIDENCE_VALIDITY))
-                    && isNonZeroInt(vcEvidenceNode.get(0).path(VC_EVIDENCE_STRENGTH)));
-        } catch (CredentialParseException e) {
-            return false;
-        }
-    }
-
-    public String getCredentialIssuerIfSingleValidEvidence(List<VcStoreItem> vcStoreItems) {
-        Map<String, Long> issuerCountMap =
-                vcStoreItems.stream()
-                        .filter(item -> isValidEvidence(item))
-                        .map(item -> item.getCredentialIssuer())
-                        .collect(Collectors.groupingBy(issuer -> issuer, Collectors.counting()));
-        if (issuerCountMap.size() == 1
-                && issuerCountMap.values().stream().anyMatch(count -> count >= 1)) {
-            return issuerCountMap.keySet().stream().findFirst().orElse(null);
-        }
-        return null;
+    public List<SignedJWT> filterValidCredentials(List<SignedJWT> credentials) {
+        return credentials.stream()
+                .filter(
+                        item -> {
+                            try {
+                                return isEvidenceVc(item.serialize(), true);
+                            } catch (CredentialParseException e) {
+                                return false;
+                            }
+                        })
+                .collect(Collectors.toList());
     }
 
     public boolean checkBirthDateCorrelationInCredentials(String userId)

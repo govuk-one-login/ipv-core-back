@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,9 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
-import java.text.ParseException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +33,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,7 +48,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
@@ -1387,95 +1385,52 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnNullForEmptyVcStoreItems() {
-        List<VcStoreItem> vcStoreItems = Collections.emptyList();
+    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
+        List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
 
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertNull(credentialIssuer);
+        List<SignedJWT> signedJWTList =
+                userIdentityService.filterValidCredentials(credentials);
+        assertEquals(signedJWTList.size(), 1);
     }
 
     @Test
-    void shouldReturnNullForSingleEmptyVcStoreItem() {
-        List<VcStoreItem> vcStoreItems =
-                Collections.singletonList(createVcStoreItem(USER_ID_1, BAV_CRI, "", Instant.now()));
+    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() throws Exception {
+        List<SignedJWT> credentials =
+                List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(M1A_F2F_VC));
 
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertNull(credentialIssuer);
+        List<SignedJWT> signedJWTList =
+                userIdentityService.filterValidCredentials(credentials);
+        assertEquals(signedJWTList.size(), 2);
     }
 
     @Test
-    void shouldReturnNullForMultipleValidEvidenceWithDifferentCredentialIssuers() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
+    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() throws Exception {
+        List<SignedJWT> credentials =
+                List.of(SignedJWT.parse(VC_FRAUD_SCORE_1), SignedJWT.parse(VC_KBV_SCORE_2));
 
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertNull(credentialIssuer);
+        List<SignedJWT> signedJWTList =
+                userIdentityService.filterValidCredentials(credentials);
+        assertEquals(signedJWTList.size(), 0);
     }
 
     @Test
-    void shouldReturnCredentialIssuerForMultipleValidEvidenceAndSingleCredentialIssuer() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(USER_ID_1, BAV_CRI, M1A_F2F_VC, Instant.now()));
+    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() throws Exception {
+        List<SignedJWT> credentials =
+                List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(VC_KBV_SCORE_2));
 
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertEquals(credentialIssuer, BAV_CRI);
+        List<SignedJWT> signedJWTList =
+                userIdentityService.filterValidCredentials(credentials);
+        assertEquals(signedJWTList.size(), 1);
     }
 
     @Test
-    void shouldReturnCredentialIssuerForSingleValidEvidenceAndSingleCredentialIssuer() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
+    void test1() throws Exception {
+        List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
 
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+        List<SignedJWT> signedJWTList =
+                userIdentityService.filterValidCredentials(credentials);
 
-        assertEquals(credentialIssuer, BAV_CRI);
-    }
-
-    @Test
-    void shouldReturnNullWithAllInValidEvidence() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
-
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertNull(credentialIssuer);
-    }
-
-    @Test
-    void shouldReturnNullForCredentialParseException()
-            throws JsonProcessingException, ParseException {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(USER_ID_1, BAV_CRI, "Invalid credential", Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, "Invalid credential", Instant.now()));
-
-        String credentialIssuer =
-                userIdentityService.getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
-
-        assertNull(credentialIssuer);
+        assertNotNull(signedJWTList);
     }
 
     private VcStoreItem createVcStoreItem(

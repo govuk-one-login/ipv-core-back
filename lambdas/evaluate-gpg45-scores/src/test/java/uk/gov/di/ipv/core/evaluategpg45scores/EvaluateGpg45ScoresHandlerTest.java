@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -42,11 +41,11 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -58,8 +57,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.VOT_P2;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -581,8 +578,8 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturnJourneyNextIfSingleValidEvidenceAndRequiresAdditionalEvidence()
             throws Exception {
+        setupValidCredentials(List.of(M1B_DCMAW_VC));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -590,18 +587,8 @@ class EvaluateGpg45ScoresHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
-
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1A_F2F_VC, Instant.now()));
-        when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
-
-        when(userIdentityService.getCredentialIssuerIfSingleValidEvidence(any()))
-                .thenReturn(BAV_CRI);
-
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
-        when(configService.getCredentialIssuerActiveConnectionConfig(BAV_CRI))
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
         JourneyResponse response =
@@ -615,12 +602,12 @@ class EvaluateGpg45ScoresHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
-        verify(userIdentityService, times(1))
-                .getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+        verify(userIdentityService, times(1)).filterValidCredentials(any());
     }
 
     @Test
     void shouldReturnJourneyEndIfMultipleValidEvidence() throws Exception {
+        setupValidCredentials(List.of(M1B_DCMAW_VC, M1A_F2F_VC));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -630,14 +617,6 @@ class EvaluateGpg45ScoresHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
-
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC, Instant.now()));
-        when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
-
-        when(userIdentityService.getCredentialIssuerIfSingleValidEvidence(any())).thenReturn(null);
 
         JourneyResponse response =
                 toResponseClass(
@@ -654,13 +633,13 @@ class EvaluateGpg45ScoresHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(VOT_P2, ipvSessionItem.getVot());
-        verify(userIdentityService, times(1))
-                .getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+        verify(userIdentityService, times(1)).filterValidCredentials(any());
     }
 
     @Test
     void shouldReturnJourneyEndIfSingleValidEvidenceAndNotRequiresAdditionalEvidenceConfig()
             throws Exception {
+        setupValidCredentials(List.of(M1B_DCMAW_VC));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -671,17 +650,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(TEST_USER_ID, BAV_CRI, M1A_F2F_VC, Instant.now()));
-        when(userIdentityService.getVcStoreItems(any())).thenReturn(vcStoreItems);
-
-        when(userIdentityService.getCredentialIssuerIfSingleValidEvidence(any()))
-                .thenReturn(BAV_CRI);
-
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
-        when(configService.getCredentialIssuerActiveConnectionConfig(BAV_CRI))
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
         JourneyResponse response =
@@ -699,22 +669,28 @@ class EvaluateGpg45ScoresHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(VOT_P2, ipvSessionItem.getVot());
-        verify(userIdentityService, times(1))
-                .getCredentialIssuerIfSingleValidEvidence(vcStoreItems);
+        verify(userIdentityService, times(1)).filterValidCredentials(any());
+    }
+
+    private void setupValidCredentials(List<String> credentials) throws ParseException {
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(credentials);
+        List<SignedJWT> parsedCredentials =
+                credentials.stream()
+                        .map(
+                                credential -> {
+                                    try {
+                                        return SignedJWT.parse(credential);
+                                    } catch (ParseException e) {
+                                        return null;
+                                    }
+                                })
+                        .collect(Collectors.toList());
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedCredentials);
+        when(userIdentityService.filterValidCredentials(any()))
+                .thenReturn(parsedCredentials);
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
-    }
-
-    private VcStoreItem createVcStoreItem(
-            String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(userId);
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
     }
 }
