@@ -23,14 +23,20 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -529,6 +535,41 @@ class CiMitServiceTest {
                 () ->
                         ciMitService.getContraIndicatorsVCJwt(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void isCiMitigatableShouldReturnTrueWhenCiIsMitigatable() throws ConfigException {
+        ContraIndicator ci =
+                ContraIndicator.builder().code("ci_code").issuanceDate("some_date").build();
+        when(configService.getCimitConfig()).thenReturn(Map.of("ci_code", "someValue"));
+
+        boolean result = ciMitService.isCiMitigatable(ci);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void isCiMitigatableShouldReturnFalseWhenCiIsNotMitigatable() throws ConfigException {
+        ContraIndicator ci =
+                ContraIndicator.builder().code("ci_code").issuanceDate("some_date").build();
+        when(configService.getCimitConfig()).thenReturn(Collections.emptyMap());
+
+        assertFalse(ciMitService.isCiMitigatable(ci));
+    }
+
+    @Test
+    void isCiMitigatableShouldReturnFalseWhenCiIsAlreadyMitigated() throws ConfigException {
+        ContraIndicator ci =
+                ContraIndicator.builder()
+                        .code("ci_code")
+                        .issuanceDate("some_date")
+                        .mitigation(List.of(Mitigation.builder().build()))
+                        .build();
+        when(configService.getCimitConfig()).thenReturn(Map.of("ci_code", "someValue"));
+
+        boolean result = ciMitService.isCiMitigatable(ci);
+
+        assertFalse(result);
     }
 
     private ByteBuffer makeCiMitVCPayload(String signedJwt) throws JsonProcessingException {

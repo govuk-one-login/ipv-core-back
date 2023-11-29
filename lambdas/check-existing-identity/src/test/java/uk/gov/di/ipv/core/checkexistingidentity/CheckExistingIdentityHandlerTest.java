@@ -200,10 +200,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -241,10 +238,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
@@ -285,10 +279,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -324,10 +315,7 @@ class CheckExistingIdentityHandlerTest {
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
@@ -361,10 +349,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -469,9 +454,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -504,8 +487,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -538,9 +520,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -562,8 +542,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -585,7 +564,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+        when(userIdentityService.areVcsCorrelated(any()))
                 .thenThrow(new CredentialParseException("Oops"));
 
         JourneyErrorResponse journeyResponse =
@@ -610,10 +589,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -645,10 +621,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -708,15 +681,13 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void
-            shouldReturn500IfCredentialParseExceptionFromCheckNameAndFamilyNameCorrelationInCredentials()
-                    throws Exception {
+    void shouldReturn500IfCredentialParseExceptionFromAreVcsCorrelated() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+        when(userIdentityService.areVcsCorrelated(any()))
                 .thenThrow(
                         new CredentialParseException("Failed to parse successful VC Store items."));
 
@@ -747,9 +718,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any()))
+        when(userIdentityService.areVcsCorrelated(any()))
                 .thenThrow(
                         new CredentialParseException("Failed to parse successful VC Store items."));
 
@@ -789,7 +758,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
         when(configService.getCimitConfig()).thenReturn(testCimitConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -823,7 +792,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.breachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
         when(configService.getCimitConfig()).thenReturn(testCimitConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -861,7 +830,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.breachingCiThreshold(any())).thenReturn(true);
+        when(userIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(configService.getCimitConfig())
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 

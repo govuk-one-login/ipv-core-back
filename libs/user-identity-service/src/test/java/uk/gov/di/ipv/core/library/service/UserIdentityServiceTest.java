@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -29,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1378,6 +1382,121 @@ class UserIdentityServiceTest {
         Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
 
         assertEquals(Optional.of(true), isValid);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ciScoresAndSurpassedThresholds")
+    void isBreachingCiThresholdShouldReturnTrueIfCiScoreBreaching(
+            int ciScore1, int ciScore2, int ciScoreThreshold) {
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+                .thenReturn(String.valueOf(ciScoreThreshold));
+
+        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
+        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, ciScore2, null, null);
+
+        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
+        ciConfigMap.put("ci_1", ciConfig1);
+        ciConfigMap.put("ci_2", ciConfig2);
+
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        Map<String, ContraIndicator> cisMap = new HashMap<>();
+        cisMap.put("ci_1", ContraIndicator.builder().build());
+        cisMap.put("ci_2", ContraIndicator.builder().build());
+
+        ContraIndicators cis = ContraIndicators.builder().contraIndicatorsMap(cisMap).build();
+
+        assertTrue(
+                userIdentityService.isBreachingCiThreshold(cis),
+                String.format(
+                        "CIs with scores %s and %s should breach threshold of %s",
+                        ciScore1, ciScore2, ciScoreThreshold));
+    }
+
+    static Stream<Arguments> ciScoresAndSurpassedThresholds() {
+        return Stream.of(
+                Arguments.of(5, 5, 9),
+                Arguments.of(3, 7, 2),
+                Arguments.of(1, 7, 2),
+                Arguments.of(101, 201, 301));
+    }
+
+    @ParameterizedTest
+    @MethodSource("ciScoresAndUnsurpassedThresholds")
+    void isBreachingCiThresholdShouldReturnFalseIfCiScoreNotBreaching(
+            int ciScore1, int ciScore2, int ciScoreThreshold) {
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+                .thenReturn(String.valueOf(ciScoreThreshold));
+
+        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
+        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, ciScore2, null, null);
+
+        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
+        ciConfigMap.put("ci_1", ciConfig1);
+        ciConfigMap.put("ci_2", ciConfig2);
+
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        Map<String, ContraIndicator> cisMap = new HashMap<>();
+        cisMap.put("ci_1", ContraIndicator.builder().build());
+        cisMap.put("ci_2", ContraIndicator.builder().build());
+
+        ContraIndicators cis = ContraIndicators.builder().contraIndicatorsMap(cisMap).build();
+
+        assertFalse(
+                userIdentityService.isBreachingCiThreshold(cis),
+                String.format(
+                        "CIs with scores %s and %s shouldn't be breach threshold of %s",
+                        ciScore1, ciScore2, ciScoreThreshold));
+    }
+
+    static Stream<Arguments> ciScoresAndUnsurpassedThresholds() {
+        return Stream.of(
+                Arguments.of(5, 4, 9),
+                Arguments.of(3, 7, 12),
+                Arguments.of(1, 7, 20),
+                Arguments.of(101, 201, 350));
+    }
+
+    @Test
+    void isBreachingCiThresholdIfMitigatedShouldReturnTrueWhenScoreExceedsThreshold() {
+        ContraIndicator ci1 =
+                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicator ci2 =
+                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicators cis =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
+                        .build();
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 4, -3, "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 9, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("9");
+
+        assertTrue(userIdentityService.isBreachingCiThresholdIfMitigated(ci1, cis));
+        assertFalse(userIdentityService.isBreachingCiThresholdIfMitigated(ci2, cis));
+    }
+
+    @Test
+    void isBreachingCiThresholdIfMitigatedShouldReturnFalseWhenScoreEqualsThreshold() {
+        ContraIndicator ci1 =
+                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicator ci2 =
+                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicators cis =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
+                        .build();
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 5, -5, "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 5, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        assertFalse(userIdentityService.isBreachingCiThresholdIfMitigated(ci1, cis));
     }
 
     private VcStoreItem createVcStoreItem(

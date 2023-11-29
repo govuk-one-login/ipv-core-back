@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
@@ -134,6 +135,11 @@ public class CiMitService {
     public ContraIndicators getContraIndicators(SignedJWT contraIndicatorsVc)
             throws CiRetrievalException {
         return mapToContraIndicators(parseContraIndicatorEvidence(contraIndicatorsVc));
+    }
+
+    public boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
+        var cimitConfig = configService.getCimitConfig();
+        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
     }
 
     public SignedJWT getContraIndicatorsVCJwt(

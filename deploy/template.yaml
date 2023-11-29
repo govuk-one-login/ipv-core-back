@@ -124,6 +124,10 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
+  IsBuild: !Equals [ !Ref Environment, build ]
+  IsDevOrBuild: !Or
+    - !Condition IsDevelopment
+    - !Condition IsBuild
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -1319,6 +1323,235 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
+
+  ProcessCriCallbackFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "ProcessCriCallbackLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "process-cri-callback-${Environment}"
+      Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/process-cri-callback
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+          CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/connections/*/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: invokePutCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
+            - Sid: invokeGetContraIndicatorCredentialFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
+            - Sid: invokePostCiMitigationFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - cimitEnvironment
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/callback
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  ProcessCriCallbackLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/process-cri-callback-${Environment}"
+
+  ProcessCriCallbackLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ProcessCriCallbackLogGroup
 
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
