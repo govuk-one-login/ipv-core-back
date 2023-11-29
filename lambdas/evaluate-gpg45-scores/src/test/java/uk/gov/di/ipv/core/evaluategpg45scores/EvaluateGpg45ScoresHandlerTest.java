@@ -580,8 +580,6 @@ class EvaluateGpg45ScoresHandlerTest {
             throws Exception {
         setupValidCredentials(List.of(M1B_DCMAW_VC));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
@@ -670,6 +668,42 @@ class EvaluateGpg45ScoresHandlerTest {
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(VOT_P2, ipvSessionItem.getVot());
         verify(userIdentityService, times(1)).filterValidCredentials(any());
+    }
+
+    @Test
+    void testGetCRIWithCredentialIssuer() {
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://address-cri.stubs.account.gov.uk"),
+                "address");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://kbv-cri.stubs.account.gov.uk"),
+                "kbv");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://fraud-cri.stubs.account.gov.uk"),
+                "fraud");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://passport-cri.stubs.account.gov.uk"),
+                "passport");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://cimit-cri.stubs.account.gov.uk"),
+                "cimit");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://bav-cri.stubs.account.gov.uk"),
+                "bav");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer(
+                        "https://nino-cri.stubs.account.gov.uk"),
+                "nino");
+        assertEquals(
+                evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer("https://example.com"),
+                "https://example.com");
+        assertEquals(evaluateGpg45ScoresHandler.getCRIWithCredentialIssuer("test"), "test");
     }
 
     private void setupValidCredentials(List<String> credentials) throws ParseException {

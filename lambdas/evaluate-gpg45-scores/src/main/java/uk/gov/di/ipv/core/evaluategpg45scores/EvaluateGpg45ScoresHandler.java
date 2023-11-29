@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -80,6 +82,7 @@ public class EvaluateGpg45ScoresHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     public static final String VOT_P2 = "P2";
+    private static final Pattern CRI_ISSUER_PATTERN = Pattern.compile("^https?://([^\\-]+)-cri.*$");
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -228,36 +231,37 @@ public class EvaluateGpg45ScoresHandler
             String ipAddress)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        Optional<Gpg45Profile> matchedProfile =
-                gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
+        if (!checkRequiresAdditionalEvidence(credentials)) {
+            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+            Optional<Gpg45Profile> matchedProfile =
+                    gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
-        if (matchedProfile.isPresent() && !checkRequiresAdditionalEvidence(credentials)) {
-            auditService.sendAuditEvent(
-                    buildProfileMatchedAuditEvent(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            matchedProfile.get(),
-                            gpg45Scores,
-                            credentials,
-                            ipAddress));
-            ipvSessionItem.setVot(VOT_P2);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            if (matchedProfile.isPresent()) {
+                auditService.sendAuditEvent(
+                        buildProfileMatchedAuditEvent(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                matchedProfile.get(),
+                                gpg45Scores,
+                                credentials,
+                                ipAddress));
+                ipvSessionItem.setVot(VOT_P2);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("lambdaResult", "A GPG45 profile has been met")
-                            .with("journeyResponse", JOURNEY_END));
-            return JOURNEY_END;
-        } else {
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("lambdaResult", "No GPG45 profiles have been met")
-                            .with("journeyResponse", JOURNEY_NEXT));
-
-            return JOURNEY_NEXT;
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with("lambdaResult", "A GPG45 profile has been met")
+                                .with("journeyResponse", JOURNEY_END));
+                return JOURNEY_END;
+            }
         }
+        LOGGER.info(
+                new StringMapMessage()
+                        .with("lambdaResult", "No GPG45 profiles have been met")
+                        .with("journeyResponse", JOURNEY_NEXT));
+
+        return JOURNEY_NEXT;
     }
 
     private boolean checkRequiresAdditionalEvidence(List<SignedJWT> credentials)
@@ -266,22 +270,36 @@ public class EvaluateGpg45ScoresHandler
             List<SignedJWT> evidenceCredentials =
                     userIdentityService.filterValidCredentials(credentials);
             if (evidenceCredentials.size() == 1) {
-                var credentialIssuer = evidenceCredentials.get(0).getJWTClaimsSet().getIssuer();
-                boolean requiresAdditionalEvidence =
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(credentialIssuer)
-                                .isRequiresAdditionalEvidence();
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "GPG45 profile should not not be set for this credential.")
-                                .with("credentialIssuer", credentialIssuer)
-                                .with("requiresAdditionalEvidence", requiresAdditionalEvidence));
-                return requiresAdditionalEvidence;
+                var credentialIssuer =
+                        getCRIWithCredentialIssuer(
+                                evidenceCredentials.get(0).getJWTClaimsSet().getIssuer());
+                CredentialIssuerConfig credentialIssuerConfig =
+                        configService.getCredentialIssuerActiveConnectionConfig(credentialIssuer);
+                if (credentialIssuerConfig != null) {
+                    boolean requiresAdditionalEvidence =
+                            credentialIssuerConfig.isRequiresAdditionalEvidence();
+                    LOGGER.info(
+                            new StringMapMessage()
+                                    .with(
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "GPG45 profile should not not be set for this credential.")
+                                    .with("credentialIssuer", credentialIssuer)
+                                    .with(
+                                            "requiresAdditionalEvidence",
+                                            requiresAdditionalEvidence));
+                    return requiresAdditionalEvidence;
+                }
             }
         }
         return false;
+    }
+
+    public String getCRIWithCredentialIssuer(String iss) {
+        java.util.regex.Matcher issMatcher = CRI_ISSUER_PATTERN.matcher(iss);
+        if (issMatcher.matches()) {
+            return issMatcher.group(1);
+        }
+        return iss;
     }
 
     @Tracing
