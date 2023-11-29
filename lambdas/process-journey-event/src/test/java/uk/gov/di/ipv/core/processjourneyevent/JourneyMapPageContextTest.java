@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,20 +48,20 @@ public class JourneyMapPageContextTest {
 
         var invalidContexts = new HashMap<String, List<String>>();
 
-        for (PageStepResponse response: pagesWithContexts ) {
+        for (PageStepResponse response : pagesWithContexts) {
             String pageId = response.getPageId();
             String context = response.getContext();
 
             if (!acceptedStateContexts.get(pageId).contains(context)) {
-                invalidContexts.computeIfAbsent(pageId,  k -> new ArrayList<>())
-                        .add(context);
+                invalidContexts.computeIfAbsent(pageId, k -> new ArrayList<>()).add(context);
             }
         }
 
         assertTrue(
                 invalidContexts.isEmpty(),
                 String.format(
-                        "Some journey map contexts are not currently supported in ipv-core-front: %s", invalidContexts));
+                        "Some journey map contexts are not currently supported in ipv-core-front: %s",
+                        invalidContexts));
     }
 
     private void findPagesWithContexts(
