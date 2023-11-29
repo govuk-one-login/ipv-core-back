@@ -17,7 +17,6 @@ public class PageStepResponse implements StepResponse {
     public Map<String, Object> value() {
         return Map.of(
                 "page", pageId,
-                "context", context
-        );
+                "context", context);
     }
 }
