@@ -487,7 +487,10 @@ CHECK_FRAUD_SCORE_J3:
       scoreThreshold: 2
   events:
     met:
-      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      targetState: CRI_NINO_J6
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     unmet:
       targetState: PYI_NO_MATCH
 
