@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -25,6 +25,8 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +35,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,6 +50,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
@@ -96,6 +99,28 @@ class UserIdentityServiceTest {
                     "0",
                     EXIT_CODES_NON_CI_BREACHING_P0,
                     "🐧");
+    public static CredentialIssuerConfig claimedIdentityConfig = null;
+
+    static {
+        try {
+            claimedIdentityConfig =
+                    CredentialIssuerConfig.builder()
+                            .tokenUrl(new URI("http://example.com/token"))
+                            .credentialUrl(new URI("http://example.com/credential"))
+                            .authorizeUrl(new URI("http://example.com/authorize"))
+                            .clientId("ipv-core")
+                            .signingKey("test-jwk")
+                            .encryptionKey("test-encryption-jwk")
+                            .componentId("https://review-a.integration.account.gov.uk")
+                            .clientCallbackUrl(new URI("http://example.com/redirect"))
+                            .requiresApiKey(true)
+                            .requiresAdditionalEvidence(false)
+                            .build();
+
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -1386,46 +1411,65 @@ class UserIdentityServiceTest {
 
     @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
-        List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
+        List<VcStoreItem> vcStoreItems =
+                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        claimedIdentityConfig.setRequiresAdditionalEvidence(true);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(claimedIdentityConfig);
 
-        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
-        assertEquals(signedJWTList.size(), 1);
+        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+    }
+
+    @Test
+    void
+            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
+                    throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        claimedIdentityConfig.setRequiresAdditionalEvidence(false);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(claimedIdentityConfig);
+
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() throws Exception {
-        List<SignedJWT> credentials =
-                List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(M1A_F2F_VC));
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
-        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
-        assertEquals(signedJWTList.size(), 2);
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() throws Exception {
-        List<SignedJWT> credentials =
-                List.of(SignedJWT.parse(VC_FRAUD_SCORE_1), SignedJWT.parse(VC_KBV_SCORE_2));
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
-        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
-        assertEquals(signedJWTList.size(), 0);
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() throws Exception {
-        List<SignedJWT> credentials =
-                List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(VC_KBV_SCORE_2));
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
-        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
-        assertEquals(signedJWTList.size(), 1);
-    }
+        claimedIdentityConfig.setRequiresAdditionalEvidence(true);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(claimedIdentityConfig);
 
-    @Test
-    void test1() throws Exception {
-        List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
-
-        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
-
-        assertNotNull(signedJWTList);
+        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
     }
 
     private VcStoreItem createVcStoreItem(

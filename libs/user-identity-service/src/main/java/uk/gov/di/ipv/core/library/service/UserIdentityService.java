@@ -311,7 +311,7 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if (isEvidenceVc(vcStoreItem.getCredential(), false)
+                if (isEvidenceVc(vcStoreItem)
                         && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
@@ -516,34 +516,47 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private boolean isEvidenceVc(String credential, boolean isNonZero)
-            throws CredentialParseException {
-        JsonNode vcEvidenceNode = getVCClaimNode(credential, VC_EVIDENCE);
+    private boolean isEvidenceVc(VcStoreItem item) throws CredentialParseException {
+        JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
         for (JsonNode evidence : vcEvidenceNode) {
-            if (evidence.path(VC_EVIDENCE_VALIDITY).isInt()
-                    && evidence.path(VC_EVIDENCE_STRENGTH).isInt()) {
-                if (isNonZero
-                        && (evidence.path(VC_EVIDENCE_VALIDITY).asInt() == 0
-                                || evidence.path(VC_EVIDENCE_STRENGTH).asInt() == 0)) {
-                    return false;
-                }
+            if (isNonZeroInt(evidence.path(VC_EVIDENCE_VALIDITY))
+                    && isNonZeroInt(evidence.path(VC_EVIDENCE_STRENGTH))) {
                 return true;
             }
         }
         return false;
     }
 
-    public List<SignedJWT> filterValidCredentials(List<SignedJWT> credentials) {
-        return credentials.stream()
+    private boolean isNonZeroInt(JsonNode node) {
+        return node.isInt() && node.asInt() != 0;
+    }
+
+    private List<VcStoreItem> filterValidVCs(List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
                 .filter(
                         item -> {
                             try {
-                                return isEvidenceVc(item.serialize(), true);
+                                return isEvidenceVc(item);
                             } catch (CredentialParseException e) {
                                 return false;
                             }
                         })
                 .collect(Collectors.toList());
+    }
+
+    public boolean checkRequiresAdditionalEvidence(String userId) throws ParseException {
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+        if (!vcStoreItems.isEmpty()) {
+
+            List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
+            if (filterValidVCs.size() == 1) {
+                return configService
+                        .getCredentialIssuerActiveConnectionConfig(
+                                filterValidVCs.get(0).getCredentialIssuer())
+                        .isRequiresAdditionalEvidence();
+            }
+        }
+        return false;
     }
 
     public boolean checkBirthDateCorrelationInCredentials(String userId)

@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -47,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -82,7 +80,6 @@ public class EvaluateGpg45ScoresHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     public static final String VOT_P2 = "P2";
-    private static final Pattern CRI_ISSUER_PATTERN = Pattern.compile("^https?://([^\\-]+)-cri.*$");
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -148,7 +145,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             return checkForMatchingGpg45Profile(
-                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -225,13 +222,14 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
+            String userId,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
-        if (!checkRequiresAdditionalEvidence(credentials)) {
+        if (!userIdentityService.checkRequiresAdditionalEvidence(userId)) {
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -262,44 +260,6 @@ public class EvaluateGpg45ScoresHandler
                         .with("journeyResponse", JOURNEY_NEXT));
 
         return JOURNEY_NEXT;
-    }
-
-    private boolean checkRequiresAdditionalEvidence(List<SignedJWT> credentials)
-            throws ParseException {
-        if (!credentials.isEmpty()) {
-            List<SignedJWT> evidenceCredentials =
-                    userIdentityService.filterValidCredentials(credentials);
-            if (evidenceCredentials.size() == 1) {
-                var credentialIssuer =
-                        getCRIWithCredentialIssuer(
-                                evidenceCredentials.get(0).getJWTClaimsSet().getIssuer());
-                CredentialIssuerConfig credentialIssuerConfig =
-                        configService.getCredentialIssuerActiveConnectionConfig(credentialIssuer);
-                if (credentialIssuerConfig != null) {
-                    boolean requiresAdditionalEvidence =
-                            credentialIssuerConfig.isRequiresAdditionalEvidence();
-                    LOGGER.info(
-                            new StringMapMessage()
-                                    .with(
-                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                            "GPG45 profile should not not be set for this credential.")
-                                    .with("credentialIssuer", credentialIssuer)
-                                    .with(
-                                            "requiresAdditionalEvidence",
-                                            requiresAdditionalEvidence));
-                    return requiresAdditionalEvidence;
-                }
-            }
-        }
-        return false;
-    }
-
-    public String getCRIWithCredentialIssuer(String iss) {
-        java.util.regex.Matcher issMatcher = CRI_ISSUER_PATTERN.matcher(iss);
-        if (issMatcher.matches()) {
-            return issMatcher.group(1);
-        }
-        return iss;
     }
 
     @Tracing
