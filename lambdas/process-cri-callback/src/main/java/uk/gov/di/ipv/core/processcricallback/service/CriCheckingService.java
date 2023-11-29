@@ -161,8 +161,8 @@ public class CriCheckingService {
         if (StringUtils.isBlank(state)) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
         }
-        var persistedOauthState = getPersistedOauthState(criOAuthSessionItem);
-        if (!callbackRequest.getState().equals(persistedOauthState)) {
+        if (criOAuthSessionItem == null
+                || !state.equals(criOAuthSessionItem.getCriOAuthSessionId())) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
         if (configService.getCredentialIssuerActiveConnectionConfig(criId) == null) {

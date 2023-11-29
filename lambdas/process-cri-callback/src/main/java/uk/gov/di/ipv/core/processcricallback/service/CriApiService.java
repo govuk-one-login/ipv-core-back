@@ -233,8 +233,6 @@ public class CriApiService {
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
-        LOGGER.error("HALLO, {} {} {}", criId, criConfig, apiKey);
-
         var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
 
         if (apiKey != null) {
