@@ -685,7 +685,7 @@ CRI_DCMAW_PYI_ESCAPE:
   parent: CRI_STATE
   events:
     next:
-      targetState: IPV_SUCCESS_PAGE
+      targetState: ERROR
       checkFeatureFlag:
         gpg45ScoresAtEnd:
           targetState: EVALUATE_GPG45_SCORES
