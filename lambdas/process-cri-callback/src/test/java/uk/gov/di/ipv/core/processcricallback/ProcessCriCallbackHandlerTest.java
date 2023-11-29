@@ -11,11 +11,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.exceptions.*;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -32,9 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.*;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
 public class ProcessCriCallbackHandlerTest {
@@ -42,6 +48,8 @@ public class ProcessCriCallbackHandlerTest {
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
+    private static final String TEST_FEATURE_SET = "test_feature_set";
+    private static final String TEST_IP_ADDRESS = "test_ip_address";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private ConfigService mockConfigService;
