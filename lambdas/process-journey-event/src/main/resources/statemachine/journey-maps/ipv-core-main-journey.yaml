@@ -525,8 +525,6 @@ CRI_HMRC_KBV_J6:
     criId: hmrcKbv
   parent: CRI_STATE
   events:
-    enhanced-verification:
-      targetState: MITIGATION_03_OPTIONS
     end:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:

@@ -31,10 +31,10 @@ public class JourneyMapPageContextTest {
         environmentVariables.set("IS_LOCAL", "true");
     }
 
-    private final HashMap<String, List<String>> expectedStateContexts =
+    private final HashMap<String, List<String>> acceptedStateContexts =
             new HashMap<>() {
                 {
-                    put("no-photo-id", List.of("MITIGATION_02_OPTIONS_WITH_F2F_J7"));
+                    put("pyi-suggest-other-options", List.of("no-photo-id"));
                 }
             };
 
@@ -44,37 +44,29 @@ public class JourneyMapPageContextTest {
         var stateMachineInitializer = new StateMachineInitializer(journeyType);
         var stateMachine = stateMachineInitializer.initialize();
 
-        var pageContextMap = new HashMap<String, List<StateAndEvents>>();
-        findPageSpecificContexts(stateMachine, pageContextMap);
+        var pagesWithContexts = new ArrayList<PageStepResponse>();
+        findPagesWithContexts(stateMachine, pagesWithContexts);
 
-        var missingContexts = new HashMap<>();
+        var invalidContexts = new HashMap<String, List<String>>();
 
-        for (var expectedContext : expectedStateContexts.keySet()) {
+        for (PageStepResponse response: pagesWithContexts ) {
+            String pageId = response.getPageId();
+            String context = response.getContext();
 
-            for (var expectedEvent : expectedStateContexts.get(expectedContext)) {
-
-                List<StateAndEvents> journeyMapEvent = pageContextMap.get(expectedContext);
-
-                boolean expectedContextIsPresent =
-                        journeyMapEvent != null
-                                && journeyMapEvent.stream()
-                                        .anyMatch(
-                                                listEvent -> listEvent.state.equals(expectedEvent));
-
-                if (!expectedContextIsPresent) {
-                    missingContexts.put(expectedEvent, expectedContext);
-                }
+            if (!acceptedStateContexts.get(pageId).contains(context)) {
+                invalidContexts.computeIfAbsent(pageId,  k -> new ArrayList<>())
+                        .add(context);
             }
         }
 
         assertTrue(
-                missingContexts.isEmpty(),
+                invalidContexts.isEmpty(),
                 String.format(
-                        "ipv-core-front is missing some expected contexts: %s", missingContexts));
+                        "Some journey map contexts are not currently supported in ipv-core-front: %s", invalidContexts));
     }
 
-    private void findPageSpecificContexts(
-            Map<String, State> stateMachine, HashMap<String, List<StateAndEvents>> pageContextMap) {
+    private void findPagesWithContexts(
+            Map<String, State> stateMachine, List<PageStepResponse> pageContextMap) {
 
         for (var key : stateMachine.keySet()) {
             var state = stateMachine.get(key);
@@ -84,15 +76,13 @@ public class JourneyMapPageContextTest {
 
                 if (response instanceof PageStepResponse pageStepResponse) {
                     var context = (String) pageStepResponse.value().get("context");
-                    var pageEvents = basicState.getEvents().keySet();
+                    var pageId = (String) pageStepResponse.value().get("page");
 
-                    pageContextMap
-                            .computeIfAbsent(context, k -> new ArrayList<>())
-                            .add(new StateAndEvents(key, pageEvents));
+                    if (!context.isEmpty() && !pageId.isEmpty()) {
+                        pageContextMap.add(pageStepResponse);
+                    }
                 }
             }
         }
     }
-
-    public record StateAndEvents(String state, Set<String> events) {}
 }
