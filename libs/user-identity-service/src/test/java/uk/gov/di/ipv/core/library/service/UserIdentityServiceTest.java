@@ -1388,8 +1388,7 @@ class UserIdentityServiceTest {
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
         List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
 
-        List<SignedJWT> signedJWTList =
-                userIdentityService.filterValidCredentials(credentials);
+        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
         assertEquals(signedJWTList.size(), 1);
     }
 
@@ -1398,8 +1397,7 @@ class UserIdentityServiceTest {
         List<SignedJWT> credentials =
                 List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(M1A_F2F_VC));
 
-        List<SignedJWT> signedJWTList =
-                userIdentityService.filterValidCredentials(credentials);
+        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
         assertEquals(signedJWTList.size(), 2);
     }
 
@@ -1408,8 +1406,7 @@ class UserIdentityServiceTest {
         List<SignedJWT> credentials =
                 List.of(SignedJWT.parse(VC_FRAUD_SCORE_1), SignedJWT.parse(VC_KBV_SCORE_2));
 
-        List<SignedJWT> signedJWTList =
-                userIdentityService.filterValidCredentials(credentials);
+        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
         assertEquals(signedJWTList.size(), 0);
     }
 
@@ -1418,8 +1415,7 @@ class UserIdentityServiceTest {
         List<SignedJWT> credentials =
                 List.of(SignedJWT.parse(M1B_DCMAW_VC), SignedJWT.parse(VC_KBV_SCORE_2));
 
-        List<SignedJWT> signedJWTList =
-                userIdentityService.filterValidCredentials(credentials);
+        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
         assertEquals(signedJWTList.size(), 1);
     }
 
@@ -1427,8 +1423,7 @@ class UserIdentityServiceTest {
     void test1() throws Exception {
         List<SignedJWT> credentials = List.of(SignedJWT.parse(M1B_DCMAW_VC));
 
-        List<SignedJWT> signedJWTList =
-                userIdentityService.filterValidCredentials(credentials);
+        List<SignedJWT> signedJWTList = userIdentityService.filterValidCredentials(credentials);
 
         assertNotNull(signedJWTList);
     }

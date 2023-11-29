@@ -686,8 +686,7 @@ class EvaluateGpg45ScoresHandlerTest {
                                 })
                         .collect(Collectors.toList());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedCredentials);
-        when(userIdentityService.filterValidCredentials(any()))
-                .thenReturn(parsedCredentials);
+        when(userIdentityService.filterValidCredentials(any())).thenReturn(parsedCredentials);
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
