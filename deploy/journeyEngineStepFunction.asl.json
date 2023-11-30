@@ -49,6 +49,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/evaluate-gpg45-scores",
           "Next": "EvaluateGpg45Scores"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/call-ticf-cri",
+          "Next": "CallTicfCriLambda"
         }
       ],
       "Default": "Success"
@@ -117,6 +122,18 @@
     "CheckGpg45ScoreLambda": {
       "Type": "Task",
       "Resource": "${CheckGpg45ScoreFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "lambdaInput.$": "$.lambdaInput"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "CallTicfCriLambda": {
+      "Type": "Task",
+      "Resource": "${CallTicfCriLambdaArn}",
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",

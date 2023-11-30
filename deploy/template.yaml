@@ -1368,6 +1368,7 @@ Resources:
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
+        CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1397,6 +1398,8 @@ Resources:
             FunctionName: !Ref CheckGpg45ScoreFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CallTicfCriFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -2235,6 +2238,8 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/ticf/connections/*/api-key-*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
