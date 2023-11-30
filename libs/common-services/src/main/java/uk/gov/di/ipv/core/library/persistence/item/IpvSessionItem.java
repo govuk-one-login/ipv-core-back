@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @DynamoDbBean

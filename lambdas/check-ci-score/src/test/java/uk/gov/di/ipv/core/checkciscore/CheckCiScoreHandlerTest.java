@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 

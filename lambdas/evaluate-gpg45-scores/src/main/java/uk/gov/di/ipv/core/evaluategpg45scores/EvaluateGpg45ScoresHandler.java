@@ -48,15 +48,15 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_END_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_MET_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_UNMET_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_MET = new JourneyResponse(JOURNEY_MET_PATH);
+    private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse(JOURNEY_UNMET_PATH);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
@@ -126,28 +126,28 @@ public class EvaluateGpg45ScoresHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
                     .toObjectMap();
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
         }
     }
@@ -181,16 +181,16 @@ public class EvaluateGpg45ScoresHandler
                 LOGGER.info(
                         new StringMapMessage()
                                 .with("lambdaResult", "A GPG45 profile has been met")
-                                .with("journeyResponse", JOURNEY_END));
-                return JOURNEY_END;
+                                .with("journeyResponse", JOURNEY_MET));
+                return JOURNEY_MET;
             }
         }
         LOGGER.info(
                 new StringMapMessage()
                         .with("lambdaResult", "No GPG45 profiles have been met")
-                        .with("journeyResponse", JOURNEY_NEXT));
+                        .with("journeyResponse", JOURNEY_UNMET));
 
-        return JOURNEY_NEXT;
+        return JOURNEY_UNMET;
     }
 
     @Tracing
