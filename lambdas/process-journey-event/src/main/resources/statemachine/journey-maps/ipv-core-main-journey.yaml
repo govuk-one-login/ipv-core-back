@@ -24,7 +24,7 @@ CRI_STATE:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
         gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+          targetState: ERROR
     pyi-no-match:
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
@@ -325,7 +325,7 @@ CRI_EXPERIAN_KBV:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
         gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+          targetState: ERROR
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
@@ -333,6 +333,9 @@ CRI_EXPERIAN_KBV:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: PYI_NO_MATCH
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS_WITH_F2F
       checkIfDisabled:
@@ -410,9 +413,12 @@ ADDRESS_AND_FRAUD_J1:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
         gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+          targetState: ERROR
     next:
       targetState: PYI_NO_MATCH
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
       targetState: PYI_NO_MATCH
 
@@ -529,11 +535,14 @@ CRI_HMRC_KBV_J6:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
         gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+          targetState: ERROR
     fail-with-no-ci:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: PYI_NO_MATCH
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
 
 # No photo id M2B journey (J7)
 CRI_CLAIMED_IDENTITY_J7:
@@ -675,6 +684,11 @@ CRI_DCMAW_PYI_ESCAPE:
     criId: dcmaw
   parent: CRI_STATE
   events:
+    next:
+      targetState: ERROR
+      checkFeatureFlag:
+        gpg45ScoresAtEnd:
+          targetState: EVALUATE_GPG45_SCORES
     not-found:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:

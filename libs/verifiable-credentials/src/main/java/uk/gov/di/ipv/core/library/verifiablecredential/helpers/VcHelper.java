@@ -65,6 +65,17 @@ public class VcHelper {
         return isValidEvidence(credentialEvidenceList);
     }
 
+    public static boolean isSuccessfulVcs(List<SignedJWT> vcs) throws ParseException {
+        if (vcs == null) return true;
+
+        for (SignedJWT vc : vcs) {
+            if (!VcHelper.isSuccessfulVc(vc)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {

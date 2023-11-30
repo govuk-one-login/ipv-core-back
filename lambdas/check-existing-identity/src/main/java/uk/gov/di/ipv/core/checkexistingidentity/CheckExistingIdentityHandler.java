@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.StringJoiner;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -61,12 +60,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_UNCORRELATABLE_DATA;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -95,8 +91,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
-    public static final String NAMES = "names";
-    public static final String DATE_OF_BIRTH = "dob";
     public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
@@ -160,6 +154,12 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem.getClientOAuthSessionId());
             String userId = clientOAuthSessionItem.getUserId();
 
+            // Reset identity if reprove is true.
+            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (!Objects.isNull(reproveIdentity) && reproveIdentity) {
+                return buildForceResetResponse();
+            }
+
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -182,7 +182,7 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             // CI scoring failure
-            if (userIdentityService.breachingCiThreshold(contraIndicators)) {
+            if (userIdentityService.isBreachingCiThreshold(contraIndicators)) {
                 ipvSessionItem.setCiFail(false);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -194,7 +194,7 @@ public class CheckExistingIdentityHandler
                             userIdentityService.getUserIssuedCredentials(userId));
 
             // Credential correlation failure
-            if (!vcDataCorrelates(userId)) {
+            if (!userIdentityService.areVcsCorrelated(userId)) {
                 return isF2FComplete
                         ? buildF2FNotCorrelatedResponse(auditEventUser)
                         : buildNotCorrelatedResponse(auditEventUser);
@@ -442,32 +442,5 @@ public class CheckExistingIdentityHandler
             }
         }
         return txnIds;
-    }
-
-    @Tracing
-    private boolean vcDataCorrelates(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        StringJoiner uncorrelatableData = new StringJoiner(",");
-        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
-            uncorrelatableData.add(NAMES);
-        }
-
-        if (!userIdentityService.checkBirthDateCorrelationInCredentials(userId)) {
-            uncorrelatableData.add(DATE_OF_BIRTH);
-        }
-
-        if (uncorrelatableData.length() > 0) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getMessage())
-                            .with(LOG_UNCORRELATABLE_DATA.getFieldName(), uncorrelatableData));
-            return false;
-        }
-        return true;
     }
 }
