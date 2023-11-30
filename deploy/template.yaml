@@ -125,9 +125,6 @@ Conditions:
   IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, build ]
-  IsDevOrBuild: !Or
-    - !Condition IsDevelopment
-    - !Condition IsBuild
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -158,7 +155,6 @@ Mappings:
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
-      criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
@@ -193,7 +189,6 @@ Mappings:
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
-      criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
@@ -226,7 +221,6 @@ Mappings:
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
       environment: build
-      criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
@@ -259,7 +253,6 @@ Mappings:
       cimitAccountId: 265689800486 # di-ipv-contra-indicators-staging
       cimitEnvironment: staging
       environment: staging
-      criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
@@ -292,7 +285,6 @@ Mappings:
       cimitAccountId: 697519714716 # di-ipv-contra-indicators-integration
       cimitEnvironment: integration
       environment: integration
-      criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
@@ -325,7 +317,6 @@ Mappings:
       cimitAccountId: 442136572379 # di-ipv-contra-indicators-prod
       cimitEnvironment: production
       environment: production
-      criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
@@ -1688,106 +1679,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
-
-  CriReturnStepFunction:
-    Type: AWS::Serverless::StateMachine
-    Properties:
-      DefinitionUri: criReturnStepFunction.asl.json
-      DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
-        RetrieveCriCredentialFunctionArn: !Ref RetrieveCriCredentialFunction.Alias
-        RetrieveCriOauthAccessTokenFunctionArn: !Ref RetrieveCriOauthAccessTokenFunction.Alias
-        ValidateOAuthCallbackFunctionArn: !Ref ValidateOAuthCallbackFunction.Alias
-        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
-        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/callback
-            Method: POST
-      Logging:
-        Destinations:
-          - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt CriReturnStepFunctionLogGroup.Arn
-        IncludeExecutionData: true
-        Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
-      Policies:
-        - LambdaInvokePolicy:
-            FunctionName: !Ref IPVProcessJourneyEventFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref RetrieveCriCredentialFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref RetrieveCriOauthAccessTokenFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ValidateOAuthCallbackFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref EvaluateGpg45ScoresFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref CheckCiScoreFunction
-        - Statement:
-            - Sid: CloudWatchLogsAccess
-              Effect: Allow
-              Action:
-                - "logs:CreateLogDelivery"
-                - "logs:GetLogDelivery"
-                - "logs:UpdateLogDelivery"
-                - "logs:DeleteLogDelivery"
-                - "logs:ListLogDeliveries"
-                - "logs:PutLogEvents"
-                - "logs:PutResourcePolicy"
-                - "logs:DescribeResourcePolicies"
-                - "logs:DescribeLogGroups"
-              Resource: "*"
-      Tracing:
-        Enabled: true
-      Type: EXPRESS
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-  CriReturnStepFunctionApiGateWayIamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Policies:
-        - PolicyName: AllowApiGatewayToInvokeStartSyncExecution
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: 'states:StartSyncExecution'
-                Resource: !Ref CriReturnStepFunction
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-  CriReturnStepFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/states/cri-return-step-function-${Environment}"
-
-  CriReturnStepFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref CriReturnStepFunctionLogGroup
 
   JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
