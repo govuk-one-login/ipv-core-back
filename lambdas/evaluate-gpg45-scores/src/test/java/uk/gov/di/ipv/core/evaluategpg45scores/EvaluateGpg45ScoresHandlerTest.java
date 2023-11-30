@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -126,10 +125,10 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Mock private Context context;
+    @Mock private ConfigService configService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @InjectMocks private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
@@ -153,13 +152,6 @@ class EvaluateGpg45ScoresHandlerTest {
     void setUpEach() {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        ipvSessionItem.setVisitedCredentialIssuerDetails(
-                List.of(
-                        new VisitedCredentialIssuerDetailsDto(
-                                "criId",
-                                "https://review-a.integration.account.gov.uk",
-                                true,
-                                null)));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -357,82 +349,6 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
-        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
-        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
-        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        testIpvSessionItem.setVisitedCredentialIssuerDetails(
-                List.of(
-                        new VisitedCredentialIssuerDetailsDto(
-                                "criIdB",
-                                "https://review-b.integration.account.gov.uk",
-                                true,
-                                null),
-                        new VisitedCredentialIssuerDetailsDto(
-                                "criIdC",
-                                "https://review-c.integration.account.gov.uk",
-                                true,
-                                null),
-                        new VisitedCredentialIssuerDetailsDto(
-                                "criIdA",
-                                "https://review-a.integration.account.gov.uk",
-                                true,
-                                null)));
-
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.getVCSuccessStatus(TEST_USER_ID, "criIdA"))
-                .thenReturn(Optional.of(false));
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        JourneyResponse response =
-                toResponseClass(
-                        evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_FAIL_WITH_NO_CI, response.getJourney());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturn500IfNoVisitedCredentialIssuersFound() throws Exception {
-        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
-        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
-        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
-
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
-                .thenReturn(true);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        JourneyErrorResponse response =
-                toResponseClass(
-                        evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getCode(), response.getCode());
-        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getMessage(), response.getMessage());
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());

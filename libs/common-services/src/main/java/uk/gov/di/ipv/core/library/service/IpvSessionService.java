@@ -104,8 +104,6 @@ public class IpvSessionService {
 
         ipvSessionItem.setUserState(generateStartingState(errorObject));
 
-        ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
-
         ipvSessionItem.setVot(VOT_P0);
 
         String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);

@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -117,9 +116,6 @@ public class CriCheckingService {
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
             LOGGER.warn("Unknown Oauth error code received");
         }
-
-        var visitedCriDetails = new VisitedCredentialIssuerDetailsDto(criId, null, false, error);
-        ipvSessionItem.addVisitedCredentialIssuerDetails(visitedCriDetails);
 
         LogHelper.logCriOauthError("OAuth error received from CRI", error, errorDescription, criId);
 
