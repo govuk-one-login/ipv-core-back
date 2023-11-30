@@ -130,7 +130,8 @@ class RetrieveCriCredentialHandlerTest {
                             "test-encryption-jwk",
                             "test-audience",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
             claimedIdentityConfig =
                     new CredentialIssuerConfig(
                             new URI("http://example.com/token"),
@@ -141,7 +142,8 @@ class RetrieveCriCredentialHandlerTest {
                             "test-encryption-jwk",
                             "test-claimed-identity",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -164,7 +166,8 @@ class RetrieveCriCredentialHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("https://www.example.com/credential-issuers/callback/criId"),
-                        true);
+                        true,
+                        false);
 
         testBearerAccessToken = BearerAccessToken.parse(ACCESS_TOKEN);
 
@@ -327,7 +330,8 @@ class RetrieveCriCredentialHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("https://www.example.com/credential-issuers/callback/criId"),
-                        true);
+                        true,
+                        false);
 
         when(configService.getCriConfig(dcmawCriOAuthSessionItem)).thenReturn(testDcmawIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
@@ -639,6 +643,7 @@ class RetrieveCriCredentialHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("https://www.example.com/credential-issuers/callback/criId"),
+                        false,
                         false);
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(testCriNotRequiringApiKey);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);

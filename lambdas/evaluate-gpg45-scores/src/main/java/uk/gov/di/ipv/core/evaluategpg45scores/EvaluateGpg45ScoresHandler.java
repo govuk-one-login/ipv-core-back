@@ -145,7 +145,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             return checkForMatchingGpg45Profile(
-                            ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -222,41 +222,44 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
+            String userId,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
-            throws UnknownEvidenceTypeException, ParseException, SqsException {
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        Optional<Gpg45Profile> matchedProfile =
-                gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
+            throws UnknownEvidenceTypeException, ParseException, SqsException,
+                    CredentialParseException {
+        if (!userIdentityService.checkRequiresAdditionalEvidence(userId)) {
+            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+            Optional<Gpg45Profile> matchedProfile =
+                    gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
 
-        if (matchedProfile.isPresent()) {
-            auditService.sendAuditEvent(
-                    buildProfileMatchedAuditEvent(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            matchedProfile.get(),
-                            gpg45Scores,
-                            credentials,
-                            ipAddress));
-            ipvSessionItem.setVot(VOT_P2);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            if (matchedProfile.isPresent()) {
+                auditService.sendAuditEvent(
+                        buildProfileMatchedAuditEvent(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                matchedProfile.get(),
+                                gpg45Scores,
+                                credentials,
+                                ipAddress));
+                ipvSessionItem.setVot(VOT_P2);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("lambdaResult", "A GPG45 profile has been met")
-                            .with("journeyResponse", JOURNEY_END));
-            return JOURNEY_END;
-        } else {
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("lambdaResult", "No GPG45 profiles have been met")
-                            .with("journeyResponse", JOURNEY_NEXT));
-
-            return JOURNEY_NEXT;
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with("lambdaResult", "A GPG45 profile has been met")
+                                .with("journeyResponse", JOURNEY_END));
+                return JOURNEY_END;
+            }
         }
+        LOGGER.info(
+                new StringMapMessage()
+                        .with("lambdaResult", "No GPG45 profiles have been met")
+                        .with("journeyResponse", JOURNEY_NEXT));
+
+        return JOURNEY_NEXT;
     }
 
     @Tracing

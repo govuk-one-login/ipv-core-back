@@ -3,12 +3,20 @@ package uk.gov.di.ipv.core.library.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Objects;
 
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
 public class CredentialIssuerConfig {
@@ -21,8 +29,7 @@ public class CredentialIssuerConfig {
     private String componentId;
     private URI clientCallbackUrl;
     private boolean requiresApiKey;
-
-    public CredentialIssuerConfig() {}
+    private boolean requiresAdditionalEvidence;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public CredentialIssuerConfig(
@@ -34,7 +41,8 @@ public class CredentialIssuerConfig {
             String encryptionKey,
             String componentId,
             URI clientCallbackUrl,
-            boolean requiresApiKey) {
+            boolean requiresApiKey,
+            boolean requiresAdditionalEvidence) {
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
@@ -44,26 +52,7 @@ public class CredentialIssuerConfig {
         this.componentId = componentId;
         this.clientCallbackUrl = clientCallbackUrl;
         this.requiresApiKey = requiresApiKey;
-    }
-
-    public URI getTokenUrl() {
-        return tokenUrl;
-    }
-
-    public URI getCredentialUrl() {
-        return credentialUrl;
-    }
-
-    public URI getAuthorizeUrl() {
-        return authorizeUrl;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public String getSigningKeyString() {
-        return signingKey;
+        this.requiresAdditionalEvidence = requiresAdditionalEvidence;
     }
 
     public ECKey getSigningKey() throws ParseException {
@@ -78,12 +67,8 @@ public class CredentialIssuerConfig {
         return RSAKey.parse(encryptionKey);
     }
 
-    public String getComponentId() {
-        return componentId;
-    }
-
-    public URI getClientCallbackUrl() {
-        return clientCallbackUrl;
+    public String getSigningKeyString() {
+        return signingKey;
     }
 
     public boolean getRequiresApiKey() {

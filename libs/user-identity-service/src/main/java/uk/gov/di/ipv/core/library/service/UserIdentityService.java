@@ -532,9 +532,41 @@ public class UserIdentityService {
     private boolean isEvidenceVc(VcStoreItem item) throws CredentialParseException {
         JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
         for (JsonNode evidence : vcEvidenceNode) {
-            if (evidence.path(VC_EVIDENCE_VALIDITY).isInt()
-                    && evidence.path(VC_EVIDENCE_STRENGTH).isInt()) {
+            if (isNonZeroInt(evidence.path(VC_EVIDENCE_VALIDITY))
+                    && isNonZeroInt(evidence.path(VC_EVIDENCE_STRENGTH))) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isNonZeroInt(JsonNode node) {
+        return node.isInt() && node.asInt() != 0;
+    }
+
+    private List<VcStoreItem> filterValidVCs(List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
+                .filter(
+                        item -> {
+                            try {
+                                return isEvidenceVc(item);
+                            } catch (CredentialParseException e) {
+                                return false;
+                            }
+                        })
+                .collect(Collectors.toList());
+    }
+
+    public boolean checkRequiresAdditionalEvidence(String userId) throws ParseException {
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+        if (!vcStoreItems.isEmpty()) {
+
+            List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
+            if (filterValidVCs.size() == 1) {
+                return configService
+                        .getCredentialIssuerActiveConnectionConfig(
+                                filterValidVCs.get(0).getCredentialIssuer())
+                        .isRequiresAdditionalEvidence();
             }
         }
         return false;

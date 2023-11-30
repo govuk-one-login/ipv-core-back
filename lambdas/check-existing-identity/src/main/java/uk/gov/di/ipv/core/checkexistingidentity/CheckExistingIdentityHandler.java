@@ -204,11 +204,13 @@ public class CheckExistingIdentityHandler
             if (configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse();
             }
-
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+
             Optional<Gpg45Profile> matchedProfile =
-                    gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES);
+                    !userIdentityService.checkRequiresAdditionalEvidence(userId)
+                            ? gpg45ProfileEvaluator.getFirstMatchingProfile(
+                                    gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES)
+                            : Optional.empty();
 
             // No profile match
             if (matchedProfile.isEmpty()) {

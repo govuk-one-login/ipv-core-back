@@ -90,6 +90,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                             null,
                             TEST_COMPONENT_ID,
                             new URI(""),
+                            false,
                             false);
             TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS =
                     new CredentialIssuerConfig(
@@ -101,6 +102,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                             null,
                             TEST_COMPONENT_ID_ADDRESS,
                             new URI(""),
+                            false,
                             false);
             TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
                     new CredentialIssuerConfig(
@@ -112,6 +114,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                             null,
                             TEST_COMPONENT_ID_CLAIMED_IDENTITY,
                             new URI(""),
+                            false,
                             false);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

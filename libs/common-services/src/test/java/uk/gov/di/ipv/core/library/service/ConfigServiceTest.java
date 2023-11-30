@@ -151,7 +151,8 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "https://testComponentId",
                         URI.create("https://testClientCallBackUrl"),
-                        true);
+                        true,
+                        false);
 
         private final Map<String, String> featureSetCredentialIssuerConfig =
                 Map.of(
@@ -169,6 +170,7 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "https://testComponentId",
                         URI.create("https://testClientCallBackUrl"),
+                        false,
                         false);
 
         private void checkCredentialIssuerConfig(

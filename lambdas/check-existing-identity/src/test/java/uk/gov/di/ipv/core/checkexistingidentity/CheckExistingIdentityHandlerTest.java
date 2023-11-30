@@ -127,7 +127,8 @@ class CheckExistingIdentityHandlerTest {
                             "test-encryption-jwk",
                             "test-audience",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
 
             claimedIdentityConfig =
                     new CredentialIssuerConfig(
@@ -139,7 +140,8 @@ class CheckExistingIdentityHandlerTest {
                             "test-encryption-jwk",
                             "test-claimed-identity",
                             new URI("http://example.com/redirect"),
-                            true);
+                            true,
+                            false);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -868,6 +870,73 @@ class CheckExistingIdentityHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
+    }
+
+    @Test
+    void shouldReturnJourneyReuseResponseIfCheckRequiresAdditionalEvidenceResponseFalse()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(false);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_REUSE, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(VOT_P2);
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(VOT_P2, ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldReturnJourneyResetIdentityResponseIfCheckRequiresAdditionalEvidenceResponseTrue()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(true);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
     }
 
     private VcStoreItem createVcStoreItem(String credentialIssuer, String credential) {

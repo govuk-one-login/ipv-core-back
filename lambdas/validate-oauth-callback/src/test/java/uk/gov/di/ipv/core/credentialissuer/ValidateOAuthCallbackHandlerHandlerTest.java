@@ -525,6 +525,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 "test-jwk",
                 criIss,
                 new URI("http://www.example.com/credential-issuers/callback/criId"),
-                true);
+                true,
+                false);
     }
 }

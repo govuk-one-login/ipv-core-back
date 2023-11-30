@@ -93,27 +93,33 @@ class EvaluateGpg45ScoresHandlerTest {
     static {
         try {
             addressConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "https://review-a.integration.account.gov.uk",
-                            new URI("http://example.com/redirect"),
-                            true);
+                    CredentialIssuerConfig.builder()
+                            .tokenUrl(new URI("http://example.com/token"))
+                            .credentialUrl(new URI("http://example.com/credential"))
+                            .authorizeUrl(new URI("http://example.com/authorize"))
+                            .clientId("ipv-core")
+                            .signingKey("test-jwk")
+                            .encryptionKey("test-encryption-jwk")
+                            .componentId("https://review-a.integration.account.gov.uk")
+                            .clientCallbackUrl(new URI("http://example.com/redirect"))
+                            .requiresApiKey(true)
+                            .requiresAdditionalEvidence(false)
+                            .build();
+
             claimedIdentityConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "https://review-c.integration.account.gov.uk",
-                            new URI("http://example.com/redirect"),
-                            true);
+                    CredentialIssuerConfig.builder()
+                            .tokenUrl(new URI("http://example.com/token"))
+                            .credentialUrl(new URI("http://example.com/credential"))
+                            .authorizeUrl(new URI("http://example.com/authorize"))
+                            .clientId("ipv-core")
+                            .signingKey("test-jwk")
+                            .encryptionKey("test-encryption-jwk")
+                            .componentId("https://review-a.integration.account.gov.uk")
+                            .clientCallbackUrl(new URI("http://example.com/redirect"))
+                            .requiresApiKey(true)
+                            .requiresAdditionalEvidence(false)
+                            .build();
+
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -565,6 +571,63 @@ class EvaluateGpg45ScoresHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldReturnJourneyNextIfCheckRequiresAdditionalEvidenceResponseTrue() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
+
+        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(true);
+
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
+        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(TEST_USER_ID);
+    }
+
+    @Test
+    void shouldReturnJourneyNextIfCheckRequiresAdditionalEvidenceResponseFalse() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.of(M1A));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
+
+        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(false);
+
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_END.getJourney(), response.getJourney());
+        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(VOT_P2);
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(VOT_P2, ipvSessionItem.getVot());
+        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(TEST_USER_ID);
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
