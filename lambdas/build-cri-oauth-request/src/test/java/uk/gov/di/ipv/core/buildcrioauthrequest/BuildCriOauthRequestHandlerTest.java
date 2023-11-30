@@ -269,8 +269,6 @@ class BuildCriOauthRequestHandlerTest {
                         .criOAuthSessionId(CRI_OAUTH_SESSION_ID)
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .criId(CRI_ID)
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .build();
 
         clientOAuthSessionItem =

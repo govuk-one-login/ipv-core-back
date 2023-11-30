@@ -18,8 +18,6 @@ public class CriOAuthSessionItem implements DynamodbItem {
     private String criOAuthSessionId;
     private String clientOAuthSessionId;
     private String criId;
-    private String accessToken;
-    private String authorizationCode;
     private String connection;
     private long ttl;
 

@@ -28,8 +28,6 @@ class CriOAuthSessionServiceTest {
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
                         .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .build();
 
         when(mockDataStore.getItem(criOAuthSessionItem.getCriOAuthSessionId()))
@@ -48,8 +46,6 @@ class CriOAuthSessionServiceTest {
                 criOAuthSessionItemArgumentCaptor.getValue());
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
-        assertEquals(criOAuthSessionItem.getAccessToken(), result.getAccessToken());
-        assertEquals(criOAuthSessionItem.getAuthorizationCode(), result.getAuthorizationCode());
     }
 
     @Test
@@ -58,8 +54,6 @@ class CriOAuthSessionServiceTest {
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
                         .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .connection("main")
                         .build();
 
@@ -77,8 +71,6 @@ class CriOAuthSessionServiceTest {
 
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
-        assertNull(result.getAccessToken());
-        assertNull(result.getAuthorizationCode());
     }
 
     @Test
@@ -87,8 +79,6 @@ class CriOAuthSessionServiceTest {
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
                         .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .build();
 
         criOauthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
