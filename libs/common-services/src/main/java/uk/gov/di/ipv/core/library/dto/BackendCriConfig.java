@@ -7,16 +7,16 @@ import java.net.URI;
 import java.text.ParseException;
 
 @Getter
-public class BackEndCriConfig implements CriConfig {
+public class BackendCriConfig implements CriConfig {
 
     private URI credentialUrl;
     private String signingKey;
     private String componentId;
     private boolean requiresApiKey;
 
-    public BackEndCriConfig() {}
+    public BackendCriConfig() {}
 
-    public BackEndCriConfig(
+    public BackendCriConfig(
             URI credentialUrl, String signingKey, String componentId, boolean requiresApiKey) {
         this.credentialUrl = credentialUrl;
         this.signingKey = signingKey;

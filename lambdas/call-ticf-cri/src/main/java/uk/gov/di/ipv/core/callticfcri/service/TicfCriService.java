@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
-import uk.gov.di.ipv.core.library.dto.BackEndCriConfig;
+import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -56,7 +56,7 @@ public class TicfCriService {
             List<String> credentials)
             throws TicfCriServiceException {
         try {
-            BackEndCriConfig ticfCriConfig = configService.getBackEndCriConfig(TICF_CRI);
+            BackendCriConfig ticfCriConfig = configService.getBackendCriConfig(TICF_CRI);
 
             TicfCriDto ticfCriRequest =
                     new TicfCriDto(

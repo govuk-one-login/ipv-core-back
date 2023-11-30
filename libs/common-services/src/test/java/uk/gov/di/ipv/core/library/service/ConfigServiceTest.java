@@ -27,7 +27,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.dto.BackEndCriConfig;
+import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
@@ -237,7 +237,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void getBackEndCriConfigShouldReturnABackEndCriConfig() throws Exception {
+        void getBackendCriConfigShouldReturnABackendCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
@@ -245,7 +245,7 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenReturn(backEndJsonCriConfig);
 
-            BackEndCriConfig backEndCriConfig = configService.getBackEndCriConfig("passportCri");
+            BackendCriConfig backEndCriConfig = configService.getBackendCriConfig("passportCri");
 
             assertEquals("https://testComponentId", backEndCriConfig.getComponentId());
             assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), backEndCriConfig.getSigningKey());

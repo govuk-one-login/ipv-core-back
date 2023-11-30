@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.dto.BackEndCriConfig;
+import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
@@ -246,8 +246,8 @@ public class ConfigService {
         return getCriConfigForType(connection, criId, CredentialIssuerConfig.class);
     }
 
-    public BackEndCriConfig getBackEndCriConfig(String criId) {
-        return getCriConfigForType(getActiveConnection(criId), criId, BackEndCriConfig.class);
+    public BackendCriConfig getBackendCriConfig(String criId) {
+        return getCriConfigForType(getActiveConnection(criId), criId, BackendCriConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
