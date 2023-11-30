@@ -1190,7 +1190,9 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /journey/cri/callback
+            Path:
+              - /journey/cri/callback
+              - /cri/callback
             Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
