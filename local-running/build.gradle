@@ -30,9 +30,6 @@ dependencies {
 			project(":lambdas:process-async-cri-credential"),
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:reset-identity"),
-			project(":lambdas:retrieve-cri-credential"),
-			project(":lambdas:retrieve-cri-oauth-access-token"),
-			project(":lambdas:validate-oauth-callback"),
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
@@ -42,6 +39,7 @@ dependencies {
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
+	implementation project(path: ':lambdas:process-cri-callback')
 }
 
 java {
