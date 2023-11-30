@@ -71,6 +71,10 @@ public class CredentialIssuerConfig {
         return signingKey;
     }
 
+    public boolean getRequiresApiKey() {
+        return requiresApiKey;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(clientId);

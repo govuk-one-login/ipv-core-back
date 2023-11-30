@@ -183,7 +183,7 @@ class ConfigServiceTest {
             assertEquals(expected.getEncryptionKeyString(), actual.getEncryptionKeyString());
             assertEquals(expected.getComponentId(), actual.getComponentId());
             assertEquals(expected.getClientCallbackUrl(), actual.getClientCallbackUrl());
-            assertEquals(expected.isRequiresApiKey(), actual.isRequiresApiKey());
+            assertEquals(expected.getRequiresApiKey(), actual.getRequiresApiKey());
         }
 
         @Test
