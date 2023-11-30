@@ -30,7 +30,7 @@ public class JourneyMapPageContextTest {
         environmentVariables.set("IS_LOCAL", "true");
     }
 
-    private final HashMap<String, List<String>> acceptedStateContexts =
+    private final HashMap<String, List<String>> supportedPageContexts =
             new HashMap<>() {
                 {
                     put("pyi-suggest-other-options", List.of("no-photo-id"));
@@ -39,7 +39,7 @@ public class JourneyMapPageContextTest {
 
     @ParameterizedTest
     @EnumSource
-    void shouldHandleSameContextForSamePage(IpvJourneyTypes journeyType) throws IOException {
+    void pagesShouldOnlyUseSupportedContexts(IpvJourneyTypes journeyType) throws IOException {
         var stateMachineInitializer = new StateMachineInitializer(journeyType);
         var stateMachine = stateMachineInitializer.initialize();
 
@@ -52,7 +52,7 @@ public class JourneyMapPageContextTest {
             String pageId = response.getPageId();
             String context = response.getContext();
 
-            if (!acceptedStateContexts.get(pageId).contains(context)) {
+            if (!supportedPageContexts.get(pageId).contains(context)) {
                 invalidContexts.computeIfAbsent(pageId, k -> new ArrayList<>()).add(context);
             }
         }
@@ -65,7 +65,7 @@ public class JourneyMapPageContextTest {
     }
 
     private void findPagesWithContexts(
-            Map<String, State> stateMachine, List<PageStepResponse> pageContextMap) {
+            Map<String, State> stateMachine, List<PageStepResponse> pagesWithContext) {
 
         for (var key : stateMachine.keySet()) {
             var state = stateMachine.get(key);
@@ -78,7 +78,7 @@ public class JourneyMapPageContextTest {
                     var pageId = (String) pageStepResponse.value().get("page");
 
                     if (!context.isEmpty() && !pageId.isEmpty()) {
-                        pageContextMap.add(pageStepResponse);
+                        pagesWithContext.add(pageStepResponse);
                     }
                 }
             }
