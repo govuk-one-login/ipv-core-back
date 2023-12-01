@@ -209,7 +209,7 @@ class ProcessJourneyEventHandlerTest {
                 ProcessJourneyStepStates.END_STATE,
                 sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals("/journey/buildclientoauthresponse", output.get("journey"));
+        assertEquals("/journey/build-client-oauth-response", output.get("journey"));
     }
 
     @Test
@@ -254,12 +254,13 @@ class ProcessJourneyEventHandlerTest {
         return Stream.of(
                 Arguments.of(
                         "testWithContext",
-                        "/journey/cri/buildoauthrequest/aCriId?context=test_context"),
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
-                        "testWithScope", "/journey/cri/buildoauthrequest/aCriId?scope=test_scope"),
+                        "testWithScope",
+                        "/journey/cri/build-oauth-request/aCriId?scope=test_scope"),
                 Arguments.of(
                         "testWithContextAndScope",
-                        "/journey/cri/buildoauthrequest/aCriId?context=test_context&scope=test_scope"));
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {
