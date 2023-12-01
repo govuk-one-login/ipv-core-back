@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -27,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

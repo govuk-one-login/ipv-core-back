@@ -107,8 +107,7 @@ public class CriCheckingServiceTest {
 
         // Act
         var journeyResponse =
-                criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem);
+                criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
@@ -130,8 +129,7 @@ public class CriCheckingServiceTest {
 
         // Act
         var journeyResponse =
-                criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem);
+                criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_ACCESS_DENIED_PATH), journeyResponse);
@@ -153,8 +151,7 @@ public class CriCheckingServiceTest {
 
         // Act
         var journeyResponse =
-                criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem);
+                criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_TEMPORARILY_UNAVAILABLE_PATH), journeyResponse);
@@ -180,8 +177,7 @@ public class CriCheckingServiceTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 
         // Act
-        criCheckingService.handleCallbackError(
-                callbackRequest, clientOauthSessionItem);
+        criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
 
         // Assert
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());

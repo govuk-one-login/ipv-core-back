@@ -261,8 +261,7 @@ public class ProcessCriCallbackHandlerTest {
                         ipvSessionItem.getCriOAuthSessionId()))
                 .thenReturn(criOAuthSessionItem);
         when(mockCriCheckingService.handleCallbackError(
-                        eq(callbackRequest),
-                        any(ClientOAuthSessionItem.class)))
+                        eq(callbackRequest), any(ClientOAuthSessionItem.class)))
                 .thenReturn(new JourneyResponse(JOURNEY_ERROR_PATH));
 
         // Act

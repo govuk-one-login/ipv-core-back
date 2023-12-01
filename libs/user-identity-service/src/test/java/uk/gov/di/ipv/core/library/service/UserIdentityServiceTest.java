@@ -34,7 +34,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +54,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
@@ -63,9 +61,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TY
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
@@ -74,7 +69,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_WITH_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
@@ -1387,8 +1381,8 @@ class UserIdentityServiceTest {
 
     @Test
     void
-    getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
-            throws Exception {
+            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
+                    throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);

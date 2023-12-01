@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;

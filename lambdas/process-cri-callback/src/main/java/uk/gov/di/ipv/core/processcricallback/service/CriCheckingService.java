@@ -85,8 +85,7 @@ public class CriCheckingService {
     }
 
     public JourneyResponse handleCallbackError(
-            CriCallbackRequest callbackRequest,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException {
         var criId = callbackRequest.getCredentialIssuerId();
         var ipAddress = callbackRequest.getIpAddress();

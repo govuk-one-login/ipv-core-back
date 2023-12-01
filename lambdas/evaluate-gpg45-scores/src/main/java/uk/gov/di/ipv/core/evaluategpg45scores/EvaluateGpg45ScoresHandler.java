@@ -59,7 +59,8 @@ public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse(JOURNEY_MET_PATH);
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse(JOURNEY_UNMET_PATH);
-    private static final JourneyResponse JOURNEY_PYI_NO_MATCH = new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
+    private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
@@ -159,9 +160,9 @@ public class EvaluateGpg45ScoresHandler
         } catch (CredentialParseException e) {
             LOGGER.error("Unable to parse credential", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
         }
     }

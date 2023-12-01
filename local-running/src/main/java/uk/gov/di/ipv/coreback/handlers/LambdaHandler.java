@@ -136,7 +136,8 @@ public class LambdaHandler {
                         ProcessRequest processRequest =
                                 buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
-                                evaluateGpg45ScoresHandler.handleRequest(processRequest, EMPTY_CONTEXT);
+                                evaluateGpg45ScoresHandler.handleRequest(
+                                        processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }

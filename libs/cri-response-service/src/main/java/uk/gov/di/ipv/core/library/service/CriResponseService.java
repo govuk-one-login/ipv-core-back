@@ -6,7 +6,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
-import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 

@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 

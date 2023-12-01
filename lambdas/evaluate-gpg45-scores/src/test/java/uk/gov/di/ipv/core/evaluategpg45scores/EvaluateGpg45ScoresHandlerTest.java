@@ -256,7 +256,8 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyUnmetIfGpg45ProfileNotMatched() throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    void shouldReturnJourneyUnmetIfGpg45ProfileNotMatched()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
