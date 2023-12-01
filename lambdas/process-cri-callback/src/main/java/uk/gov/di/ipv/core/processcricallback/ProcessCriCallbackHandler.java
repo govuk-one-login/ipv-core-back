@@ -145,12 +145,20 @@ public class ProcessCriCallbackHandler
         } catch (InvalidCriCallbackRequestException e) {
             if (e.getErrorResponse() == ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION) {
                 LOGGER.error(e.getErrorResponse(), e);
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_UNAUTHORIZED,
+                var pageOutput =
                         StepFunctionHelpers.generatePageOutputMap(
                                 "error",
                                 HttpStatus.SC_UNAUTHORIZED,
-                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID));
+                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
+                if (callbackRequest != null) {
+                    var criOAuthSessionItem =
+                            criOAuthSessionService.getCriOauthSessionItem(
+                                    callbackRequest.getState());
+                    pageOutput.put(
+                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
+                }
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_UNAUTHORIZED, pageOutput);
             }
             if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
                 LOGGER.error(e.getErrorResponse(), e);
