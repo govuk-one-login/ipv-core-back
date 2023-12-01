@@ -187,31 +187,13 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStoreSingleParameter() {
+        void shouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenReturn(jsonCredentialIssuerConfig);
-
-            CredentialIssuerConfig result =
-                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
-
-            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
-        }
-
-        @Test
-        void shouldGetCredentialIssuerFromParameterStoreMultipleParameters() {
-            environmentVariables.set("ENVIRONMENT", "test");
-
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(baseCredentialIssuerConfig);
 
             CredentialIssuerConfig result =
                     configService.getCredentialIssuerActiveConnectionConfig("passportCri");
@@ -245,71 +227,6 @@ class ConfigServiceTest {
             assertThrows(
                     NoConfigForConnectionException.class,
                     () -> configService.getCriConfigForConnection("stub", "passportCri"));
-        }
-
-        @Test
-        void shouldApplyFeatureSetOverridesOnActiveConfiguration() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet("fs01");
-
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
-                    .thenReturn(Map.of());
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(baseCredentialIssuerConfig);
-            when(ssmProvider.getMultiple(
-                            "/test/core/features/fs01/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(featureSetCredentialIssuerConfig);
-
-            CredentialIssuerConfig result =
-                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
-
-            checkCredentialIssuerConfig(expectedFeatureSetCredentialIssuerConfig, result);
-        }
-
-        @Test
-        void shouldOverrideActiveConfigurationForAFeatureSet() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet("fs01");
-
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/main"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
-            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
-                    .thenReturn(Map.of("activeConnection", "main"));
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/main"))
-                    .thenReturn(baseCredentialIssuerConfig);
-
-            CredentialIssuerConfig result =
-                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
-
-            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
-        }
-
-        @Test
-        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet("fs01");
-
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/main"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
-            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
-                    .thenReturn(Map.of("activeConnection", "main"));
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/passportCri/connections/main"))
-                    .thenReturn(baseCredentialIssuerConfig);
-            when(ssmProvider.getMultiple(
-                            "/test/core/features/fs01/credentialIssuers/passportCri/connections/main"))
-                    .thenReturn(featureSetCredentialIssuerConfig);
-
-            CredentialIssuerConfig result =
-                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
-
-            checkCredentialIssuerConfig(expectedFeatureSetCredentialIssuerConfig, result);
         }
 
         @Test
