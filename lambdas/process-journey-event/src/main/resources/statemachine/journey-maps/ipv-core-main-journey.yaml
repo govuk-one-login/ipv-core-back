@@ -20,15 +20,8 @@ CRI_STATE:
       targetState: ERROR
     temporarily-unavailable:
       targetState: PYI_NO_MATCH
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: ERROR
     pyi-no-match:
       targetState: PYI_NO_MATCH
-    pyi-kbv-fail:
-      targetState: PYI_KBV_FAIL
 
 # Shared states
 INITIAL_IPV_JOURNEY:
@@ -222,12 +215,6 @@ PYI_NO_MATCH:
     pageId: pyi-no-match
   parent: END_JOURNEY
 
-PYI_KBV_FAIL:
-  response:
-    type: page
-    pageId: pyi-kbv-fail
-  parent: END_JOURNEY
-
 PYI_F2F_TECHNICAL:
   response:
     type: page
@@ -288,10 +275,10 @@ EVALUATE_GPG45_SCORES:
     type: process
     lambda: evaluate-gpg45-scores
   events:
-    end:
+    met:
       targetState:
         IPV_SUCCESS_PAGE
-    next:
+    unmet:
       targetState:
         PYI_NO_MATCH
 
@@ -321,21 +308,13 @@ CRI_EXPERIAN_KBV:
     criId: kbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: ERROR
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
       targetState: MITIGATION_02_OPTIONS_WITH_F2F
       checkIfDisabled:
@@ -409,16 +388,8 @@ POST_DCMAW_SUCCESS_PAGE:
 ADDRESS_AND_FRAUD_J1:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: ERROR
     next:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
       targetState: PYI_NO_MATCH
 
@@ -445,8 +416,6 @@ ADDRESS_AND_FRAUD_J2:
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_NINO_J6
       checkIfDisabled:
@@ -473,8 +442,6 @@ ADDRESS_AND_FRAUD_J3:
   exitEvents:
     next:
       targetState: CHECK_FRAUD_SCORE_J3
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CHECK_FRAUD_SCORE_J3
 
@@ -511,8 +478,6 @@ ADDRESS_AND_FRAUD_J4:
   exitEvents:
     next:
       targetState: CRI_F2F
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_F2F
 
@@ -534,18 +499,10 @@ CRI_HMRC_KBV_J6:
     criId: hmrcKbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: ERROR
     fail-with-no-ci:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES
 
 # No photo id journey (M2B)
 CRI_CLAIMED_IDENTITY_M2B:
@@ -587,8 +544,6 @@ ADDRESS_AND_FRAUD_M2B:
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_HMRC_KBV_J6
       checkIfDisabled:
@@ -609,11 +564,6 @@ CRI_EXPERIAN_KBV_M2B:
     criId: kbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
@@ -733,10 +683,7 @@ CRI_DCMAW_PYI_ESCAPE:
   parent: CRI_STATE
   events:
     next:
-      targetState: ERROR
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES
     not-found:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
