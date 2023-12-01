@@ -18,12 +18,7 @@ import java.time.Instant;
 import java.util.Date;
 
 public class VerifiableCredentialService {
-
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String API_KEY_HEADER = "x-api-key";
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private final DataStore<VcStoreItem> dataStore;
     private final ConfigService configService;
 

@@ -63,16 +63,4 @@ public class CriOAuthSessionService {
                                 criOAuthSessionItem.getCriOAuthSessionId()));
         return criOAuthSessionItem;
     }
-
-    public void updateCriOAuthSessionItem(CriOAuthSessionItem updatedCriOAuthSessionItem) {
-        dataStore.update(updatedCriOAuthSessionItem);
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Cri OAuth Session item updated.")
-                        .with(
-                                LOG_CRI_OAUTH_SESSION_ID.getFieldName(),
-                                updatedCriOAuthSessionItem.getCriOAuthSessionId()));
-    }
 }

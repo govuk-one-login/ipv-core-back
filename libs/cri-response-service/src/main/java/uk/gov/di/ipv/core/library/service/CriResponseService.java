@@ -35,10 +35,6 @@ public class CriResponseService {
         this.dataStore = dataStore;
     }
 
-    public List<CriResponseItem> getCriResponseItems(String userId) {
-        return dataStore.getItems(userId);
-    }
-
     public CriResponseItem getCriResponseItem(String userId, String criId) {
         return dataStore.getItem(userId, criId);
     }

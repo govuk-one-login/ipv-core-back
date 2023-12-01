@@ -134,20 +134,4 @@ class ClientOAuthSessionDetailsServiceTest {
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
     }
-
-    @Test
-    void shouldUpdateSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
-        clientOAuthSessionItem.setResponseType("test-type");
-        clientOAuthSessionItem.setClientId("test-client");
-        clientOAuthSessionItem.setRedirectUri("http://example.com");
-        clientOAuthSessionItem.setState("test-state");
-        clientOAuthSessionItem.setUserId("test-user-id");
-        clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
-
-        clientOAuthSessionDetailsService.updateClientOAuthSession(clientOAuthSessionItem);
-
-        verify(mockDataStore).update(clientOAuthSessionItem);
-    }
 }

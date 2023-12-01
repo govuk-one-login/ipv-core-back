@@ -65,27 +65,6 @@ public class CriResponseServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-
-        List<CriResponseItem> criResponseItem =
-                List.of(
-                        createCriResponseStoreItem(
-                                USER_ID_1,
-                                TEST_CREDENTIAL_ISSUER,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()));
-
-        when(mockDataStore.getItems(USER_ID)).thenReturn(criResponseItem);
-
-        var criResponseItems = criResponseService.getCriResponseItems(USER_ID);
-
-        assertTrue(
-                criResponseItems.stream()
-                        .map(CriResponseItem::getCredentialIssuer)
-                        .anyMatch(item -> TEST_CREDENTIAL_ISSUER.equals(item)));
-    }
-
-    @Test
     void shouldPersistCriResponse() {
         final Instant testCreatedDate = Instant.now();
         final CriResponseItem testCriResponseItem =

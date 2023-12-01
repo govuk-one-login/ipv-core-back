@@ -71,17 +71,4 @@ class CriOAuthSessionServiceTest {
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
     }
-
-    @Test
-    void shouldUpdateSessionItem() {
-        CriOAuthSessionItem criOAuthSessionItem =
-                CriOAuthSessionItem.builder()
-                        .criOAuthSessionId("testState")
-                        .criId("testAddress")
-                        .build();
-
-        criOauthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
-
-        verify(mockDataStore).update(criOAuthSessionItem);
-    }
 }

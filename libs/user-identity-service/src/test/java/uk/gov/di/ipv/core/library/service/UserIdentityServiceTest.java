@@ -55,6 +55,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
@@ -62,7 +63,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TY
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
@@ -1371,49 +1374,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getVCSuccessStatusReturnShouldBeEmpty() throws Exception {
-        when(userIdentityService.getVcStoreItem(USER_ID_1, FRAUD_CRI)).thenReturn(null);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
-
-        assertEquals(Optional.empty(), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(USER_ID_1, PASSPORT_CRI, M1A_FAILED_PASSPORT_VC, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, PASSPORT_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, PASSPORT_CRI);
-
-        assertEquals(Optional.of(false), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, PASSPORT_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, PASSPORT_CRI);
-
-        assertEquals(Optional.of(true), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusShouldIgnoreCIs() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITH_CI, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, FRAUD_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
-
-        assertEquals(Optional.of(true), isValid);
-    }
-
-    @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
@@ -1427,8 +1387,8 @@ class UserIdentityServiceTest {
 
     @Test
     void
-            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
-                    throws Exception {
+    getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
+            throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
