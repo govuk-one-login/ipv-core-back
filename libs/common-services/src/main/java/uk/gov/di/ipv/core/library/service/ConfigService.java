@@ -301,12 +301,6 @@ public class ConfigService {
         return getSsmParameterWithOverride(pathTemplate, credentialIssuerId, activeConnection);
     }
 
-    public boolean isUnavailable(String credentialIssuerId) {
-        final String pathTemplate =
-                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/unavailable";
-        return Boolean.parseBoolean(getSsmParameterWithOverride(pathTemplate, credentialIssuerId));
-    }
-
     public String getAllowedSharedAttributes(String credentialIssuerId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/allowedSharedAttributes";

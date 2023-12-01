@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -62,27 +61,6 @@ public class CriResponseServiceTest {
                 criResponseService.getCriResponseItem(ipvSessionId, criId);
 
         assertEquals(criResponseItem, retrievedCredentialItem);
-    }
-
-    @Test
-    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-
-        List<CriResponseItem> criResponseItem =
-                List.of(
-                        createCriResponseStoreItem(
-                                USER_ID_1,
-                                TEST_CREDENTIAL_ISSUER,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()));
-
-        when(mockDataStore.getItems(USER_ID)).thenReturn(criResponseItem);
-
-        var criResponseItems = criResponseService.getCriResponseItems(USER_ID);
-
-        assertTrue(
-                criResponseItems.stream()
-                        .map(CriResponseItem::getCredentialIssuer)
-                        .anyMatch(item -> TEST_CREDENTIAL_ISSUER.equals(item)));
     }
 
     @Test

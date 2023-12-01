@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -257,7 +256,7 @@ public class ProcessCriCallbackHandler
                 criCheckingService.validateOAuthForError(
                         callbackRequest, criOAuthSessionItem, ipvSessionItem);
                 return criCheckingService.handleCallbackError(
-                        callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        callbackRequest, clientOAuthSessionItem);
             }
             criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
 
@@ -289,12 +288,6 @@ public class ProcessCriCallbackHandler
                     vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
         } finally {
             if (ipvSessionItem != null) {
-                ipvSessionItem.addVisitedCredentialIssuerDetails(
-                        new VisitedCredentialIssuerDetailsDto(
-                                callbackRequest.getCredentialIssuerId(),
-                                null,
-                                false,
-                                null)); // TODO: Only need until we remove in PYIC-3799
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
         }

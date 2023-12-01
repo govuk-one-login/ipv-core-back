@@ -80,8 +80,4 @@ public class ClientOAuthSessionDetailsService {
 
         return clientOAuthSessionErrorItem;
     }
-
-    public void updateClientOAuthSession(ClientOAuthSessionItem updatedClientOAuthSessionItem) {
-        dataStore.update(updatedClientOAuthSessionItem);
-    }
 }

@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
@@ -92,13 +91,6 @@ class CheckGpg45ScoreHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        ipvSessionItem.setVisitedCredentialIssuerDetails(
-                List.of(
-                        new VisitedCredentialIssuerDetailsDto(
-                                "criId",
-                                "https://review-a.integration.account.gov.uk",
-                                true,
-                                null)));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()

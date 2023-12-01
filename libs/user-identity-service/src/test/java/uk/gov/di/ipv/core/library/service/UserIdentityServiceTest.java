@@ -34,7 +34,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,7 +61,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TY
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
@@ -71,7 +69,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_WITH_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
@@ -1368,49 +1365,6 @@ class UserIdentityServiceTest {
         assertThrows(
                 NoVcStatusForIssuerException.class,
                 () -> userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer"));
-    }
-
-    @Test
-    void getVCSuccessStatusReturnShouldBeEmpty() throws Exception {
-        when(userIdentityService.getVcStoreItem(USER_ID_1, FRAUD_CRI)).thenReturn(null);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
-
-        assertEquals(Optional.empty(), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(USER_ID_1, PASSPORT_CRI, M1A_FAILED_PASSPORT_VC, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, PASSPORT_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, PASSPORT_CRI);
-
-        assertEquals(Optional.of(false), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, PASSPORT_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, PASSPORT_CRI);
-
-        assertEquals(Optional.of(true), isValid);
-    }
-
-    @Test
-    void getVCSuccessStatusShouldIgnoreCIs() throws Exception {
-        VcStoreItem vcStoreItem =
-                createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITH_CI, Instant.now());
-        when(userIdentityService.getVcStoreItem(USER_ID_1, FRAUD_CRI)).thenReturn(vcStoreItem);
-
-        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, FRAUD_CRI);
-
-        assertEquals(Optional.of(true), isValid);
     }
 
     @Test

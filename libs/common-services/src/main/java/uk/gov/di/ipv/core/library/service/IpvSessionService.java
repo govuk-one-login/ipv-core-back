@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -103,8 +102,6 @@ public class IpvSessionService {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
 
         ipvSessionItem.setUserState(generateStartingState(errorObject));
-
-        ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
 
         ipvSessionItem.setVot(VOT_P0);
 

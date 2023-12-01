@@ -432,25 +432,6 @@ class ConfigServiceTest {
         }
 
         @ParameterizedTest
-        @CsvSource({"false,true,,false", "false,true,fs01,true"})
-        void shouldReturnIsUnavailableOrNot(
-                String baseIsUnavailable,
-                String featureSetIsUnavailable,
-                String featureSet,
-                String expectedIsUnavailable) {
-            final String credentialIssuer = "passportCri";
-            setupTestData(
-                    credentialIssuer,
-                    "unavailable",
-                    baseIsUnavailable,
-                    featureSet,
-                    featureSetIsUnavailable);
-            assertEquals(
-                    Boolean.parseBoolean(expectedIsUnavailable),
-                    configService.isUnavailable(credentialIssuer));
-        }
-
-        @ParameterizedTest
         @CsvSource(
                 delimiter = '|',
                 value = {

@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,8 +27,6 @@ class CriOAuthSessionServiceTest {
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
                         .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .build();
 
         when(mockDataStore.getItem(criOAuthSessionItem.getCriOAuthSessionId()))
@@ -48,8 +45,6 @@ class CriOAuthSessionServiceTest {
                 criOAuthSessionItemArgumentCaptor.getValue());
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
-        assertEquals(criOAuthSessionItem.getAccessToken(), result.getAccessToken());
-        assertEquals(criOAuthSessionItem.getAuthorizationCode(), result.getAuthorizationCode());
     }
 
     @Test
@@ -58,8 +53,6 @@ class CriOAuthSessionServiceTest {
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
                         .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
                         .connection("main")
                         .build();
 
@@ -77,22 +70,5 @@ class CriOAuthSessionServiceTest {
 
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
-        assertNull(result.getAccessToken());
-        assertNull(result.getAuthorizationCode());
-    }
-
-    @Test
-    void shouldUpdateSessionItem() {
-        CriOAuthSessionItem criOAuthSessionItem =
-                CriOAuthSessionItem.builder()
-                        .criOAuthSessionId("testState")
-                        .criId("testAddress")
-                        .accessToken("testAccessToken")
-                        .authorizationCode("testAuthorizationCode")
-                        .build();
-
-        criOauthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
-
-        verify(mockDataStore).update(criOAuthSessionItem);
     }
 }

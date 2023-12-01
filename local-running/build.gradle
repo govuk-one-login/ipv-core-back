@@ -21,7 +21,6 @@ dependencies {
 			project(":lambdas:build-cri-oauth-request"),
 			project(":lambdas:build-proven-user-identity-details"),
 			project(":lambdas:build-user-identity"),
-			project(":lambdas:check-ci-score"),
 			project(":lambdas:check-existing-identity"),
 			project(":lambdas:check-gpg45-score"),
 			project(":lambdas:evaluate-gpg45-scores"),
@@ -30,9 +29,6 @@ dependencies {
 			project(":lambdas:process-async-cri-credential"),
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:reset-identity"),
-			project(":lambdas:retrieve-cri-credential"),
-			project(":lambdas:retrieve-cri-oauth-access-token"),
-			project(":lambdas:validate-oauth-callback"),
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
@@ -42,6 +38,7 @@ dependencies {
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
+	implementation project(path: ':lambdas:process-cri-callback')
 }
 
 java {

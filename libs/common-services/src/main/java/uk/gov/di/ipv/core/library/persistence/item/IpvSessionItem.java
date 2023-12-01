@@ -9,9 +9,7 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
-import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @DynamoDbBean
@@ -29,8 +27,6 @@ public class IpvSessionItem implements DynamodbItem {
     private AccessTokenMetadata accessTokenMetadata;
     private String errorCode;
     private String errorDescription;
-    private List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-            new ArrayList<>();
     private String vot;
     private long ttl;
     private IpvJourneyTypes journeyType;
@@ -54,10 +50,5 @@ public class IpvSessionItem implements DynamodbItem {
     @DynamoDbSecondaryPartitionKey(indexNames = "accessToken")
     public String getAccessToken() {
         return accessToken;
-    }
-
-    public void addVisitedCredentialIssuerDetails(
-            VisitedCredentialIssuerDetailsDto visitedCredentialIssuerDetails) {
-        this.visitedCredentialIssuerDetails.add(visitedCredentialIssuerDetails);
     }
 }

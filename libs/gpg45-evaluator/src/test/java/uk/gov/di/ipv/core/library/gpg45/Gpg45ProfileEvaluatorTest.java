@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -27,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -210,94 +207,6 @@ class Gpg45ProfileEvaluatorTest {
                 parsedCredentials.stream().map(SignedJWT::serialize).collect(Collectors.toList());
 
         assertEquals(expected, reserializedCredentials);
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnCorrectType() throws Exception {
-        List<SignedJWT> parsedCredentials =
-                evaluator.parseCredentials(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC));
-
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        parsedCredentials, CredentialEvidenceItem.EvidenceType.EVIDENCE);
-
-        assertTrue(result.isPresent());
-
-        JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
-
-        assertEquals("https://review-p.integration.account.gov.uk", jwtClaimsSet.getIssuer());
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnCorrectTypeForDcmaw() throws Exception {
-        List<SignedJWT> parsedCredentials =
-                evaluator.parseCredentials(List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC));
-
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        parsedCredentials, CredentialEvidenceItem.EvidenceType.EVIDENCE);
-
-        assertTrue(result.isPresent());
-
-        JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
-
-        assertEquals("https://review-b.integration.account.gov.uk", jwtClaimsSet.getIssuer());
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnCorrectTypeForF2F() throws Exception {
-        List<SignedJWT> parsedCredentials =
-                evaluator.parseCredentials(
-                        List.of(
-                                M1A_F2F_VC,
-                                M1A_F2F_VC_VERIFICATION_SCORE_ZERO,
-                                M1A_ADDRESS_VC,
-                                M1A_FRAUD_VC));
-
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        parsedCredentials, CredentialEvidenceItem.EvidenceType.EVIDENCE);
-
-        assertTrue(result.isPresent());
-
-        JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
-
-        assertEquals(
-                "https://development-di-ipv-cri-uk-passport-stub.london.cloudapps.digital",
-                jwtClaimsSet.getIssuer());
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnEmptyForMissingEvidenceType() throws Exception {
-        List<SignedJWT> parsedCredentials =
-                evaluator.parseCredentials(List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC));
-
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        parsedCredentials, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnEmptyForMissingCredentials() throws Exception {
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        Collections.emptyList(), CredentialEvidenceItem.EvidenceType.EVIDENCE);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getCredentialByTypeShouldReturnEmptyForMissingEvidenceTypeInDcmaw() throws Exception {
-        List<SignedJWT> parsedCredentials = evaluator.parseCredentials(List.of(M1B_DCMAW_VC));
-
-        Optional<SignedJWT> result =
-                evaluator.getCredentialByType(
-                        parsedCredentials, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
-
-        assertTrue(result.isEmpty());
     }
 
     @ParameterizedTest
