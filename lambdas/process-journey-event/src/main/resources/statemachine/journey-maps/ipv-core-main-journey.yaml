@@ -308,8 +308,6 @@ CRI_EXPERIAN_KBV:
     criId: kbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: ERROR
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
@@ -390,8 +388,6 @@ POST_DCMAW_SUCCESS_PAGE:
 ADDRESS_AND_FRAUD_J1:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
-    end:
-      targetState: ERROR
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
@@ -420,8 +416,6 @@ ADDRESS_AND_FRAUD_J2:
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_NINO_J6
       checkIfDisabled:
@@ -448,8 +442,6 @@ ADDRESS_AND_FRAUD_J3:
   exitEvents:
     next:
       targetState: CHECK_FRAUD_SCORE_J3
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CHECK_FRAUD_SCORE_J3
 
@@ -486,8 +478,6 @@ ADDRESS_AND_FRAUD_J4:
   exitEvents:
     next:
       targetState: CRI_F2F
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_F2F
 
@@ -509,8 +499,6 @@ CRI_HMRC_KBV_J6:
     criId: hmrcKbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: ERROR
     fail-with-no-ci:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
@@ -556,8 +544,6 @@ ADDRESS_AND_FRAUD_M2B:
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
-    end:
-      targetState: ERROR
     enhanced-verification:
       targetState: CRI_HMRC_KBV_J6
       checkIfDisabled:

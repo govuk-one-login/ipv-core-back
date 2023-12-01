@@ -134,7 +134,7 @@ public class EvaluateGpg45ScoresHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                            JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse())
                     .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
