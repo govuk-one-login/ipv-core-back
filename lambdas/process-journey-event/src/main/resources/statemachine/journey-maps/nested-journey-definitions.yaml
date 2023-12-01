@@ -21,8 +21,6 @@ ADDRESS_AND_FRAUD:
         criId: fraud
       parent: CRI_STATE
       events:
-        end:
-          exitEventToEmit: end
         next:
           exitEventToEmit: next
         enhanced-verification:
