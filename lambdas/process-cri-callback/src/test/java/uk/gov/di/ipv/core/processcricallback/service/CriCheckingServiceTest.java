@@ -102,14 +102,13 @@ public class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        var ipvSessionItem = new IpvSessionItem();
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
                 criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem, ipvSessionItem);
+                        callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
@@ -126,14 +125,13 @@ public class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        var ipvSessionItem = new IpvSessionItem();
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
                 criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem, ipvSessionItem);
+                        callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_ACCESS_DENIED_PATH), journeyResponse);
@@ -150,14 +148,13 @@ public class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        var ipvSessionItem = new IpvSessionItem();
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
                 criCheckingService.handleCallbackError(
-                        callbackRequest, clientOauthSessionItem, ipvSessionItem);
+                        callbackRequest, clientOauthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_TEMPORARILY_UNAVAILABLE_PATH), journeyResponse);
@@ -178,14 +175,13 @@ public class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        var ipvSessionItem = new IpvSessionItem();
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 
         // Act
         criCheckingService.handleCallbackError(
-                callbackRequest, clientOauthSessionItem, ipvSessionItem);
+                callbackRequest, clientOauthSessionItem);
 
         // Assert
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());

@@ -256,7 +256,7 @@ public class ProcessCriCallbackHandler
                 criCheckingService.validateOAuthForError(
                         callbackRequest, criOAuthSessionItem, ipvSessionItem);
                 return criCheckingService.handleCallbackError(
-                        callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        callbackRequest, clientOAuthSessionItem);
             }
             criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
 

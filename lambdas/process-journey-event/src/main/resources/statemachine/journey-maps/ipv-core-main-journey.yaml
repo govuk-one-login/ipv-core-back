@@ -20,12 +20,8 @@ CRI_STATE:
       targetState: ERROR
     temporarily-unavailable:
       targetState: PYI_NO_MATCH
-    end:
-      targetState: ERROR
     pyi-no-match:
       targetState: PYI_NO_MATCH
-    pyi-kbv-fail:
-      targetState: PYI_KBV_FAIL
 
 # Shared states
 INITIAL_IPV_JOURNEY:
@@ -217,12 +213,6 @@ PYI_NO_MATCH:
   response:
     type: page
     pageId: pyi-no-match
-  parent: END_JOURNEY
-
-PYI_KBV_FAIL:
-  response:
-    type: page
-    pageId: pyi-kbv-fail
   parent: END_JOURNEY
 
 PYI_F2F_TECHNICAL:

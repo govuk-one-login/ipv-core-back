@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandl
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
-import uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
@@ -49,7 +48,6 @@ public class LambdaHandler {
     private ResetIdentityHandler resetIdentityHandler;
     private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private BuildClientOauthResponseHandler buildClientOauthResponseHandler;
-    private CheckCiScoreHandler checkCiScoreHandler;
     private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private BuildProvenUserIdentityDetailsHandler buildProvenUserIdentityDetailsHandler;
     private ProcessCriCallbackHandler processCriCallbackHandler;
@@ -64,7 +62,6 @@ public class LambdaHandler {
         this.resetIdentityHandler = new ResetIdentityHandler();
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler();
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler();
-        this.checkCiScoreHandler = new CheckCiScoreHandler();
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
         this.buildProvenUserIdentityDetailsHandler = new BuildProvenUserIdentityDetailsHandler();
         this.processCriCallbackHandler = new ProcessCriCallbackHandler();
@@ -135,15 +132,16 @@ public class LambdaHandler {
                             return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/ci-scoring".equals(journey)) {
+                    } else if ("/journey/evaluate-gpg45-score".equals(journey)) {
+                        ProcessRequest processRequest =
+                                buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
-                                checkCiScoreHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
+                                evaluateGpg45ScoresHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/check-gpg45-score".equals(journey)) {
+                    } else if ("/journey/check-gpg45-scores".equals(journey)) {
                         ProcessRequest processRequest =
                                 buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
