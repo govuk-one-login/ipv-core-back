@@ -1367,7 +1367,6 @@ Resources:
         ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Alias
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
-        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
       Events:
@@ -1395,8 +1394,6 @@ Resources:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildClientOauthResponseFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref CheckCiScoreFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGpg45ScoreFunction
         - LambdaInvokePolicy:
@@ -2124,117 +2121,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
-
-  CheckCiScoreFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - CheckCiScoreFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-ci-score-${Environment}"
-      Handler: uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/check-ci-score
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub check-ci-score-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-            - cimit_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitEnvironment
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
-        - Statement:
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-          - Sid: invokeGetContraIndicatorCredentialFunction
-            Effect: Allow
-            Action:
-              - 'lambda:InvokeFunction'
-            Resource:
-              - !Sub
-                - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-                - cimit_account_id: !If
-                    - UseIndividualCiMitStubs
-                    - !Ref AWS::AccountId
-                    - !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - cimitAccountId
-                  env: !If
-                    - UseIndividualCiMitStubs
-                    - !Sub ${Environment}
-                    - !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - cimitEnvironment
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  CheckCiScoreFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-ci-score-${Environment}"
-
-  CheckCiScoreFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref CheckCiScoreFunctionLogGroup
 
   CheckGpg45ScoreFunction:
     Type: AWS::Serverless::Function

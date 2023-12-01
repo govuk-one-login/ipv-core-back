@@ -21,7 +21,6 @@ dependencies {
 			project(":lambdas:build-cri-oauth-request"),
 			project(":lambdas:build-proven-user-identity-details"),
 			project(":lambdas:build-user-identity"),
-			project(":lambdas:check-ci-score"),
 			project(":lambdas:check-existing-identity"),
 			project(":lambdas:check-gpg45-score"),
 			project(":lambdas:evaluate-gpg45-scores"),
