@@ -275,10 +275,10 @@ EVALUATE_GPG45_SCORES:
     type: process
     lambda: evaluate-gpg45-scores
   events:
-    met:
+    end:
       targetState:
         IPV_SUCCESS_PAGE
-    unmet:
+    next:
       targetState:
         PYI_NO_MATCH
 
