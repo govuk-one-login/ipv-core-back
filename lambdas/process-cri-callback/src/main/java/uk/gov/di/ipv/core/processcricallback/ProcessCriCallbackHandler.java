@@ -156,9 +156,9 @@ public class ProcessCriCallbackHandler
                                     callbackRequest.getState());
                     pageOutput.put(
                             "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_UNAUTHORIZED, pageOutput);
                 }
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_UNAUTHORIZED, pageOutput);
             }
             if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
                 LOGGER.error(e.getErrorResponse(), e);
