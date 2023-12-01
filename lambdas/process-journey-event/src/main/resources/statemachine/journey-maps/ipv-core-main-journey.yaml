@@ -564,11 +564,6 @@ CRI_EXPERIAN_KBV_M2B:
     criId: kbv
   parent: CRI_STATE
   events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        gpg45ScoresAtEnd:
-          targetState: EVALUATE_GPG45_SCORES
     fail-with-no-ci:
       targetState: PYI_CRI_ESCAPE
       checkIfDisabled:

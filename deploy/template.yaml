@@ -124,7 +124,6 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
-  IsBuild: !Equals [ !Ref Environment, build ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
