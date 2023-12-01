@@ -121,7 +121,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, String> input =
                 Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout("INVALID-STATE");
+        mockIpvSessionItemAndTimeout("INVALIDSTATE");
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -282,10 +282,10 @@ class ProcessJourneyEventHandlerTest {
         return ClientOAuthSessionItem.builder()
                 .clientOAuthSessionId(SecureTokenHelper.generate())
                 .responseType("code")
-                .state("test-state")
+                .state("teststate")
                 .redirectUri("https://example.com/redirect")
-                .govukSigninJourneyId("test-journey-id")
-                .userId("test-user-id")
+                .govukSigninJourneyId("testjourneyid")
+                .userId("testuserid")
                 .build();
     }
 
