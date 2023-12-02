@@ -154,8 +154,11 @@ public class ProcessCriCallbackHandler
                     var criOAuthSessionItem =
                             criOAuthSessionService.getCriOauthSessionItem(
                                     callbackRequest.getState());
-                    pageOutput.put(
-                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
+                    if (criOAuthSessionItem != null) {
+                        pageOutput.put(
+                                "clientOAuthSessionId",
+                                criOAuthSessionItem.getClientOAuthSessionId());
+                    }
                 }
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_UNAUTHORIZED, pageOutput);

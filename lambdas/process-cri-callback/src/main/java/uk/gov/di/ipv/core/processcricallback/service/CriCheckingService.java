@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
@@ -90,7 +91,9 @@ public class CriCheckingService {
         var criId = callbackRequest.getCredentialIssuerId();
         var ipAddress = callbackRequest.getIpAddress();
         var error = callbackRequest.getError();
-        var errorDescription = callbackRequest.getErrorDescription();
+        var errorDescription =
+                Objects.toString(
+                        callbackRequest.getErrorDescription(), "No error description provided");
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
