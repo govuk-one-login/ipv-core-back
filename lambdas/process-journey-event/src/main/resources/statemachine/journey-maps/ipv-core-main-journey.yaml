@@ -7,19 +7,19 @@ END_JOURNEY:
 CRI_STATE:
   events:
     next:
-      targetState: ERROR
+      targetState: UNEXPECTED_EVENT
     not-found:
-      targetState: ERROR
+      targetState: PYI_NO_MATCH
     fail-with-no-ci:
-      targetState: ERROR
+      targetState: PYI_NO_MATCH
     error:
       targetState: ERROR
     access-denied:
       targetState: PYI_NO_MATCH
     enhanced-verification:
-      targetState: ERROR
-    temporarily-unavailable:
       targetState: PYI_NO_MATCH
+    temporarily-unavailable:
+      targetState: ERROR
     fail-with-ci:
       targetState: PYI_NO_MATCH
 
@@ -258,6 +258,13 @@ PYI_CRI_ESCAPE_NO_F2F:
       targetState: END
 
 ERROR:
+  response:
+    type: error
+    pageId: pyi-technical
+    statusCode: 500
+  parent: END_JOURNEY
+
+UNEXPECTED_EVENT:
   response:
     type: error
     pageId: pyi-technical
