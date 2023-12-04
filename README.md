@@ -3,9 +3,10 @@
 This the back-end code for the core of the Identity Proofing and Verification (IPV) system within the GDS digital identity platform, GOV.UK One Login.
 
 The following projects are related to the di-ipv-core-back, providing additional functionality:
-* [di-ipv-core-front](https://github.com/alphagov/di-ipv-core-front) - Front end code for the core of the Identity Proofing and Verification (IPV) system.
-* [di-ipv-core-tests](https://github.com/alphagov/di-ipv-core-tests) - Feature tests for the core of the Identity Proofing and Verification (IPV) system.
-* [di-ipv-config](https://github.com/alphagov/di-ipv-config) - Configuration for the core of the Identity Proofing and Verification (IPV) system. This is an internal project which contains the configuration required for IPV Core to interact with the other components of the IPV system.
+* [di-ipv-core-front](https://github.com/govuk-one-login/ipv-core-front) - Front end code for the core of the Identity Proofing and Verification (IPV) system.
+* [di-ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) - Feature tests for the core of the Identity Proofing and Verification (IPV) system.
+* [di-ipv-core-common-infra](https://github.com/govuk-one-login/ipv-core-common-infra) - Infrastructure and configuration values for the core of the Identity Proofing and Verification (IPV) system.
+* [di-ipv-stubs](https://github.com/govuk-one-login/ipv-stubs) - Stubs for IPV Core dependencies (i.e. CRIs), used for testing in dev/build and occasionally higher environments.
 
 ## Development
 The di-ipv-core-back is a mix of Java and Node.js AWS Lambdas. The following section should give you a guide how to get started developing functionality for di-ipv-core-back.
@@ -63,7 +64,7 @@ See the [Deployment Documentation](deploy/README.md) for information on deployin
 The di-ipv-core-back has a number of different tests:
 * Unit Tests - Each lambda contains unit tests which test a classes functionality in isolation. These tests can be found within the `lambda\*\src\test` folder.
 * Integration Tests - Integration tests are found in the `integration-test` folder and test the functionality of `di-ipv-core-back` running on an AWS test environment.
-* Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/alphagov/di-ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
+* Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
 
 ## Code structure
 The application is configured as a Gradle project with a sub-project for each Lambda. The following are the main folders and their use:
