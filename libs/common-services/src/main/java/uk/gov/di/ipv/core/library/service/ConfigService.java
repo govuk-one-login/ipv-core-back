@@ -269,12 +269,7 @@ public class ConfigService {
         try {
             String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
             return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
-        } catch (ParameterNotFoundException | ClassCastException e) {
-            Map<String, String> parameters =
-                    getSsmParameters(pathTemplate, false, criId, connection);
-            if (parameters != null && !parameters.isEmpty()) {
-                return objectMapper.convertValue(parameters, CredentialIssuerConfig.class);
-            }
+        } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",
