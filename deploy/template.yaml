@@ -1184,13 +1184,6 @@ Resources:
                         - !Ref AWS::AccountId
                         - cimitEnvironment
       Events:
-        IPVCoreJourneyCallback:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/callback
-            Method: POST
         IPVCoreCriCallback:
           Type: Api
           Properties:
