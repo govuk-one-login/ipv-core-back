@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -14,17 +14,16 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 
 import java.text.ParseException;
 import java.util.List;
@@ -127,14 +126,15 @@ public class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .verifiableCredentials(List.of(signedJWT))
-                        .build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
-        criStoringService.storeCreatedVcs(vcResponse, callbackRequest, clientOAuthSessionItem);
+        criStoringService.storeVcs(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getIpAddress(),
+                callbackRequest.getIpvSessionId(),
+                List.of(signedJWT),
+                clientOAuthSessionItem);
 
         // Assert
         verify(mockCiMitService)
@@ -171,12 +171,15 @@ public class CriStoringServiceTest {
     void storeCreatedVcsShouldHandleEmptyVcList() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse =
-                VerifiableCredentialResponse.builder().verifiableCredentials(List.of()).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
-        criStoringService.storeCreatedVcs(vcResponse, callbackRequest, clientOAuthSessionItem);
+        criStoringService.storeVcs(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getIpAddress(),
+                callbackRequest.getIpvSessionId(),
+                List.of(),
+                clientOAuthSessionItem);
 
         // Assert
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -188,10 +191,6 @@ public class CriStoringServiceTest {
     void storeCreatedVcsShouldThrowParseExceptionWhenVcCannotBeParsed() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .verifiableCredentials(List.of(mockSignedJWT))
-                        .build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockSignedJWT.getJWTClaimsSet()).thenThrow(new ParseException("Parse exception!", 0));
 
@@ -199,8 +198,12 @@ public class CriStoringServiceTest {
         assertThrows(
                 ParseException.class,
                 () ->
-                        criStoringService.storeCreatedVcs(
-                                vcResponse, callbackRequest, clientOAuthSessionItem));
+                        criStoringService.storeVcs(
+                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getIpAddress(),
+                                callbackRequest.getIpvSessionId(),
+                                List.of(mockSignedJWT),
+                                clientOAuthSessionItem));
     }
 
     @Test
@@ -208,10 +211,6 @@ public class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .verifiableCredentials(List.of(signedJWT))
-                        .build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPutException(""))
                 .when(mockCiMitService)
@@ -221,8 +220,12 @@ public class CriStoringServiceTest {
         assertThrows(
                 CiPutException.class,
                 () ->
-                        criStoringService.storeCreatedVcs(
-                                vcResponse, callbackRequest, clientOAuthSessionItem));
+                        criStoringService.storeVcs(
+                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getIpAddress(),
+                                callbackRequest.getIpvSessionId(),
+                                List.of(signedJWT),
+                                clientOAuthSessionItem));
     }
 
     @Test
@@ -231,10 +234,6 @@ public class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .verifiableCredentials(List.of(signedJWT))
-                        .build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPostMitigationsException(""))
                 .when(mockCiMitService)
@@ -244,8 +243,12 @@ public class CriStoringServiceTest {
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
-                        criStoringService.storeCreatedVcs(
-                                vcResponse, callbackRequest, clientOAuthSessionItem));
+                        criStoringService.storeVcs(
+                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getIpAddress(),
+                                callbackRequest.getIpvSessionId(),
+                                List.of(signedJWT),
+                                clientOAuthSessionItem));
     }
 
     @Test
@@ -253,10 +256,6 @@ public class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .verifiableCredentials(List.of(signedJWT))
-                        .build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
 
@@ -264,8 +263,12 @@ public class CriStoringServiceTest {
         assertThrows(
                 SqsException.class,
                 () ->
-                        criStoringService.storeCreatedVcs(
-                                vcResponse, callbackRequest, clientOAuthSessionItem));
+                        criStoringService.storeVcs(
+                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getIpAddress(),
+                                callbackRequest.getIpvSessionId(),
+                                List.of(signedJWT),
+                                clientOAuthSessionItem));
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {

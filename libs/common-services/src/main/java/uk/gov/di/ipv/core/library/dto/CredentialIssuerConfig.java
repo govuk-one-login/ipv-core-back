@@ -19,7 +19,7 @@ import java.util.Objects;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
-public class CredentialIssuerConfig {
+public class CredentialIssuerConfig implements CriConfig {
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;

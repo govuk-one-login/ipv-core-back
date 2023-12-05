@@ -124,35 +124,45 @@ public class RequestHelper {
 
     public static String getScoreType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        String scoreType = request.getScoreType();
-        if (scoreType == null) {
-            LOGGER.error("Missing score type in request");
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_TYPE);
-        }
-        return scoreType;
+        return extractValueFromLambdaInput(
+                request, "scoreType", ErrorResponse.MISSING_SCORE_TYPE, String.class);
     }
 
     public static Integer getScoreThreshold(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        Integer scoreThreshold = request.getScoreThreshold();
-        if (scoreThreshold == null) {
-            LOGGER.error("Missing score threshold in request");
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_THRESHOLD);
-        }
-        return scoreThreshold;
+        return extractValueFromLambdaInput(
+                request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD, Integer.class);
     }
 
-    public static Boolean getIsUserInitiated(JourneyRequest request)
+    public static String getJourneyType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        Boolean isUserInitiated = request.getIsUserInitiated();
-        if (isUserInitiated == null) {
-            LOGGER.error("Missing isUserInitiated parameter in request");
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER);
+        return extractValueFromLambdaInput(
+                request, "journeyType", ErrorResponse.MISSING_JOURNEY_TYPE, String.class);
+    }
+
+    public static Boolean getIsUserInitiated(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        return extractValueFromLambdaInput(
+                request,
+                "isUserInitiated",
+                ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER,
+                Boolean.class);
+    }
+
+    private static <T> T extractValueFromLambdaInput(
+            ProcessRequest request, String key, ErrorResponse errorResponse, Class<T> returnType)
+            throws HttpResponseExceptionWithErrorBody {
+        Map<String, Object> lambdaInput = request.getLambdaInput();
+        if (lambdaInput == null) {
+            LOGGER.error("Missing lambdaInput map");
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
-        return isUserInitiated;
+        T value = (T) lambdaInput.get(key);
+        if (value == null) {
+            LOGGER.error(String.format("Missing '%s' in lambdaInput", key));
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
+        }
+        return value;
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)

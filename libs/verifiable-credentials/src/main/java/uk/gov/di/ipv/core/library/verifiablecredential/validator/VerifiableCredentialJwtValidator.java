@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -47,9 +47,7 @@ public class VerifiableCredentialJwtValidator {
     }
 
     public void validate(
-            SignedJWT verifiableCredential,
-            CredentialIssuerConfig credentialIssuerConfig,
-            String userId)
+            SignedJWT verifiableCredential, CriConfig credentialIssuerConfig, String userId)
             throws VerifiableCredentialException {
         LOGGER.info("Validating Verifiable Credential.");
         ECKey signingKey;
@@ -78,7 +76,8 @@ public class VerifiableCredentialJwtValidator {
         validateClaimsSet(verifiableCredential, componentId, userId);
     }
 
-    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {
+    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey)
+            throws VerifiableCredentialException {
         SignedJWT concatSignatureVerifiableCredential;
         try {
             concatSignatureVerifiableCredential =
@@ -125,7 +124,8 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateClaimsSet(
-            SignedJWT verifiableCredential, String componentId, String userId) {
+            SignedJWT verifiableCredential, String componentId, String userId)
+            throws VerifiableCredentialException {
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
                 new DefaultJWTClaimsVerifier<>(
                         new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build(),
@@ -141,7 +141,8 @@ public class VerifiableCredentialJwtValidator {
         }
     }
 
-    private void validateCiCodes(SignedJWT verifiableCredential) {
+    private void validateCiCodes(SignedJWT verifiableCredential)
+            throws VerifiableCredentialException {
         Map<String, ContraIndicatorConfig> contraIndicatorConfigMap =
                 configService.getContraIndicatorConfigMap();
 
@@ -178,7 +179,7 @@ public class VerifiableCredentialJwtValidator {
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
-        } catch (ParseException e) {
+        } catch (ParseException | VerifiableCredentialException e) {
             LOGGER.error("Failed to parse verifiable credential claims set: {}", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,

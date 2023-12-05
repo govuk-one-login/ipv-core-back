@@ -192,7 +192,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVC() throws CiRetrievalException, JsonProcessingException {
+    void getContraIndicatorsVC() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -294,7 +294,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCThrowsExceptionIfVCValidationFails() throws JsonProcessingException {
+    void getContraIndicatorsVCThrowsExceptionIfVCValidationFails() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -325,8 +325,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorCredentialsReturnEmptyCIIfInvalidEvidenceWithNoCI()
-            throws CiRetrievalException, JsonProcessingException {
+    void getContraIndicatorCredentialsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -396,8 +395,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtWhenValidJWT()
-            throws CiRetrievalException, JsonProcessingException {
+    void getContraIndicatorsVCJwtWhenValidJWT() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -507,7 +505,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtWhenVcValidationFails() throws JsonProcessingException {
+    void getContraIndicatorsVCJwtWhenVcValidationFails() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))

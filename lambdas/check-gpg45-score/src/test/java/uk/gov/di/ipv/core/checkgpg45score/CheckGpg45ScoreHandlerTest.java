@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,7 @@ class CheckGpg45ScoreHandlerTest {
                         .ipAddress(TEST_CLIENT_SOURCE_IP)
                         .ipvSessionId(TEST_SESSION_ID)
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
-                        .scoreThreshold(2)
+                        .lambdaInput(new HashMap<>(Map.of("scoreThreshold", 2)))
                         .build();
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
@@ -107,7 +108,7 @@ class CheckGpg45ScoreHandlerTest {
 
     @Test
     void handlerShouldReturnJourneyMetPathIfThresholdMetFraud() throws Exception {
-        request.setScoreType("fraud");
+        request.getLambdaInput().put("scoreType", "fraud");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -123,7 +124,7 @@ class CheckGpg45ScoreHandlerTest {
 
     @Test
     void handlerShouldReturnJourneyMetPathIfThresholdMetActivity() throws Exception {
-        request.setScoreType("activity");
+        request.getLambdaInput().put("scoreType", "activity");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -139,7 +140,7 @@ class CheckGpg45ScoreHandlerTest {
 
     @Test
     void handlerShouldReturnJourneyMetPathIfThresholdMetVerification() throws Exception {
-        request.setScoreType("verification");
+        request.getLambdaInput().put("scoreType", "verification");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -155,7 +156,7 @@ class CheckGpg45ScoreHandlerTest {
 
     @Test
     void handlerShouldReturnJourneyUnmetPathIfThresholdNotMet() throws Exception {
-        request.setScoreType("fraud");
+        request.getLambdaInput().put("scoreType", "fraud");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -231,7 +232,7 @@ class CheckGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturn500IfUnknownScoreType() throws Exception {
-        request.setScoreType("unknown");
+        request.getLambdaInput().put("scoreType", "unknown");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

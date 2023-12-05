@@ -42,7 +42,8 @@ public class VerifiableCredentialService {
     }
 
     public void persistUserCredentials(
-            SignedJWT credential, String credentialIssuerId, String userId) {
+            SignedJWT credential, String credentialIssuerId, String userId)
+            throws VerifiableCredentialException {
         try {
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
             dataStore.create(vcStoreItem, ConfigurationVariable.VC_TTL);

@@ -278,7 +278,9 @@ class RequestHelperTest {
     @Test
     void getScoreTypeShouldReturnScoreType() throws HttpResponseExceptionWithErrorBody {
         ProcessRequest processRequest =
-                ProcessRequest.processRequestBuilder().scoreType("fraud").build();
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("scoreType", "fraud"))
+                        .build();
         assertEquals("fraud", RequestHelper.getScoreType(processRequest));
     }
 
@@ -300,7 +302,9 @@ class RequestHelperTest {
     @Test
     void getScoreThresholdShouldReturnScoreThreshold() throws HttpResponseExceptionWithErrorBody {
         ProcessRequest processRequest =
-                ProcessRequest.processRequestBuilder().scoreThreshold(2).build();
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("scoreThreshold", 2))
+                        .build();
         assertEquals(2, RequestHelper.getScoreThreshold(processRequest));
     }
 
@@ -316,6 +320,30 @@ class RequestHelperTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getJourneyTypeShouldReturnJourneyType() throws HttpResponseExceptionWithErrorBody {
+        ProcessRequest processRequest =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("journeyType", "reuse"))
+                        .build();
+        assertEquals("reuse", RequestHelper.getJourneyType(processRequest));
+    }
+
+    @Test
+    void getJourneyTypeShouldThrowIfJourneyTypeIsNull() {
+        ProcessRequest processRequest = new ProcessRequest();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getJourneyType(processRequest));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_TYPE.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 }

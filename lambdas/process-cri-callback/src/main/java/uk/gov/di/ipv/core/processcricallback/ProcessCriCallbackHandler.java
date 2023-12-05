@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -16,9 +17,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -42,13 +45,11 @@ import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCrede
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
-import uk.gov.di.ipv.core.processcricallback.service.CriStoringService;
 
 import java.text.ParseException;
 
@@ -281,18 +282,25 @@ public class ProcessCriCallbackHandler
                 criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
                 criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
             } else {
-                vcResponse
-                        .getVerifiableCredentials()
-                        .forEach(
-                                (vc) -> {
-                                    assert criOAuthSessionItem != null;
-                                    verifiableCredentialJwtValidator.validate(
-                                            vc,
-                                            configService.getCriConfig(criOAuthSessionItem),
-                                            clientOAuthSessionItem.getUserId());
-                                });
-                criStoringService.storeCreatedVcs(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
+                for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
+                    if (criOAuthSessionItem == null) {
+                        // We should never get here due to earlier null checks.
+                        // This is to satisfy a compile time warning
+                        throw new InvalidCriCallbackRequestException(
+                                ErrorResponse.INVALID_OAUTH_STATE);
+                    } else {
+                        verifiableCredentialJwtValidator.validate(
+                                vc,
+                                configService.getCriConfig(criOAuthSessionItem),
+                                clientOAuthSessionItem.getUserId());
+                    }
+                }
+                criStoringService.storeVcs(
+                        callbackRequest.getCredentialIssuerId(),
+                        callbackRequest.getIpAddress(),
+                        callbackRequest.getIpvSessionId(),
+                        vcResponse.getVerifiableCredentials(),
+                        clientOAuthSessionItem);
             }
 
             return criCheckingService.checkVcResponse(

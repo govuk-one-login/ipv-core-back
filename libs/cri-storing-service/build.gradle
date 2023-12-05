@@ -1,0 +1,54 @@
+plugins {
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
+			project(":libs:audit-service"),
+			project(":libs:cimit-service"),
+			project(":libs:common-services"),
+			project(":libs:verifiable-credentials")
+
+	api project(":libs:cri-response-service")
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0',
+			"org.mockito:mockito-junit-jupiter:5.7.0",
+			project(path: ':libs:common-services', configuration: 'tests')
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

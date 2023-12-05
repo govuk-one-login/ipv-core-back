@@ -164,7 +164,8 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
-                    AsyncVerifiableCredentialException, CiPostMitigationsException {
+                    AsyncVerifiableCredentialException, CiPostMitigationsException,
+                    VerifiableCredentialException {
 
         validateOAuthState(successAsyncCriResponse);
 

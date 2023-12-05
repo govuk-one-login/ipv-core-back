@@ -27,6 +27,7 @@ dependencies {
 			project(":lambdas:initialise-ipv-session"),
 			project(":lambdas:issue-client-access-token"),
 			project(":lambdas:process-async-cri-credential"),
+			project(":lambdas:process-cri-callback"),
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:reset-identity"),
 			project(":libs:audit-service"),
@@ -38,7 +39,6 @@ dependencies {
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
-	implementation project(path: ':lambdas:process-cri-callback')
 }
 
 java {

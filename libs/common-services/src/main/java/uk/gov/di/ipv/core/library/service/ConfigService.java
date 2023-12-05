@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
@@ -221,35 +222,13 @@ public class ConfigService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
-        String secretId =
-                String.format(
-                        "%s/credential-issuers/%s/connections/%s/api-key",
-                        getEnvironmentVariable(ENVIRONMENT),
-                        criOAuthSessionItem.getCriId(),
-                        criOAuthSessionItem.getConnection());
-        try {
-            String secretValue = getSecretValue(secretId);
+    public String getCriPrivateApiKeyForActiveConnection(String criId) {
+        return getApiKeyFromSecretManager(criId, getActiveConnection(criId));
+    }
 
-            if (secretValue != null) {
-                Map<String, String> secret =
-                        objectMapper.readValue(secretValue, new TypeReference<>() {});
-                return secret.get(API_KEY);
-            }
-            LOGGER.warn(
-                    (new StringMapMessage())
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "API key not found")
-                            .with(LOG_CRI_ID.getFieldName(), criOAuthSessionItem.getCriId())
-                            .with(
-                                    LOG_CONNECTION.getFieldName(),
-                                    criOAuthSessionItem.getConnection()));
-            return null;
-        } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    "Failed to parse the api key secret from secrets manager for client: {}",
-                    criOAuthSessionItem.getCriId());
-            return null;
-        }
+    public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
+        return getApiKeyFromSecretManager(
+                criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
     }
 
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
@@ -264,22 +243,11 @@ public class ConfigService {
     }
 
     public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
-        final String pathTemplate =
-                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        try {
-            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
-            return objectMapper.readValue(parameter, CredentialIssuerConfig.class);
-        } catch (ParameterNotFoundException e) {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
-        } catch (JsonProcessingException e) {
-            throw new ConfigParseException(
-                    String.format(
-                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
-                            pathTemplate, e));
-        }
+        return getCriConfigForType(connection, criId, CredentialIssuerConfig.class);
+    }
+
+    public BackendCriConfig getBackendCriConfig(String criId) {
+        return getCriConfigForType(getActiveConnection(criId), criId, BackendCriConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
@@ -335,6 +303,16 @@ public class ConfigService {
         }
     }
 
+    public boolean enabled(FeatureFlag featureFlag) {
+        return Boolean.parseBoolean(
+                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName()));
+    }
+
+    public boolean enabled(String featureFlagValue) {
+        return Boolean.parseBoolean(
+                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+    }
+
     private String getSecretValue(String secretId) {
         try {
             return secretsProvider.get(secretId);
@@ -365,13 +343,49 @@ public class ConfigService {
         return null;
     }
 
-    public boolean enabled(FeatureFlag featureFlag) {
-        return Boolean.parseBoolean(
-                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName()));
+    private String getApiKeyFromSecretManager(String criId, String connection) {
+        String secretId =
+                String.format(
+                        "%s/credential-issuers/%s/connections/%s/api-key",
+                        getEnvironmentVariable(ENVIRONMENT), criId, connection);
+        try {
+            String secretValue = getSecretValue(secretId);
+
+            if (secretValue != null) {
+                Map<String, String> secret =
+                        objectMapper.readValue(secretValue, new TypeReference<>() {});
+                return secret.get(API_KEY);
+            }
+            LOGGER.warn(
+                    (new StringMapMessage())
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "API key not found")
+                            .with(LOG_CRI_ID.getFieldName(), criId)
+                            .with(LOG_CONNECTION.getFieldName(), connection));
+            return null;
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    "Failed to parse the api key secret from secrets manager for client: {}",
+                    criId);
+            return null;
+        }
     }
 
-    public boolean enabled(String featureFlagValue) {
-        return Boolean.parseBoolean(
-                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+    private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
+        try {
+            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+            return objectMapper.readValue(parameter, configType);
+        } catch (ParameterNotFoundException e) {
+            throw new NoConfigForConnectionException(
+                    String.format(
+                            "No config found for connection: '%s' and criId: '%s'",
+                            connection, criId));
+        } catch (JsonProcessingException e) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
+                            pathTemplate, e));
+        }
     }
 }

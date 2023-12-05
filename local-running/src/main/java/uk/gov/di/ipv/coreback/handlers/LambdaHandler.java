@@ -18,8 +18,8 @@ import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
-import uk.gov.di.ipv.core.processcricallback.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
@@ -108,9 +108,10 @@ public class LambdaHandler {
                         }
                         journey = (String) lambdaOutput.get(JOURNEY);
                     } else if ("/journey/reset-identity".equals(journey)) {
+                        ProcessRequest processRequest =
+                                buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
-                                resetIdentityHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
+                                resetIdentityHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
@@ -253,17 +254,13 @@ public class LambdaHandler {
 
     private ProcessRequest buildProcessRequest(
             Request request, Map<String, Object> processJourneyEventOutput) {
-        Map<String, Object> lambdaInput =
-                (Map<String, Object>) processJourneyEventOutput.get("lambdaInput");
         return ProcessRequest.processRequestBuilder()
                 .ipvSessionId(request.headers(IPV_SESSION_ID))
                 .ipAddress(request.headers(IP_ADDRESS))
                 .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
                 .featureSet(request.headers(FEATURE_SET))
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
-                .scoreType((String) lambdaInput.get("scoreType"))
-                .scoreThreshold((int) lambdaInput.get("scoreThreshold"))
-                .isUserInitiated((boolean) lambdaInput.get("isUserInitiated"))
+                .lambdaInput((Map<String, Object>) processJourneyEventOutput.get("lambdaInput"))
                 .build();
     }
 

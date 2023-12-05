@@ -19,6 +19,7 @@ public class CriConstants {
     public static final String CLAIMED_IDENTITY_CRI = "claimedIdentity";
     public static final String F2F_CRI = "f2f";
     public static final String NINO_CRI = "nino";
+    public static final String TICF_CRI = "ticf";
 
     public static final Set<String> NON_EVIDENCE_CRI_TYPES =
             Set.of(ADDRESS_CRI, CLAIMED_IDENTITY_CRI);

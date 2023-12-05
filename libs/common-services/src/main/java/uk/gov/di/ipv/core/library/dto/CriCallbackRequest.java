@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.dto;
+package uk.gov.di.ipv.core.library.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -131,8 +131,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
 
     @Test
-    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully()
-            throws JsonProcessingException, SqsException, CiPutException {
+    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -151,8 +150,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @Test
     void shouldSendValidExpectedAsyncVerifiableCredentialToCIMITPostMitigationWhenFeatureEnabled()
-            throws JsonProcessingException, SqsException, CiPutException,
-                    CiPostMitigationsException {
+            throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -191,9 +189,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldRejectValidUnexpectedVerifiableCredential()
-            throws JsonProcessingException, CiPostMitigationsException, CiPutException,
-                    SqsException {
+    void shouldRejectValidUnexpectedVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -206,9 +202,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldRejectValidUnsolicitedVerifiableCredential()
-            throws JsonProcessingException, CiPostMitigationsException, CiPutException,
-                    SqsException {
+    void shouldRejectValidUnsolicitedVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -222,9 +216,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldRejectInvalidVerifiableCredential()
-            throws JsonProcessingException, CiPutException, CiPostMitigationsException,
-                    SqsException {
+    void shouldRejectInvalidVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -243,8 +235,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void willNotPersistVerifiableCredentialIfFailsToPutCredentialToCIMIT()
-            throws JsonProcessingException, CiPutException, SqsException {
+    void willNotPersistVerifiableCredentialIfFailsToPutCredentialToCIMIT() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -271,8 +262,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @Test
     void willNotPersistVerifiableCredentialIfFailsToPostMitigatingCredentialToCIMIT()
-            throws JsonProcessingException, CiPostMitigationsException, SqsException,
-                    CiPutException {
+            throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -328,7 +318,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         return sqsEvent;
     }
 
-    private void verifyVerifiableCredentialJwtValidator() {
+    private void verifyVerifiableCredentialJwtValidator() throws Exception {
         verify(verifiableCredentialJwtValidator)
                 .validate(
                         any(SignedJWT.class), eq(TEST_CREDENTIAL_ISSUER_CONFIG), eq(TEST_USER_ID));
@@ -385,7 +375,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertNull(ciIpAddresses.get(0));
     }
 
-    private void verifyVerifiableCredentialService() {
+    private void verifyVerifiableCredentialService() throws Exception {
         ArgumentCaptor<SignedJWT> storableVerifiableCredentialCaptor =
                 ArgumentCaptor.forClass(SignedJWT.class);
         ArgumentCaptor<String> credentialIssuerCaptor = ArgumentCaptor.forClass(String.class);
@@ -408,8 +398,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(TEST_USER_ID, userIds.get(0));
     }
 
-    private void verifyVerifiableCredentialNotProcessedFurther()
-            throws CiPutException, CiPostMitigationsException, SqsException {
+    private void verifyVerifiableCredentialNotProcessedFurther() throws Exception {
         verify(auditService, never())
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
