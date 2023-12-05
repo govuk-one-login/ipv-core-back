@@ -73,7 +73,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         this.configService = new ConfigService();
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.userIdentityService = new UserIdentityService(configService);
 
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);

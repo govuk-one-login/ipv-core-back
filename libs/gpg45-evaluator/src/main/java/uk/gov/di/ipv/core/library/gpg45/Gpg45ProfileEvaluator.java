@@ -8,18 +8,11 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -28,12 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CI_SCORE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_NO_OF_CI_ITEMS;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 public class Gpg45ProfileEvaluator {
@@ -44,51 +34,8 @@ public class Gpg45ProfileEvaluator {
             new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
-    private final ConfigService configService;
-    private final IpvSessionService ipvSessionService;
 
-    public Gpg45ProfileEvaluator(ConfigService configService, IpvSessionService ipvSessionService) {
-        this.configService = configService;
-        this.ipvSessionService = ipvSessionService;
-    }
-
-    public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndicators contraIndicators, IpvSessionItem ipvSession)
-            throws ConfigException, UnrecognisedCiException {
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
-                        .with(
-                                LOG_NO_OF_CI_ITEMS.getFieldName(),
-                                contraIndicators.getContraIndicatorsMap().size()));
-        final int ciScore =
-                contraIndicators.getContraIndicatorScore(
-                        configService.getContraIndicatorConfigMap());
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
-                        .with(LOG_CI_SCORE.getFieldName(), ciScore));
-
-        if (ciScore <= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
-            ipvSession.setCiFail(false);
-            ipvSessionService.updateIpvSession(ipvSession);
-            return Optional.empty();
-        }
-        ipvSession.setCiFail(true);
-        ipvSessionService.updateIpvSession(ipvSession);
-
-        Optional<ContraIndicator> latestCI = contraIndicators.getLatestContraIndicator();
-
-        if (latestCI.isPresent()) {
-            Map<String, String> cimitConfig = configService.getCimitConfig();
-            String ciCode = latestCI.get().getCode();
-            if (cimitConfig.containsKey(ciCode)) {
-                return Optional.of(new JourneyResponse(cimitConfig.get(ciCode)));
-            }
-        }
-
-        return Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH);
-    }
+    public Gpg45ProfileEvaluator() {}
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
             Gpg45Scores gpg45Scores, List<Gpg45Profile> profiles) {

@@ -22,10 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -41,14 +38,13 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -101,8 +97,6 @@ class CheckExistingIdentityHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
-    private static CredentialIssuerConfig addressConfig = null;
-    private static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
@@ -115,38 +109,6 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    static {
-        try {
-            addressConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "test-audience",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            false);
-
-            claimedIdentityConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "test-claimed-identity",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            false);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -156,6 +118,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CiMitService ciMitService;
+    @Mock private CiMitUtilityService ciMitUtilityService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
     @Spy private IpvSessionItem ipvSessionItem;
@@ -659,23 +622,16 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnCiJourneyResponseIfPresent() throws Exception {
-        var testCiCode = "TEST01";
         var testJourneyResponse = "/journey/test-response";
-        var testContraIndicators =
-                ContraIndicators.builder()
-                        .contraIndicatorsMap(
-                                Map.of(
-                                        testCiCode,
-                                        ContraIndicator.builder().code(testCiCode).build()))
-                        .build();
-        var testCimitConfig = Map.of(testCiCode, testJourneyResponse);
+        var testContraIndicators = ContraIndicators.builder().build();
 
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(configService.getCimitConfig()).thenReturn(testCimitConfig);
+        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+                .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -689,27 +645,16 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldNotReturnCiJourneyResponseForMitigatedCi() throws Exception {
-        var testCiCode = "TEST01";
-        var testJourneyResponse = "/journey/test-response";
-        var testContraIndicators =
-                ContraIndicators.builder()
-                        .contraIndicatorsMap(
-                                Map.of(
-                                        testCiCode,
-                                        ContraIndicator.builder()
-                                                .code(testCiCode)
-                                                .mitigation(List.of(Mitigation.builder().build()))
-                                                .build()))
-                        .build();
-        var testCimitConfig = Map.of(testCiCode, testJourneyResponse);
+    void shouldReturnFailWithCiJourneyResponseForCiBreach() throws Exception {
+        var testContraIndicators = ContraIndicators.builder().build();
 
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(userIdentityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(configService.getCimitConfig()).thenReturn(testCimitConfig);
+        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+                .thenReturn(Optional.empty());
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -746,8 +691,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(configService.getCimitConfig())
+        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =

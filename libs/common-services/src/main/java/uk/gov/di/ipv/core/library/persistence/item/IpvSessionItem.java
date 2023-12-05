@@ -32,7 +32,6 @@ public class IpvSessionItem implements DynamodbItem {
     private IpvJourneyTypes journeyType;
     private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
     private String emailAddress;
-    private boolean ciFail;
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
     private String featureSet;

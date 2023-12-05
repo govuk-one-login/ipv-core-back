@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -36,9 +37,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCrede
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,6 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
@@ -80,6 +82,7 @@ public class CriCheckingServiceTest {
     @Mock private AuditService mockAuditService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private CiMitService mockCiMitService;
+    @Mock private CiMitUtilityService mockCimitUtilityService;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @BeforeEach
@@ -89,7 +92,8 @@ public class CriCheckingServiceTest {
                         mockConfigService,
                         mockAuditService,
                         mockUserIdentityService,
-                        mockCiMitService);
+                        mockCiMitService,
+                        mockCimitUtilityService);
     }
 
     @Test
@@ -457,7 +461,7 @@ public class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(true);
@@ -465,10 +469,7 @@ public class CriCheckingServiceTest {
             // Act
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            vcResponse,
-                            callbackRequest,
-                            clientOAuthSessionItem,
-                            new IpvSessionItem());
+                            vcResponse, callbackRequest, clientOAuthSessionItem);
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
@@ -476,22 +477,22 @@ public class CriCheckingServiceTest {
     }
 
     @Test
-    void checkVcResponseShouldReturnPyiNoMatchWhenUserBreachesCiThreshold() throws Exception {
+    void checkVcResponseShouldReturnFailWithCiWhenUserBreachesCiThreshold() throws Exception {
         // Arrange for CI threshold breach
         var callbackRequest = buildValidCallbackRequest();
         var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem, new IpvSessionItem());
+                        vcResponse, callbackRequest, clientOAuthSessionItem);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH), result);
+        assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
     }
 
     @Test
@@ -502,17 +503,14 @@ public class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCiMitService.isCiMitigatable(any())).thenReturn(true);
-        when(mockUserIdentityService.isBreachingCiThresholdIfMitigated(any(), any()))
-                .thenReturn(false);
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Collections.singletonMap(TEST_CI_CODE, "/journey/mitigation-journey"));
+        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCimitUtilityService.getCiMitigationJourneyStep(any()))
+                .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem, new IpvSessionItem());
+                        vcResponse, callbackRequest, clientOAuthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
@@ -526,13 +524,13 @@ public class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem, new IpvSessionItem());
+                        vcResponse, callbackRequest, clientOAuthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH), result);
@@ -546,7 +544,7 @@ public class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(false);
@@ -554,10 +552,7 @@ public class CriCheckingServiceTest {
             // Act
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            vcResponse,
-                            callbackRequest,
-                            clientOAuthSessionItem,
-                            new IpvSessionItem());
+                            vcResponse, callbackRequest, clientOAuthSessionItem);
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);

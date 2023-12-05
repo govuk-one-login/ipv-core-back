@@ -47,8 +47,6 @@ public class ProcessCriCallbackHandlerTest {
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
-    private static final String TEST_FEATURE_SET = "test_feature_set";
-    private static final String TEST_IP_ADDRESS = "test_ip_address";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private ConfigService mockConfigService;
@@ -105,7 +103,7 @@ public class ProcessCriCallbackHandlerTest {
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem))
+                        vcResponse, callbackRequest, clientOAuthSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -123,7 +121,6 @@ public class ProcessCriCallbackHandlerTest {
                         callbackRequest.getIpvSessionId(),
                         vcResponse.getVerifiableCredentials(),
                         clientOAuthSessionItem);
-        verify(mockIpvSessionService).updateIpvSession(any(IpvSessionItem.class));
     }
 
     @Test
@@ -154,7 +151,7 @@ public class ProcessCriCallbackHandlerTest {
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem))
+                        vcResponse, callbackRequest, clientOAuthSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -165,7 +162,6 @@ public class ProcessCriCallbackHandlerTest {
         verify(mockCriCheckingService).validateSessionIds(eq(callbackRequest));
         verify(mockCriStoringService)
                 .storeCriResponse(eq(callbackRequest), eq(clientOAuthSessionItem));
-        verify(mockIpvSessionService).updateIpvSession(any(IpvSessionItem.class));
     }
 
     @Test

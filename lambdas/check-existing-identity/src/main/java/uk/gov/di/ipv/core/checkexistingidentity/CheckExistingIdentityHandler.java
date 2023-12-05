@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -101,6 +102,7 @@ public class CheckExistingIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -111,7 +113,8 @@ public class CheckExistingIdentityHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            CiMitService ciMitService) {
+            CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -120,6 +123,7 @@ public class CheckExistingIdentityHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -129,11 +133,12 @@ public class CheckExistingIdentityHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.ciMitService = new CiMitService(configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -182,11 +187,11 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             // CI scoring failure
-            if (userIdentityService.isBreachingCiThreshold(contraIndicators)) {
-                ipvSessionItem.setCiFail(false);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return buildCiBreachingResponse(contraIndicators);
+            if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
+                return ciMitUtilityService
+                        .getCiMitigationJourneyStep(contraIndicators)
+                        .orElse(JOURNEY_FAIL_WITH_CI)
+                        .toObjectMap();
             }
 
             List<SignedJWT> credentials =
