@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -61,7 +60,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -280,26 +278,6 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_F2F_FAIL;
             }
         }
-    }
-
-    private Map<String, Object> buildCiBreachingResponse(ContraIndicators contraIndicators)
-            throws UnrecognisedCiException, ConfigException {
-        JourneyResponse journeyResponse = JOURNEY_FAIL_WITH_CI;
-
-        var cimitConfig = configService.getCimitConfig();
-        for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
-            if (cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated()) {
-                journeyResponse = new JourneyResponse(cimitConfig.get(ci.getCode()));
-                break;
-            }
-        }
-
-        StringMapMessage message = new StringMapMessage();
-        message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
-                .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), journeyResponse.toString());
-        LOGGER.info(message);
-
-        return journeyResponse.toObjectMap();
     }
 
     private Map<String, Object> buildF2FNotCorrelatedResponse(AuditEventUser auditEventUser)
