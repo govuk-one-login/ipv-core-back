@@ -1359,12 +1359,11 @@ class UserIdentityServiceTest {
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
-        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
@@ -1373,12 +1372,11 @@ class UserIdentityServiceTest {
                     throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
-        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
@@ -1387,9 +1385,7 @@ class UserIdentityServiceTest {
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
@@ -1398,9 +1394,7 @@ class UserIdentityServiceTest {
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+        assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
@@ -1409,13 +1403,12 @@ class UserIdentityServiceTest {
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
-        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(USER_ID_1));
+        assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     private VcStoreItem createVcStoreItem(

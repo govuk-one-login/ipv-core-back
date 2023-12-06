@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
@@ -462,7 +463,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(anyString())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(true);
 
@@ -525,7 +526,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
+        when(mockUserIdentityService.areVcsCorrelated(anyString())).thenReturn(false);
 
         // Act
         JourneyResponse result =
@@ -545,7 +546,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(anyString())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(false);
 

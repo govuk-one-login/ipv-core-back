@@ -170,7 +170,15 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            VcStoreItem f2fVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
+
+            List<VcStoreItem> vcStoreItems = userIdentityService.getVcStoreItems(userId);
+            VcStoreItem f2fVc =
+                    vcStoreItems.stream()
+                            .filter(
+                                    vcStoreItem ->
+                                            vcStoreItem.getCredentialIssuer().equals(F2F_CRI))
+                            .findFirst()
+                            .orElse(null);
 
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && Objects.isNull(f2fVc);
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && !Objects.isNull(f2fVc);
@@ -194,10 +202,10 @@ public class CheckExistingIdentityHandler
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(userId));
+                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
             // Credential correlation failure
-            if (!userIdentityService.areVcsCorrelated(userId)) {
+            if (!userIdentityService.areVcsCorrelated(vcStoreItems)) {
                 return isF2FComplete
                         ? buildF2FNotCorrelatedResponse(auditEventUser)
                         : buildNotCorrelatedResponse(auditEventUser);
@@ -210,7 +218,7 @@ public class CheckExistingIdentityHandler
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
 
             Optional<Gpg45Profile> matchedProfile =
-                    !userIdentityService.checkRequiresAdditionalEvidence(userId)
+                    !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
                             ? gpg45ProfileEvaluator.getFirstMatchingProfile(
                                     gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES)
                             : Optional.empty();

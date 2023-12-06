@@ -48,6 +48,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -165,7 +166,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -201,9 +202,10 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyResetIdentityIfResetIdentityFeatureFlagIsEnabled() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+                .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
@@ -242,9 +244,10 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+                .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -279,8 +282,9 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyResetIdentityResponseIfScoresDoNotSatisfyM1AGpg45Profile()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+                .thenReturn(CREDENTIALS);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
@@ -310,11 +314,11 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldNotSendAuditEventIfNewUser() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(Collections.emptyList());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -362,7 +366,6 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
                         TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
@@ -386,7 +389,6 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnFailResponseIfFaceToFaceVerificationIsError() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
                 createCriErrorResponseStoreItem(
                         TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
@@ -411,15 +413,15 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException, SqsException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
-                .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
+        when(userIdentityService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(Arrays.asList(createVcStoreItem(F2F_CRI, M1A_F2F_VC)));
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
                         TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -444,15 +446,15 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
-                .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
+        when(userIdentityService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(Arrays.asList(createVcStoreItem(F2F_CRI, M1A_F2F_VC)));
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
                         TEST_USER_ID, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -477,11 +479,10 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -499,7 +500,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -519,7 +520,7 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 journeyResponse.getMessage());
 
-        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService).getUserIssuedCredentials((List<VcStoreItem>) any());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -531,7 +532,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -551,7 +552,7 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 journeyResponse.getMessage());
 
-        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService).getUserIssuedCredentials((List<VcStoreItem>) any());
         verify(criResponseService).getFaceToFaceRequest(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -593,11 +594,10 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfCredentialParseExceptionFromAreVcsCorrelated() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any()))
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any()))
                 .thenThrow(
                         new CredentialParseException("Failed to parse successful VC Store items."));
 
@@ -735,15 +735,17 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyReuseResponseIfCheckRequiresAdditionalEvidenceResponseFalse()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+                .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
-        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(false);
+        when(userIdentityService.checkRequiresAdditionalEvidence((List<VcStoreItem>) any()))
+                .thenReturn(false);
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
@@ -772,13 +774,15 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyResetIdentityResponseIfCheckRequiresAdditionalEvidenceResponseTrue()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.areVcsCorrelated(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+                .thenReturn(CREDENTIALS);
+        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkRequiresAdditionalEvidence(TEST_USER_ID)).thenReturn(true);
+        when(userIdentityService.checkRequiresAdditionalEvidence((List<VcStoreItem>) any()))
+                .thenReturn(true);
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),

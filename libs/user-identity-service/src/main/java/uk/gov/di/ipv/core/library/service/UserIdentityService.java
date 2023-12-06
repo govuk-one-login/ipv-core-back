@@ -115,8 +115,10 @@ public class UserIdentityService {
     }
 
     public List<String> getUserIssuedCredentials(String userId) {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
+        return getUserIssuedCredentials(dataStore.getItems(userId));
+    }
 
+    public List<String> getUserIssuedCredentials(List<VcStoreItem> vcStoreItems) {
         return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
     }
 
@@ -533,10 +535,9 @@ public class UserIdentityService {
                 .collect(Collectors.toList());
     }
 
-    public boolean checkRequiresAdditionalEvidence(String userId) throws ParseException {
-        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems)
+            throws ParseException {
         if (!vcStoreItems.isEmpty()) {
-
             List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
             if (filterValidVCs.size() == 1) {
                 return configService
@@ -667,10 +668,9 @@ public class UserIdentityService {
                 .toList();
     }
 
-    public boolean areVcsCorrelated(String userId)
+    public boolean areVcsCorrelated(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
@@ -697,6 +697,11 @@ public class UserIdentityService {
             return false;
         }
         return true;
+    }
+
+    public boolean areVcsCorrelated(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        return areVcsCorrelated(getSuccessfulVCStoreItems(getVcStoreItems(userId)));
     }
 
     private void addLogMessage(VcStoreItem item, String error) {

@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -120,16 +121,21 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            List<VcStoreItem> vcStoreItems = userIdentityService.getVcStoreItems(userId);
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(userId));
+                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
-            if (!userIdentityService.areVcsCorrelated(userId)) {
+            if (!userIdentityService.areVcsCorrelated(vcStoreItems)) {
                 return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 
             return checkForMatchingGpg45Profile(
-                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            vcStoreItems,
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            credentials,
+                            ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -169,13 +175,13 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
-            String userId,
+            List<VcStoreItem> vcStoreItems,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
             throws UnknownEvidenceTypeException, ParseException, SqsException {
-        if (!userIdentityService.checkRequiresAdditionalEvidence(userId)) {
+        if (!userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)) {
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
