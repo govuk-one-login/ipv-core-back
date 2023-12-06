@@ -258,7 +258,7 @@ public class ProcessAsyncCriCredentialHandler
                         auditEventUser,
                         null,
                         getRestrictedDataForAuditEvent(verifiableCredential),
-                        false);
+                        null);
         auditService.sendAuditEvent(auditEvent);
     }
 
