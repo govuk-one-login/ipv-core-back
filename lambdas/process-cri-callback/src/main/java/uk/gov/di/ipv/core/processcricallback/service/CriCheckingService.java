@@ -5,7 +5,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -20,13 +19,13 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -42,6 +41,7 @@ import java.util.Objects;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
@@ -52,6 +52,8 @@ public class CriCheckingService {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCESS_DENIED =
@@ -71,6 +73,7 @@ public class CriCheckingService {
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
     private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
     private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -78,11 +81,13 @@ public class CriCheckingService {
             ConfigService configService,
             AuditService auditService,
             UserIdentityService userIdentityService,
-            CiMitService ciMitService) {
+            CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
     }
 
     public JourneyResponse handleCallbackError(
@@ -172,14 +177,6 @@ public class CriCheckingService {
         }
     }
 
-    @Tracing
-    private String getPersistedOauthState(CriOAuthSessionItem criOAuthSessionItem) {
-        if (criOAuthSessionItem != null) {
-            return criOAuthSessionItem.getCriOAuthSessionId();
-        }
-        return null;
-    }
-
     public void validateOAuthForError(
             CriCallbackRequest callbackRequest,
             CriOAuthSessionItem criOAuthSessionItem,
@@ -197,7 +194,7 @@ public class CriCheckingService {
 
     public void validatePendingVcResponse(
             VerifiableCredentialResponse vcResponse, ClientOAuthSessionItem clientOAuthSessionItem)
-            throws VerifiableCredentialResponseException, VerifiableCredentialException {
+            throws VerifiableCredentialResponseException {
         var userId = clientOAuthSessionItem.getUserId();
 
         if (!vcResponse.getUserId().equals(userId)) {
@@ -210,32 +207,20 @@ public class CriCheckingService {
     public JourneyResponse checkVcResponse(
             VerifiableCredentialResponse vcResponse,
             CriCallbackRequest callbackRequest,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     ParseException, CredentialParseException {
-        var ipAddress = callbackRequest.getIpAddress();
-        var userId = clientOAuthSessionItem.getUserId();
-        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+        var cis =
+                ciMitService.getContraIndicatorsVC(
+                        clientOAuthSessionItem.getUserId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        callbackRequest.getIpAddress());
 
-        var cis = ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress);
-
-        if (userIdentityService.isBreachingCiThreshold(cis)) {
-            ipvSessionItem.setCiFail(true); // TODO: Remove ciFail flag in PYIC-3797
-
-            // Try to mitigate an unmitigated ci to resolve the threshold breach
-            var cimitConfig = configService.getCimitConfig();
-            for (var ci : cis.getContraIndicatorsMap().values()) {
-                if (ciMitService.isCiMitigatable(ci)
-                        && !userIdentityService.isBreachingCiThresholdIfMitigated(ci, cis)) {
-                    return new JourneyResponse(cimitConfig.get(ci.getCode()));
-                }
-            }
-            return JOURNEY_PYI_NO_MATCH;
+        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
+            return ciMitUtilityService.getCiMitigationJourneyStep(cis).orElse(JOURNEY_FAIL_WITH_CI);
         }
-        ipvSessionItem.setCiFail(false);
 
-        if (!userIdentityService.areVcsCorrelated(userId)) {
+        if (!userIdentityService.areVcsCorrelated(clientOAuthSessionItem.getUserId())) {
             return JOURNEY_PYI_NO_MATCH;
         }
 

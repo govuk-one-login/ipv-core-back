@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -60,6 +61,7 @@ public class BuildUserIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
@@ -67,13 +69,15 @@ public class BuildUserIdentityHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CiMitService ciMitService) {
+            CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -84,6 +88,7 @@ public class BuildUserIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
     }
 
     @Override
@@ -193,7 +198,7 @@ public class BuildUserIdentityHandler
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(
                         ipvSessionItem.getVot(),
-                        ipvSessionItem.isCiFail(),
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
                         contraIndicators.hasMitigations(),
                         userIdentity.getExitCode());
 

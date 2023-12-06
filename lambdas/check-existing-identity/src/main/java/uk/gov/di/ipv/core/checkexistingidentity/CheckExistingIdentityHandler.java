@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -40,6 +39,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -60,7 +60,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -101,6 +100,7 @@ public class CheckExistingIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -111,7 +111,8 @@ public class CheckExistingIdentityHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            CiMitService ciMitService) {
+            CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -120,6 +121,7 @@ public class CheckExistingIdentityHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -129,11 +131,12 @@ public class CheckExistingIdentityHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.ciMitService = new CiMitService(configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -182,11 +185,11 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             // CI scoring failure
-            if (userIdentityService.isBreachingCiThreshold(contraIndicators)) {
-                ipvSessionItem.setCiFail(false);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return buildCiBreachingResponse(contraIndicators);
+            if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
+                return ciMitUtilityService
+                        .getCiMitigationJourneyStep(contraIndicators)
+                        .orElse(JOURNEY_FAIL_WITH_CI)
+                        .toObjectMap();
             }
 
             List<SignedJWT> credentials =
@@ -275,26 +278,6 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_F2F_FAIL;
             }
         }
-    }
-
-    private Map<String, Object> buildCiBreachingResponse(ContraIndicators contraIndicators)
-            throws UnrecognisedCiException, ConfigException {
-        JourneyResponse journeyResponse = JOURNEY_FAIL_WITH_CI;
-
-        var cimitConfig = configService.getCimitConfig();
-        for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
-            if (cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated()) {
-                journeyResponse = new JourneyResponse(cimitConfig.get(ci.getCode()));
-                break;
-            }
-        }
-
-        StringMapMessage message = new StringMapMessage();
-        message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
-                .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), journeyResponse.toString());
-        LOGGER.info(message);
-
-        return journeyResponse.toObjectMap();
     }
 
     private Map<String, Object> buildF2FNotCorrelatedResponse(AuditEventUser auditEventUser)

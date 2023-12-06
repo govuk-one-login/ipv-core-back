@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -80,6 +81,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private CiMitService mockCiMitService;
+    @Mock private CiMitUtilityService mockCiMitUtilityService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -127,7 +129,8 @@ class BuildUserIdentityHandlerTest {
                         mockConfigService,
                         mockAuditService,
                         mockClientOAuthSessionDetailsService,
-                        mockCiMitService);
+                        mockCiMitService,
+                        mockCiMitUtilityService);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -345,7 +348,7 @@ class BuildUserIdentityHandlerTest {
         event.setHeaders(headers);
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(null));
+                .thenReturn(Optional.empty());
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);

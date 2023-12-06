@@ -20,7 +20,7 @@ CRI_STATE:
       targetState: ERROR
     temporarily-unavailable:
       targetState: PYI_NO_MATCH
-    pyi-no-match:
+    fail-with-ci:
       targetState: PYI_NO_MATCH
 
 # Shared states

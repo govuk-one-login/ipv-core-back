@@ -94,7 +94,7 @@ public class EvaluateGpg45ScoresHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         VcHelper.setConfigService(this.configService);

@@ -31,9 +31,9 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -106,6 +106,7 @@ public class ProcessCriCallbackHandler
         var auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         var verifiableCredentialService = new VerifiableCredentialService(configService);
         var ciMitService = new CiMitService(configService);
+        var ciMitUtilityService = new CiMitUtilityService(configService);
         var criResponseService = new CriResponseService(configService);
         var signer = new KmsEs256Signer();
 
@@ -115,7 +116,11 @@ public class ProcessCriCallbackHandler
         criApiService = new CriApiService(configService, signer);
         criCheckingService =
                 new CriCheckingService(
-                        configService, auditService, userIdentityService, ciMitService);
+                        configService,
+                        auditService,
+                        userIdentityService,
+                        ciMitService,
+                        ciMitUtilityService);
         criStoringService =
                 new CriStoringService(
                         configService,
@@ -236,80 +241,70 @@ public class ProcessCriCallbackHandler
                     CriApiException, VerifiableCredentialResponseException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     CredentialParseException, InvalidCriCallbackRequestException {
-        IpvSessionItem ipvSessionItem = null;
+        // Validate callback sessions
+        criCheckingService.validateSessionIds(callbackRequest);
 
-        try {
-            // Validate callback sessions
-            criCheckingService.validateSessionIds(callbackRequest);
+        // Get/ set session items/ config
+        var ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
 
-            // Get/ set session items/ config
-            ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
+        var clientOAuthSessionItem =
+                clientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId());
+        var criOAuthSessionItem =
+                ipvSessionItem.getCriOAuthSessionId() != null
+                        ? criOAuthSessionService.getCriOauthSessionItem(
+                                ipvSessionItem.getCriOAuthSessionId())
+                        : null;
+        configService.setFeatureSet(callbackRequest.getFeatureSet());
 
-            var clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
-            var criOAuthSessionItem =
-                    ipvSessionItem.getCriOAuthSessionId() != null
-                            ? criOAuthSessionService.getCriOauthSessionItem(
-                                    ipvSessionItem.getCriOAuthSessionId())
-                            : null;
-            configService.setFeatureSet(callbackRequest.getFeatureSet());
+        // Attach variables to logs
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientOAuthSessionItem.getGovukSigninJourneyId());
+        LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
+        LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
+        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
+        LogHelper.attachComponentIdToLogs(configService);
 
-            // Attach variables to logs
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
-            LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
-            LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
-            LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
-            LogHelper.attachComponentIdToLogs(configService);
-
-            // Validate callback request
-            if (callbackRequest.getError() != null) {
-                criCheckingService.validateOAuthForError(
-                        callbackRequest, criOAuthSessionItem, ipvSessionItem);
-                return criCheckingService.handleCallbackError(
-                        callbackRequest, clientOAuthSessionItem);
-            }
-            criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
-
-            // Retrieve, store and check cri credentials
-            var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
-            var vcResponse =
-                    criApiService.fetchVerifiableCredential(
-                            accessToken, callbackRequest, criOAuthSessionItem);
-
-            if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
-                criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
-                criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
-            } else {
-                for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
-                    if (criOAuthSessionItem == null) {
-                        // We should never get here due to earlier null checks.
-                        // This is to satisfy a compile time warning
-                        throw new InvalidCriCallbackRequestException(
-                                ErrorResponse.INVALID_OAUTH_STATE);
-                    } else {
-                        verifiableCredentialJwtValidator.validate(
-                                vc,
-                                configService.getCriConfig(criOAuthSessionItem),
-                                clientOAuthSessionItem.getUserId());
-                    }
-                }
-                criStoringService.storeVcs(
-                        callbackRequest.getCredentialIssuerId(),
-                        callbackRequest.getIpAddress(),
-                        callbackRequest.getIpvSessionId(),
-                        vcResponse.getVerifiableCredentials(),
-                        clientOAuthSessionItem);
-            }
-
-            return criCheckingService.checkVcResponse(
-                    vcResponse, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
-        } finally {
-            if (ipvSessionItem != null) {
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-            }
+        // Validate callback request
+        if (callbackRequest.getError() != null) {
+            criCheckingService.validateOAuthForError(
+                    callbackRequest, criOAuthSessionItem, ipvSessionItem);
+            return criCheckingService.handleCallbackError(callbackRequest, clientOAuthSessionItem);
         }
+        criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
+
+        // Retrieve, store and check cri credentials
+        var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
+        var vcResponse =
+                criApiService.fetchVerifiableCredential(
+                        accessToken, callbackRequest, criOAuthSessionItem);
+
+        if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
+            criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
+            criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
+        } else {
+            for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
+                if (criOAuthSessionItem == null) {
+                    // We should never get here due to earlier null checks.
+                    // This is to satisfy a compile time warning
+                    throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
+                } else {
+                    verifiableCredentialJwtValidator.validate(
+                            vc,
+                            configService.getCriConfig(criOAuthSessionItem),
+                            clientOAuthSessionItem.getUserId());
+                }
+            }
+            criStoringService.storeVcs(
+                    callbackRequest.getCredentialIssuerId(),
+                    callbackRequest.getIpAddress(),
+                    callbackRequest.getIpvSessionId(),
+                    vcResponse.getVerifiableCredentials(),
+                    clientOAuthSessionItem);
+        }
+
+        return criCheckingService.checkVcResponse(
+                vcResponse, callbackRequest, clientOAuthSessionItem);
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(

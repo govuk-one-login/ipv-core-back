@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -66,7 +67,8 @@ class CallTicfCriHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private TicfCriService mockTicfCriService;
     @Mock private CiMitService mockCiMitService;
-    @Mock private CriStoringService mockCriStroringService;
+    @Mock private CiMitUtilityService mockCiMitUtilityService;
+    @Mock private CriStoringService mockCriStoringService;
     @Spy private IpvSessionItem spyIpvSessionItem;
     @Mock private SignedJWT mockSignedJwt;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
@@ -84,7 +86,7 @@ class CallTicfCriHandlerTest {
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-        verify(mockCriStroringService)
+        verify(mockCriStoringService)
                 .storeVcs(
                         TICF_CRI,
                         "an-ip-address",
@@ -119,7 +121,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockTicfCriService).getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, List.of());
 
-        verify(mockCriStroringService)
+        verify(mockCriStoringService)
                 .storeVcs(
                         TICF_CRI,
                         "an-ip-address",
@@ -145,7 +147,7 @@ class CallTicfCriHandlerTest {
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-        verify(mockCriStroringService, never()).storeVcs(any(), any(), any(), any(), any());
+        verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any());
         verify(mockCiMitService, never()).getContraIndicatorsVC(any(), any(), any());
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
@@ -160,12 +162,11 @@ class CallTicfCriHandlerTest {
         when(mockTicfCriService.getTicfVc(
                         clientOAuthSessionItem, spyIpvSessionItem, List.of("a-vc")))
                 .thenReturn(List.of(mockSignedJwt));
-        when(mockUserIdentityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setCiFail(true);
         inOrder.verify(spyIpvSessionItem).setVot("P0");
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
@@ -224,7 +225,7 @@ class CallTicfCriHandlerTest {
                     .thenReturn(new ClientOAuthSessionItem());
             when(mockTicfCriService.getTicfVc(any(), any(), any()))
                     .thenReturn(List.of(mockSignedJwt));
-            doThrow(e).when(mockCriStroringService).storeVcs(any(), any(), any(), any(), any());
+            doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any());
 
             Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 

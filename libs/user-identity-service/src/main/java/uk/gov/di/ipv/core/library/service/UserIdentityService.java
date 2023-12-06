@@ -43,7 +43,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
@@ -90,6 +89,7 @@ public class UserIdentityService {
 
     private final ConfigService configService;
     private final DataStore<VcStoreItem> dataStore;
+    private final CiMitUtilityService ciMitUtilityService;
 
     @ExcludeFromGeneratedCoverageReport
     public UserIdentityService(ConfigService configService) {
@@ -103,12 +103,14 @@ public class UserIdentityService {
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         VcHelper.setConfigService(configService);
     }
 
     public UserIdentityService(ConfigService configService, DataStore<VcStoreItem> dataStore) {
         this.configService = configService;
         this.dataStore = dataStore;
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -189,7 +191,7 @@ public class UserIdentityService {
 
     private List<String> getFailExitCode(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
-        return isBreachingCiThreshold(contraIndicators)
+        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators)
                 ? mapCisToExitCodes(contraIndicators)
                 : List.of(configService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0));
     }
@@ -219,22 +221,6 @@ public class UserIdentityService {
                 .distinct()
                 .sorted()
                 .toList();
-    }
-
-    public boolean isBreachingCiThreshold(ContraIndicators contraIndicators) {
-        return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
-                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
-    }
-
-    public boolean isBreachingCiThresholdIfMitigated(ContraIndicator ci, ContraIndicators cis) {
-        var scoreOnceMitigated =
-                cis.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
-                        + configService
-                                .getContraIndicatorConfigMap()
-                                .get(ci.getCode())
-                                .getCheckedScore();
-        var threshold = Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
-        return scoreOnceMitigated > threshold;
     }
 
     private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)

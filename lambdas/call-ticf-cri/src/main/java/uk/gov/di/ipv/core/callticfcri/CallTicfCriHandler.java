@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -60,6 +61,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private final UserIdentityService userIdentityService;
     private final TicfCriService ticfCriService;
     private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
     private final CriStoringService criStoringService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -70,6 +72,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.userIdentityService = new UserIdentityService(configService);
         this.ticfCriService = new TicfCriService(configService);
         this.ciMitService = new CiMitService(configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,
@@ -86,6 +89,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             UserIdentityService userIdentityService,
             TicfCriService ticfCriService,
             CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService,
             CriStoringService criStoringService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
@@ -93,6 +97,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.userIdentityService = userIdentityService;
         this.ticfCriService = ticfCriService;
         this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
         this.criStoringService = criStoringService;
     }
 
@@ -138,9 +143,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             input.getIpAddress());
 
-            if (userIdentityService.isBreachingCiThreshold(cis)) {
+            if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
                 LOGGER.info("CI score is breaching threshold - setting VOT to P0");
-                ipvSessionItem.setCiFail(true); // TODO: Remove ciFail flag in PYIC-3797
                 ipvSessionItem.setVot(VOT_P0);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
