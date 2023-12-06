@@ -548,10 +548,8 @@ public class UserIdentityService {
         return false;
     }
 
-    private boolean checkBirthDateCorrelationInCredentials(String userId)
+    private boolean checkBirthDateCorrelationInCredentials(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        final List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
         List<IdentityClaim> identityClaims =
                 getIdentityClaimsForBirthDateCorrelation(successfulVCStoreItems);
         return identityClaims.stream()
@@ -588,10 +586,9 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
+    private boolean checkNameAndFamilyNameCorrelationInCredentials(
+            List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        final List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
         List<IdentityClaim> identityClaims =
                 getIdentityClaimsForNameCorrelation(successfulVCStoreItems);
         return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
@@ -672,7 +669,9 @@ public class UserIdentityService {
 
     public boolean areVcsCorrelated(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        if (!checkNameAndFamilyNameCorrelationInCredentials(userId)) {
+        List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -685,7 +684,7 @@ public class UserIdentityService {
             return false;
         }
 
-        if (!checkBirthDateCorrelationInCredentials(userId)) {
+        if (!checkBirthDateCorrelationInCredentials(successfulVCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
