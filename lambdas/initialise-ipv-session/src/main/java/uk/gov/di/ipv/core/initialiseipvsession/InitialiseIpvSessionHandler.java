@@ -126,8 +126,6 @@ public class InitialiseIpvSessionHandler
             String govukSigninJourneyId =
                     claimsSet.getStringClaim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY);
             String emailAddress = claimsSet.getStringClaim(REQUEST_EMAIL_ADDRESS_KEY);
-            String isReproveIdentity = claimsSet.getStringClaim("reprove_identity");
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
@@ -164,8 +162,7 @@ public class InitialiseIpvSessionHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            isReproveIdentity));
+                            auditEventUser));
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
