@@ -9,13 +9,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 public class AuditExtensionsReproveIdentity implements AuditExtensions {
 
-        public static final String REPROVE_IDENTITY_KEY = "reprove_identity";
+    public static final String REPROVE_IDENTITY_KEY = "reprove_identity";
 
-        @JsonProperty("reprove_identity")
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        private final Boolean reproveIdentity;
+    @JsonProperty("reprove_identity")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private final Boolean reproveIdentity;
 
-        public AuditExtensionsReproveIdentity(String reproveIdentity) {
-                this.reproveIdentity = reproveIdentity == null ? null : Boolean.valueOf(reproveIdentity);
-        }
+    public AuditExtensionsReproveIdentity(String reproveIdentity) {
+        this.reproveIdentity = reproveIdentity == null ? null : Boolean.valueOf(reproveIdentity);
+    }
 }

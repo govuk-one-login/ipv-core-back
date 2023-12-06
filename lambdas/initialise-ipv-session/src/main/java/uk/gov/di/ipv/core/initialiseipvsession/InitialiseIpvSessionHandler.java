@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -161,14 +160,21 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            AuditExtensionsReproveIdentity auditExtension = new AuditExtensionsReproveIdentity(claimsSet.getStringClaim(REPROVE_IDENTITY_KEY));
+            String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
+
+            AuditExtensionsReproveIdentity auditExtension = reproveIdentity == null ? null :
+                    new AuditExtensionsReproveIdentity(reproveIdentity);
+
+            AuditEvent auditEvent = new AuditEvent(
+                    AuditEventTypes.IPV_JOURNEY_START,
+                    configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                    auditEventUser,
+                    auditExtension);
+
+            LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
 
             auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_JOURNEY_START,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            auditExtension));
+                    auditEvent);
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
