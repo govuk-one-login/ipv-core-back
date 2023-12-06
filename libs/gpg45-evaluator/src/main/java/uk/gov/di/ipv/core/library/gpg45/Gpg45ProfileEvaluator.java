@@ -8,7 +8,6 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -24,18 +23,13 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 public class Gpg45ProfileEvaluator {
     public static final List<Gpg45Profile> CURRENT_ACCEPTED_GPG45_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
-            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
-
-    public Gpg45ProfileEvaluator() {}
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
             Gpg45Scores gpg45Scores, List<Gpg45Profile> profiles) {

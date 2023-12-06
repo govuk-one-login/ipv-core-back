@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 
 @ExtendWith(MockitoExtension.class)
-public class CiMitUtilityServiceTest {
+class CiMitUtilityServiceTest {
     @Mock private ConfigService mockConfigService;
 
     @InjectMocks private CiMitUtilityService ciMitUtilityService;
