@@ -114,8 +114,16 @@ public class UserIdentityService {
         VcHelper.setConfigService(configService);
     }
 
+    public List<VcStoreItem> getVcStoreItems(String userId) {
+        return dataStore.getItems(userId);
+    }
+
+    public VcStoreItem getVcStoreItem(String userId, String criId) {
+        return dataStore.getItem(userId, criId);
+    }
+
     public List<String> getUserIssuedCredentials(String userId) {
-        return getUserIssuedCredentials(dataStore.getItems(userId));
+        return getUserIssuedCredentials(getVcStoreItems(userId));
     }
 
     public List<String> getUserIssuedCredentials(List<VcStoreItem> vcStoreItems) {
@@ -123,7 +131,7 @@ public class UserIdentityService {
     }
 
     public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
         if (!vcStoreItems.isEmpty()) {
             var message =
                     new StringMapMessage()
@@ -143,19 +151,11 @@ public class UserIdentityService {
         }
     }
 
-    public List<VcStoreItem> getVcStoreItems(String userId) {
-        return dataStore.getItems(userId);
-    }
-
-    public VcStoreItem getVcStoreItem(String userId, String criId) {
-        return dataStore.getItem(userId, criId);
-    }
-
     public UserIdentity generateUserIdentity(
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
 
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
