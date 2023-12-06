@@ -257,7 +257,8 @@ public class ProcessAsyncCriCredentialHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
-                        getRestrictedDataForAuditEvent(verifiableCredential));
+                        getRestrictedDataForAuditEvent(verifiableCredential),
+                        false);
         auditService.sendAuditEvent(auditEvent);
     }
 

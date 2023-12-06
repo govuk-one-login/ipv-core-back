@@ -33,13 +33,19 @@ public class AuditEvent {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuditRestricted restricted;
 
+    @JsonProperty("reprove_identity")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private final Boolean reproveIdentity;
+
     @JsonCreator
     public AuditEvent(
             @JsonProperty(value = "event_name", required = true) AuditEventTypes eventName,
             @JsonProperty(value = "component_id", required = false) String componentId,
             @JsonProperty(value = "user", required = false) AuditEventUser user,
             @JsonProperty(value = "extensions", required = false) AuditExtensions extensions,
-            @JsonProperty(value = "restricted", required = false) AuditRestricted restricted) {
+            @JsonProperty(value = "restricted", required = false) AuditRestricted restricted,
+            @JsonProperty(value = "reprove_identity", required = false) Boolean reproveIdentity) {
+        this.reproveIdentity = reproveIdentity;
         Instant now = Instant.now();
         this.timestamp = now.getEpochSecond();
         this.timestampMs = now.toEpochMilli();
@@ -51,7 +57,21 @@ public class AuditEvent {
     }
 
     public AuditEvent(AuditEventTypes eventName, String componentId, AuditEventUser user) {
-        this(eventName, componentId, user, null, null);
+        this(eventName, componentId, user, null, null, null);
+    }
+
+    public AuditEvent(
+            AuditEventTypes eventName,
+            String componentId,
+            AuditEventUser user,
+            String reproveIdentity) {
+        this(
+                eventName,
+                componentId,
+                user,
+                null,
+                null,
+                reproveIdentity != null ? Boolean.valueOf(reproveIdentity) : null);
     }
 
     public AuditEvent(
@@ -59,6 +79,6 @@ public class AuditEvent {
             String componentId,
             AuditEventUser user,
             AuditExtensions extensions) {
-        this(eventName, componentId, user, extensions, null);
+        this(eventName, componentId, user, extensions, null, null);
     }
 }
