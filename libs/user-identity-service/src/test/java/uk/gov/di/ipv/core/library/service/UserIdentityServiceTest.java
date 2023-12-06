@@ -199,7 +199,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -227,8 +227,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -247,7 +246,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -266,8 +265,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -286,8 +284,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -307,9 +304,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                                        USER_ID_1));
+                        () -> userIdentityService.areVcsCorrelated(USER_ID_1));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -330,8 +325,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -352,8 +346,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -367,13 +360,11 @@ class UserIdentityServiceTest {
                                 ADDRESS_CRI,
                                 VC_PASSPORT_MISSING_BIRTH_DATE,
                                 Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 VC_PASSPORT_MISSING_BIRTH_DATE,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, VC_KBV_SCORE_2, Instant.now()));
+                                Instant.now()));
 
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
@@ -381,9 +372,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.checkBirthDateCorrelationInCredentials(
-                                        USER_ID_1));
+                        () -> userIdentityService.areVcsCorrelated(USER_ID_1));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -410,7 +399,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -420,15 +409,18 @@ class UserIdentityServiceTest {
             throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, PASSPORT_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
                         createVcStoreItem(
                                 USER_ID_1, BAV_CRI, VC_PASSPORT_MISSING_BIRTH_DATE, Instant.now()));
 
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -444,7 +436,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -465,7 +457,7 @@ class UserIdentityServiceTest {
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
         mockCredentialIssuerConfig();
 
-        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
+        boolean isValid = userIdentityService.areVcsCorrelated(USER_ID_1);
 
         assertFalse(isValid);
     }

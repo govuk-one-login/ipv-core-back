@@ -548,7 +548,7 @@ public class UserIdentityService {
         return false;
     }
 
-    public boolean checkBirthDateCorrelationInCredentials(String userId)
+    private boolean checkBirthDateCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
@@ -588,7 +588,7 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
+    private boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         final List<VcStoreItem> successfulVCStoreItems =
                 getSuccessfulVCStoreItems(getVcStoreItems(userId));
