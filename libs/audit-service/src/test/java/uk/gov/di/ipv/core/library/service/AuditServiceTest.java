@@ -161,7 +161,7 @@ class AuditServiceTest {
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
-        assertNull(auditExtensionsUserIdentity.get("exitCode"));
+        assertNull(auditExtensionsUserIdentity.get("returnCode"));
     }
 
     @Test
@@ -185,7 +185,7 @@ class AuditServiceTest {
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
-        assertNotNull(auditExtensionsUserIdentity.get("exitCode"));
+        assertNotNull(auditExtensionsUserIdentity.get("returnCode"));
     }
 
     @Test
