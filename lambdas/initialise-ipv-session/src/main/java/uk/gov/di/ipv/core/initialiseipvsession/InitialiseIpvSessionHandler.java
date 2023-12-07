@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -158,11 +160,23 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            auditService.sendAuditEvent(
+            String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
+
+            AuditExtensionsReproveIdentity reproveAuditExtension =
+                    reproveIdentity == null
+                            ? null
+                            : new AuditExtensionsReproveIdentity(reproveIdentity);
+
+            AuditEvent auditEvent =
                     new AuditEvent(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
+                            auditEventUser,
+                            reproveAuditExtension);
+
+            LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
+
+            auditService.sendAuditEvent(auditEvent);
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
