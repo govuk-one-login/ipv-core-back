@@ -12,4 +12,5 @@ public class ContraIndicatorConfig {
     private Integer detectedScore;
     private Integer checkedScore;
     private String exitCode;
+    private String returnCode;
 }

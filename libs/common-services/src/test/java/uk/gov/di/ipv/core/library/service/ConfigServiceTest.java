@@ -518,7 +518,7 @@ class ConfigServiceTest {
     @Test
     void shouldGetContraIndicatorConfigMap() {
         String scoresJsonString =
-                "[{\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\"},{\"ci\":\"Z03\",\"detectedScore\":5,\"checkedScore\":-3,\"exitCode\":\"1\"}]";
+                "[{\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\",\"returnCode\":\"1\"},{\"ci\":\"Z03\",\"detectedScore\":5,\"checkedScore\":-3,\"exitCode\":\"1\",\"returnCode\":\"1\"}]";
         when(secretsProvider.get(any())).thenReturn(scoresJsonString);
 
         Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
@@ -535,7 +535,7 @@ class ConfigServiceTest {
     @Test
     void shouldReturnEmptyCollectionOnInvalidContraIndicatorConfigsMap() {
         final String invalidCIConfigJsonString =
-                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\"}]";
+                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"exitCode\":\"1\",\"returnCode\":\"1\"}]";
         when(secretsProvider.get(any())).thenReturn(invalidCIConfigJsonString);
         Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
         assertTrue(configMap.isEmpty());

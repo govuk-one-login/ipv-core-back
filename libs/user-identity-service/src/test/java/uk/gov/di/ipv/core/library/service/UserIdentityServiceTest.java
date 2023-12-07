@@ -1171,9 +1171,9 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆", "🦆"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2", "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3", "3")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1207,7 +1207,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1", "1")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1228,9 +1228,9 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1", "1"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2", "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3", "3")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1260,7 +1260,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1", "1")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1281,10 +1281,10 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3"),
-                                "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1", "1"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2", "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3", "3"),
+                                "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2", "2")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
@@ -1311,7 +1311,7 @@ class UserIdentityServiceTest {
         when(mockConfigService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
+                .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1", "1")));
 
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()

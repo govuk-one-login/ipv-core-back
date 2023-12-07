@@ -40,8 +40,10 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
                 .thenReturn(String.valueOf(ciScoreThreshold));
 
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, ciScore2, null, null);
+        ContraIndicatorConfig ciConfig1 =
+                new ContraIndicatorConfig(null, ciScore1, null, null, null);
+        ContraIndicatorConfig ciConfig2 =
+                new ContraIndicatorConfig(null, ciScore2, null, null, null);
 
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("ci_1", ciConfig1);
@@ -77,8 +79,10 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
                 .thenReturn(String.valueOf(ciScoreThreshold));
 
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, ciScore2, null, null);
+        ContraIndicatorConfig ciConfig1 =
+                new ContraIndicatorConfig(null, ciScore1, null, null, null);
+        ContraIndicatorConfig ciConfig2 =
+                new ContraIndicatorConfig(null, ciScore2, null, null, null);
 
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("ci_1", ciConfig1);
@@ -119,8 +123,8 @@ class CiMitUtilityServiceTest {
                         .build();
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
-                        "ciCode1", new ContraIndicatorConfig("ciCode", 4, -3, "X"),
-                        "ciCode2", new ContraIndicatorConfig("ciCode", 9, -5, "X"));
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 4, -3, "X", "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 9, -5, "X", "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("9");
 
@@ -140,8 +144,8 @@ class CiMitUtilityServiceTest {
                         .build();
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
-                        "ciCode1", new ContraIndicatorConfig("ciCode", 5, -5, "X"),
-                        "ciCode2", new ContraIndicatorConfig("ciCode", 5, -5, "X"));
+                        "ciCode1", new ContraIndicatorConfig("ciCode", 5, -5, "X", "X"),
+                        "ciCode2", new ContraIndicatorConfig("ciCode", 5, -5, "X", "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
@@ -157,7 +161,7 @@ class CiMitUtilityServiceTest {
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
         Map<String, ContraIndicatorConfig> ciConfigMap =
-                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X", "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
@@ -213,7 +217,7 @@ class CiMitUtilityServiceTest {
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
         Map<String, ContraIndicatorConfig> ciConfigMap =
-                Map.of(code, new ContraIndicatorConfig(code, 7, -1, "X"));
+                Map.of(code, new ContraIndicatorConfig(code, 7, -1, "X", "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
