@@ -162,19 +162,21 @@ public class InitialiseIpvSessionHandler
 
             String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
 
-            AuditExtensionsReproveIdentity auditExtension = reproveIdentity == null ? null :
-                    new AuditExtensionsReproveIdentity(reproveIdentity);
+            AuditExtensionsReproveIdentity reproveAuditExtension =
+                    reproveIdentity == null
+                            ? null
+                            : new AuditExtensionsReproveIdentity(reproveIdentity);
 
-            AuditEvent auditEvent = new AuditEvent(
-                    AuditEventTypes.IPV_JOURNEY_START,
-                    configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                    auditEventUser,
-                    auditExtension);
+            AuditEvent auditEvent =
+                    new AuditEvent(
+                            AuditEventTypes.IPV_JOURNEY_START,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            reproveAuditExtension);
 
             LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
 
-            auditService.sendAuditEvent(
-                    auditEvent);
+            auditService.sendAuditEvent(auditEvent);
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());

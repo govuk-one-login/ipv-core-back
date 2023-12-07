@@ -16,6 +16,6 @@ public class AuditExtensionsReproveIdentity implements AuditExtensions {
     private final Boolean reproveIdentity;
 
     public AuditExtensionsReproveIdentity(String reproveIdentity) {
-        this.reproveIdentity = reproveIdentity == null ? null : Boolean.valueOf(reproveIdentity);
+        this.reproveIdentity = Boolean.valueOf(reproveIdentity);
     }
 }
