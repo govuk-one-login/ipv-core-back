@@ -126,7 +126,7 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
-            if (!userIdentityService.areVcsCorrelated(vcStoreItems)) {
+            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
                 return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 

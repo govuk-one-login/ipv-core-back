@@ -166,7 +166,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -205,7 +205,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
@@ -247,7 +247,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -284,7 +284,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(CREDENTIALS);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
@@ -318,7 +318,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -421,7 +421,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -454,7 +454,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -482,7 +482,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -500,7 +500,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -532,7 +532,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -597,7 +597,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any()))
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any()))
                 .thenThrow(
                         new CredentialParseException("Failed to parse successful VC Store items."));
 
@@ -738,7 +738,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -776,7 +776,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
                 .thenReturn(CREDENTIALS);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))

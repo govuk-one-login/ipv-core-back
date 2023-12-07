@@ -220,7 +220,8 @@ public class CriCheckingService {
             return ciMitUtilityService.getCiMitigationJourneyStep(cis).orElse(JOURNEY_FAIL_WITH_CI);
         }
 
-        if (!userIdentityService.areVcsCorrelated(clientOAuthSessionItem.getUserId())) {
+        if (!userIdentityService.areVCsCorrelated(
+                userIdentityService.getVcStoreItems(clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_PYI_NO_MATCH;
         }
 

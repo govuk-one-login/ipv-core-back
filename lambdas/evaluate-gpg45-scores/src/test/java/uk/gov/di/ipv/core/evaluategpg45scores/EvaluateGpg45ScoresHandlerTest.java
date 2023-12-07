@@ -178,7 +178,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -209,7 +209,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -239,7 +239,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -263,7 +263,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -298,7 +298,7 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -327,7 +327,7 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -363,7 +363,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         SignedJWT.parse(M1A_VERIFICATION_VC));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.buildScore(any()))
@@ -404,7 +404,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
 
         JourneyResponse response =
                 toResponseClass(
@@ -414,7 +414,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(userIdentityService, times(1)).areVcsCorrelated((List<VcStoreItem>) any());
+        verify(userIdentityService, times(1)).areVCsCorrelated((List<VcStoreItem>) any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -427,7 +427,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any()))
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any()))
                 .thenThrow(
                         new CredentialParseException("Failed to parse successful VC Store items."));
 
@@ -455,7 +455,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         when(userIdentityService.checkRequiresAdditionalEvidence((List<VcStoreItem>) any()))
                 .thenReturn(true);
@@ -484,7 +484,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(userIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
 
         when(userIdentityService.checkRequiresAdditionalEvidence((List<VcStoreItem>) any()))
                 .thenReturn(false);

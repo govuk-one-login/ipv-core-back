@@ -668,7 +668,7 @@ public class UserIdentityService {
                 .toList();
     }
 
-    public boolean areVcsCorrelated(List<VcStoreItem> vcStoreItems)
+    public boolean areVCsCorrelated(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
@@ -697,11 +697,6 @@ public class UserIdentityService {
             return false;
         }
         return true;
-    }
-
-    public boolean areVcsCorrelated(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        return areVcsCorrelated(getSuccessfulVCStoreItems(getVcStoreItems(userId)));
     }
 
     private void addLogMessage(VcStoreItem item, String error) {

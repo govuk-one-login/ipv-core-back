@@ -172,16 +172,14 @@ public class CheckExistingIdentityHandler
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
 
             List<VcStoreItem> vcStoreItems = userIdentityService.getVcStoreItems(userId);
-            VcStoreItem f2fVc =
+            var hasF2fVc =
                     vcStoreItems.stream()
-                            .filter(
+                            .anyMatch(
                                     vcStoreItem ->
-                                            vcStoreItem.getCredentialIssuer().equals(F2F_CRI))
-                            .findFirst()
-                            .orElse(null);
+                                            vcStoreItem.getCredentialIssuer().equals(F2F_CRI));
 
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && Objects.isNull(f2fVc);
-            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && !Objects.isNull(f2fVc);
+            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
+            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
             // Incomplete F2F journey
             if (isF2FIncomplete) {
@@ -205,7 +203,7 @@ public class CheckExistingIdentityHandler
                             userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
             // Credential correlation failure
-            if (!userIdentityService.areVcsCorrelated(vcStoreItems)) {
+            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
                 return isF2FComplete
                         ? buildF2FNotCorrelatedResponse(auditEventUser)
                         : buildNotCorrelatedResponse(auditEventUser);
