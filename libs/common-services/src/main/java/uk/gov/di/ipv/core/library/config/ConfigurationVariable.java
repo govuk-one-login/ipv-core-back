@@ -23,8 +23,8 @@ public enum ConfigurationVariable {
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_COMPONENT_ID("cimit/componentId"),
     CIMIT_CONFIG("cimit/config"),
-    EXIT_CODES_ALWAYS_REQUIRED("self/exitCodes/alwaysRequired"),
-    EXIT_CODES_NON_CI_BREACHING_P0("self/exitCodes/nonCiBreachingP0");
+    RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
+    RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0");
 
     private final String path;
 

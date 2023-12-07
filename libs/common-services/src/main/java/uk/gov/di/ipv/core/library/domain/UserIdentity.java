@@ -26,7 +26,7 @@ public class UserIdentity {
             "https://vocab.account.gov.uk/v1/drivingPermit";
     private static final String NINO_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/socialSecurityRecord";
-    public static final String EXIT_CODE_NAME = "exit_code";
+    public static final String RETURN_CODE_NAME = "https://vocab.account.gov.uk/v1/returnCode";
 
     @JsonProperty(VCS_CLAIM_NAME)
     private List<String> vcs;
@@ -52,8 +52,8 @@ public class UserIdentity {
 
     @JsonProperty private String vtm;
 
-    @JsonProperty(EXIT_CODE_NAME)
-    private List<String> exitCode;
+    @JsonProperty(RETURN_CODE_NAME)
+    private List<ReturnCode> returnCode;
 
     @JsonCreator
     public UserIdentity(
@@ -66,7 +66,7 @@ public class UserIdentity {
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
-            @JsonProperty(value = EXIT_CODE_NAME) List<String> exitCode) {
+            @JsonProperty(value = RETURN_CODE_NAME) List<ReturnCode> returnCode) {
         this.vcs = new ArrayList<>(vcs);
         this.identityClaim = identityClaim;
         this.addressClaim = addressClaim;
@@ -76,6 +76,6 @@ public class UserIdentity {
         this.sub = sub;
         this.vot = vot;
         this.vtm = vtm;
-        this.exitCode = exitCode;
+        this.returnCode = returnCode;
     }
 }

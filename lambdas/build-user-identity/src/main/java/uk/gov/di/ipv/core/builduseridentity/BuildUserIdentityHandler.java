@@ -200,7 +200,7 @@ public class BuildUserIdentityHandler
                         ipvSessionItem.getVot(),
                         ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
                         contraIndicators.hasMitigations(),
-                        userIdentity.getExitCode());
+                        userIdentity.getReturnCode());
 
         LOGGER.info(
                 new StringMapMessage()

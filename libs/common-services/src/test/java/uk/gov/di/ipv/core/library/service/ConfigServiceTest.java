@@ -529,7 +529,7 @@ class ConfigServiceTest {
         assertEquals("X01", configMap.get("X01").getCi());
         assertEquals(3, configMap.get("X01").getDetectedScore());
         assertEquals(-3, configMap.get("X01").getCheckedScore());
-        assertEquals("1", configMap.get("X01").getExitCode());
+        assertEquals("1", configMap.get("X01").getReturnCode());
     }
 
     @Test
