@@ -122,10 +122,6 @@ public class UserIdentityService {
         return dataStore.getItem(userId, criId);
     }
 
-    public List<String> getUserIssuedCredentials(String userId) {
-        return getUserIssuedCredentials(getVcStoreItems(userId));
-    }
-
     public List<String> getUserIssuedCredentials(List<VcStoreItem> vcStoreItems) {
         return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
     }

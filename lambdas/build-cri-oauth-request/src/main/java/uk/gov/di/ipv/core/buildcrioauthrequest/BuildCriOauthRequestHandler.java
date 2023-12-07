@@ -365,7 +365,9 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<String> credentials =
+                userIdentityService.getUserIssuedCredentials(
+                        userIdentityService.getVcStoreItems(userId));
         List<SignedJWT> signedJWTs = new ArrayList<>();
 
         for (String credential : credentials) {

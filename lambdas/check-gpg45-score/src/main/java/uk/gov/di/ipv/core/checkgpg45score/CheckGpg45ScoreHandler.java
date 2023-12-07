@@ -135,6 +135,18 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         }
     }
 
+    private int getScore(String ipvSessionId, String scoreType)
+            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
+        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        return switch (scoreType) {
+            case FRAUD -> gpg45Scores.getFraud();
+            case ACTIVITY -> gpg45Scores.getActivity();
+            case VERIFICATION -> gpg45Scores.getVerification();
+            default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
+        };
+    }
+
     private List<SignedJWT> getParsedCredentials(String ipvSessionId) throws ParseException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -146,18 +158,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
         return gpg45ProfileEvaluator.parseCredentials(
-                userIdentityService.getUserIssuedCredentials(userId));
-    }
-
-    private int getScore(String ipvSessionId, String scoreType)
-            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
-        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        return switch (scoreType) {
-            case FRAUD -> gpg45Scores.getFraud();
-            case ACTIVITY -> gpg45Scores.getActivity();
-            case VERIFICATION -> gpg45Scores.getVerification();
-            default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
-        };
+                userIdentityService.getUserIssuedCredentials(
+                        userIdentityService.getVcStoreItems(userId)));
     }
 }

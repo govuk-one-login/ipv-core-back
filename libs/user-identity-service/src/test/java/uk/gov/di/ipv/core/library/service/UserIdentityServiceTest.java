@@ -927,9 +927,7 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        List<String> vcList = userIdentityService.getUserIssuedCredentials(USER_ID_1);
+        List<String> vcList = userIdentityService.getUserIssuedCredentials(vcStoreItems);
 
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcList.get(0));
         assertEquals(VC_FRAUD_SCORE_1, vcList.get(1));

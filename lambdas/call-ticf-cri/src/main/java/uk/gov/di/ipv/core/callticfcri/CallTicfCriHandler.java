@@ -127,7 +127,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             journeyType.equals(REUSE_JOURNEY_TYPE)
                                     ? List.of()
                                     : userIdentityService.getUserIssuedCredentials(
-                                            clientOAuthSessionItem.getUserId()));
+                                            userIdentityService.getVcStoreItems(
+                                                    clientOAuthSessionItem.getUserId())));
 
             if (ticfVcs.isEmpty()) {
                 LOGGER.info("No VC to process - returning next");
