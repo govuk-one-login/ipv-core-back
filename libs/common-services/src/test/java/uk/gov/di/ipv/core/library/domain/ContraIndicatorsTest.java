@@ -29,11 +29,11 @@ class ContraIndicatorsTest {
     private static final Map<String, ContraIndicatorConfig> CONTRA_INDICATOR_CONFIG_MAP =
             Map.of(
                     TEST_CI1,
-                    new ContraIndicatorConfig(TEST_CI1, 4, -3, "1"),
+                    new ContraIndicatorConfig(TEST_CI1, 4, -3, "1", "1"),
                     TEST_CI2,
-                    new ContraIndicatorConfig(TEST_CI2, 3, -3, "2"),
+                    new ContraIndicatorConfig(TEST_CI2, 3, -3, "2", "2"),
                     TEST_CI3,
-                    new ContraIndicatorConfig(TEST_CI3, 2, -1, "3"));
+                    new ContraIndicatorConfig(TEST_CI3, 2, -1, "3", "3"));
 
     @BeforeEach
     void setup() {
