@@ -9,9 +9,16 @@ body {
     overflow: hidden;
     font-family: sans-serif;
 }
+h1 {
+    display: flex;
+    gap: 8px;
+    background: black;
+    color: white;
+    padding: 8px;
+}
 #header {
     padding: 8px 16px 16px;
-    border-bottom: 2px solid black;
+    border-bottom: 3px solid black;
 }
 #diagram {
     flex: 1 1 auto;
@@ -20,8 +27,8 @@ body {
     height: 100%;
 }
 form {
-    flex: 0 1 auto;
-    margin-top: 16px;
+    flex: 0 1 500px;
+    padding-top: 8px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -31,7 +38,8 @@ form button {
 }
 form label {
     display: flex;
-    justify-content: space-between;
+    gap: 8px;
+    margin: 2px 0;
 }
 form select {
     flex: 0 0 30%;
@@ -39,16 +47,30 @@ form select {
 form input[type=checkbox] {
     margin-left: 8px;
 }
+form fieldset {
+    margin-top: 8px;
+    padding: 8px;
+}
+form fieldset legend {
+    font-weight: bold;
+}
+form fieldset p {
+    color: #555;
+    margin-bottom: 8px;
+}
 #checkbox-controls {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     gap: 16px;
 }
+#checkbox-controls fieldset {
+    flex: 1 0 0;
+}
 #nodeInfo {
     border-left: solid 1px black;
-    margin-left: 16px;
-    padding: 16px;
+    margin-left: 32px;
+    padding: 8px 32px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -67,7 +89,6 @@ form input[type=checkbox] {
 }
 .header-split {
     display: flex;
-    padding: 16px 0;
 }
 #diagramSvg .highlight.outgoingEdge {
     stroke-width: 3px;
