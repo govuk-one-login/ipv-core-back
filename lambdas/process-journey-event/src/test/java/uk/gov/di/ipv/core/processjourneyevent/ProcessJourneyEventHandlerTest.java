@@ -12,10 +12,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -55,6 +59,7 @@ class ProcessJourneyEventHandlerTest {
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
+    @Mock private AuditService mochAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
 
     @SystemStub static EnvironmentVariables environmentVariables;
@@ -140,6 +145,7 @@ class ProcessJourneyEventHandlerTest {
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(
+                        mochAuditService,
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
@@ -235,7 +241,7 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
-        var processJourneyEventOutput =
+        Map<String, Object> processJourneyEventOutput =
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
                         .handleRequest(input, mockContext);
 
@@ -261,6 +267,27 @@ class ProcessJourneyEventHandlerTest {
                 Arguments.of(
                         "testWithContextAndScope",
                         "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
+    }
+
+    @Test
+    void shouldSendAuditEventForMitigationStart() throws Exception {
+        Map<String, String> input =
+                Map.of(JOURNEY, "testWithMitigationStart", IPV_SESSION_ID, "1234");
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn("component_id");
+
+        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                .handleRequest(input, mockContext);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mochAuditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+
+        assertEquals(AuditEventTypes.IPV_MITIGATION_START, capturedAuditEvent.getEventName());
+        assertEquals("component_id", capturedAuditEvent.getComponentId());
+        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {
@@ -292,6 +319,7 @@ class ProcessJourneyEventHandlerTest {
     private ProcessJourneyEventHandler getProcessJourneyStepHandler(
             StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
         return new ProcessJourneyEventHandler(
+                mochAuditService,
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,

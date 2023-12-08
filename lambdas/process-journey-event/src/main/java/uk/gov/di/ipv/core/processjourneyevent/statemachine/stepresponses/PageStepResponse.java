@@ -13,10 +13,9 @@ public class PageStepResponse implements StepResponse {
 
     private String pageId;
     private String context = "";
+    private String mitigationStart = "";
 
     public Map<String, Object> value() {
-        return Map.of(
-                "page", pageId,
-                "context", context);
+        return Map.of("page", pageId, "context", context, "mitigationStart", mitigationStart);
     }
 }
