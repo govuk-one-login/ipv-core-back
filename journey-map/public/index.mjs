@@ -26,6 +26,8 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerContent = document.getElementById('header-content');
+const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
 const disabledInput = document.getElementById('disabledInput');
 const featureFlagInput = document.getElementById('featureFlagInput')
@@ -38,6 +40,9 @@ const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
 const journeyMap = yaml.parse(await journeyResponse.text());
 const nestedResponse = await fetch('./nested-journey-definitions.yaml');
 const nestedJourneys = yaml.parse(await nestedResponse.text());
+
+// svg-pan-zoom instance, for resizing viewport
+let svgPanZoomInstance;
 
 const setupOptions = (name, options, fieldset, labels) => {
     if (options.length) {
@@ -71,7 +76,9 @@ const renderSvg = async () => {
     if (bindFunctions) {
         bindFunctions(diagramElement);
     }
-    svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
+    svgPanZoomInstance = svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
+    // Pan to correct header offset
+    svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
 };
 
 const highlightState = (state) => {
@@ -123,11 +130,22 @@ const setupMermaidClickHandlers = () => {
     };
 }
 
+const setupHeaderToggleClickHandlers = () => {
+    headerToggle.addEventListener('click', () => {
+        if (headerContent.classList.toggle('hidden')) {
+            headerToggle.innerText = 'Show header';
+        } else {
+            headerToggle.innerText = 'Hide header';
+        }
+    });
+}
+
 const initialize = async () => {
     const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
     setupMermaidClickHandlers();
+    setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
         event.preventDefault();
         await renderSvg();

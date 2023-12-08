@@ -17,10 +17,39 @@ h1 {
     padding: 8px;
 }
 #header {
-    padding: 8px 16px 16px;
+    position: relative;
     border-bottom: 3px solid black;
+    background: white;
+    z-index: 1;
+}
+#header-content {
+    display: flex;
+    padding: 8px 16px 16px;
+    overflow: hidden;
+    max-height: 450px;
+    transition: max-height 0.1s ease-out;
+}
+#header-content.hidden {
+    max-height: 0;
+    padding: 0 16px;
+}
+#header-toggle {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 100px;
+    margin-left: -50px;
+
+    background: white;
+    border: 3px solid black;
+    cursor: pointer;
 }
 #diagram {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     flex: 1 1 auto;
 }
 #diagram > * {
@@ -86,9 +115,6 @@ form fieldset p {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-.header-split {
-    display: flex;
 }
 #diagramSvg .highlight.outgoingEdge {
     stroke-width: 3px;
