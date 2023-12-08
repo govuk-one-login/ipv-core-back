@@ -28,24 +28,31 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_TTL;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
+    private static final String USER_ID_1 = "user-id-1";
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
     private VerifiableCredentialService verifiableCredentialService;
@@ -55,145 +62,6 @@ class VerifiableCredentialServiceTest {
         verifiableCredentialService =
                 new VerifiableCredentialService(mockDataStore, mockConfigService);
     }
-
-    //    @Test
-    //    void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-    //        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-    //        stubFor(
-    //                post("/token")
-    //                        .willReturn(
-    //                                aResponse()
-    //                                        .withHeader(
-    //                                                "Content-Type",
-    // "application/json;charset=utf-8")
-    //                                        .withBody(
-    //
-    // "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
-    //
-    //        CredentialIssuerConfig credentialIssuerConfig =
-    //                getStubCredentialIssuerConfig(wmRuntimeInfo);
-    //
-    //        AccessToken accessToken =
-    //                verifiableCredentialService.exchangeCodeForToken(
-    //                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri);
-    //        AccessTokenType type = accessToken.getType();
-    //        assertEquals("Bearer", type.toString());
-    //        assertEquals(3600, accessToken.getLifetime());
-    //        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
-    //    }
-
-    //    @Test
-    //    void validTokenResponseForAppJourney(WireMockRuntimeInfo wmRuntimeInfo) {
-    //        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-    //        stubFor(
-    //                post("/token")
-    //                        .willReturn(
-    //                                aResponse()
-    //                                        .withHeader(
-    //                                                "Content-Type",
-    // "application/json;charset=utf-8")
-    //                                        .withBody(
-    //
-    // "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
-    //
-    //        CredentialIssuerConfig credentialIssuerConfig =
-    //                getStubCredentialIssuerConfig(wmRuntimeInfo);
-    //
-    //        AccessToken accessToken =
-    //                verifiableCredentialService.exchangeCodeForToken(
-    //                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri);
-    //        AccessTokenType type = accessToken.getType();
-    //        assertEquals("Bearer", type.toString());
-    //        assertEquals(3600, accessToken.getLifetime());
-    //        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
-    //    }
-
-    //    @Test
-    //    void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
-    //        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-    //        stubFor(
-    //                post("/token")
-    //                        .willReturn(
-    //                                aResponse()
-    //                                        .withHeader(
-    //                                                "Content-Type",
-    // "application/json;charset=utf-8")
-    //                                        .withBody(
-    //
-    // "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
-    //
-    //        CredentialIssuerConfig credentialIssuerConfig =
-    //                getStubCredentialIssuerConfig(wmRuntimeInfo);
-    //
-    //        AccessToken accessToken =
-    //                verifiableCredentialService.exchangeCodeForToken(
-    //                        TEST_AUTH_CODE, credentialIssuerConfig, null, cri);
-    //        AccessTokenType type = accessToken.getType();
-    //        assertEquals("Bearer", type.toString());
-    //        assertEquals(3600, accessToken.getLifetime());
-    //        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
-    //    }
-
-    //    @Test
-    //    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-    //        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-    //        var errorJson =
-    //                "{ \"error\": \"invalid_request\", \"error_description\": \"Request was
-    // missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at
-    // https://authorization-server.com/docs/access_token\"}";
-    //        stubFor(
-    //                post("/token")
-    //                        .willReturn(
-    //                                aResponse()
-    //                                        .withStatus(400)
-    //                                        .withHeader(
-    //                                                "Content-Type",
-    // "application/json;charset=utf-8")
-    //                                        .withBody(errorJson)));
-    //
-    //        CredentialIssuerConfig credentialIssuerConfig =
-    //                getStubCredentialIssuerConfig(wmRuntimeInfo);
-    //
-    //        VerifiableCredentialException exception =
-    //                assertThrows(
-    //                        VerifiableCredentialException.class,
-    //                        () ->
-    //                                verifiableCredentialService.exchangeCodeForToken(
-    //                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey,
-    // cri));
-    //
-    //        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
-    //        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
-    //    }
-
-    //    @Test
-    //    void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
-    //        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-    //        stubFor(
-    //                post("/token")
-    //                        .willReturn(
-    //                                aResponse()
-    //                                        .withHeader("Content-Type",
-    // "application/xml;charset=utf-8")
-    //                                        .withBody(
-    //
-    // "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
-    //
-    //        CredentialIssuerConfig credentialIssuerConfig =
-    //                getStubCredentialIssuerConfig(wmRuntimeInfo);
-    //        CredentialIssuerException exception =
-    //                assertThrows(
-    //                        CredentialIssuerException.class,
-    //                        () ->
-    //                                verifiableCredentialService.exchangeCodeForToken(
-    //                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey,
-    // cri));
-    //
-    //        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-    //        assertEquals(
-    //                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE,
-    // exception.getErrorResponse());
-    //    }
 
     @Test
     void expectedSuccessWhenSaveCredentials() throws Exception {
@@ -308,11 +176,81 @@ class VerifiableCredentialServiceTest {
         verify(mockDataStore, Mockito.times(0)).create(any(), any());
     }
 
+    @Test
+    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
+        String userId = "userId";
+        String testCredentialIssuer = PASSPORT_CRI;
+        List<VcStoreItem> credentialItem =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                testCredentialIssuer,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()));
+
+        when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
+
+        var vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+
+        assertTrue(
+                vcStoreItems.stream()
+                        .map(VcStoreItem::getCredentialIssuer)
+                        .anyMatch(testCredentialIssuer::equals));
+    }
+
+    @Test
+    void shouldReturnCredentialFromDataStoreForSpecificCri() {
+        String ipvSessionId = "ipvSessionId";
+        String criId = "criId";
+        VcStoreItem credentialItem =
+                createVcStoreItem(
+                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
+
+        when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
+
+        VcStoreItem retrievedCredentialItem =
+                verifiableCredentialService.getVcStoreItem(ipvSessionId, criId);
+
+        assertEquals(credentialItem, retrievedCredentialItem);
+    }
+
+    @Test
+    void shouldDeleteAllExistingVCs() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                "a-users-id",
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
+                        createVcStoreItem("a-users-id", FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem("a-users-id", "sausages", VC_KBV_SCORE_2, Instant.now()));
+
+        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
+
+        verifiableCredentialService.deleteVcStoreItems("a-users-id", true);
+
+        verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
+        verify(mockDataStore).delete("a-users-id", FRAUD_CRI);
+        verify(mockDataStore).delete("a-users-id", "sausages");
+    }
+
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
                 KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    }
+
+    private VcStoreItem createVcStoreItem(
+            String userId, String credentialIssuer, String credential, Instant dateCreated) {
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
     }
 }

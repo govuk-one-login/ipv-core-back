@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Map;
 
@@ -49,7 +49,7 @@ public class ResetIdentityHandlerTest {
                     .lambdaInput(Map.of(IS_USER_INITIATED, true))
                     .build();
     @Mock private Context context;
-    @Mock private UserIdentityService userIdentityService;
+    @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private CriResponseService criResponseService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ConfigService configService;
@@ -87,7 +87,7 @@ public class ResetIdentityHandlerTest {
                 objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
-        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }

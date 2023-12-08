@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -36,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
 import java.util.List;
@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
@@ -84,6 +85,7 @@ public class CriCheckingServiceTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCimitUtilityService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @BeforeEach
@@ -94,7 +96,8 @@ public class CriCheckingServiceTest {
                         mockAuditService,
                         mockUserIdentityService,
                         mockCiMitService,
-                        mockCimitUtilityService);
+                        mockCimitUtilityService,
+                        mockVerifiableCredentialService);
     }
 
     @Test
@@ -463,7 +466,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(true);
 
@@ -474,6 +477,7 @@ public class CriCheckingServiceTest {
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+            verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         }
     }
 
@@ -526,7 +530,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(false);
+        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
@@ -535,6 +539,7 @@ public class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH), result);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -546,7 +551,7 @@ public class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated((List<VcStoreItem>) any())).thenReturn(true);
+        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(false);
 
@@ -557,6 +562,7 @@ public class CriCheckingServiceTest {
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
+            verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         }
     }
 

@@ -23,13 +23,13 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -41,15 +41,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
+    public static final String TEST_USER_ID = "a-user-id";
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
-                    .userId("a-user-id")
+                    .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     private static final ProcessRequest input =
@@ -66,6 +68,7 @@ class CallTicfCriHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private TicfCriService mockTicfCriService;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
@@ -80,8 +83,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockUserIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(List.of("a-vc"));
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(List.of("a-vc"));
         when(mockTicfCriService.getTicfVc(
                         clientOAuthSessionItem, spyIpvSessionItem, List.of("a-vc")))
                 .thenReturn(List.of(mockSignedJwt));
@@ -97,8 +99,8 @@ class CallTicfCriHandlerTest {
                         clientOAuthSessionItem);
 
         verify(mockCiMitService)
-                .getContraIndicatorsVC("a-user-id", "a-govuk-journey-id", "an-ip-address");
-
+                .getContraIndicatorsVC(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         assertEquals("/journey/next", lambdaResult.get("journey"));
     }
 
@@ -132,7 +134,7 @@ class CallTicfCriHandlerTest {
                         clientOAuthSessionItem);
 
         verify(mockCiMitService)
-                .getContraIndicatorsVC("a-user-id", "a-govuk-journey-id", "an-ip-address");
+                .getContraIndicatorsVC(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
     }
@@ -142,8 +144,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockUserIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(List.of("a-vc"));
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(List.of("a-vc"));
         when(mockTicfCriService.getTicfVc(
                         clientOAuthSessionItem, spyIpvSessionItem, List.of("a-vc")))
                 .thenReturn(List.of());
@@ -161,8 +162,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockUserIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(List.of("a-vc"));
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(List.of("a-vc"));
         when(mockTicfCriService.getTicfVc(
                         clientOAuthSessionItem, spyIpvSessionItem, List.of("a-vc")))
                 .thenReturn(List.of(mockSignedJwt));

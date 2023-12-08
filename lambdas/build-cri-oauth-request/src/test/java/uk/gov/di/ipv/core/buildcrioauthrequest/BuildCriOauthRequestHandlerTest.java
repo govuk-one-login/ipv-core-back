@@ -38,9 +38,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -48,6 +46,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -106,15 +105,9 @@ class BuildCriOauthRequestHandlerTest {
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
-
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
-
     private static final String TEST_EVIDENCE_REQUESTED = "evidence_requested";
-
-    private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
-
-    public static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
-
+    private static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
@@ -145,17 +138,16 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
 
     private CredentialIssuerConfig credentialIssuerConfig;
     private CredentialIssuerConfig addressCredentialIssuerConfig;
     private CredentialIssuerConfig dcmawCredentialIssuerConfig;
-    private CredentialIssuerConfig kbvCredentialIssuerConfig;
     private CredentialIssuerConfig f2fCredentialIssuerConfig;
     private CredentialIssuerConfig claimedIdentityCredentialIssuerConfig;
     private CredentialIssuerConfig hmrcKbvCredentialIssuerConfig;
     private BuildCriOauthRequestHandler underTest;
-    private CriOAuthSessionItem criOAuthSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
@@ -173,7 +165,8 @@ class BuildCriOauthRequestHandlerTest {
                         mockIpvSessionService,
                         mockCriOAuthSessionService,
                         mockClientOAuthSessionDetailsService,
-                        mockGpg45ProfileEvaluator);
+                        mockGpg45ProfileEvaluator,
+                        mockVerifiableCredentialService);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         new URI(CRI_TOKEN_URL),
@@ -201,19 +194,6 @@ class BuildCriOauthRequestHandlerTest {
                         false);
 
         dcmawCredentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        new URI(CRI_TOKEN_URL),
-                        new URI(CRI_CREDENTIAL_URL),
-                        new URI(CRI_AUTHORIZE_URL),
-                        IPV_CLIENT_ID,
-                        "{}",
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        true,
-                        false);
-
-        kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
@@ -264,13 +244,6 @@ class BuildCriOauthRequestHandlerTest {
                         URI.create("http://www.example.com/callback/criId"),
                         true,
                         false);
-
-        criOAuthSessionItem =
-                CriOAuthSessionItem.builder()
-                        .criOAuthSessionId(CRI_OAUTH_SESSION_ID)
-                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
-                        .criId(CRI_ID)
-                        .build();
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -325,7 +298,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -394,7 +367,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false, false);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -466,7 +439,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -518,7 +491,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(userIdentityService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -538,7 +511,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -590,7 +563,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(userIdentityService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -609,7 +582,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -662,7 +635,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(userIdentityService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -759,7 +732,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -814,7 +787,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -867,7 +840,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -939,7 +912,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -996,7 +969,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressCredentialIssuerConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, false);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -1034,7 +1007,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
-        verify(userIdentityService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -1055,7 +1028,7 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getEmailAddress()).thenReturn(null);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -1115,7 +1088,7 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getEmailAddress()).thenReturn(TEST_EMAIL_ADDRESS);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -1177,7 +1150,7 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getEmailAddress()).thenReturn(TEST_EMAIL_ADDRESS);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
+        when(userIdentityService.getUserIssuedCredentials(any()))
                 .thenReturn(
                         List.of(
                                 generateVerifiableCredential(
@@ -1218,7 +1191,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 TEST_NI_NUMBER,
                 sharedClaims.get("socialSecurityRecord").get(0).get("personalNumber").asText());
-        verify(userIdentityService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test

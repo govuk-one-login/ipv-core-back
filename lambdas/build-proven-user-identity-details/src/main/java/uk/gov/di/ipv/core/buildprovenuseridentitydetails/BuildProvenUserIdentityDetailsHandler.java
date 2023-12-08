@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -59,6 +59,7 @@ public class BuildProvenUserIdentityDetailsHandler
     private final UserIdentityService userIdentityService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -66,11 +67,13 @@ public class BuildProvenUserIdentityDetailsHandler
             IpvSessionService ipvSessionService,
             UserIdentityService userIdentityService,
             ConfigService configService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        this.verifiableCredentialService = verifiableCredentialService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -80,6 +83,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -104,7 +108,7 @@ public class BuildProvenUserIdentityDetailsHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             List<VcStoreItem> credentials =
-                    userIdentityService.getVcStoreItems(clientOAuthSessionItem.getUserId());
+                    verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId());
 
             List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
 
@@ -211,7 +215,7 @@ public class BuildProvenUserIdentityDetailsHandler
                                 Comparator.comparing(
                                         Address::getValidUntil,
                                         Comparator.nullsFirst(Comparator.reverseOrder())))
-                        .collect(Collectors.toList());
+                        .toList();
             }
         }
         LOGGER.error("Failed to find addresses of proven user identity");

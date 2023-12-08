@@ -21,11 +21,11 @@ import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -68,6 +68,7 @@ class CheckGpg45ScoreHandlerTest {
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private UserIdentityService userIdentityService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -113,8 +114,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
@@ -122,6 +122,7 @@ class CheckGpg45ScoreHandlerTest {
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -130,8 +131,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 2, 0, 0));
@@ -139,6 +139,7 @@ class CheckGpg45ScoreHandlerTest {
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -147,8 +148,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 0, 2));
@@ -156,6 +156,7 @@ class CheckGpg45ScoreHandlerTest {
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -164,8 +165,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 1, 0));
@@ -175,6 +175,7 @@ class CheckGpg45ScoreHandlerTest {
                         checkGpg45ScoreHandler.handleRequest(request, context),
                         JourneyResponse.class);
         assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -210,8 +211,9 @@ class CheckGpg45ScoreHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 response.getMessage());
-        verify(userIdentityService).getUserIssuedCredentials((List<VcStoreItem>) any());
+        verify(userIdentityService).getUserIssuedCredentials(any());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -231,8 +233,9 @@ class CheckGpg45ScoreHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 response.getMessage());
-        verify(userIdentityService).getUserIssuedCredentials((List<VcStoreItem>) any());
+        verify(userIdentityService).getUserIssuedCredentials(any());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -241,8 +244,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.getUserIssuedCredentials((List<VcStoreItem>) any()))
-                .thenReturn(CREDENTIALS);
+        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
@@ -254,7 +256,8 @@ class CheckGpg45ScoreHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getMessage(), response.getMessage());
-        verify(userIdentityService).getUserIssuedCredentials((List<VcStoreItem>) any());
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(userIdentityService).getUserIssuedCredentials(any());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 

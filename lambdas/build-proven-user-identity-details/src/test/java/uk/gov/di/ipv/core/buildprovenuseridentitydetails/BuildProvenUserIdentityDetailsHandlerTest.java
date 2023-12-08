@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URI;
 import java.time.Instant;
@@ -66,6 +67,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private IpvSessionItem mockIpvSessionItem;
 
     private BuildProvenUserIdentityDetailsHandler handler;
@@ -88,7 +90,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         mockIpvSessionService,
                         mockUserIdentityService,
                         mockConfigService,
-                        mockClientOAuthSessionDetailsService);
+                        mockClientOAuthSessionDetailsService,
+                        mockVerifiableCredentialService);
     }
 
     @Test
@@ -97,7 +100,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
@@ -132,7 +135,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
@@ -168,7 +171,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
@@ -208,7 +211,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
@@ -246,7 +249,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(ISSUER_CONFIG_ADDRESS.getComponentId());
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
@@ -275,7 +278,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
@@ -308,7 +311,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_FAILED_PASSPORT_VC),
@@ -342,7 +345,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
@@ -376,7 +379,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
@@ -423,7 +426,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, "invalid-credential"),
@@ -451,7 +454,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenThrow(new NoVcStatusForIssuerException("Bad"));
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),

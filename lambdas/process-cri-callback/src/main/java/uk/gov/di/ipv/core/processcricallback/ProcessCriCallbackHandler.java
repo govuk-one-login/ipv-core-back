@@ -120,7 +120,8 @@ public class ProcessCriCallbackHandler
                         auditService,
                         userIdentityService,
                         ciMitService,
-                        ciMitUtilityService);
+                        ciMitUtilityService,
+                        verifiableCredentialService);
         criStoringService =
                 new CriStoringService(
                         configService,

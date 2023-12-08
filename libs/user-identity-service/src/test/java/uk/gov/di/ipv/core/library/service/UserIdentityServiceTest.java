@@ -150,22 +150,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialFromDataStoreForSpecificCri() {
-        String ipvSessionId = "ipvSessionId";
-        String criId = "criId";
-        VcStoreItem credentialItem =
-                createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
-
-        when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
-
-        VcStoreItem retrievedCredentialItem =
-                userIdentityService.getVcStoreItem(ipvSessionId, criId);
-
-        assertEquals(credentialItem, retrievedCredentialItem);
-    }
-
-    @Test
     void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -931,49 +915,6 @@ class UserIdentityServiceTest {
 
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcList.get(0));
         assertEquals(VC_FRAUD_SCORE_1, vcList.get(1));
-    }
-
-    @Test
-    void shouldDeleteAllExistingVCs() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem(
-                                "a-users-id",
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem("a-users-id", FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem("a-users-id", "sausages", VC_KBV_SCORE_2, Instant.now()));
-
-        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-        userIdentityService.deleteVcStoreItems("a-users-id", true);
-
-        verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
-        verify(mockDataStore).delete("a-users-id", FRAUD_CRI);
-        verify(mockDataStore).delete("a-users-id", "sausages");
-    }
-
-    @Test
-    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-        String userId = "userId";
-        String testCredentialIssuer = PASSPORT_CRI;
-        List<VcStoreItem> credentialItem =
-                List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                testCredentialIssuer,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()));
-
-        when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
-
-        var vcStoreItems = userIdentityService.getVcStoreItems(userId);
-
-        assertTrue(
-                vcStoreItems.stream()
-                        .map(VcStoreItem::getCredentialIssuer)
-                        .anyMatch(testCredentialIssuer::equals));
     }
 
     @Test
