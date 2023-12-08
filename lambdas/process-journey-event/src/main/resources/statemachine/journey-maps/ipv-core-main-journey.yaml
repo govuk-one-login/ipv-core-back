@@ -107,6 +107,9 @@ IPV_IDENTITY_REUSE_PAGE:
   events:
     next:
       targetState: END
+    reset-identity:
+      targetState:
+        PYI_NEW_DETAILS_PAGE
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
