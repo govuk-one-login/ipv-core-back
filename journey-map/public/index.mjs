@@ -3,6 +3,21 @@ import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
+const CRI_NAMES = {
+    address: 'Address CRI',
+    claimedIdentity: 'Claimed Identity CRI',
+    bav: 'Bank account CRI',
+    dcmaw: 'DCMAW (mobile app) CRI',
+    drivingLicence: 'Driving licence (web) CRI',
+    f2f: 'Face-to-face CRI',
+    fraud: 'Experian fraud CRI',
+    hmrcKbv: 'HMRC KBV CRI',
+    kbv: 'Experian KBV CRI',
+    nino: 'NINO CRI',
+    ukPassport: 'Passport (web) CRI',
+    ticf: 'TICF CRI',
+};
+
 mermaid.initialize({
     startOnLoad: false,
     // Required to enable links and callbacks
@@ -11,6 +26,8 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerContent = document.getElementById('header-content');
+const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
 const disabledInput = document.getElementById('disabledInput');
 const featureFlagInput = document.getElementById('featureFlagInput')
@@ -24,7 +41,10 @@ const journeyMap = yaml.parse(await journeyResponse.text());
 const nestedResponse = await fetch('./nested-journey-definitions.yaml');
 const nestedJourneys = yaml.parse(await nestedResponse.text());
 
-const setupOptions = (name, options, fieldset) => {
+// svg-pan-zoom instance, for resizing viewport
+let svgPanZoomInstance;
+
+const setupOptions = (name, options, fieldset, labels) => {
     if (options.length) {
         options.forEach((option) => {
             const input = document.createElement('input');
@@ -34,8 +54,11 @@ const setupOptions = (name, options, fieldset) => {
             input.id = option;
 
             const label = document.createElement('label');
-            label.innerText = option;
+            const span = document.createElement('span');
+            span.innerText = (labels && labels[option]) || option;
+
             label.appendChild(input);
+            label.appendChild(span);
 
             fieldset.appendChild(label);
         });
@@ -53,7 +76,9 @@ const renderSvg = async () => {
     if (bindFunctions) {
         bindFunctions(diagramElement);
     }
-    svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
+    svgPanZoomInstance = svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
+    // Pan to correct header offset
+    svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
 };
 
 const highlightState = (state) => {
@@ -80,7 +105,7 @@ const setupMermaidClickHandlers = () => {
             case 'page':
                 return `Page node displaying the \'${def.pageId}\' screen in IPV Core.`;
             case 'cri':
-                return `CRI node routing to the '${def.criId}' CRI.`;
+                return `CRI node routing to the ${CRI_NAMES[def.criId] || `'${def.criId}' CRI`}.`;
             default:
                 return '';
         }
@@ -105,11 +130,22 @@ const setupMermaidClickHandlers = () => {
     };
 }
 
+const setupHeaderToggleClickHandlers = () => {
+    headerToggle.addEventListener('click', () => {
+        if (headerContent.classList.toggle('hidden')) {
+            headerToggle.innerText = 'Show header';
+        } else {
+            headerToggle.innerText = 'Hide header';
+        }
+    });
+}
+
 const initialize = async () => {
     const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
-    setupOptions('disabledCri', disabledOptions, disabledInput);
+    setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
     setupMermaidClickHandlers();
+    setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
         event.preventDefault();
         await renderSvg();
