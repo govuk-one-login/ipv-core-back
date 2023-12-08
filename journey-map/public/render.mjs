@@ -227,6 +227,7 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
 
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
+    // These styles should be kept in sync with the key in style.css
     const mermaid =
 `graph LR
     classDef process fill:#ffa,stroke:#000;

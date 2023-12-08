@@ -24,14 +24,16 @@ h1 {
 }
 #header-content {
     display: flex;
-    padding: 8px 16px 16px;
+    margin: 16px 0;
     overflow: hidden;
     max-height: 450px;
     transition: max-height 0.1s ease-out;
 }
 #header-content.hidden {
     max-height: 0;
-    padding: 0 16px;
+}
+#header-content > *:not(:first-child) {
+    border-left: 1px solid black;
 }
 #header-toggle {
     position: absolute;
@@ -57,7 +59,7 @@ h1 {
 }
 form {
     flex: 0 1 500px;
-    padding-top: 8px;
+    padding: 8px 32px 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -97,8 +99,7 @@ form fieldset p {
     flex: 1 0 0;
 }
 #nodeInfo {
-    border-left: solid 1px black;
-    margin-left: 32px;
+    flex: 1 1 auto;
     padding: 8px 32px;
     display: flex;
     flex-direction: column;
@@ -115,6 +116,43 @@ form fieldset p {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+#key {
+    flex: 0 1 500px;
+    padding: 16px 32px;
+    display: flex;
+    gap: 16px;
+    flex-direction: column;
+    align-items: start;
+}
+.key-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.key-node {
+    flex: 0 0 auto;
+    border: 1px solid black;
+    text-align: center;
+    padding: 8px;
+}
+/* These styles should be kept in sync with the mermaid in render.js */
+.key-node.page {
+    background: #ae8;
+}
+.key-node.cri {
+    background: #faf;
+    border-radius: 16px;
+}
+.key-node.process {
+    background: #ffa;
+    border-radius: 4px;
+}
+.key-node.error {
+    background: #f99;
+}
+.key-node.other {
+    background: #f3f2f1;
 }
 #diagramSvg .highlight.outgoingEdge {
     stroke-width: 3px;
