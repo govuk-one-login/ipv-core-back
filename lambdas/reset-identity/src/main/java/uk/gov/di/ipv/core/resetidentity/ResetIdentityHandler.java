@@ -26,6 +26,8 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EmailService;
+import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -44,6 +46,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final ConfigService configService;
     private final AuditService auditService;
     private final CriResponseService criResponseService;
+    private final EmailServiceFactory emailServiceFactory;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -55,13 +58,15 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            EmailServiceFactory emailServiceFactory) {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.emailServiceFactory = emailServiceFactory;
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -73,6 +78,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.emailServiceFactory = new EmailServiceFactory(configService);
     }
 
     @Override
@@ -100,6 +106,12 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             if (isUserInitiated) {
                 sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
+
+                // Create a new service for each request so that we don't risk using stale
+                // configuration.
+                final EmailService emailService = emailServiceFactory.getEmailService();
+                emailService.SendUserTriggeredIdentityResetConfirmation(
+                        ipvSessionItem.getEmailAddress());
             }
 
             return JOURNEY_NEXT;

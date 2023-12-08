@@ -18,7 +18,8 @@ dependencies {
 			project(":libs:journey-uris"),
 			project(":libs:cri-response-service"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:audit-service")
+			project(":libs:audit-service"),
+			project(":libs:email-service")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
