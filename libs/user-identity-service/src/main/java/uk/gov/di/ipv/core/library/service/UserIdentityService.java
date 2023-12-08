@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -43,8 +44,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EXIT_CODES_NON_CI_BREACHING_P0;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
@@ -149,9 +150,9 @@ public class UserIdentityService {
             Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
             ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
 
-            userIdentityBuilder.exitCode(getSuccessExitCode(contraIndicators));
+            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
         } else {
-            userIdentityBuilder.exitCode(getFailExitCode(contraIndicators));
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
         }
 
         return userIdentityBuilder.build();
@@ -365,21 +366,27 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private List<String> getFailExitCode(ContraIndicators contraIndicators)
+    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
         return ciMitUtilityService.isBreachingCiThreshold(contraIndicators)
-                ? mapCisToExitCodes(contraIndicators)
-                : List.of(configService.getSsmParameter(EXIT_CODES_NON_CI_BREACHING_P0));
+                ? mapCisToReturnCodes(contraIndicators)
+                : List.of(
+                        new ReturnCode(
+                                configService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
     }
 
-    private List<String> getSuccessExitCode(ContraIndicators contraIndicators)
+    private List<ReturnCode> getSuccessReturnCode(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
-        return mapCisToExitCodes(contraIndicators).stream()
-                .filter(configService.getSsmParameter(EXIT_CODES_ALWAYS_REQUIRED)::contains)
+        return mapCisToReturnCodes(contraIndicators).stream()
+                .filter(
+                        returnCode ->
+                                configService
+                                        .getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)
+                                        .contains(returnCode.code()))
                 .toList();
     }
 
-    private List<String> mapCisToExitCodes(ContraIndicators contraIndicators)
+    private List<ReturnCode> mapCisToReturnCodes(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
         return contraIndicators.getContraIndicatorsMap().values().stream()
                 .map(ContraIndicator::getCode)
@@ -393,9 +400,10 @@ public class UserIdentityService {
                                                 () ->
                                                         new UnrecognisedCiException(
                                                                 "CI code not found")))
-                .map(ContraIndicatorConfig::getExitCode)
+                .map(ContraIndicatorConfig::getReturnCode)
                 .distinct()
                 .sorted()
+                .map(ReturnCode::new)
                 .toList();
     }
 

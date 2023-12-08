@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -111,7 +112,7 @@ class BuildUserIdentityHandlerTest {
                         "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM,
-                        List.of("1", "2", "3"));
+                        List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")));
 
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
@@ -188,7 +189,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
         assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
-        assertEquals(userIdentity.getExitCode(), responseBody.getExitCode());
+        assertEquals(userIdentity.getReturnCode(), responseBody.getReturnCode());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -202,7 +203,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(VectorOfTrust.P2.toString(), extensions.levelOfConfidence());
         assertFalse(extensions.ciFail());
         assertTrue(extensions.hasMitigations());
-        assertEquals(extensions.exitCode(), responseBody.getExitCode());
+        assertEquals(extensions.returnCode(), responseBody.getReturnCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
