@@ -27,10 +27,11 @@ h1 {
     margin: 16px 0;
     overflow: hidden;
     max-height: 450px;
-    transition: max-height 0.1s ease-out;
+    transition: max-height 0.15s ease-out, margin 0.15s ease-out;
 }
 #header-content.hidden {
     max-height: 0;
+    margin: 0;
 }
 #header-content > *:not(:first-child) {
     border-left: 1px solid black;
@@ -58,7 +59,7 @@ h1 {
     height: 100%;
 }
 form {
-    flex: 0 1 500px;
+    flex: 0 1 525px;
     padding: 8px 32px 0;
     display: flex;
     flex-direction: column;
@@ -118,7 +119,7 @@ form fieldset p {
     gap: 8px;
 }
 #key {
-    flex: 0 1 500px;
+    flex: 0 1 525px;
     padding: 16px 32px;
     display: flex;
     gap: 16px;
