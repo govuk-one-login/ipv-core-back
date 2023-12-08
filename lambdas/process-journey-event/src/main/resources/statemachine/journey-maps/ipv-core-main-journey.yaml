@@ -76,9 +76,6 @@ CHECK_EXISTING_IDENTITY:
       targetState: RESET_IDENTITY
     reuse:
       targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
     fail-with-ci:
@@ -332,16 +329,6 @@ CRI_EXPERIAN_KBV:
           targetState: MITIGATION_02_OPTIONS
 
 # User initiated details delete
-IPV_IDENTITY_REUSE_PAGE_TEST:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-  parent: END_JOURNEY
-  events:
-    next:
-      targetState:
-        PYI_NEW_DETAILS_PAGE
-
 PYI_NEW_DETAILS_PAGE:
   response:
     type: page
