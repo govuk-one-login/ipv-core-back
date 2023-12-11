@@ -74,7 +74,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getURIParameter;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourneyParameter;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
@@ -151,8 +151,8 @@ public class BuildCriOauthRequestHandler
             configService.setFeatureSet(featureSet);
             URI journeyUri = URI.create(input.getJourney());
             String journeyPath = journeyUri.getPath();
-            String criContext = getURIParameter(journeyUri, CONTEXT);
-            String criScope = getURIParameter(journeyUri, SCOPE);
+            String criContext = getJourneyParameter(journeyUri, CONTEXT);
+            String criScope = getJourneyParameter(journeyUri, SCOPE);
 
             var errorResponse = validate(journeyPath);
             if (errorResponse.isPresent()) {

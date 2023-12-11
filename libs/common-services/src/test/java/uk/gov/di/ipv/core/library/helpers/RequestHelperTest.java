@@ -261,8 +261,8 @@ class RequestHelperTest {
 
         URI journeyUri = URI.create(event.getJourney());
         assertEquals(CLAIMED_IDENTITY_CRI, journeyUri.getPath());
-        assertEquals(expectedContext, RequestHelper.getURIParameter(journeyUri, CONTEXT));
-        assertEquals(expectedScope, RequestHelper.getURIParameter(journeyUri, SCOPE));
+        assertEquals(expectedContext, RequestHelper.getJourneyParameter(journeyUri, CONTEXT));
+        assertEquals(expectedScope, RequestHelper.getJourneyParameter(journeyUri, SCOPE));
     }
 
     static Stream<Arguments> journeyUriParameters() {
