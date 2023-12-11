@@ -59,7 +59,7 @@ class ProcessJourneyEventHandlerTest {
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
-    @Mock private AuditService mochAuditService;
+    @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
 
     @SystemStub static EnvironmentVariables environmentVariables;
@@ -145,7 +145,7 @@ class ProcessJourneyEventHandlerTest {
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(
-                        mochAuditService,
+                        mockAuditService,
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
@@ -281,7 +281,7 @@ class ProcessJourneyEventHandlerTest {
                 .handleRequest(input, mockContext);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mochAuditService).sendAuditEvent(auditEventCaptor.capture());
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
 
         assertEquals(AuditEventTypes.IPV_MITIGATION_START, capturedAuditEvent.getEventName());
@@ -319,7 +319,7 @@ class ProcessJourneyEventHandlerTest {
     private ProcessJourneyEventHandler getProcessJourneyStepHandler(
             StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
         return new ProcessJourneyEventHandler(
-                mochAuditService,
+                mockAuditService,
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,

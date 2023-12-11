@@ -591,6 +591,7 @@ MITIGATION_01:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: false
+    mitigationStart: true
   events:
     next:
       targetState: MITIGATION_01_IDENTITY_START_PAGE
@@ -599,7 +600,6 @@ MITIGATION_01_IDENTITY_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-document-start
-    mitigationStart: true
   events:
     next:
       targetState: MITIGATION_01_CRI_DCMAW

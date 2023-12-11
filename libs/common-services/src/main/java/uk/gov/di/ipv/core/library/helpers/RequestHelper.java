@@ -112,8 +112,8 @@ public class RequestHelper {
         return featureSet;
     }
 
-    public static String getJourneyParameter(URI journeyUri, String key) {
-        List<NameValuePair> queryParams = new URIBuilder(journeyUri).getQueryParams();
+    public static String getURIParameter(URI uri, String key) {
+        List<NameValuePair> queryParams = new URIBuilder(uri).getQueryParams();
         Optional<NameValuePair> parameter =
                 queryParams.stream()
                         .filter(query -> Objects.equals(query.getName(), key))

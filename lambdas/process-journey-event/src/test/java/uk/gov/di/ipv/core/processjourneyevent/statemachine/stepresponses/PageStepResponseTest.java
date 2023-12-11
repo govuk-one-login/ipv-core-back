@@ -14,7 +14,7 @@ public class PageStepResponseTest {
     @Test
     void valueReturnsCorrectPageResponse() {
         assertEquals(
-                Map.of("page", "aPageId", "context", "testContext", "mitigationStart", "true"),
+                Map.of("page", "aPageId?context=testContext&mitigationStart=true"),
                 PAGE_RESPONSE.value());
     }
 }
