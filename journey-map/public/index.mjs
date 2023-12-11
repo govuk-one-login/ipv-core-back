@@ -7,7 +7,7 @@ const CRI_NAMES = {
     address: 'Address CRI',
     claimedIdentity: 'Claimed Identity CRI',
     bav: 'Bank account CRI',
-    dcmaw: 'DCMAW (mobile app) CRI',
+    dcmaw: 'DCMAW (app) CRI',
     drivingLicence: 'Driving licence (web) CRI',
     f2f: 'Face-to-face CRI',
     fraud: 'Experian fraud CRI',
