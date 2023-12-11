@@ -27,7 +27,7 @@ services:
     container_name: core-front
     build:
       context: ../../ipv-core-front
-      dockerfile: Dockerfile
+      dockerfile: dev-deploy/Dockerfile
     environment:
       - API_BASE_URL=http://host.docker.internal:3002
       - SESSION_TABLE_NAME=core-front-sessions-${ENVIRONMENT}
