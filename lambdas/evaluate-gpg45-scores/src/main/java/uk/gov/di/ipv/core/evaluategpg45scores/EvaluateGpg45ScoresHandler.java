@@ -32,12 +32,14 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -69,6 +71,7 @@ public class EvaluateGpg45ScoresHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final VerifiableCredentialService verifiableCredentialService;
     public static final String VOT_P2 = "P2";
 
     @SuppressWarnings("unused") // Used by tests through injection
@@ -78,13 +81,15 @@ public class EvaluateGpg45ScoresHandler
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             ConfigService configService,
             AuditService auditService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        this.verifiableCredentialService = verifiableCredentialService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -97,6 +102,7 @@ public class EvaluateGpg45ScoresHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -120,16 +126,21 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(userId));
+                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
-            if (!userIdentityService.areVcsCorrelated(userId)) {
+            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
                 return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 
             return checkForMatchingGpg45Profile(
-                            userId, ipvSessionItem, clientOAuthSessionItem, credentials, ipAddress)
+                            vcStoreItems,
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            credentials,
+                            ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
@@ -169,13 +180,13 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
-            String userId,
+            List<VcStoreItem> vcStoreItems,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
             throws UnknownEvidenceTypeException, ParseException, SqsException {
-        if (!userIdentityService.checkRequiresAdditionalEvidence(userId)) {
+        if (!userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)) {
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(

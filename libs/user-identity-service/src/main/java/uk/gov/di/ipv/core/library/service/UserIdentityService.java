@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -115,39 +114,8 @@ public class UserIdentityService {
         VcHelper.setConfigService(configService);
     }
 
-    public List<String> getUserIssuedCredentials(String userId) {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
-
+    public List<String> getUserIssuedCredentials(List<VcStoreItem> vcStoreItems) {
         return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
-    }
-
-    public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
-        if (!vcStoreItems.isEmpty()) {
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Deleting existing issued VCs.")
-                            .with(
-                                    LogHelper.LogField.LOG_NUMBER_OF_VCS.getFieldName(),
-                                    String.valueOf(vcStoreItems.size()))
-                            .with(
-                                    LogHelper.LogField.LOG_IS_USER_INITIATED.getFieldName(),
-                                    String.valueOf(isUserInitiated));
-            LOGGER.info(message);
-        }
-        for (VcStoreItem item : vcStoreItems) {
-            dataStore.delete(item.getUserId(), item.getCredentialIssuer());
-        }
-    }
-
-    public List<VcStoreItem> getVcStoreItems(String userId) {
-        return dataStore.getItems(userId);
-    }
-
-    public VcStoreItem getVcStoreItem(String userId, String criId) {
-        return dataStore.getItem(userId, criId);
     }
 
     public UserIdentity generateUserIdentity(
@@ -188,6 +156,214 @@ public class UserIdentityService {
         }
 
         return userIdentityBuilder.build();
+    }
+
+    public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem vcStoreItem : vcStoreItems) {
+            try {
+                if (isEvidenceVc(vcStoreItem)
+                        && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
+                    identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
+                }
+            } catch (ParseException e) {
+                throw new CredentialParseException(
+                        "Encountered a parsing error while attempting to parse VC store item");
+            }
+        }
+
+        if (identityClaims.isEmpty()) {
+            LOGGER.warn("Failed to generate identity claim");
+            return Optional.empty();
+        }
+
+        Optional<IdentityClaim> claimWithName =
+                identityClaims.stream()
+                        .filter(identityClaim -> !identityClaim.getName().isEmpty())
+                        .findFirst();
+        Optional<IdentityClaim> claimWithBirthDate =
+                identityClaims.stream()
+                        .filter(identityClaim -> !identityClaim.getBirthDate().isEmpty())
+                        .findFirst();
+        if (claimWithName.isEmpty() || claimWithBirthDate.isEmpty()) {
+            LOGGER.error("Failed to generate identity claim");
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+        IdentityClaim identityClaim =
+                new IdentityClaim(
+                        claimWithName.get().getName(), claimWithBirthDate.get().getBirthDate());
+        return Optional.of(identityClaim);
+    }
+
+    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems)
+            throws ParseException {
+        if (!vcStoreItems.isEmpty()) {
+            List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
+            if (filterValidVCs.size() == 1) {
+                return configService
+                        .getCredentialIssuerActiveConnectionConfig(
+                                filterValidVCs.get(0).getCredentialIssuer())
+                        .isRequiresAdditionalEvidence();
+            }
+        }
+        return false;
+    }
+
+    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)
+            throws NoVcStatusForIssuerException {
+        return currentVcStatuses.stream()
+                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
+                .findFirst()
+                .orElseThrow(
+                        () ->
+                                new NoVcStatusForIssuerException(
+                                        String.format(
+                                                "No VC status found for issuer '%s'", criIss)))
+                .getIsSuccessfulVc();
+    }
+
+    public boolean areVCsCorrelated(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
+        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
+
+            return false;
+        }
+
+        if (!checkBirthDateCorrelationInCredentials(successfulVCStoreItems)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
+
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkNameAndFamilyNameCorrelationInCredentials(
+            List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForNameCorrelation(successfulVCStoreItems);
+        return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+    }
+
+    private boolean checkBirthDateCorrelationInCredentials(List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims =
+                getIdentityClaimsForBirthDateCorrelation(successfulVCStoreItems);
+        return identityClaims.stream()
+                        .map(IdentityClaim::getBirthDate)
+                        .flatMap(List::stream)
+                        .map(BirthDate::getValue)
+                        .distinct()
+                        .count()
+                <= 1;
+    }
+
+    public boolean checkNamesForCorrelation(List<String> userFullNames) {
+        return userFullNames.stream()
+                        .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
+                        .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
+                        .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
+                        .map(String::toLowerCase)
+                        .distinct()
+                        .count()
+                <= 1;
+    }
+
+    private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
+            if (isNamesEmpty(identityClaim.getName())) {
+                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
+                    continue;
+                }
+                addLogMessage(item, "Name property is missing from VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
+            List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
+            if (isBirthDateEmpty(identityClaim.getBirthDate())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
+                    continue;
+                }
+                addLogMessage(item, "Birthdate property is missing from VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
+            }
+            identityClaims.add(identityClaim);
+        }
+        return identityClaims;
+    }
+
+    private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
+        return identityClaims.stream()
+                .flatMap(id -> id.getName().stream())
+                .map(Name::getNameParts)
+                .map(
+                        nameParts -> {
+                            String givenNames =
+                                    nameParts.stream()
+                                            .filter(
+                                                    nameParts1 ->
+                                                            GIVEN_NAME_PROPERTY_NAME.equals(
+                                                                            nameParts1.getType())
+                                                                    && !nameParts1
+                                                                            .getValue()
+                                                                            .equals(""))
+                                            .map(NameParts::getValue)
+                                            .collect(Collectors.joining(" "));
+
+                            String familyNames =
+                                    nameParts.stream()
+                                            .filter(
+                                                    nameParts1 ->
+                                                            FAMILY_NAME_PROPERTY_NAME.equals(
+                                                                            nameParts1.getType())
+                                                                    && !nameParts1
+                                                                            .getValue()
+                                                                            .equals(""))
+                                            .map(NameParts::getValue)
+                                            .collect(Collectors.joining(" "));
+
+                            return givenNames + " " + familyNames;
+                        })
+                .map(String::trim)
+                .toList();
+    }
+
+    private boolean isBirthDateEmpty(List<BirthDate> birthDates) {
+        return CollectionUtils.isEmpty(birthDates)
+                || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
     private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators)
@@ -301,45 +477,6 @@ public class UserIdentityService {
                                 .constructCollectionType(List.class, BirthDate.class));
 
         return new IdentityClaim(names, birthDates);
-    }
-
-    public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem vcStoreItem : vcStoreItems) {
-            try {
-                if (isEvidenceVc(vcStoreItem)
-                        && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
-                    identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
-                }
-            } catch (ParseException e) {
-                throw new CredentialParseException(
-                        "Encountered a parsing error while attempting to parse VC store item");
-            }
-        }
-
-        if (identityClaims.isEmpty()) {
-            LOGGER.warn("Failed to generate identity claim");
-            return Optional.empty();
-        }
-
-        Optional<IdentityClaim> claimWithName =
-                identityClaims.stream()
-                        .filter(identityClaim -> !identityClaim.getName().isEmpty())
-                        .findFirst();
-        Optional<IdentityClaim> claimWithBirthDate =
-                identityClaims.stream()
-                        .filter(identityClaim -> !identityClaim.getBirthDate().isEmpty())
-                        .findFirst();
-        if (claimWithName.isEmpty() || claimWithBirthDate.isEmpty()) {
-            LOGGER.error("Failed to generate identity claim");
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-        }
-        IdentityClaim identityClaim =
-                new IdentityClaim(
-                        claimWithName.get().getName(), claimWithBirthDate.get().getBirthDate());
-        return Optional.of(identityClaim);
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
@@ -500,19 +637,6 @@ public class UserIdentityService {
         }
     }
 
-    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)
-            throws NoVcStatusForIssuerException {
-        return currentVcStatuses.stream()
-                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
-                .findFirst()
-                .orElseThrow(
-                        () ->
-                                new NoVcStatusForIssuerException(
-                                        String.format(
-                                                "No VC status found for issuer '%s'", criIss)))
-                .getIsSuccessfulVc();
-    }
-
     private boolean isEvidenceVc(VcStoreItem item) throws CredentialParseException {
         JsonNode vcEvidenceNode = getVCClaimNode(item.getCredential(), VC_EVIDENCE);
         for (JsonNode evidence : vcEvidenceNode) {
@@ -541,171 +665,12 @@ public class UserIdentityService {
                 .collect(Collectors.toList());
     }
 
-    public boolean checkRequiresAdditionalEvidence(String userId) throws ParseException {
-        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-        if (!vcStoreItems.isEmpty()) {
-
-            List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
-            if (filterValidVCs.size() == 1) {
-                return configService
-                        .getCredentialIssuerActiveConnectionConfig(
-                                filterValidVCs.get(0).getCredentialIssuer())
-                        .isRequiresAdditionalEvidence();
-            }
-        }
-        return false;
-    }
-
-    public boolean checkBirthDateCorrelationInCredentials(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        final List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims =
-                getIdentityClaimsForBirthDateCorrelation(successfulVCStoreItems);
-        return identityClaims.stream()
-                        .map(IdentityClaim::getBirthDate)
-                        .flatMap(List::stream)
-                        .map(BirthDate::getValue)
-                        .distinct()
-                        .count()
-                <= 1;
-    }
-
-    private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
-            List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem item : vcStoreItems) {
-            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
-            if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(item.getCredentialIssuer())) {
-                    continue;
-                }
-                addLogMessage(item, "Birthdate property is missing from VC");
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
-            }
-            identityClaims.add(identityClaim);
-        }
-        return identityClaims;
-    }
-
-    private boolean isBirthDateEmpty(List<BirthDate> birthDates) {
-        return CollectionUtils.isEmpty(birthDates)
-                || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
-    }
-
-    public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        final List<VcStoreItem> successfulVCStoreItems =
-                getSuccessfulVCStoreItems(getVcStoreItems(userId));
-        List<IdentityClaim> identityClaims =
-                getIdentityClaimsForNameCorrelation(successfulVCStoreItems);
-        return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
-    }
-
-    private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VcStoreItem> vcStoreItems)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem item : vcStoreItems) {
-            IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
-            if (isNamesEmpty(identityClaim.getName())) {
-                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
-                    continue;
-                }
-                addLogMessage(item, "Name property is missing from VC");
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
-            }
-            identityClaims.add(identityClaim);
-        }
-        return identityClaims;
-    }
-
     private boolean isNamesEmpty(List<Name> names) {
         return CollectionUtils.isEmpty(names)
                 || names.stream()
                         .flatMap(name -> name.getNameParts().stream())
                         .map(NameParts::getValue)
                         .allMatch(StringUtils::isEmpty);
-    }
-
-    public boolean checkNamesForCorrelation(List<String> userFullNames) {
-        return userFullNames.stream()
-                        .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
-                        .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
-                        .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
-                        .map(String::toLowerCase)
-                        .distinct()
-                        .count()
-                <= 1;
-    }
-
-    private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
-        return identityClaims.stream()
-                .flatMap(id -> id.getName().stream())
-                .map(Name::getNameParts)
-                .map(
-                        nameParts -> {
-                            String givenNames =
-                                    nameParts.stream()
-                                            .filter(
-                                                    nameParts1 ->
-                                                            GIVEN_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
-                                            .map(NameParts::getValue)
-                                            .collect(Collectors.joining(" "));
-
-                            String familyNames =
-                                    nameParts.stream()
-                                            .filter(
-                                                    nameParts1 ->
-                                                            FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
-                                            .map(NameParts::getValue)
-                                            .collect(Collectors.joining(" "));
-
-                            return givenNames + " " + familyNames;
-                        })
-                .map(String::trim)
-                .toList();
-    }
-
-    public boolean areVcsCorrelated(String userId)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        if (!checkNameAndFamilyNameCorrelationInCredentials(userId)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
-
-            return false;
-        }
-
-        if (!checkBirthDateCorrelationInCredentials(userId)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
-
-            return false;
-        }
-        return true;
     }
 
     private void addLogMessage(VcStoreItem item, String error) {

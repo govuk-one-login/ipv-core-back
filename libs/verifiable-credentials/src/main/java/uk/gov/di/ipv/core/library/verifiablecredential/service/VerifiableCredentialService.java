@@ -4,17 +4,22 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class VerifiableCredentialService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -70,5 +75,34 @@ public class VerifiableCredentialService {
             vcStoreItem.setExpirationTime(expirationTime.toInstant());
         }
         return vcStoreItem;
+    }
+
+    public List<VcStoreItem> getVcStoreItems(String userId) {
+        return dataStore.getItems(userId);
+    }
+
+    public VcStoreItem getVcStoreItem(String userId, String criId) {
+        return dataStore.getItem(userId, criId);
+    }
+
+    public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+        if (!vcStoreItems.isEmpty()) {
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Deleting existing issued VCs.")
+                            .with(
+                                    LogHelper.LogField.LOG_NUMBER_OF_VCS.getFieldName(),
+                                    String.valueOf(vcStoreItems.size()))
+                            .with(
+                                    LogHelper.LogField.LOG_IS_USER_INITIATED.getFieldName(),
+                                    String.valueOf(isUserInitiated));
+            LOGGER.info(message);
+        }
+        for (VcStoreItem item : vcStoreItems) {
+            dataStore.delete(item.getUserId(), item.getCredentialIssuer());
+        }
     }
 }

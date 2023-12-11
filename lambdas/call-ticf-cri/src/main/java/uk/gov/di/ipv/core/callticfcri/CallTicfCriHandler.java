@@ -63,6 +63,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final CriStoringService criStoringService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
@@ -80,6 +81,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         null,
                         new VerifiableCredentialService(configService),
                         ciMitService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
     public CallTicfCriHandler(
@@ -90,7 +92,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             TicfCriService ticfCriService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            CriStoringService criStoringService) {
+            CriStoringService criStoringService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
@@ -99,6 +102,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.criStoringService = criStoringService;
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     @Override
@@ -127,7 +131,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             journeyType.equals(REUSE_JOURNEY_TYPE)
                                     ? List.of()
                                     : userIdentityService.getUserIssuedCredentials(
-                                            clientOAuthSessionItem.getUserId()));
+                                            verifiableCredentialService.getVcStoreItems(
+                                                    clientOAuthSessionItem.getUserId())));
 
             if (ticfVcs.isEmpty()) {
                 LOGGER.info("No VC to process - returning next");

@@ -10,7 +10,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -28,6 +27,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -45,7 +45,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
-    private final String componentId;
+    private final VerifiableCredentialService verifiableCredentialService;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String FRAUD = "fraud";
     private static final String ACTIVITY = "activity";
@@ -57,14 +57,14 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             IpvSessionService ipvSessionService,
-            UserIdentityService userIdentityService) {
+            UserIdentityService userIdentityService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     @SuppressWarnings("unused") // Used by AWS
@@ -75,8 +75,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.userIdentityService = new UserIdentityService(configService);
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
     @Override
@@ -135,6 +134,18 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         }
     }
 
+    private int getScore(String ipvSessionId, String scoreType)
+            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
+        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        return switch (scoreType) {
+            case FRAUD -> gpg45Scores.getFraud();
+            case ACTIVITY -> gpg45Scores.getActivity();
+            case VERIFICATION -> gpg45Scores.getVerification();
+            default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
+        };
+    }
+
     private List<SignedJWT> getParsedCredentials(String ipvSessionId) throws ParseException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -146,18 +157,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
         return gpg45ProfileEvaluator.parseCredentials(
-                userIdentityService.getUserIssuedCredentials(userId));
-    }
-
-    private int getScore(String ipvSessionId, String scoreType)
-            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
-        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-        return switch (scoreType) {
-            case FRAUD -> gpg45Scores.getFraud();
-            case ACTIVITY -> gpg45Scores.getActivity();
-            case VERIFICATION -> gpg45Scores.getVerification();
-            default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
-        };
+                userIdentityService.getUserIssuedCredentials(
+                        verifiableCredentialService.getVcStoreItems(userId)));
     }
 }

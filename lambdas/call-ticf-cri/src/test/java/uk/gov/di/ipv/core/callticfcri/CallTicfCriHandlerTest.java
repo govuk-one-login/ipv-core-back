@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -40,15 +41,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
+    public static final String TEST_USER_ID = "a-user-id";
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
-                    .userId("a-user-id")
+                    .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     private static final ProcessRequest input =
@@ -65,6 +68,7 @@ class CallTicfCriHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private TicfCriService mockTicfCriService;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
@@ -95,8 +99,8 @@ class CallTicfCriHandlerTest {
                         clientOAuthSessionItem);
 
         verify(mockCiMitService)
-                .getContraIndicatorsVC("a-user-id", "a-govuk-journey-id", "an-ip-address");
-
+                .getContraIndicatorsVC(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
+        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
         assertEquals("/journey/next", lambdaResult.get("journey"));
     }
 
@@ -130,7 +134,7 @@ class CallTicfCriHandlerTest {
                         clientOAuthSessionItem);
 
         verify(mockCiMitService)
-                .getContraIndicatorsVC("a-user-id", "a-govuk-journey-id", "an-ip-address");
+                .getContraIndicatorsVC(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
     }

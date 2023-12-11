@@ -46,6 +46,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ public class CheckExistingIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -112,7 +114,8 @@ public class CheckExistingIdentityHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService) {
+            CiMitUtilityService ciMitUtilityService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -122,6 +125,7 @@ public class CheckExistingIdentityHandler
         this.criResponseService = criResponseService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
+        this.verifiableCredentialService = verifiableCredentialService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -137,6 +141,7 @@ public class CheckExistingIdentityHandler
         this.criResponseService = new CriResponseService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -170,10 +175,16 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            VcStoreItem f2fVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && Objects.isNull(f2fVc);
-            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && !Objects.isNull(f2fVc);
+            List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+            var hasF2fVc =
+                    vcStoreItems.stream()
+                            .anyMatch(
+                                    vcStoreItem ->
+                                            vcStoreItem.getCredentialIssuer().equals(F2F_CRI));
+
+            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
+            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
             // Incomplete F2F journey
             if (isF2FIncomplete) {
@@ -194,10 +205,10 @@ public class CheckExistingIdentityHandler
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(userId));
+                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
             // Credential correlation failure
-            if (!userIdentityService.areVcsCorrelated(userId)) {
+            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
                 return isF2FComplete
                         ? buildF2FNotCorrelatedResponse(auditEventUser)
                         : buildNotCorrelatedResponse(auditEventUser);
@@ -210,7 +221,7 @@ public class CheckExistingIdentityHandler
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
 
             Optional<Gpg45Profile> matchedProfile =
-                    !userIdentityService.checkRequiresAdditionalEvidence(userId)
+                    !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
                             ? gpg45ProfileEvaluator.getFirstMatchingProfile(
                                     gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES)
                             : Optional.empty();

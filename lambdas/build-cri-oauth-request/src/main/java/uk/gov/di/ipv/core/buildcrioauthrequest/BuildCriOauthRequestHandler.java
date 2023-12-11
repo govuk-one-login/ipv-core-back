@@ -50,6 +50,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -101,6 +102,7 @@ public class BuildCriOauthRequestHandler
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     public BuildCriOauthRequestHandler(
             ConfigService configService,
@@ -110,7 +112,8 @@ public class BuildCriOauthRequestHandler
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
+            VerifiableCredentialService verifiableCredentialService) {
 
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -120,6 +123,7 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        this.verifiableCredentialService = verifiableCredentialService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -133,6 +137,7 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -365,7 +370,9 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<String> credentials =
+                userIdentityService.getUserIssuedCredentials(
+                        verifiableCredentialService.getVcStoreItems(userId));
         List<SignedJWT> signedJWTs = new ArrayList<>();
 
         for (String credential : credentials) {

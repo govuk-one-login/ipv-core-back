@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
 import java.text.ParseException;
@@ -75,6 +76,7 @@ public class CriCheckingService {
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final ConfigService configService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
@@ -82,12 +84,14 @@ public class CriCheckingService {
             AuditService auditService,
             UserIdentityService userIdentityService,
             CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService) {
+            CiMitUtilityService ciMitUtilityService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     public JourneyResponse handleCallbackError(
@@ -220,7 +224,8 @@ public class CriCheckingService {
             return ciMitUtilityService.getCiMitigationJourneyStep(cis).orElse(JOURNEY_FAIL_WITH_CI);
         }
 
-        if (!userIdentityService.areVcsCorrelated(clientOAuthSessionItem.getUserId())) {
+        if (!userIdentityService.areVCsCorrelated(
+                verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_PYI_NO_MATCH;
         }
 

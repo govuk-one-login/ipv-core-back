@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Map;
 
@@ -33,33 +33,33 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private final ConfigService configService;
-    private final UserIdentityService userIdentityService;
     private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     @SuppressWarnings("unused") // Used by AWS
     public ResetIdentityHandler(
             ConfigService configService,
-            UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CriResponseService criResponseService) {
+            CriResponseService criResponseService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
-        this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public ResetIdentityHandler() {
         this.configService = new ConfigService();
-        this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            userIdentityService.deleteVcStoreItems(userId, isUserInitiated);
+            verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             return JOURNEY_NEXT;
