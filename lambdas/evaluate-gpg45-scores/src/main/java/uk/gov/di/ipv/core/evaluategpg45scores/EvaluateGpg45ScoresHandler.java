@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -53,7 +54,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_MET_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_UNMET_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
@@ -61,8 +61,8 @@ public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse(JOURNEY_MET_PATH);
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse(JOURNEY_UNMET_PATH);
-    private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
-            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
+    private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
+            new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
@@ -132,7 +132,7 @@ public class EvaluateGpg45ScoresHandler
                             userIdentityService.getUserIssuedCredentials(vcStoreItems));
 
             if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
-                return JOURNEY_PYI_NO_MATCH.toObjectMap();
+                return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
             return checkForMatchingGpg45Profile(

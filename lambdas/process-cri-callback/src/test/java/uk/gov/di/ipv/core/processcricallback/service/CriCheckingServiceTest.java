@@ -54,8 +54,8 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
 
 @ExtendWith(MockitoExtension.class)
 public class CriCheckingServiceTest {
@@ -522,7 +522,7 @@ public class CriCheckingServiceTest {
     }
 
     @Test
-    void checkVcResponseShouldReturnPyiNoMatchWhenVcsNotCorrelated() throws Exception {
+    void checkVcResponseShouldReturnVcsNotCorrelatedWhenVcsNotCorrelated() throws Exception {
         // Arrange for VCs not correlated
         var callbackRequest = buildValidCallbackRequest();
         var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
@@ -538,7 +538,7 @@ public class CriCheckingServiceTest {
                         vcResponse, callbackRequest, clientOAuthSessionItem);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH), result);
+        assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
     }
 

@@ -86,7 +86,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
-    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    private static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -395,7 +395,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnPyiNoMatchIfFailedDueToNameCorrelationIssues() throws Exception {
+    void shouldReturnVcsNotCorrelatedIfFailedDueToNameCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -406,7 +406,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         evaluateGpg45ScoresHandler.handleRequest(request, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
+        assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1)).areVCsCorrelated(any());
