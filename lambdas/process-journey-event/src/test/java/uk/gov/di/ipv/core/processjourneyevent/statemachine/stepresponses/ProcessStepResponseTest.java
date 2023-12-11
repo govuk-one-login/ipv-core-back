@@ -12,14 +12,12 @@ class ProcessStepResponseTest {
     void valueReturnsCorrectJourneyResponse() {
         ProcessStepResponse processStepResponse =
                 new ProcessStepResponse(
-                        "a-process-lambda",
-                        Map.of("input1", "Windom Earle", "input2", 315),
-                        "is-mitigation-start");
+                        "a-process-lambda", Map.of("input1", "Windom Earle", "input2", 315), true);
 
         Map<String, Object> expectedValue =
                 Map.of(
                         "journey",
-                        "/journey/a-process-lambda?mitigationStart=is-mitigation-start",
+                        "/journey/a-process-lambda",
                         "lambdaInput",
                         Map.of("input1", "Windom Earle", "input2", 315));
         assertEquals(expectedValue, processStepResponse.value());

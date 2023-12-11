@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -37,15 +36,15 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownSta
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
@@ -53,16 +52,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getURIParameter;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
-    private static final String JOURNEY = "journey";
-    private static final String PAGE = "page";
-    private static final String CONTEXT = "context";
     private static final String MITIGATION_START = "mitigationStart";
 
     private final IpvSessionService ipvSessionService;
@@ -125,10 +120,11 @@ public class ProcessJourneyEventHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            Map<String, Object> newStateResponse =
-                    executeJourneyEvent(journeyEvent, ipvSessionItem);
+            StepResponse stepResponse = executeJourneyEvent(journeyEvent, ipvSessionItem);
 
-            return checkForQueryParameters(input, newStateResponse, clientOAuthSessionItem);
+            checkIfStartingMitigationJourney(input, stepResponse, clientOAuthSessionItem);
+
+            return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
@@ -138,19 +134,16 @@ public class ProcessJourneyEventHandler
         } catch (SqsException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
-        } catch (URISyntaxException e) {
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_URI);
         }
     }
 
     @Tracing
-    private Map<String, Object> executeJourneyEvent(
-            String journeyEvent, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
+    private StepResponse executeJourneyEvent(String journeyEvent, IpvSessionItem ipvSessionItem)
+            throws JourneyEngineException {
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", "").value();
+            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", null);
         }
 
         try {
@@ -182,7 +175,7 @@ public class ProcessJourneyEventHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return newState.getResponse().value();
+            return newState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -274,50 +267,44 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private Map<String, Object> checkForQueryParameters(
+    private void checkIfStartingMitigationJourney(
             Map<String, String> input,
-            Map<String, Object> stateResponse,
+            StepResponse stepResponse,
             ClientOAuthSessionItem clientOAuthSessionItem)
-            throws HttpResponseExceptionWithErrorBody, SqsException, URISyntaxException {
+            throws HttpResponseExceptionWithErrorBody, SqsException {
+
         String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
 
-        // Find response URI
-        String key;
-        if (stateResponse.containsKey(JOURNEY)) {
-            key = JOURNEY;
-        } else if (stateResponse.containsKey(PAGE)) {
-            key = PAGE;
-        } else {
-            return stateResponse;
+        Boolean mitigationStart = getMitigationStart(stepResponse);
+        if (Objects.nonNull(mitigationStart) && mitigationStart) {
+            sendAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
         }
-        URI uri = new URI(stateResponse.get(key).toString());
+    }
 
-        // Check for mitigation start
-        String mitigationStart = getURIParameter(uri, MITIGATION_START);
-        if (Boolean.parseBoolean(mitigationStart)) {
-            var auditEventUser =
-                    new AuditEventUser(
-                            clientOAuthSessionItem.getUserId(),
-                            ipvSessionId,
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
-
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_MITIGATION_START,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
+    private Boolean getMitigationStart(StepResponse stepResponse) {
+        if (stepResponse instanceof PageStepResponse) {
+            return ((PageStepResponse) stepResponse).getMitigationStart();
+        } else if (stepResponse instanceof ProcessStepResponse) {
+            return ((ProcessStepResponse) stepResponse).getMitigationStart();
         }
+        return false;
+    }
 
-        // Strip queries if page
-        if (stateResponse.containsKey(PAGE)) {
-            Map<String, Object> newStateResponse = new HashMap<>(stateResponse);
-            newStateResponse.put(key, new URIBuilder(uri).getPathSegments().get(0));
-            newStateResponse.put(CONTEXT, getURIParameter(uri, CONTEXT));
-            return newStateResponse;
-        }
+    private void sendAuditEvent(
+            String ipvSessionId, String ipAddress, ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException {
+        var auditEventUser =
+                new AuditEventUser(
+                        clientOAuthSessionItem.getUserId(),
+                        ipvSessionId,
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        ipAddress);
 
-        return stateResponse;
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_MITIGATION_START,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
     }
 }

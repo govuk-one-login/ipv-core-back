@@ -9,12 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class PageStepResponseTest {
 
     public static final PageStepResponse PAGE_RESPONSE =
-            new PageStepResponse("aPageId", "testContext", "true");
+            new PageStepResponse("aPageId", "testContext", true);
 
     @Test
     void valueReturnsCorrectPageResponse() {
-        assertEquals(
-                Map.of("page", "aPageId?context=testContext&mitigationStart=true"),
-                PAGE_RESPONSE.value());
+        assertEquals(Map.of("page", "aPageId", "context", "testContext"), PAGE_RESPONSE.value());
     }
 }
