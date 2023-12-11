@@ -133,7 +133,7 @@ public class LambdaHandler {
                             return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/evaluate-gpg45-score".equals(journey)) {
+                    } else if ("/journey/evaluate-gpg45-scores".equals(journey)) {
                         ProcessRequest processRequest =
                                 buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
