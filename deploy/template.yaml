@@ -2421,7 +2421,7 @@ Resources:
         - IndexName: "dateCreated"
           KeySchema:
             - AttributeName: "dateCreated"
-              KeyType: "HASH"
+              KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"
       TimeToLiveSpecification:
