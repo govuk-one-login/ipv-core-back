@@ -2410,10 +2410,14 @@ Resources:
           AttributeType: "S"
         - AttributeName: "credentialIssuer"
           AttributeType: "S"
+        - AttributeName: "dateCreated"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "userId"
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
+          KeyType: "RANGE"
+        - AttributeName: "dateCreated"
           KeyType: "RANGE"
       TimeToLiveSpecification:
         AttributeName: "ttl"
