@@ -50,19 +50,30 @@ paths:
             application/json:
               schema:
                 type: "object"
+        500:
+          description: 500 response
+          content: {}
       x-amazon-apigateway-integration:
-        type: "MOCK"
-        requestTemplates:
-          application/json: "{\"statusCode\":200}"
+        type: aws
+        credentials:
+          Fn::GetAtt: ExternalApiGatewayJwksS3Role.Arn
+        httpMethod: GET
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:eu-west-2:s3:path/ipv-core-well-known-jwks-${env}/well-known.json
+            - env:
+                Fn::If:
+                  - IsDevelopment
+                  - Fn::If:
+                      - IsDev01
+                      - dev01
+                      - dev02
+                  - Ref: Environment
         responses:
-          200:
+          default:
             statusCode: 200
-            responseTemplates:
-              application/json:
-                Fn::FindInMap:
-                  - EnvironmentConfiguration
-                  - Ref: AWS::AccountId
-                  - jwksJson
+          \[45\]\d{2}:
+            statusCode: 500
 
   /healthcheck:
     get:
