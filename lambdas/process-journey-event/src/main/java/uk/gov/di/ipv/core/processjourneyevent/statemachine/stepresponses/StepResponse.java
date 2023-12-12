@@ -15,4 +15,6 @@ import java.util.Map;
 })
 public interface StepResponse {
     Map<String, Object> value();
+
+    Boolean getMitigationStart();
 }

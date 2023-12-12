@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class JourneyStepResponseTest {
 
     public static final JourneyStepResponse JOURNEY_RESPONSE =
-            new JourneyStepResponse("aJourneyStepId");
+            new JourneyStepResponse("aJourneyStepId", null);
 
     @Test
     void valueReturnsCorrectJourneyResponse() {

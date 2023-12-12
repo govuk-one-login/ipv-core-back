@@ -77,8 +77,7 @@ class StateMachineInitializerTest {
                 (NestedJourneyInvokeState) journeyMap.get("NESTED_JOURNEY_INVOKE_STATE");
 
         // page state assertions
-        assertEquals(
-                "page-id-for-some-page?context=test", pageState.getResponse().value().get("page"));
+        assertEquals("page-id-for-some-page", pageState.getResponse().value().get("page"));
         assertEquals(parentState, pageState.getParentObj());
         assertEquals(
                 journeyState,

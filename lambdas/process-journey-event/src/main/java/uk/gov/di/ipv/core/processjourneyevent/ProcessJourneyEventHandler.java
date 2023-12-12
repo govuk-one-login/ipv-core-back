@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownSta
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
@@ -44,7 +43,6 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
@@ -101,6 +99,7 @@ public class ProcessJourneyEventHandler
         try {
             // Extract variables
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             String featureSet = StepFunctionHelpers.getFeatureSet(input);
 
@@ -122,7 +121,9 @@ public class ProcessJourneyEventHandler
 
             StepResponse stepResponse = executeJourneyEvent(journeyEvent, ipvSessionItem);
 
-            checkIfStartingMitigationJourney(input, stepResponse, clientOAuthSessionItem);
+            if (Boolean.TRUE.equals(stepResponse.getMitigationStart())) {
+                sendMitigationStartAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
+            }
 
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -266,32 +267,7 @@ public class ProcessJourneyEventHandler
         return stateMachinesMap;
     }
 
-    @Tracing
-    private void checkIfStartingMitigationJourney(
-            Map<String, String> input,
-            StepResponse stepResponse,
-            ClientOAuthSessionItem clientOAuthSessionItem)
-            throws HttpResponseExceptionWithErrorBody, SqsException {
-
-        String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
-        String ipAddress = StepFunctionHelpers.getIpAddress(input);
-
-        Boolean mitigationStart = getMitigationStart(stepResponse);
-        if (Objects.nonNull(mitigationStart) && mitigationStart) {
-            sendAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
-        }
-    }
-
-    private Boolean getMitigationStart(StepResponse stepResponse) {
-        if (stepResponse instanceof PageStepResponse) {
-            return ((PageStepResponse) stepResponse).getMitigationStart();
-        } else if (stepResponse instanceof ProcessStepResponse) {
-            return ((ProcessStepResponse) stepResponse).getMitigationStart();
-        }
-        return false;
-    }
-
-    private void sendAuditEvent(
+    private void sendMitigationStartAuditEvent(
             String ipvSessionId, String ipAddress, ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException {
         var auditEventUser =

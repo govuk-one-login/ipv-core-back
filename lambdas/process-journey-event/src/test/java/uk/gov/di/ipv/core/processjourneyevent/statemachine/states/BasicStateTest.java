@@ -23,7 +23,7 @@ class BasicStateTest {
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
         BasicState targetState = new BasicState();
-        JourneyStepResponse journeyStepResponse = new JourneyStepResponse("stepId");
+        JourneyStepResponse journeyStepResponse = new JourneyStepResponse("stepId", null);
         targetState.setResponse(journeyStepResponse);
 
         BasicState currentState = new BasicState();

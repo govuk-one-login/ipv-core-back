@@ -288,7 +288,7 @@ public class ConfigService {
             }
             return configMap;
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse contra-indicator config: {}", e.getMessage());
+            LOGGER.error("Failed to parse contra-indicator config");
             return Collections.emptyMap();
         }
     }
@@ -299,8 +299,7 @@ public class ConfigService {
             return objectMapper.readValue(
                     cimitConfig, new TypeReference<HashMap<String, String>>() {});
         } catch (JsonProcessingException e) {
-            throw new ConfigException(
-                    String.format("Failed to parse CIMit configuration: %s", e.getMessage()));
+            throw new ConfigException("Failed to parse CIMit configuration");
         }
     }
 
