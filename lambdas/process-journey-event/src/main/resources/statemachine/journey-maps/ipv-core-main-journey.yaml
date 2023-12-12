@@ -22,6 +22,8 @@ CRI_STATE:
       targetState: ERROR
     fail-with-ci:
       targetState: PYI_NO_MATCH
+    vcs-not-correlated:
+      targetState: PYI_NO_MATCH
 
 # Shared states
 INITIAL_IPV_JOURNEY:
@@ -283,11 +285,11 @@ EVALUATE_GPG45_SCORES:
     lambda: evaluate-gpg45-scores
   events:
     met:
-      targetState:
-        IPV_SUCCESS_PAGE
+      targetState: IPV_SUCCESS_PAGE
     unmet:
-      targetState:
-        PYI_NO_MATCH
+      targetState: PYI_NO_MATCH
+    vcs-not-correlated:
+      targetState: PYI_NO_MATCH
 
 IPV_SUCCESS_PAGE:
   response:
