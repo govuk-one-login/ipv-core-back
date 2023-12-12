@@ -1163,7 +1163,7 @@ class UserIdentityServiceTest {
                         USER_ID_1, "test-sub", "P0", contraIndicators);
         List<FailureEventReturnCode> returnCodes = userIdentity.getReturnCode();
         assertEquals(returnCodes.size(), 3);
-        assertTrue(returnCodes.get(0).cris().isEmpty());
+        assertTrue(returnCodes.get(0).issuers().isEmpty());
         assertTrue(returnCodes.stream().anyMatch(rt -> rt.code().equals("1")));
         assertTrue(returnCodes.stream().anyMatch(rt -> rt.code().equals("2")));
     }
@@ -1252,7 +1252,7 @@ class UserIdentityServiceTest {
 
         List<FailureEventReturnCode> failureEventReturnCodes = userIdentity.getReturnCode();
         assertEquals(failureEventReturnCodes.size(), 3);
-        assertTrue(failureEventReturnCodes.get(0).cris().isEmpty());
+        assertTrue(failureEventReturnCodes.get(0).issuers().isEmpty());
         assertTrue(failureEventReturnCodes.stream().anyMatch(fc -> fc.code().equals("3")));
     }
 
@@ -1312,7 +1312,7 @@ class UserIdentityServiceTest {
 
         List<FailureEventReturnCode> failureEventReturnCodes = userIdentity.getReturnCode();
         assertEquals(failureEventReturnCodes.size(), 3);
-        assertTrue(failureEventReturnCodes.get(0).cris().isEmpty());
+        assertTrue(failureEventReturnCodes.get(0).issuers().isEmpty());
         assertTrue(failureEventReturnCodes.stream().anyMatch(fc -> fc.code().equals("3")));
     }
 

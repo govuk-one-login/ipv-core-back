@@ -45,7 +45,7 @@ class AuditServiceTest {
     private static final String SUCCESS_RETURN_CODES_TEST = "[{\"code\":\"A\"},{\"code\":\"V\"}]";
 
     private static final String FAILURE_RETURN_CODES_TEST =
-            "[{\"code\":\"A\",\"cris\":[\"https://review-d.account.gov.uk\",\"https://review-f.account.gov.uk\"]},{\"code\":\"V\",\"cris\":[\"https://review-k.account.gov.uk\"]}]";
+            "[{\"code\":\"A\",\"issuers\":[\"https://review-d.account.gov.uk\",\"https://review-f.account.gov.uk\"]},{\"code\":\"V\",\"issuers\":[\"https://review-k.account.gov.uk\"]}]";
 
     @BeforeEach
     void setup() {
