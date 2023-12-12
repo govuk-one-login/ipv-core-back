@@ -2410,15 +2410,18 @@ Resources:
           AttributeType: "S"
         - AttributeName: "credentialIssuer"
           AttributeType: "S"
-        - AttributeName: "dateCreated"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "userId"
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"
-        - AttributeName: "dateCreated"
-          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "dateCreated"
+          KeySchema:
+            - AttributeName: "dateCreated"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: !If
