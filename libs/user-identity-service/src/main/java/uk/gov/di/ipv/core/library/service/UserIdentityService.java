@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.FailureEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -38,7 +39,11 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -152,10 +157,72 @@ public class UserIdentityService {
 
             userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
         } else {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
-        }
+            var isBreachingCiThreshold =
+                    ciMitUtilityService.isBreachingCiThreshold(contraIndicators);
+            var defaultFailureReturnCode =
+                    configService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0);
+            List<FailureEventReturnCode> failureEventReturnCodes =
+                    getFailureEventReturnCodes(
+                            contraIndicators, isBreachingCiThreshold, defaultFailureReturnCode);
 
+            if (failureEventReturnCodes == null || !contraIndicators.hasMitigations()) {
+                userIdentityBuilder.returnCode(
+                        getFailReturnCodes(
+                                contraIndicators,
+                                isBreachingCiThreshold,
+                                defaultFailureReturnCode));
+            } else {
+                userIdentityBuilder.returnCode(failureEventReturnCodes);
+            }
+        }
         return userIdentityBuilder.build();
+    }
+
+    private List<ReturnCode> getFailReturnCodes(
+            ContraIndicators contraIndicators,
+            boolean isBreachingCiThreshold,
+            String defaultReturnCode)
+            throws UnrecognisedCiException {
+        return isBreachingCiThreshold
+                ? mapCisToReturnCodes(contraIndicators)
+                : List.of(new ReturnCode(defaultReturnCode));
+    }
+
+    private List<FailureEventReturnCode> getFailureEventReturnCodes(
+            ContraIndicators contraIndicators,
+            boolean isBreachingCiThreshold,
+            String defaultReturnCode) {
+        return contraIndicators.getContraIndicatorsMap().values().stream()
+                .map(
+                        contraIndicator -> {
+                            String returnCode =
+                                    isBreachingCiThreshold && contraIndicator.getCode() != null
+                                            ? configService
+                                                    .getContraIndicatorConfigMap()
+                                                    .get(contraIndicator.getCode())
+                                                    .getReturnCode()
+                                            : defaultReturnCode;
+                            List<String> issuers =
+                                    contraIndicator.getIssuers() != null
+                                            ? contraIndicator.getIssuers()
+                                            : Collections.emptyList();
+                            return Map.entry(
+                                    Objects.requireNonNull(returnCode),
+                                    issuers.stream().distinct().collect(Collectors.toList()));
+                        })
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
+                                (existing, replacement) -> {
+                                    existing.addAll(replacement);
+                                    return existing;
+                                }))
+                .entrySet()
+                .stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .map(entry -> new FailureEventReturnCode(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
@@ -364,15 +431,6 @@ public class UserIdentityService {
     private boolean isBirthDateEmpty(List<BirthDate> birthDates) {
         return CollectionUtils.isEmpty(birthDates)
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
-    }
-
-    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators)
-            throws UnrecognisedCiException {
-        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators)
-                ? mapCisToReturnCodes(contraIndicators)
-                : List.of(
-                        new ReturnCode(
-                                configService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
     }
 
     private List<ReturnCode> getSuccessReturnCode(ContraIndicators contraIndicators)

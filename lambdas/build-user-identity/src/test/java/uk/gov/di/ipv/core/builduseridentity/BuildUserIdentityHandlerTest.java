@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.FailureEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -189,7 +190,6 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
         assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode(), responseBody.getReturnCode());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -200,10 +200,163 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         AuditExtensionsUserIdentity extensions =
                 (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P2.toString(), extensions.levelOfConfidence());
-        assertFalse(extensions.ciFail());
-        assertTrue(extensions.hasMitigations());
-        assertEquals(extensions.returnCode(), responseBody.getReturnCode());
+        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
+        assertFalse(extensions.isCiFail());
+        assertTrue(extensions.isHasMitigations());
+        assertEquals(responseBody.getReturnCode().size(), 3);
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+    }
+
+    @Test
+    void
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsTrueForCheckFailureCodesWithCris()
+                    throws Exception {
+        List<FailureEventReturnCode> failureEventReturnCodes =
+                List.of(
+                        new FailureEventReturnCode(
+                                "A",
+                                List.of(
+                                        "https://review-d.account.gov.uk",
+                                        "https://review-f.account.gov.uk")),
+                        new FailureEventReturnCode(
+                                "V", List.of("https://review-k.account.gov.uk")));
+
+        userIdentity.setReturnCode(failureEventReturnCodes);
+        // Arrange
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
+                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+        AuditExtensionsUserIdentity extensions =
+                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
+        assertFalse(extensions.isCiFail());
+        assertTrue(extensions.isHasMitigations());
+        assertEquals(extensions.getReturnCode(), userIdentity.getReturnCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+    }
+
+    @Test
+    void
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseForCheckFailureCodesWithCris()
+                    throws Exception {
+        List<FailureEventReturnCode> failureEventReturnCodes =
+                List.of(
+                        new FailureEventReturnCode(
+                                "A",
+                                List.of(
+                                        "https://review-d.account.gov.uk",
+                                        "https://review-f.account.gov.uk")),
+                        new FailureEventReturnCode(
+                                "V", List.of("https://review-k.account.gov.uk")));
+
+        userIdentity.setReturnCode(failureEventReturnCodes);
+        // Arrange
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
+                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+        when(mockContraIndicators.hasMitigations()).thenReturn(false);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+        AuditExtensionsUserIdentity extensions =
+                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
+        assertFalse(extensions.isCiFail());
+        assertTrue(!extensions.isHasMitigations());
+        assertEquals(extensions.getReturnCode().size(), 2);
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
