@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class EmailService {
@@ -25,6 +26,10 @@ public class EmailService {
     }
 
     public void SendUserTriggeredIdentityResetConfirmation(String userEmailAddress) {
+        Map<String, Object> templateParameters = new HashMap<>();
+        templateParameters.put("firstName", "testFirst");
+        templateParameters.put("lastName", "testLast");
+
         LOGGER.info("Attempting to send user triggered identity reset confirmation email");
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
@@ -32,7 +37,8 @@ public class EmailService {
                 configService.getSsmParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
-        SendEmail(templateId, userEmailAddress, null);
+        LOGGER.info("Got template ID {}", templateId);
+        SendEmail(templateId, userEmailAddress, templateParameters);
     }
 
     private void SendEmail(
@@ -42,12 +48,14 @@ public class EmailService {
 
         while (true) {
             try {
+                LOGGER.info("About to send email");
                 notificationClient.sendEmail(templateId, toAddress, personalisation, null, null);
                 LOGGER.info("Email sent");
                 return;
             } catch (NotificationClientException e) {
                 LOGGER.warn(
-                        "Exception caught trying to send email. Response code: {}. response message: '{}'",
+                        "Exception caught trying to send email. Attempt: {}. Response code: {}. response message: '{}'",
+                        retries + 1,
                         e.getHttpResult(),
                         e.getMessage());
                 var httpResult = e.getHttpResult();
