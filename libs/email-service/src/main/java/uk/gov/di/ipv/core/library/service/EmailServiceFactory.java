@@ -12,7 +12,6 @@ import uk.gov.service.notify.NotificationClient;
  * handler class would then be untestable.
  */
 public class EmailServiceFactory {
-
     private final ConfigService configService;
 
     public EmailServiceFactory(ConfigService configService) {
@@ -20,10 +19,9 @@ public class EmailServiceFactory {
     }
 
     public EmailService getEmailService() {
-        return new EmailService(
-                configService,
-                new NotificationClient(
-                        configService.getCoreSecretValue(
-                                ConfigurationVariable.GOV_UK_NOTIFY_API_KEY)));
+        final var apiKey =
+                configService.getCoreSecretValue(ConfigurationVariable.GOV_UK_NOTIFY_API_KEY);
+
+        return new EmailService(configService, new NotificationClient(apiKey));
     }
 }
