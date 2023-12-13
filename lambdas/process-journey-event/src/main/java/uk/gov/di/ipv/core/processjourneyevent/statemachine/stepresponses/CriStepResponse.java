@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -22,16 +23,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 @AllArgsConstructor
 @Data
 public class CriStepResponse implements StepResponse {
-
     private static final Logger LOGGER = LogManager.getLogger();
-
     public static final String CRI_JOURNEY_TEMPLATE = "/journey/cri/build-oauth-request/%s";
-
     private String criId;
-
     private String context;
-
     private String scope;
+    @Getter private Boolean mitigationStart;
 
     public Map<String, Object> value() {
         try {

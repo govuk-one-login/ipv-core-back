@@ -43,6 +43,8 @@ CRI_STATE:
       targetState: CRI_STATE_WITH_SCOPE
     testWithContextAndScope:
       targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
+    testWithMitigationStart:
+      targetState: PAGE_STATE_AT_START_OF_MITIGATION
 
 CRI_STATE_WITH_CONTEXT:
   response:
@@ -68,6 +70,15 @@ CRI_STATE_WITH_CONTEXT_AND_SCOPE:
     criId: aCriId
     context: test_context
     scope: test_scope
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
+
+PAGE_STATE_AT_START_OF_MITIGATION:
+  response:
+    type: page
+    pageId: page-id-for-some-page
+    mitigationStart: true
   events:
     enterNestedJourneyAtStateOne:
       targetState: NESTED_JOURNEY_INVOKE_STATE

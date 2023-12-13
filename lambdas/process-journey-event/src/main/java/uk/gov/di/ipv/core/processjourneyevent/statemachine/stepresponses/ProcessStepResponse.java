@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ public class ProcessStepResponse implements StepResponse {
     private static final String JOURNEY_TEMPLATE = "/journey/%s";
     private String lambda;
     private Map<String, Object> lambdaInput;
+    @Getter private Boolean mitigationStart;
 
     @Override
     public Map<String, Object> value() {

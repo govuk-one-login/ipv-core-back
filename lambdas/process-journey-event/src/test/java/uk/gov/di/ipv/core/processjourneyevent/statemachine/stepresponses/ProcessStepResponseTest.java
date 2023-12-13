@@ -12,7 +12,7 @@ class ProcessStepResponseTest {
     void valueReturnsCorrectJourneyResponse() {
         ProcessStepResponse processStepResponse =
                 new ProcessStepResponse(
-                        "a-process-lambda", Map.of("input1", "Windom Earle", "input2", 315));
+                        "a-process-lambda", Map.of("input1", "Windom Earle", "input2", 315), true);
 
         Map<String, Object> expectedValue =
                 Map.of(

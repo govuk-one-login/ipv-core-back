@@ -1476,6 +1476,7 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1496,6 +1497,13 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1508,6 +1516,8 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If

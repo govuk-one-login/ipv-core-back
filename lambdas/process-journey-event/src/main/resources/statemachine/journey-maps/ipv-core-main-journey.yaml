@@ -586,19 +586,6 @@ CRI_EXPERIAN_KBV_M2B:
         f2f:
           targetState: MITIGATION_02_OPTIONS
 
-MITIGATION_02_OPTIONS_WITH_F2F_M2B:
-  response:
-    type: page
-    pageId: pyi-suggest-other-options
-    context: no-photo-id
-  events:
-    f2f:
-      targetState: CRI_F2F
-    dcmaw:
-      targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-
 # Mitigation journey (01)
 MITIGATION_01:
   response:
@@ -606,6 +593,7 @@ MITIGATION_01:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: false
+    mitigationStart: true
   events:
     next:
       targetState: MITIGATION_01_IDENTITY_START_PAGE
@@ -679,6 +667,7 @@ MITIGATION_02_OPTIONS:
   response:
     type: page
     pageId: pyi-suggest-other-options-no-f2f
+    mitigationStart: true
   events:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
@@ -723,6 +712,21 @@ MITIGATION_02_OPTIONS_WITH_F2F:
   response:
     type: page
     pageId: pyi-suggest-other-options
+    mitigationStart: true
+  events:
+    f2f:
+      targetState: CRI_F2F
+    dcmaw:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+    end:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_02_OPTIONS_WITH_F2F_M2B:
+  response:
+    type: page
+    pageId: pyi-suggest-other-options
+    context: no-photo-id
+    mitigationStart: true
   events:
     f2f:
       targetState: CRI_F2F

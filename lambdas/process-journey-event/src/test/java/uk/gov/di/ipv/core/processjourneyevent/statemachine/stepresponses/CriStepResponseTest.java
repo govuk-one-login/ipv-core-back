@@ -15,7 +15,7 @@ public class CriStepResponseTest {
     @MethodSource("journeyUriParameters")
     void valueReturnsExpectedJourneyResponse(
             String criId, String context, String scope, String expectedJourney) {
-        CriStepResponse response = new CriStepResponse(criId, context, scope);
+        CriStepResponse response = new CriStepResponse(criId, context, scope, null);
         assertEquals(
                 Map.of("journey", expectedJourney),
                 response.value(),

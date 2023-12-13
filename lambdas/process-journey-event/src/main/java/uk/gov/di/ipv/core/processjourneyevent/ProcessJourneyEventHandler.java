@@ -10,13 +10,19 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -30,6 +36,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownSta
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -49,13 +56,16 @@ public class ProcessJourneyEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
+    private static final String MITIGATION_START = "mitigationStart";
 
     private final IpvSessionService ipvSessionService;
+    private final AuditService auditService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
 
     public ProcessJourneyEventHandler(
+            AuditService auditService,
             IpvSessionService ipvSessionService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
@@ -63,6 +73,7 @@ public class ProcessJourneyEventHandler
             StateMachineInitializerMode stateMachineInitializerMode)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
+        this.auditService = auditService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.stateMachines = loadStateMachines(journeyTypes, stateMachineInitializerMode);
@@ -71,6 +82,7 @@ public class ProcessJourneyEventHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyEventHandler() throws IOException {
         this.configService = new ConfigService();
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
@@ -85,45 +97,54 @@ public class ProcessJourneyEventHandler
         LogHelper.attachComponentIdToLogs(configService);
 
         try {
+            // Extract variables
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             String featureSet = StepFunctionHelpers.getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
 
+            // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (ipvSessionItem == null) {
                 LOGGER.warn("Failed to find ipv-session");
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+            configService.setFeatureSet(featureSet);
 
-            ClientOAuthSessionItem clientOAuthSessionItem;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-                LogHelper.attachGovukSigninJourneyIdToLogs(
-                        clientOAuthSessionItem.getGovukSigninJourneyId());
+            // Attach variables to logs
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
+
+            StepResponse stepResponse = executeJourneyEvent(journeyEvent, ipvSessionItem);
+
+            if (Boolean.TRUE.equals(stepResponse.getMitigationStart())) {
+                sendMitigationStartAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
             }
 
-            return executeJourneyEvent(journeyEvent, ipvSessionItem);
-
+            return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+        } catch (SqsException e) {
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }
 
     @Tracing
-    private Map<String, Object> executeJourneyEvent(
-            String journeyEvent, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
+    private StepResponse executeJourneyEvent(String journeyEvent, IpvSessionItem ipvSessionItem)
+            throws JourneyEngineException {
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "").value();
+            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", null);
         }
 
         try {
@@ -155,7 +176,7 @@ public class ProcessJourneyEventHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return newState.getResponse().value();
+            return newState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -244,5 +265,22 @@ public class ProcessJourneyEventHandler
                             new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
         }
         return stateMachinesMap;
+    }
+
+    private void sendMitigationStartAuditEvent(
+            String ipvSessionId, String ipAddress, ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException {
+        var auditEventUser =
+                new AuditEventUser(
+                        clientOAuthSessionItem.getUserId(),
+                        ipvSessionId,
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        ipAddress);
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_MITIGATION_START,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
     }
 }

@@ -18,7 +18,6 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -57,8 +56,7 @@ class StateMachineInitializerTest {
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
     @Test
-    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps()
-            throws IOException, URISyntaxException {
+    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
                                 IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,

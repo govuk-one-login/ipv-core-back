@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class PageStepResponseTest {
 
     public static final PageStepResponse PAGE_RESPONSE =
-            new PageStepResponse("aPageId", "testContext");
+            new PageStepResponse("aPageId", "testContext", true);
 
     @Test
     void valueReturnsCorrectPageResponse() {
