@@ -2502,6 +2502,8 @@ Resources:
       GlobalSecondaryIndexes:
         - IndexName: "dateCreated"
           KeySchema:
+            - AttributeName: "userId"
+              KeyType: "HASH"
             - AttributeName: "dateCreated"
               KeyType: "RANGE"
           Projection:
