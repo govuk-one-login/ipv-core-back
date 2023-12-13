@@ -91,6 +91,7 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+    private static final String TCIF_CRI = "tcif";
     public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
@@ -161,6 +162,9 @@ public class CheckExistingIdentityHandler
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
             String userId = clientOAuthSessionItem.getUserId();
+
+            // Clear TCIF VCs
+            userIdentityService.deleteVcItem(userId, TCIF_CRI);
 
             // Reset identity if reprove is true.
             Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
