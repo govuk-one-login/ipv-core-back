@@ -6,12 +6,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.Collections;
+import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 public class ReplayCimitVcsHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,8 +46,8 @@ public class ReplayCimitVcsHandler implements RequestHandler<ProcessRequest, Map
     @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
-        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService();
         this.configService = new ConfigService();
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
@@ -61,5 +71,6 @@ public class ReplayCimitVcsHandler implements RequestHandler<ProcessRequest, Map
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("HTTP response exception", e);
         }
+        return Collections.emptyMap();
     }
 }
