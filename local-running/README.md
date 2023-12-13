@@ -22,9 +22,6 @@ All other AWS services are still used - Dynamo, SSM, SQS etc. They're called by 
 
 You need to have the core-front and stubs repos checked out and on the same level as the core-back repo.
 
-Core-front needs a very minor code change to make things stable. It's on a branch called "local-running". Pull it before
-spinning things up.
-
 You'll need to update some config for your env. This is mostly to set up parameters for new connections for core to the
 locally running CRIs. Also a parameter to configure the orch-stubs expected redirect URL. We also need to stop the event
 source mapping that feeds the process-async-cri-credential lambda. This is to allow the local deployment to read
