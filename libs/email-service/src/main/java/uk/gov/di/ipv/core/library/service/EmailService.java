@@ -25,7 +25,7 @@ public class EmailService {
         this.notificationClient = notificationClient;
     }
 
-    public void SendUserTriggeredIdentityResetConfirmation(
+    public void sendUserTriggeredIdentityResetConfirmation(
             String userEmailAddress, String fullName) {
         Map<String, Object> templateParameters = new HashMap<>();
         templateParameters.put("fullName", fullName);

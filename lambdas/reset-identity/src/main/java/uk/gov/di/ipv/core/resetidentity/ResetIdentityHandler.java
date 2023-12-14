@@ -128,7 +128,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                 // Create a new email service for each request so that we don't risk using stale
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
-                emailService.SendUserTriggeredIdentityResetConfirmation(
+                emailService.sendUserTriggeredIdentityResetConfirmation(
                         ipvSessionItem.getEmailAddress(), userName);
             }
 
