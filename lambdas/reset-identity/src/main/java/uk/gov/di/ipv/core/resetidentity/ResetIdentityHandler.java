@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -22,6 +23,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -29,9 +31,12 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EmailService;
 import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -50,6 +55,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final UserIdentityService userIdentityService;
 
     @SuppressWarnings("unused") // Used by AWS
     public ResetIdentityHandler(
@@ -59,7 +65,8 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             VerifiableCredentialService verifiableCredentialService,
-            EmailServiceFactory emailServiceFactory) {
+            EmailServiceFactory emailServiceFactory,
+            UserIdentityService userIdentityService) {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
@@ -67,6 +74,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.emailServiceFactory = emailServiceFactory;
+        this.userIdentityService = userIdentityService;
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -79,6 +87,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.criResponseService = new CriResponseService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.emailServiceFactory = new EmailServiceFactory(configService);
+        this.userIdentityService = new UserIdentityService(configService);
     }
 
     @Override
@@ -101,17 +110,26 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            // Make sure we do this before deleting the credentials!
+            String userName = null;
+            if (isUserInitiated) {
+                List<VcStoreItem> credentials =
+                        verifiableCredentialService.getVcStoreItems(
+                                clientOAuthSessionItem.getUserId());
+                userName = getUserName(credentials);
+            }
+
             verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             if (isUserInitiated) {
                 sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
 
-                // Create a new service for each request so that we don't risk using stale
+                // Create a new email service for each request so that we don't risk using stale
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
                 emailService.SendUserTriggeredIdentityResetConfirmation(
-                        ipvSessionItem.getEmailAddress());
+                        ipvSessionItem.getEmailAddress(), userName);
             }
 
             return JOURNEY_NEXT;
@@ -142,5 +160,25 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                                 getIpvSessionId(event),
                                 govukSigninJourneyId,
                                 getIpAddress(event))));
+    }
+
+    // Try to get the user's name from their VCs. It's not the end of the world if this fails so
+    // just return null in that case.
+    private String getUserName(List<VcStoreItem> credentials) {
+        try {
+            final Optional<IdentityClaim> identityClaim =
+                    userIdentityService.findIdentityClaim(credentials);
+
+            if (identityClaim.isEmpty()) {
+                LOGGER.error("Failed to find identity claim");
+                return null;
+            }
+
+            return identityClaim.get().getFullName();
+        } catch (Exception e) {
+            LOGGER.error("Exception caught trying to find user's identity", e);
+        }
+
+        return null;
     }
 }

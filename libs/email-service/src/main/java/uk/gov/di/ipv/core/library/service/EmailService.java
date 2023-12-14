@@ -25,10 +25,10 @@ public class EmailService {
         this.notificationClient = notificationClient;
     }
 
-    public void SendUserTriggeredIdentityResetConfirmation(String userEmailAddress) {
+    public void SendUserTriggeredIdentityResetConfirmation(
+            String userEmailAddress, String fullName) {
         Map<String, Object> templateParameters = new HashMap<>();
-        templateParameters.put("firstName", "testFirst");
-        templateParameters.put("lastName", "testLast");
+        templateParameters.put("fullName", fullName);
 
         LOGGER.info("Attempting to send user triggered identity reset confirmation email");
         // This template ID can vary between production and the other environments, so it can't be

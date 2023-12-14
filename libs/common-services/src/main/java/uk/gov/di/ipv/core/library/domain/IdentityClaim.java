@@ -28,7 +28,8 @@ public class IdentityClaim {
     // Concatenate the first name we have into a single string
     public String getFullName() {
         StringBuilder nameBuilder = new StringBuilder();
-        name.get(0).getNameParts()
+        name.get(0)
+                .getNameParts()
                 .forEach(
                         namePart -> {
                             if (nameBuilder.isEmpty()) {
