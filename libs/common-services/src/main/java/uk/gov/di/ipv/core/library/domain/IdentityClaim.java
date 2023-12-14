@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 
@@ -26,6 +27,7 @@ public class IdentityClaim {
     }
 
     // Concatenate the first name we have into a single string
+    @JsonIgnore
     public String getFullName() {
         StringBuilder nameBuilder = new StringBuilder();
         name.get(0)
