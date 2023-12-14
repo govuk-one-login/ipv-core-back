@@ -14,15 +14,22 @@ public class EmailService {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int NUMBER_OF_RETRIES = 3;
-    private static final int RETRIES_WAIT_MILLISECONDS = 3000;
+    private static final int RETRY_WAIT_MILLISECONDS = 3000;
 
     private final ConfigService configService;
     private final NotificationClient notificationClient;
+    private final int retryWaitInMilliseconds;
+
+    @ExcludeFromGeneratedCoverageReport
+    public EmailService(ConfigService configService, NotificationClient notificationClient, int retryWaitInMilliseconds) {
+        this.configService = configService;
+        this.notificationClient = notificationClient;
+        this.retryWaitInMilliseconds = retryWaitInMilliseconds;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public EmailService(ConfigService configService, NotificationClient notificationClient) {
-        this.configService = configService;
-        this.notificationClient = notificationClient;
+        this(configService, notificationClient, RETRY_WAIT_MILLISECONDS);
     }
 
     public void sendUserTriggeredIdentityResetConfirmation(
@@ -74,7 +81,7 @@ public class EmailService {
             retries++;
 
             try {
-                Thread.sleep(RETRIES_WAIT_MILLISECONDS);
+                Thread.sleep(retryWaitInMilliseconds);
             } catch (InterruptedException e) {
                 // Set the interruption flag
                 Thread.currentThread().interrupt();
