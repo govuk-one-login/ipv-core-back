@@ -24,4 +24,20 @@ public class IdentityClaim {
     public List<BirthDate> getBirthDate() {
         return birthDate;
     }
+
+    // Concatenate the first name we have into a single string
+    public String getFullName() {
+        StringBuilder nameBuilder = new StringBuilder();
+        name.get(0).getNameParts()
+                .forEach(
+                        namePart -> {
+                            if (nameBuilder.isEmpty()) {
+                                nameBuilder.append(namePart.getValue());
+                            } else {
+                                nameBuilder.append(" ").append(namePart.getValue());
+                            }
+                        });
+
+        return nameBuilder.toString();
+    }
 }
