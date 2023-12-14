@@ -11,13 +11,13 @@ public class IdentityClaimTest {
     @Test
     void getFullName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
         // Arrange
-        var underTest = new IdentityClaim(
-                Arrays.asList(
-                    new Name(
+        var underTest =
+                new IdentityClaim(
                         Arrays.asList(
-                                new NameParts("SingleNamePart", "dummyType")))),
-                Arrays.asList(
-                        new BirthDate()));
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("SingleNamePart", "dummyType")))),
+                        Arrays.asList(new BirthDate()));
 
         // Act
         var result = underTest.getFullName();
@@ -29,14 +29,14 @@ public class IdentityClaimTest {
     @Test
     void getFullName_whenCalledWithOneNameWithMultipleNameParts_ReturnsTheNamePartsConcatenated() {
         // Arrange
-        var underTest = new IdentityClaim(
-                Arrays.asList(
-                        new Name(
-                                Arrays.asList(
-                                        new NameParts("FirstNamePart", "dummyType"),
-                                        new NameParts("SecondNamePart", "dummyType")))),
-                Arrays.asList(
-                        new BirthDate()));
+        var underTest =
+                new IdentityClaim(
+                        Arrays.asList(
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("FirstNamePart", "dummyType"),
+                                                new NameParts("SecondNamePart", "dummyType")))),
+                        Arrays.asList(new BirthDate()));
 
         // Act
         var result = underTest.getFullName();
@@ -48,18 +48,18 @@ public class IdentityClaimTest {
     @Test
     void getFullName_whenCalledWithMultipleNames_ReturnsOnlyTheFirstName() {
         // Arrange
-        var underTest = new IdentityClaim(
-                Arrays.asList(
-                        new Name(
-                                Arrays.asList(
-                                        new NameParts("FirstNamePart1", "dummyType"),
-                                        new NameParts("FirstNamePart2", "dummyType"))),
-                        new Name(
-                                Arrays.asList(
-                                        new NameParts("SecondNamePart1", "dummyType"),
-                                        new NameParts("SecondNamePart2", "dummyType")))),
-                Arrays.asList(
-                        new BirthDate()));
+        var underTest =
+                new IdentityClaim(
+                        Arrays.asList(
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("FirstNamePart1", "dummyType"),
+                                                new NameParts("FirstNamePart2", "dummyType"))),
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("SecondNamePart1", "dummyType"),
+                                                new NameParts("SecondNamePart2", "dummyType")))),
+                        Arrays.asList(new BirthDate()));
 
         // Act
         var result = underTest.getFullName();

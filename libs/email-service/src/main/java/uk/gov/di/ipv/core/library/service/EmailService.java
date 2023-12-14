@@ -21,7 +21,10 @@ public class EmailService {
     private final int retryWaitInMilliseconds;
 
     @ExcludeFromGeneratedCoverageReport
-    public EmailService(ConfigService configService, NotificationClient notificationClient, int retryWaitInMilliseconds) {
+    public EmailService(
+            ConfigService configService,
+            NotificationClient notificationClient,
+            int retryWaitInMilliseconds) {
         this.configService = configService;
         this.notificationClient = notificationClient;
         this.retryWaitInMilliseconds = retryWaitInMilliseconds;
