@@ -2,19 +2,27 @@ package uk.gov.di.ipv.core.resetidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -24,6 +32,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
@@ -33,6 +42,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private final ConfigService configService;
+    private final AuditService auditService;
     private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -41,11 +51,13 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     @SuppressWarnings("unused") // Used by AWS
     public ResetIdentityHandler(
             ConfigService configService,
+            AuditService auditService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
+        this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
@@ -56,6 +68,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     @ExcludeFromGeneratedCoverageReport
     public ResetIdentityHandler() {
         this.configService = new ConfigService();
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
@@ -85,12 +98,37 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
+            if (isUserInitiated) {
+                sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
+            }
+
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("HTTP response exception", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } catch (SqsException e) {
+            LOGGER.error(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
+                    .toObjectMap();
         }
+    }
+
+    private void sendIpvVcResetAuditEvent(
+            ProcessRequest event, String userId, String govukSigninJourneyId)
+            throws SqsException, HttpResponseExceptionWithErrorBody {
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_CORE_VC_RESET,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        new AuditEventUser(
+                                userId,
+                                getIpvSessionId(event),
+                                govukSigninJourneyId,
+                                getIpAddress(event))));
     }
 }

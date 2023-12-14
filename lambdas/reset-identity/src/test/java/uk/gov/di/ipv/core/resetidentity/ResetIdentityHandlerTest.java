@@ -8,11 +8,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -23,6 +26,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -51,6 +55,7 @@ public class ResetIdentityHandlerTest {
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private CriResponseService criResponseService;
+    @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ConfigService configService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -78,7 +83,7 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void shouldDeleteUsersVcsAndReturnNext() {
+    void shouldDeleteUsersVcsAndReturnNext() throws SqsException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -89,6 +94,7 @@ public class ResetIdentityHandlerTest {
 
         verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+        verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }
