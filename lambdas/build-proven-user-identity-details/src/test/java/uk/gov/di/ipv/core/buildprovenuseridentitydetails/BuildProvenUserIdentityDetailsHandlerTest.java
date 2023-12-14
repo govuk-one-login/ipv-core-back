@@ -55,7 +55,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final CredentialIssuerConfig ISSUER_CONFIG_ADDRESS =
             createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");

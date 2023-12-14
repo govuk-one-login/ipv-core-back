@@ -190,7 +190,7 @@ public class BuildCriOauthRequestHandler
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            String oauthState = SecureTokenHelper.generate();
+            String oauthState = SecureTokenHelper.getInstance().generate();
             JWEObject jweObject =
                     signEncryptJar(
                             ipvSessionItem,

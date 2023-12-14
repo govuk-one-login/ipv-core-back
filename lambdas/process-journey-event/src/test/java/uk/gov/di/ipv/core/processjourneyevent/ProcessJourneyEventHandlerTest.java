@@ -195,10 +195,10 @@ class ProcessJourneyEventHandlerTest {
                 Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
-        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -292,10 +292,10 @@ class ProcessJourneyEventHandlerTest {
 
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(userState);
-        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
         when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("core");
@@ -307,7 +307,7 @@ class ProcessJourneyEventHandlerTest {
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         return ClientOAuthSessionItem.builder()
-                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
                 .responseType("code")
                 .state("teststate")
                 .redirectUri("https://example.com/redirect")

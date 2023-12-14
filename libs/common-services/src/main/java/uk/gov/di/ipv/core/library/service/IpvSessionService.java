@@ -95,7 +95,7 @@ public class IpvSessionService {
             String clientOAuthSessionId, ErrorObject errorObject, String emailAddress) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 

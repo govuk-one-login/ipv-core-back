@@ -52,7 +52,8 @@ class CheckGpg45ScoreHandlerTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
