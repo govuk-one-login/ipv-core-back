@@ -98,6 +98,7 @@ class CheckExistingIdentityHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
+    private static final String TICF_CRI = "ticf";
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
@@ -182,6 +183,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
+        verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
