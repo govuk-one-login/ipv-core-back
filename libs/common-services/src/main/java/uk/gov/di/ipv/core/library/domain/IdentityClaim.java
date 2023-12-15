@@ -26,21 +26,9 @@ public class IdentityClaim {
         return birthDate;
     }
 
-    // Concatenate the first name we have into a single string
+    // Return the first name that we have (they should all be the same for now)
     @JsonIgnore
     public String getFullName() {
-        StringBuilder nameBuilder = new StringBuilder();
-        name.get(0)
-                .getNameParts()
-                .forEach(
-                        namePart -> {
-                            if (nameBuilder.isEmpty()) {
-                                nameBuilder.append(namePart.getValue());
-                            } else {
-                                nameBuilder.append(" ").append(namePart.getValue());
-                            }
-                        });
-
-        return nameBuilder.toString();
+        return name.get(0).getFullName();
     }
 }

@@ -9,43 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class IdentityClaimTest {
 
     @Test
-    void getFullName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
-        // Arrange
-        var underTest =
-                new IdentityClaim(
-                        Arrays.asList(
-                                new Name(
-                                        Arrays.asList(
-                                                new NameParts("SingleNamePart", "dummyType")))),
-                        Arrays.asList(new BirthDate()));
-
-        // Act
-        var result = underTest.getFullName();
-
-        // Assert
-        assertEquals("SingleNamePart", result);
-    }
-
-    @Test
-    void getFullName_whenCalledWithOneNameWithMultipleNameParts_ReturnsTheNamePartsConcatenated() {
-        // Arrange
-        var underTest =
-                new IdentityClaim(
-                        Arrays.asList(
-                                new Name(
-                                        Arrays.asList(
-                                                new NameParts("FirstNamePart", "dummyType"),
-                                                new NameParts("SecondNamePart", "dummyType")))),
-                        Arrays.asList(new BirthDate()));
-
-        // Act
-        var result = underTest.getFullName();
-
-        // Assert
-        assertEquals("FirstNamePart SecondNamePart", result);
-    }
-
-    @Test
     void getFullName_whenCalledWithMultipleNames_ReturnsOnlyTheFirstName() {
         // Arrange
         var underTest =

@@ -44,6 +44,7 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
+    private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String TEST_JOURNEY = "journey/reset-identity";
     private static final String IS_USER_INITIATED = "isUserInitiated";
 
@@ -66,6 +67,7 @@ public class ResetIdentityHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
@@ -80,7 +82,8 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenFraudReset_shouldDeleteUsersVcsAndReturnNext() throws SqsException {
+    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext()
+            throws SqsException {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -134,7 +137,8 @@ public class ResetIdentityHandlerTest {
         verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
-        verify(emailService, times(1)).sendUserTriggeredIdentityResetConfirmation(any(), any());
+        verify(emailService, times(1))
+                .sendUserTriggeredIdentityResetConfirmation(TEST_EMAIL_ADDRESS, any());
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }

@@ -47,20 +47,20 @@ public class EmailService {
                 configService.getSsmParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
-        LOGGER.info("Got template ID {}", templateId);
-        SendEmail(templateId, userEmailAddress, templateParameters);
+        LOGGER.debug("Got template ID {}", templateId);
+        sendEmail(templateId, userEmailAddress, templateParameters);
     }
 
-    private void SendEmail(
+    private void sendEmail(
             String templateId, String toAddress, Map<String, Object> personalisation) {
 
         var retries = 0;
 
         while (true) {
             try {
-                LOGGER.info("About to send email");
+                LOGGER.debug("About to send email");
                 notificationClient.sendEmail(templateId, toAddress, personalisation, null, null);
-                LOGGER.info("Email sent");
+                LOGGER.debug("Email sent");
                 return;
             } catch (NotificationClientException e) {
                 LOGGER.warn(
