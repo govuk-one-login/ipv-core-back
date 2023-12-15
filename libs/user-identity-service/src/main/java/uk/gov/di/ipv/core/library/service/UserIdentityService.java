@@ -118,10 +118,6 @@ public class UserIdentityService {
         return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
     }
 
-    public void deleteVcItem(String userId, String criId) {
-        dataStore.delete(userId, criId);
-    }
-
     public UserIdentity generateUserIdentity(
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
