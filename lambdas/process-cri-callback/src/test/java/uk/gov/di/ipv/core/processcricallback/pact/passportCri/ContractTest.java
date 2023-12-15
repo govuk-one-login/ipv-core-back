@@ -13,17 +13,21 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
@@ -32,6 +36,8 @@ import java.net.URISyntaxException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -41,6 +47,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
@@ -48,7 +57,8 @@ import static org.mockito.Mockito.when;
 @PactTestFor(providerName = "PassportCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 public class ContractTest {
-
+    private static final String TEST_USER = "test-subject";
+    private static final String TEST_ISSUER = "dummyPassportComponentId";
     public static final String IPV_CORE_CLIENT_ID = "ipv-core";
     public static final String PRIVATE_API_KEY = "dummyApiKey";
     public static final String CRI_SIGNING_PRIVATE_KEY_JWK =
@@ -89,24 +99,33 @@ public class ContractTest {
                 .toPact();
     }
 
+    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyAuthCode is a valid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("dummyPassportComponentId is the passport CRI component ID")
+                .given(
+                        "Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Valid auth code")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        generateVerifiableCredential(
+                                vcClaim(CREDENTIAL_ATTRIBUTES_2), TEST_USER, TEST_ISSUER),
+                        "application/jwt; charset=UTF-8")
+                .toPact();
+    }
+
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
     void testCallToDummyPassportCri(MockServer mockServer)
             throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
-        var credentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        new URI("http://localhost:" + mockServer.getPort() + "/token"),
-                        new URI("http://localhost:" + mockServer.getPort() + "/credential"),
-                        new URI("http://localhost:" + mockServer.getPort() + "/authorize"),
-                        IPV_CORE_CLIENT_ID,
-                        CRI_SIGNING_PRIVATE_KEY_JWK,
-                        CRI_RSA_ENCRYPTION_PUBLIC_JWK,
-                        "dummyPassportComponentId",
-                        URI.create(
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport"),
-                        true,
-                        false);
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
@@ -156,5 +175,86 @@ public class ContractTest {
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
         assertThat(accessToken.getLifetime(), greaterThan(0L));
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
+    void testCallToDummyPassportIssueCredential(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
+        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
+
+        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
+        ciConfigMap.put("A02", ciConfig1);
+        ciConfigMap.put("A03", ciConfig2);
+
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        var verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(mockConfigService);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockSigner,
+                        mockSecureTokenHelper,
+                        Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC));
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        new CriCallbackRequest(
+                                "dummyAuthCode",
+                                credentialIssuerConfig.getClientId(),
+                                "dummySessionId",
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
+                                "dummyState",
+                                null,
+                                null,
+                                "dummyIpAddress",
+                                "dummyFeatureSet"),
+                        new CriOAuthSessionItem(
+                                "dummySessionId",
+                                "dummyOAuthSessionId",
+                                "dummyCriId",
+                                "dummyConnection",
+                                900));
+
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+                            } catch (VerifiableCredentialException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @NotNull
+    private static CredentialIssuerConfig getMockCredentialIssuerConfig(MockServer mockServer)
+            throws URISyntaxException {
+        return new CredentialIssuerConfig(
+                new URI("http://localhost:" + mockServer.getPort() + "/token"),
+                new URI("http://localhost:" + mockServer.getPort() + "/credential"),
+                new URI("http://localhost:" + mockServer.getPort() + "/authorize"),
+                IPV_CORE_CLIENT_ID,
+                CRI_SIGNING_PRIVATE_KEY_JWK,
+                CRI_RSA_ENCRYPTION_PUBLIC_JWK,
+                "dummyPassportComponentId",
+                URI.create(
+                        "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport"),
+                true,
+                false);
     }
 }

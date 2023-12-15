@@ -174,8 +174,6 @@ public class InitialiseIpvSessionHandler
                             auditEventUser,
                             reproveAuditExtension);
 
-            LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
-
             auditService.sendAuditEvent(auditEvent);
 
             Map<String, String> response =

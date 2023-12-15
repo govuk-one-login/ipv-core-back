@@ -179,10 +179,6 @@ public class CriApiService {
                 buildFetchVerifiableCredentialRequest(
                         accessToken, callbackRequest, criOAuthSessionItem);
 
-        LOGGER.warn(credentialRequest.toString());
-        LOGGER.warn(callbackRequest.toString());
-        LOGGER.warn(criId);
-
         try {
             var response = credentialRequest.send();
 
@@ -201,8 +197,6 @@ public class CriApiService {
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
-
-            LOGGER.warn(response.toString());
 
             var responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
@@ -249,8 +243,6 @@ public class CriApiService {
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
-
-        LOGGER.warn(criConfig.getCredentialUrl());
 
         if (apiKey != null) {
             LOGGER.info(
