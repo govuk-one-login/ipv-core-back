@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 
 import java.util.List;
 
@@ -15,12 +16,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuditExtensionsUserIdentity<T> implements AuditExtensions {
+public class AuditExtensionsUserIdentity implements AuditExtensions {
     @JsonProperty private String levelOfConfidence;
     @JsonProperty boolean ciFail;
     @JsonProperty boolean hasMitigations;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonProperty("https://vocab.account.gov.uk/v1/returnCode")
-    List<T> returnCode;
+    @JsonProperty("returnCodes")
+    List<AuditEventReturnCode> returnCodes;
 }

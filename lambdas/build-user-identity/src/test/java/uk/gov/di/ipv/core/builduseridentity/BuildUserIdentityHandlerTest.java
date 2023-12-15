@@ -21,16 +21,19 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.FailureEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -61,6 +64,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
@@ -212,19 +217,8 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsTrueForCheckFailureCodesWithCris()
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsTrueForP0AndFailureReturnCodes()
                     throws Exception {
-        List<FailureEventReturnCode> failureEventReturnCodes =
-                List.of(
-                        new FailureEventReturnCode(
-                                "A",
-                                List.of(
-                                        "https://review-d.account.gov.uk",
-                                        "https://review-f.account.gov.uk")),
-                        new FailureEventReturnCode(
-                                "V", List.of("https://review-k.account.gov.uk")));
-
-        userIdentity.setReturnCode(failureEventReturnCodes);
         // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
@@ -235,7 +229,48 @@ class BuildUserIdentityHandlerTest {
                         "ip-address",
                         TEST_IP_ADDRESS);
         event.setHeaders(headers);
-
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01",
+                                                ContraIndicator.builder()
+                                                        .code("X01")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-d.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .mitigation(
+                                                                List.of(
+                                                                        Mitigation.builder()
+                                                                                .code("V03")
+                                                                                .build()))
+                                                        .build(),
+                                        "X02",
+                                                ContraIndicator.builder()
+                                                        .code("X02")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-q.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "Z03",
+                                                ContraIndicator.builder()
+                                                        .code("Z03")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-z.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build()))
+                        .build();
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        ipvSessionItem.setVot("P0");
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
@@ -244,9 +279,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -277,10 +310,19 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         AuditExtensionsUserIdentity extensions =
                 (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
+        assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
+        assertTrue(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCode(), userIdentity.getReturnCode());
+        assertEquals(extensions.getReturnCodes().size(), 3);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("2")));
+        assertTrue(
+                extensions.getReturnCodes().stream()
+                        .anyMatch(
+                                rt ->
+                                        rt.issuers()
+                                                .toString()
+                                                .equals(
+                                                        "[https://review-z.account.gov.uk, https://review-f.account.gov.uk]")));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
@@ -289,19 +331,8 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseForCheckFailureCodesWithCris()
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndisBreachingCiThresholdFalseForP0AndFailureReturnCodes()
                     throws Exception {
-        List<FailureEventReturnCode> failureEventReturnCodes =
-                List.of(
-                        new FailureEventReturnCode(
-                                "A",
-                                List.of(
-                                        "https://review-d.account.gov.uk",
-                                        "https://review-f.account.gov.uk")),
-                        new FailureEventReturnCode(
-                                "V", List.of("https://review-k.account.gov.uk")));
-
-        userIdentity.setReturnCode(failureEventReturnCodes);
         // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
@@ -312,7 +343,43 @@ class BuildUserIdentityHandlerTest {
                         "ip-address",
                         TEST_IP_ADDRESS);
         event.setHeaders(headers);
-
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01",
+                                                ContraIndicator.builder()
+                                                        .code("X01")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-d.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "X02",
+                                                ContraIndicator.builder()
+                                                        .code("X02")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-q.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "Z03",
+                                                ContraIndicator.builder()
+                                                        .code("Z03")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-z.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build()))
+                        .build();
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        ipvSessionItem.setVot("P0");
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
@@ -321,10 +388,10 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(false);
-
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn("stub");
+        when(mockConfigService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("X");
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
@@ -343,6 +410,220 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
         assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+        AuditExtensionsUserIdentity extensions =
+                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+        assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
+        assertFalse(extensions.isCiFail());
+        assertFalse(extensions.isHasMitigations());
+        assertEquals(extensions.getReturnCodes().size(), 1);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("X")));
+        assertTrue(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+    }
+
+    @Test
+    void
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseForP0AndFailureReturnCodes()
+                    throws Exception {
+        // Arrange
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01",
+                                                ContraIndicator.builder()
+                                                        .code("X01")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-d.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "X02",
+                                                ContraIndicator.builder()
+                                                        .code("X02")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-q.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "Z03",
+                                                ContraIndicator.builder()
+                                                        .code("Z03")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-z.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build()))
+                        .build();
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        ipvSessionItem.setVot("P0");
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
+                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn("stub");
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+        AuditExtensionsUserIdentity extensions =
+                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+        assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
+        assertTrue(extensions.isCiFail());
+        assertFalse(extensions.isHasMitigations());
+        assertEquals(extensions.getReturnCodes().size(), 3);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("2")));
+        assertTrue(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+    }
+
+    @Test
+    void
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsTrueForP2AndSuccessReturnCodes()
+                    throws Exception {
+        // Arrange
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "A"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "A"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        ContraIndicators contraIndicators =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(
+                                Map.of(
+                                        "X01",
+                                                ContraIndicator.builder()
+                                                        .code("X01")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-d.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .mitigation(
+                                                                List.of(
+                                                                        Mitigation.builder()
+                                                                                .code("V03")
+                                                                                .build()))
+                                                        .build(),
+                                        "X02",
+                                                ContraIndicator.builder()
+                                                        .code("X02")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-q.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build(),
+                                        "Z03",
+                                                ContraIndicator.builder()
+                                                        .code("Z03")
+                                                        .issuers(
+                                                                List.of(
+                                                                        "https://review-z.account.gov.uk",
+                                                                        "https://review-f.account.gov.uk"))
+                                                        .build()))
+                        .build();
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        ipvSessionItem.setVot("P2");
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
+                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn("stub");
+        when(mockConfigService.getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("A");
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -354,9 +635,18 @@ class BuildUserIdentityHandlerTest {
         AuditExtensionsUserIdentity extensions =
                 (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
         assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertTrue(!extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCode().size(), 2);
+        assertTrue(extensions.isCiFail());
+        assertTrue(extensions.isHasMitigations());
+        assertEquals(extensions.getReturnCodes().size(), 1);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("A")));
+        assertTrue(
+                extensions.getReturnCodes().stream()
+                        .anyMatch(
+                                rt ->
+                                        rt.issuers()
+                                                .toString()
+                                                .equals(
+                                                        "[https://review-d.account.gov.uk, https://review-f.account.gov.uk, https://review-q.account.gov.uk, https://review-f.account.gov.uk]")));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 

@@ -16,10 +16,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
-import uk.gov.di.ipv.core.library.domain.FailureEventReturnCode;
-import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,9 +40,10 @@ class AuditServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private AuditService auditService;
-    private static final String RETURN_CODE_KEY = "https://vocab.account.gov.uk/v1/returnCode";
+    private static final String RETURN_CODE_KEY = "returnCodes";
 
-    private static final String SUCCESS_RETURN_CODES_TEST = "[{\"code\":\"A\"},{\"code\":\"V\"}]";
+    private static final String SUCCESS_RETURN_CODES_TEST =
+            "[{\"code\":\"A\",\"issuers\":[]},{\"code\":\"V\",\"issuers\":[]}]";
 
     private static final String FAILURE_RETURN_CODES_TEST =
             "[{\"code\":\"A\",\"issuers\":[\"https://review-d.account.gov.uk\",\"https://review-f.account.gov.uk\"]},{\"code\":\"V\",\"issuers\":[\"https://review-k.account.gov.uk\"]}]";
@@ -174,7 +175,10 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithExitCode()
             throws JsonProcessingException, SqsException {
-        List<ReturnCode> returnCodes = List.of(new ReturnCode("A"), new ReturnCode("V"));
+        List<AuditEventReturnCode> returnCodes =
+                List.of(
+                        new AuditEventReturnCode("A", Collections.emptyList()),
+                        new AuditEventReturnCode("V", Collections.emptyList()));
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity("levelOFConfidence", false, false, returnCodes);
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
@@ -200,18 +204,17 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithFailureCodes()
             throws JsonProcessingException, SqsException {
-        List<FailureEventReturnCode> failureEventReturnCodes =
+        List<AuditEventReturnCode> auditEventReturnCodes =
                 List.of(
-                        new FailureEventReturnCode(
+                        new AuditEventReturnCode(
                                 "A",
                                 List.of(
                                         "https://review-d.account.gov.uk",
                                         "https://review-f.account.gov.uk")),
-                        new FailureEventReturnCode(
-                                "V", List.of("https://review-k.account.gov.uk")));
+                        new AuditEventReturnCode("V", List.of("https://review-k.account.gov.uk")));
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(
-                        "levelOFConfidence", false, false, failureEventReturnCodes);
+                        "levelOFConfidence", false, false, auditEventReturnCodes);
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =

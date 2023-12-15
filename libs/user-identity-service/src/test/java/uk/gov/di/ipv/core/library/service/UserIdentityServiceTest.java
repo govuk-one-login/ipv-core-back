@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.FailureEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -30,7 +29,6 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1161,11 +1159,10 @@ class UserIdentityServiceTest {
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
                         USER_ID_1, "test-sub", "P0", contraIndicators);
-        List<FailureEventReturnCode> returnCodes = userIdentity.getReturnCode();
-        assertEquals(returnCodes.size(), 3);
-        assertTrue(returnCodes.get(0).issuers().isEmpty());
-        assertTrue(returnCodes.stream().anyMatch(rt -> rt.code().equals("1")));
-        assertTrue(returnCodes.stream().anyMatch(rt -> rt.code().equals("2")));
+
+        assertEquals(
+                List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
+                userIdentity.getReturnCode());
     }
 
     @Test
@@ -1215,105 +1212,6 @@ class UserIdentityServiceTest {
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
                 userIdentity.getReturnCode());
-    }
-
-    @Test
-    void generateUserIdentityShouldDeduplicateExitCodesForCheckFailureCodes() throws Exception {
-        mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(
-                        Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3"),
-                                "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
-
-        ContraIndicators contraIndicators =
-                ContraIndicators.builder()
-                        .contraIndicatorsMap(
-                                Map.of(
-                                        "X01", ContraIndicator.builder().code("X01").build(),
-                                        "X02",
-                                                ContraIndicator.builder()
-                                                        .code("X02")
-                                                        .mitigation(
-                                                                List.of(
-                                                                        Mitigation.builder()
-                                                                                .code("V03")
-                                                                                .build()))
-                                                        .build(),
-                                        "Z03", ContraIndicator.builder().code("Z03").build(),
-                                        "Z04", ContraIndicator.builder().code("Z04").build()))
-                        .build();
-
-        UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", contraIndicators);
-
-        List<FailureEventReturnCode> failureEventReturnCodes = userIdentity.getReturnCode();
-        assertEquals(failureEventReturnCodes.size(), 3);
-        assertTrue(failureEventReturnCodes.get(0).issuers().isEmpty());
-        assertTrue(failureEventReturnCodes.stream().anyMatch(fc -> fc.code().equals("3")));
-    }
-
-    @Test
-    void generateUserIdentityShouldDeduplicateExitCodesAndFailureCodesForCheckFailureCodes()
-            throws Exception {
-        mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(
-                        Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "2"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "1"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3"),
-                                "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
-
-        ContraIndicators contraIndicators =
-                ContraIndicators.builder()
-                        .contraIndicatorsMap(
-                                Map.of(
-                                        "X01",
-                                                ContraIndicator.builder()
-                                                        .code("X01")
-                                                        .issuers(
-                                                                List.of(
-                                                                        "https://review-d.account.gov.uk",
-                                                                        "https://review-f.account.gov.uk"))
-                                                        .build(),
-                                        "X02",
-                                                ContraIndicator.builder()
-                                                        .code("X02")
-                                                        .issuers(Collections.emptyList())
-                                                        .mitigation(
-                                                                List.of(
-                                                                        Mitigation.builder()
-                                                                                .code("V03")
-                                                                                .build()))
-                                                        .build(),
-                                        "Z03",
-                                                ContraIndicator.builder()
-                                                        .code("Z03")
-                                                        .issuers(
-                                                                List.of(
-                                                                        "https://review-k.account.gov.uk"))
-                                                        .build(),
-                                        "Z04",
-                                                ContraIndicator.builder()
-                                                        .code("Z04")
-                                                        .issuers(
-                                                                List.of(
-                                                                        "https://review-k.account.gov.uk"))
-                                                        .build()))
-                        .build();
-
-        UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", contraIndicators);
-
-        List<FailureEventReturnCode> failureEventReturnCodes = userIdentity.getReturnCode();
-        assertEquals(failureEventReturnCodes.size(), 3);
-        assertTrue(failureEventReturnCodes.get(0).issuers().isEmpty());
-        assertTrue(failureEventReturnCodes.stream().anyMatch(fc -> fc.code().equals("3")));
     }
 
     @Test

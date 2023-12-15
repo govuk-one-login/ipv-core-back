@@ -15,7 +15,7 @@ import java.util.List;
 @Setter
 @ExcludeFromGeneratedCoverageReport
 @Builder
-public class UserIdentity<T> {
+public class UserIdentity {
 
     public static final String VCS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/credentialJWT";
     public static final String ADDRESS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/address";
@@ -53,7 +53,7 @@ public class UserIdentity<T> {
     @JsonProperty private String vtm;
 
     @JsonProperty(RETURN_CODE_NAME)
-    private List<T> returnCode;
+    private List<ReturnCode> returnCode;
 
     @JsonCreator
     public UserIdentity(
@@ -66,7 +66,7 @@ public class UserIdentity<T> {
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
-            @JsonProperty(value = RETURN_CODE_NAME) List<T> returnCode) {
+            @JsonProperty(value = RETURN_CODE_NAME) List<ReturnCode> returnCode) {
         this.vcs = new ArrayList<>(vcs);
         this.identityClaim = identityClaim;
         this.addressClaim = addressClaim;
