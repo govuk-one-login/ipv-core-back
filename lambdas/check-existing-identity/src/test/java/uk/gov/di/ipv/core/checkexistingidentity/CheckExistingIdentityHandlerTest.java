@@ -183,7 +183,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
-        verify(mockVerifiableCredentialService).deleteVcItem(TEST_USER_ID, TICF_CRI);
+        verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());

@@ -102,11 +102,11 @@ public class VerifiableCredentialService {
             LOGGER.info(message);
         }
         for (VcStoreItem item : vcStoreItems) {
-            deleteVcItem(item.getUserId(), item.getCredentialIssuer());
+            deleteVcStoreItem(item.getUserId(), item.getCredentialIssuer());
         }
     }
 
-    public void deleteVcItem(String userId, String criId) {
+    public void deleteVcStoreItem(String userId, String criId) {
         dataStore.delete(userId, criId);
     }
 }

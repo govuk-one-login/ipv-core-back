@@ -164,7 +164,7 @@ public class CheckExistingIdentityHandler
             String userId = clientOAuthSessionItem.getUserId();
 
             // Clear TICF VCs
-            verifiableCredentialService.deleteVcItem(userId, TICF_CRI);
+            verifiableCredentialService.deleteVcStoreItem(userId, TICF_CRI);
 
             // Reset identity if reprove is true.
             Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
