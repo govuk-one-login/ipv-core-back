@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -64,8 +63,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
@@ -331,7 +328,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndisBreachingCiThresholdFalseForP0AndFailureReturnCodes()
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndOnlyNotFoundReturnCodeInCiConfigForAuditEventReturnCodes()
                     throws Exception {
         // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -346,7 +343,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
         ContraIndicators contraIndicators =
@@ -389,9 +386,6 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
         when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn("stub");
-        when(mockConfigService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("X");
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
@@ -424,9 +418,9 @@ class BuildUserIdentityHandlerTest {
         assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
         assertFalse(extensions.isCiFail());
         assertFalse(extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCodes().size(), 1);
-        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("X")));
-        assertTrue(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
+        assertEquals(extensions.getReturnCodes().size(), 3);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("1")));
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.issuers().isEmpty()));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
@@ -435,7 +429,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseForP0AndFailureReturnCodes()
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndOnlyAllFoundReturnCodeInCiConfigForAuditEventReturnCodes()
                     throws Exception {
         // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -450,7 +444,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "🦆"),
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
         ContraIndicators contraIndicators =
@@ -493,9 +487,6 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
         when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn("stub");
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
@@ -529,8 +520,8 @@ class BuildUserIdentityHandlerTest {
         assertTrue(extensions.isCiFail());
         assertFalse(extensions.isHasMitigations());
         assertEquals(extensions.getReturnCodes().size(), 3);
-        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("2")));
-        assertTrue(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("3")));
+        assertFalse(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
@@ -539,7 +530,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsTrueForP2AndSuccessReturnCodes()
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndOnlyAllNotFoundReturnCodeInCiConfigForAuditEventReturnCodes()
                     throws Exception {
         // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -555,8 +546,8 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(
                         Map.of(
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "A"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "A"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "B"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "C")));
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
@@ -602,9 +593,6 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
         when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn("stub");
-        when(mockConfigService.getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("A");
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
@@ -637,16 +625,9 @@ class BuildUserIdentityHandlerTest {
         assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
         assertTrue(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCodes().size(), 1);
-        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("A")));
-        assertTrue(
-                extensions.getReturnCodes().stream()
-                        .anyMatch(
-                                rt ->
-                                        rt.issuers()
-                                                .toString()
-                                                .equals(
-                                                        "[https://review-d.account.gov.uk, https://review-f.account.gov.uk, https://review-q.account.gov.uk, https://review-f.account.gov.uk]")));
+        assertEquals(extensions.getReturnCodes().size(), 3);
+        assertTrue(extensions.getReturnCodes().stream().anyMatch(rt -> rt.code().equals("1")));
+        assertTrue(extensions.getReturnCodes().stream().allMatch(rt -> rt.issuers().isEmpty()));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 

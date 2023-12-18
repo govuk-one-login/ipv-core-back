@@ -26,8 +26,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -47,15 +47,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -166,7 +160,7 @@ public class BuildUserIdentityHandler
             userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
             sendIdentityIssuedAuditEvent(
-                    ipvSessionItem, ipvSessionItem.getVot(), auditEventUser, contraIndicators);
+                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
 
@@ -201,16 +195,26 @@ public class BuildUserIdentityHandler
 
     private void sendIdentityIssuedAuditEvent(
             IpvSessionItem ipvSessionItem,
-            String vot,
             AuditEventUser auditEventUser,
-            ContraIndicators contraIndicators)
+            ContraIndicators contraIndicators,
+            UserIdentity userIdentity)
             throws SqsException {
+
+        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
+        var auditEventReturnCodes =
+                userIdentity.getReturnCode().stream()
+                        .map(
+                                returnCode ->
+                                        getAuditEventReturnCodes(
+                                                returnCode, contraIndicators, configMap))
+                        .toList();
+
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(
                         ipvSessionItem.getVot(),
                         ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
                         contraIndicators.hasMitigations(),
-                        getReturnCodes(vot, contraIndicators));
+                        auditEventReturnCodes);
 
         LOGGER.info(
                 new StringMapMessage()
@@ -225,78 +229,20 @@ public class BuildUserIdentityHandler
                         extensions));
     }
 
-    private List<AuditEventReturnCode> getReturnCodes(
-            String vot, ContraIndicators contraIndicators) {
-        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
-        var isBreachingCiThreshold = ciMitUtilityService.isBreachingCiThreshold(contraIndicators);
-        List<AuditEventReturnCode> auditEventReturnCodes =
-                getAuditEventReturnCodes(configMap, vot, contraIndicators, isBreachingCiThreshold);
-        if (vot.equals(VectorOfTrust.P2.toString()) && !auditEventReturnCodes.isEmpty()) {
-            return getSuccessReturnCode(auditEventReturnCodes);
-        }
-        return auditEventReturnCodes;
-    }
-
-    private List<AuditEventReturnCode> getSuccessReturnCode(
-            List<AuditEventReturnCode> auditEventReturnCodes) throws UnrecognisedCiException {
-        return auditEventReturnCodes.stream()
-                .filter(
-                        returnCode ->
-                                configService
-                                        .getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)
-                                        .contains(returnCode.code()))
-                .toList();
-    }
-
-    private List<AuditEventReturnCode> getAuditEventReturnCodes(
-            Map<String, ContraIndicatorConfig> configMap,
-            String vot,
+    private AuditEventReturnCode getAuditEventReturnCodes(
+            ReturnCode returnCode,
             ContraIndicators contraIndicators,
-            boolean isBreachingCiThreshold) {
-        return contraIndicators.getContraIndicatorsMap().values().stream()
-                .map(
-                        contraIndicator -> {
-                            ContraIndicatorConfig contraIndicatorConfig =
-                                    configMap.get(contraIndicator.getCode());
-                            String returnCode;
-                            if (vot.equals(VectorOfTrust.P2.toString())) {
-                                returnCode =
-                                        contraIndicatorConfig != null
-                                                ? contraIndicatorConfig.getReturnCode()
-                                                : configService.getSsmParameter(
-                                                        RETURN_CODES_ALWAYS_REQUIRED);
-                            } else {
-                                returnCode =
-                                        isBreachingCiThreshold
-                                                        && contraIndicator.getCode() != null
-                                                        && contraIndicatorConfig != null
-                                                ? contraIndicatorConfig.getReturnCode()
-                                                : configService.getSsmParameter(
-                                                        RETURN_CODES_NON_CI_BREACHING_P0);
-                            }
-
-                            List<String> issuers =
-                                    contraIndicator.getIssuers() != null
-                                                    && contraIndicators.hasMitigations()
-                                            ? contraIndicator.getIssuers()
-                                            : Collections.emptyList();
-                            return Map.entry(
-                                    Objects.requireNonNull(returnCode),
-                                    issuers.stream().distinct().collect(Collectors.toList()));
-                        })
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                Map.Entry::getValue,
-                                (existing, replacement) -> {
-                                    existing.addAll(replacement);
-                                    return existing;
-                                }))
-                .entrySet()
-                .stream()
-                .sorted(Comparator.comparing(Map.Entry::getKey))
-                .map(entry -> new AuditEventReturnCode(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+            Map<String, ContraIndicatorConfig> ciConfig) {
+        var issuers =
+                contraIndicators.getContraIndicatorsMap().values().stream()
+                        .filter(
+                                ci ->
+                                        ciConfig.get(ci.getCode())
+                                                .getReturnCode()
+                                                .equals(returnCode.code()))
+                        .flatMap(ci -> ci.getIssuers().stream())
+                        .toList();
+        return new AuditEventReturnCode(returnCode.code(), issuers);
     }
 
     private APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
