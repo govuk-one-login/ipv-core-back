@@ -17,11 +17,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuditExtensionsUserIdentity implements AuditExtensions {
-    @JsonProperty private String levelOfConfidence;
+    @JsonProperty String levelOfConfidence;
     @JsonProperty boolean ciFail;
     @JsonProperty boolean hasMitigations;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonProperty("returnCodes")
     List<AuditEventReturnCode> returnCodes;
 }

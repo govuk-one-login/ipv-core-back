@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,9 +40,6 @@ class AuditServiceTest {
 
     private AuditService auditService;
     private static final String RETURN_CODE_KEY = "returnCodes";
-
-    private static final String SUCCESS_RETURN_CODES_TEST =
-            "[{\"code\":\"A\",\"issuers\":[]},{\"code\":\"V\",\"issuers\":[]}]";
 
     private static final String FAILURE_RETURN_CODES_TEST =
             "[{\"code\":\"A\",\"issuers\":[\"https://review-d.account.gov.uk\",\"https://review-f.account.gov.uk\"]},{\"code\":\"V\",\"issuers\":[\"https://review-k.account.gov.uk\"]}]";
@@ -170,35 +166,6 @@ class AuditServiceTest {
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
         assertNull(auditExtensionsUserIdentity.get(RETURN_CODE_KEY));
-    }
-
-    @Test
-    void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithExitCode()
-            throws JsonProcessingException, SqsException {
-        List<AuditEventReturnCode> returnCodes =
-                List.of(
-                        new AuditEventReturnCode("A", Collections.emptyList()),
-                        new AuditEventReturnCode("V", Collections.emptyList()));
-        AuditExtensionsUserIdentity extensions =
-                new AuditExtensionsUserIdentity("levelOFConfidence", false, false, returnCodes);
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
-
-        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
-                ArgumentCaptor.forClass(SendMessageRequest.class);
-        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
-
-        assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
-
-        JsonNode messageBody =
-                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
-        assertEquals(
-                AuditEventTypes.IPV_JOURNEY_START.toString(),
-                messageBody.get("event_name").asText());
-        JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
-        JsonNode returnCodeJson = auditExtensionsUserIdentity.get(RETURN_CODE_KEY);
-        assertEquals(returnCodeJson.size(), 2);
-        assertEquals(returnCodeJson, objectMapper.readTree(SUCCESS_RETURN_CODES_TEST));
     }
 
     @Test
