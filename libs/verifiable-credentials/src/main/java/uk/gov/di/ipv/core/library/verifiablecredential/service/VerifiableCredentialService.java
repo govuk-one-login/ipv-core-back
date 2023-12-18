@@ -85,6 +85,11 @@ public class VerifiableCredentialService {
         return dataStore.getItem(userId, criId);
     }
 
+    public List<VcStoreItem> getVcStoreItems(
+            String userId, String filterKey, String start, String end) {
+        return dataStore.getItemsByRange(userId, filterKey, start, end);
+    }
+
     public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
         List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
         if (!vcStoreItems.isEmpty()) {

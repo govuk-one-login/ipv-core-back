@@ -128,6 +128,29 @@ public class DataStore<T extends DynamodbItem> {
                 .toList();
     }
 
+    public List<T> getItemsByRange(
+            String partitionValue, String filterAttribute, String start, String end) {
+        var queryConditional =
+                QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build());
+        AttributeValue startValue = AttributeValue.builder().s(start).build();
+        AttributeValue endValue = AttributeValue.builder().s(end).build();
+        var filterExpression =
+                Expression.builder()
+                        .expression("#a <= :b")
+                        .putExpressionName("#a", filterAttribute)
+                        .putExpressionValue(":b", startValue)
+                        .putExpressionValue(":c", endValue)
+                        .build();
+        var queryEnhancedRequest =
+                QueryEnhancedRequest.builder()
+                        .queryConditional(queryConditional)
+                        .filterExpression(filterExpression)
+                        .build();
+        return table.query(queryEnhancedRequest).stream()
+                .flatMap(page -> page.items().stream())
+                .toList();
+    }
+
     public T update(T item) {
         return table.updateItem(item);
     }
