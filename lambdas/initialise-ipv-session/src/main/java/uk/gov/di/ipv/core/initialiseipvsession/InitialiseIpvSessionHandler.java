@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -160,7 +159,9 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
+            //            Hardcoding to null to temporarily address INCIDENT-599
+            //            String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
+            String reproveIdentity = null;
 
             AuditExtensionsReproveIdentity reproveAuditExtension =
                     reproveIdentity == null

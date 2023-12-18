@@ -104,6 +104,7 @@ class InitialiseIpvSessionHandlerTest {
                         .claim("state", "test-state")
                         .claim("client_id", "test-client")
                         .claim("vtr", List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
+                        .claim("reprove_identity", false)
                         .build();
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
