@@ -11,6 +11,7 @@ import java.util.List;
 @ToString
 public class ContraIndicator {
     private final String code;
+    private final List<String> issuers;
     private final String issuanceDate;
     private final String document;
     private final List<String> txn;

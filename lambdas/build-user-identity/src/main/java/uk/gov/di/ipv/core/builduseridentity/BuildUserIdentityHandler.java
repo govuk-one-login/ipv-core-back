@@ -23,7 +23,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -44,6 +47,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -195,12 +199,22 @@ public class BuildUserIdentityHandler
             ContraIndicators contraIndicators,
             UserIdentity userIdentity)
             throws SqsException {
+
+        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
+        var auditEventReturnCodes =
+                userIdentity.getReturnCode().stream()
+                        .map(
+                                returnCode ->
+                                        getAuditEventReturnCodes(
+                                                returnCode, contraIndicators, configMap))
+                        .toList();
+
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(
                         ipvSessionItem.getVot(),
                         ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
                         contraIndicators.hasMitigations(),
-                        userIdentity.getReturnCode());
+                        auditEventReturnCodes);
 
         LOGGER.info(
                 new StringMapMessage()
@@ -213,6 +227,23 @@ public class BuildUserIdentityHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         extensions));
+    }
+
+    private AuditEventReturnCode getAuditEventReturnCodes(
+            ReturnCode returnCode,
+            ContraIndicators contraIndicators,
+            Map<String, ContraIndicatorConfig> ciConfig) {
+        var issuers =
+                contraIndicators.getContraIndicatorsMap().values().stream()
+                        .filter(
+                                ci ->
+                                        ciConfig.get(ci.getCode())
+                                                .getReturnCode()
+                                                .equals(returnCode.code()))
+                        .flatMap(ci -> ci.getIssuers().stream())
+                        .distinct()
+                        .toList();
+        return new AuditEventReturnCode(returnCode.code(), issuers);
     }
 
     private APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
