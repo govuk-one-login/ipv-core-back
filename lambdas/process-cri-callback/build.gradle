@@ -26,8 +26,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
-	testImplementation 'junit:junit:4.13.1'
-
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 	aspect('org.aspectj:aspectjrt') {

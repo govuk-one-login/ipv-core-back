@@ -102,12 +102,9 @@ public class ContractTest {
     @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
             throws Exception {
-        return builder.given("dummyAuthCode is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyPassportComponentId is the passport CRI component ID")
-                .given(
-                        "Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Valid auth code")
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .uponReceiving("Valid POST request")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
