@@ -81,6 +81,8 @@ CHECK_EXISTING_IDENTITY:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CALL_TICF_CRI_ON_REUSE
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
     fail-with-ci:
@@ -391,9 +393,6 @@ PYI_NEW_DETAILS_PAGE:
         PYI_CONFIRM_DELETE_DETAILS_PAGE
     end:
       targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CALL_TICF_CRI_ON_REUSE
 
 PYI_CONFIRM_DELETE_DETAILS_PAGE:
   response:
@@ -405,9 +404,6 @@ PYI_CONFIRM_DELETE_DETAILS_PAGE:
         RESET_IDENTITY_USER_INITIATED
     end:
       targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CALL_TICF_CRI_ON_REUSE
 
 RESET_IDENTITY_USER_INITIATED:
   response:
