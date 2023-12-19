@@ -19,6 +19,8 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EmailService;
+import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -26,8 +28,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 
@@ -41,17 +45,10 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
+    private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String TEST_JOURNEY = "journey/reset-identity";
     private static final String IS_USER_INITIATED = "isUserInitiated";
-    private static final ProcessRequest event =
-            ProcessRequest.processRequestBuilder()
-                    .ipvSessionId(TEST_SESSION_ID)
-                    .ipAddress(TEST_CLIENT_SOURCE_IP)
-                    .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
-                    .journey(TEST_JOURNEY)
-                    .featureSet(TEST_FEATURE_SET)
-                    .lambdaInput(Map.of(IS_USER_INITIATED, true))
-                    .build();
+
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private CriResponseService criResponseService;
@@ -59,6 +56,8 @@ public class ResetIdentityHandlerTest {
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ConfigService configService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    @Mock private EmailServiceFactory emailServiceFactory;
+    @Mock private EmailService emailService;
     @InjectMocks private ResetIdentityHandler resetIdentityHandler;
 
     private IpvSessionItem ipvSessionItem;
@@ -69,6 +68,7 @@ public class ResetIdentityHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
@@ -83,18 +83,63 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void shouldDeleteUsersVcsAndReturnNext() throws SqsException {
+    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext()
+            throws SqsException {
+        // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_CLIENT_SOURCE_IP)
+                        .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of(IS_USER_INITIATED, false))
+                        .build();
 
+        // Act
         JourneyResponse journeyResponse =
                 objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
+        // Assert
+        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, false);
+        verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+        verifyNoInteractions(mockAuditService);
+        verifyNoInteractions(emailService);
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequest_whenUserInitiated_shouldSendEmailAndRaiseAuditLog() throws SqsException {
+        // Arrange
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_CLIENT_SOURCE_IP)
+                        .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .build();
+        when(emailServiceFactory.getEmailService()).thenReturn(emailService);
+
+        // Act
+        JourneyResponse journeyResponse =
+                objectMapper.convertValue(
+                        resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
+
+        // Assert
         verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
+        verify(emailService, times(1))
+                .sendUserTriggeredIdentityResetConfirmation(eq(TEST_EMAIL_ADDRESS), any());
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }

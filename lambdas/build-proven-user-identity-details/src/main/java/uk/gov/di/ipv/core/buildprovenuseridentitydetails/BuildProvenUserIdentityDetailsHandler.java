@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -165,22 +164,10 @@ public class BuildProvenUserIdentityDetailsHandler
                         500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
             }
 
-            Name name = mapper.convertValue(identityClaim.get().getName().get(0), Name.class);
             BirthDate birthDate =
                     mapper.convertValue(identityClaim.get().getBirthDate().get(0), BirthDate.class);
 
-            StringBuilder nameBuilder = new StringBuilder();
-            name.getNameParts()
-                    .forEach(
-                            namePart -> {
-                                if (nameBuilder.length() == 0) {
-                                    nameBuilder.append(namePart.getValue());
-                                } else {
-                                    nameBuilder.append(" ").append(namePart.getValue());
-                                }
-                            });
-
-            return new NameAndDateOfBirth(nameBuilder.toString(), birthDate.getValue());
+            return new NameAndDateOfBirth(identityClaim.get().getFullName(), birthDate.getValue());
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Failed to find name and date of birth of proven user identity");
             throw new ProvenUserIdentityDetailsException(

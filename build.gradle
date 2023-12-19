@@ -48,6 +48,7 @@ ext {
 		log4j:'2.17.1',
 		lombok:'1.18.28',
 		nimbusdsOauth2OidcSdk:'9.27',
+		notificationsJavaClient: '4.1.1-RELEASE',
 		powertoolsParameters:'1.16.1',
 		powertoolsLogging:'1.16.1',
 		powertoolsTracing:'1.16.1'

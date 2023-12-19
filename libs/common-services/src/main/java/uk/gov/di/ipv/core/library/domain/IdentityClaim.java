@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 
@@ -23,5 +24,11 @@ public class IdentityClaim {
 
     public List<BirthDate> getBirthDate() {
         return birthDate;
+    }
+
+    // Return the first name that we have (they should all be the same for now)
+    @JsonIgnore
+    public String getFullName() {
+        return name.get(0).getFullName();
     }
 }

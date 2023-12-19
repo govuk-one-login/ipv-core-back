@@ -24,7 +24,10 @@ public enum ConfigurationVariable {
     CIMIT_COMPONENT_ID("cimit/componentId"),
     CIMIT_CONFIG("cimit/config"),
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
-    RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0");
+    RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
+    GOV_UK_NOTIFY_API_KEY("self/gov-uk-notify/api-key"),
+    GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
+            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation");
 
     private final String path;
 

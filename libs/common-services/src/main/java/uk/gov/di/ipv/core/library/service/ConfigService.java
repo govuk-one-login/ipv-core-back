@@ -277,9 +277,8 @@ public class ConfigService {
     }
 
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
-        String secretId = resolveBasePath() + ConfigurationVariable.CI_CONFIG.getPath();
         try {
-            String secretValue = getSecretValue(secretId);
+            String secretValue = getCoreSecretValue(ConfigurationVariable.CI_CONFIG);
             List<ContraIndicatorConfig> configList =
                     objectMapper.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
@@ -311,6 +310,11 @@ public class ConfigService {
     public boolean enabled(String featureFlagValue) {
         return Boolean.parseBoolean(
                 getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+    }
+
+    public String getCoreSecretValue(ConfigurationVariable secretName) {
+        String secretId = resolveBasePath() + secretName.getPath();
+        return getSecretValue(secretId);
     }
 
     private String getSecretValue(String secretId) {
