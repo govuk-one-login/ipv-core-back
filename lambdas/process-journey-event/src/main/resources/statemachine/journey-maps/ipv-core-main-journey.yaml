@@ -80,7 +80,7 @@ CHECK_EXISTING_IDENTITY:
       targetState: IPV_IDENTITY_REUSE_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_ON_REUSE
+          targetState: CALL_TICF_CRI_ON_REUSE
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
     fail-with-ci:
@@ -288,17 +288,17 @@ EVALUATE_GPG45_SCORES:
       targetState: IPV_SUCCESS_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF
+          targetState: CALL_TICF_CRI
     unmet:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF
+          targetState: CALL_TICF_CRI
     vcs-not-correlated:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF
+          targetState: CALL_TICF_CRI
 
 IPV_SUCCESS_PAGE:
   response:
@@ -311,26 +311,26 @@ END:
     type: process
     lambda: build-client-oauth-response
 
-CRI_TICF:
+CALL_TICF_CRI:
   response:
     type: process
     lambda: call-ticf-cri
     lambdaInput:
       journeyType: main
-  parent: CRI_STATE
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
     fail-with-ci:
       targetState: PYI_NO_MATCH
+    error:
+      targetState: ERROR
 
-CRI_TICF_ON_REUSE:
+CALL_TICF_CRI_ON_REUSE:
   response:
     type: process
     lambda: call-ticf-cri
     lambdaInput:
       journeyType: reuse
-  parent: CRI_STATE
   events:
     next:
       targetState: IPV_IDENTITY_REUSE_PAGE
@@ -339,6 +339,8 @@ CRI_TICF_ON_REUSE:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     fail-with-ci:
       targetState: PYI_NO_MATCH
+    error:
+      targetState: ERROR
 
 # Common pages
 PRE_EXPERIAN_KBV_TRANSITION_PAGE:
@@ -391,7 +393,7 @@ PYI_NEW_DETAILS_PAGE:
       targetState: IPV_IDENTITY_REUSE_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_ON_REUSE
+          targetState: CALL_TICF_CRI_ON_REUSE
 
 PYI_CONFIRM_DELETE_DETAILS_PAGE:
   response:
@@ -405,7 +407,7 @@ PYI_CONFIRM_DELETE_DETAILS_PAGE:
       targetState: IPV_IDENTITY_REUSE_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_ON_REUSE
+          targetState: CALL_TICF_CRI_ON_REUSE
 
 RESET_IDENTITY_USER_INITIATED:
   response:
