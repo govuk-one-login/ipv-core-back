@@ -116,6 +116,9 @@ IPV_IDENTITY_PENDING_PAGE:
   response:
     type: page
     pageId: page-ipv-pending
+  events:
+    next:
+      targetState: PYI_F2F_DELETE_PAGE
 
 IPV_IDENTITY_START_PAGE:
   response:
@@ -382,6 +385,31 @@ IPV_IDENTITY_REUSE_PAGE_TEST:
     next:
       targetState:
         PYI_NEW_DETAILS_PAGE
+
+PYI_F2F_DELETE_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-delete-details
+    parent: END_JOURNEY
+  events:
+    next:
+      targetState:
+        PYI_CONFIRM_DELETE_DETAILS_PAGE
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE
+
+PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-confirm-delete-details
+  events:
+    next:
+      targetState:
+        RESET_IDENTITY_USER_INITIATED
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE
 
 PYI_NEW_DETAILS_PAGE:
   response:
