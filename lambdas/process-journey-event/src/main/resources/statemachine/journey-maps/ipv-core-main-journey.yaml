@@ -390,11 +390,11 @@ PYI_F2F_DELETE_PAGE:
   response:
     type: page
     pageId: pyi-f2f-delete-details
-    parent: END_JOURNEY
+  parent: END_JOURNEY
   events:
     next:
       targetState:
-        PYI_CONFIRM_DELETE_DETAILS_PAGE
+        PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
     end:
       targetState:
         IPV_IDENTITY_PENDING_PAGE
