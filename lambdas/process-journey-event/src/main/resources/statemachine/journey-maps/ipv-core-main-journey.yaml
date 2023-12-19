@@ -513,7 +513,10 @@ CRI_HMRC_KBV_J6:
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
-      targetState: CRI_F2F
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+      checkIfDisabled:
+        f2f:
+          targetState: MITIGATION_02_OPTIONS
 
 # No photo id journey (M2B)
 CRI_CLAIMED_IDENTITY_M2B:
