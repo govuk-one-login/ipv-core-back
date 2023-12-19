@@ -241,6 +241,7 @@ public class BuildUserIdentityHandler
                                                 .getReturnCode()
                                                 .equals(returnCode.code()))
                         .flatMap(ci -> ci.getIssuers().stream())
+                        .distinct()
                         .toList();
         return new AuditEventReturnCode(returnCode.code(), issuers);
     }
