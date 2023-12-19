@@ -402,6 +402,7 @@ PYI_F2F_DELETE_PAGE:
 PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
   response:
     type: page
+    context: f2f
     pageId: pyi-confirm-delete-details
   events:
     next:
