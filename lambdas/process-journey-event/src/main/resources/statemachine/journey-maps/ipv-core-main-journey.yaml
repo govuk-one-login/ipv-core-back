@@ -512,6 +512,8 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetState: CRI_F2F
 
 # No photo id journey (M2B)
 CRI_CLAIMED_IDENTITY_M2B:
