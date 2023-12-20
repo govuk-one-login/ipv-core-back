@@ -85,6 +85,9 @@ CHECK_EXISTING_IDENTITY:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
     fail-with-ci:
       targetState: PYI_NO_MATCH
     f2f-fail:
@@ -112,10 +115,23 @@ IPV_IDENTITY_REUSE_PAGE:
     next:
       targetState: END
 
+# User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
+IPV_IDENTITY_PENDING_PAGE_TEST:
+  response:
+    type: page
+    context: f2f-delete-details
+    pageId: page-ipv-pending
+  events:
+    next:
+      targetState: PYI_F2F_DELETE_PAGE
+
 IPV_IDENTITY_PENDING_PAGE:
   response:
     type: page
     pageId: page-ipv-pending
+  events:
+    next:
+      targetState: END
 
 IPV_IDENTITY_START_PAGE:
   response:
@@ -383,6 +399,32 @@ IPV_IDENTITY_REUSE_PAGE_TEST:
       targetState:
         PYI_NEW_DETAILS_PAGE
 
+PYI_F2F_DELETE_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-delete-details
+  parent: END_JOURNEY
+  events:
+    next:
+      targetState:
+        PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE_TEST
+
+PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
+  response:
+    type: page
+    context: f2f
+    pageId: pyi-confirm-delete-details
+  events:
+    next:
+      targetState:
+        RESET_IDENTITY_USER_INITIATED_F2F
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE_TEST
+
 PYI_NEW_DETAILS_PAGE:
   response:
     type: page
@@ -418,6 +460,26 @@ RESET_IDENTITY_USER_INITIATED:
 PYI_DETAILS_DELETED_PAGE:
   response:
     type: page
+    pageId: pyi-details-deleted
+  events:
+    next:
+      targetState:
+        IPV_IDENTITY_START_PAGE
+
+RESET_IDENTITY_USER_INITIATED_F2F:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: true
+  events:
+    next:
+      targetState: PYI_DETAILS_DELETED_PAGE_F2F
+
+PYI_DETAILS_DELETED_PAGE_F2F:
+  response:
+    type: page
+    context: f2f
     pageId: pyi-details-deleted
   events:
     next:
