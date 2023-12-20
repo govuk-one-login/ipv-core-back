@@ -115,6 +115,7 @@ IPV_IDENTITY_REUSE_PAGE:
     next:
       targetState: END
 
+# User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
 IPV_IDENTITY_PENDING_PAGE_TEST:
   response:
     type: page
