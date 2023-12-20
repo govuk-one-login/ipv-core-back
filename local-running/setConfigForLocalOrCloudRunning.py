@@ -28,6 +28,7 @@ def get_local_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/nino/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/hmrcKbv/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/bav/activeConnection", "local"),
+        Param(f"/{environment}/core/credentialIssuers/ticf/activeConnection", "stub"),
 
         Param(f'/{environment}/core/credentialIssuers/dcmaw/connections/local', f'''{{
             "authorizeUrl":"http://localhost:3003/authorize",
