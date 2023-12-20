@@ -160,7 +160,7 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            String reproveIdentity = claimsSet.getStringClaim(REPROVE_IDENTITY_KEY);
+            Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
 
             AuditExtensionsReproveIdentity reproveAuditExtension =
                     reproveIdentity == null

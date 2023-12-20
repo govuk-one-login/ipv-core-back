@@ -15,7 +15,7 @@ public class AuditExtensionsReproveIdentity implements AuditExtensions {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final Boolean reproveIdentity;
 
-    public AuditExtensionsReproveIdentity(String reproveIdentity) {
-        this.reproveIdentity = Boolean.valueOf(reproveIdentity);
+    public AuditExtensionsReproveIdentity(Boolean reproveIdentity) {
+        this.reproveIdentity = reproveIdentity;
     }
 }

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,6 +42,7 @@ class ClientOAuthSessionDetailsServiceTest {
         clientOAuthSessionItem.setState("test-state");
         clientOAuthSessionItem.setUserId("test-user-id");
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
+        clientOAuthSessionItem.setReproveIdentity(true);
 
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(clientOAuthSessionItem);
 
@@ -60,6 +62,7 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(clientOAuthSessionItem.getUserId(), result.getUserId());
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(), result.getGovukSigninJourneyId());
+        assertEquals(clientOAuthSessionItem.getReproveIdentity(), result.getReproveIdentity());
     }
 
     @Test
@@ -71,6 +74,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("redirect_uri", "http://example.com")
                         .claim("state", "test-state")
                         .claim("govuk_signin_journey_id", "test-journey-id")
+                        .claim("reprove_identity", false)
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -100,6 +104,7 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertFalse(clientOAuthSessionItem.getReproveIdentity());
     }
 
     @Test
@@ -133,5 +138,6 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertNull(clientOAuthSessionItem.getReproveIdentity());
     }
 }
