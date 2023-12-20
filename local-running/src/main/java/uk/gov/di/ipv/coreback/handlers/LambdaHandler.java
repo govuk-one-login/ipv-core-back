@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandl
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
+import uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
@@ -54,6 +55,7 @@ public class LambdaHandler {
     private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private IssueClientAccessTokenHandler issueClientAccessTokenHandler;
     private BuildUserIdentityHandler buildUserIdentityHandler;
+    private CallTicfCriHandler callTicfCriHandler;
 
     public LambdaHandler() throws IOException {
         this.initialiseIpvSessionHandler = new InitialiseIpvSessionHandler();
@@ -68,6 +70,7 @@ public class LambdaHandler {
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
         this.issueClientAccessTokenHandler = new IssueClientAccessTokenHandler();
         this.buildUserIdentityHandler = new BuildUserIdentityHandler();
+        this.callTicfCriHandler = new CallTicfCriHandler();
     }
 
     private final Route initialiseSession =
@@ -148,6 +151,15 @@ public class LambdaHandler {
                                 buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
                                 checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
+                        if (!lambdaOutput.containsKey(JOURNEY)) {
+                            return gson.toJson(lambdaOutput);
+                        }
+                        journey = (String) lambdaOutput.get(JOURNEY);
+                    } else if ("/journey/call-ticf-cri".equals(journey)) {
+                        ProcessRequest processRequest =
+                                buildProcessRequest(request, processJourneyEventOutput);
+                        lambdaOutput =
+                                callTicfCriHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey(JOURNEY)) {
                             return gson.toJson(lambdaOutput);
                         }
