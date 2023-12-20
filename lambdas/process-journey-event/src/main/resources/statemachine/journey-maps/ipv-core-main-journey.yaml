@@ -420,7 +420,7 @@ PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
   events:
     next:
       targetState:
-        RESET_IDENTITY_USER_INITIATED
+        RESET_IDENTITY_USER_INITIATED_F2F
     end:
       targetState:
         IPV_IDENTITY_PENDING_PAGE_TEST
@@ -460,6 +460,26 @@ RESET_IDENTITY_USER_INITIATED:
 PYI_DETAILS_DELETED_PAGE:
   response:
     type: page
+    pageId: pyi-details-deleted
+  events:
+    next:
+      targetState:
+        IPV_IDENTITY_START_PAGE
+
+RESET_IDENTITY_USER_INITIATED_F2F:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: true
+  events:
+    next:
+      targetState: PYI_DETAILS_DELETED_PAGE_F2F
+
+PYI_DETAILS_DELETED_PAGE_F2F:
+  response:
+    type: page
+    context: f2f
     pageId: pyi-details-deleted
   events:
     next:
