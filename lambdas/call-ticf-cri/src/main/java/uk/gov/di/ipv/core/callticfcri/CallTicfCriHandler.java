@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +116,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             String featureSet = RequestHelper.getFeatureSet(input);
-            String journeyType = RequestHelper.getJourneyType(input);
             configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -124,15 +124,24 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
+            List<String> currentVCs =
+                    userIdentityService.getUserIssuedCredentials(
+                            verifiableCredentialService.getVcStoreItems(
+                                    clientOAuthSessionItem.getUserId()));
+
+            List<String> vcGatheredThisSession = new ArrayList<>();
+            for (String vc : currentVCs) {
+                SignedJWT parsedVc = SignedJWT.parse(vc);
+                if (ipvSessionItem
+                        .getVcReceivedThisSession()
+                        .contains(parsedVc.getJWTClaimsSet().getJWTID())) {
+                    vcGatheredThisSession.add(parsedVc.serialize());
+                }
+            }
+
             List<SignedJWT> ticfVcs =
                     ticfCriService.getTicfVc(
-                            clientOAuthSessionItem,
-                            ipvSessionItem,
-                            journeyType.equals(REUSE_JOURNEY_TYPE)
-                                    ? List.of()
-                                    : userIdentityService.getUserIssuedCredentials(
-                                            verifiableCredentialService.getVcStoreItems(
-                                                    clientOAuthSessionItem.getUserId())));
+                            clientOAuthSessionItem, ipvSessionItem, vcGatheredThisSession);
 
             if (ticfVcs.isEmpty()) {
                 LOGGER.info("No VC to process - returning next");
@@ -140,7 +149,12 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             }
 
             criStoringService.storeVcs(
-                    TICF_CRI, input.getIpAddress(), ipvSessionId, ticfVcs, clientOAuthSessionItem);
+                    TICF_CRI,
+                    input.getIpAddress(),
+                    ipvSessionId,
+                    ticfVcs,
+                    clientOAuthSessionItem,
+                    ipvSessionItem);
 
             ContraIndicators cis =
                     ciMitService.getContraIndicatorsVC(

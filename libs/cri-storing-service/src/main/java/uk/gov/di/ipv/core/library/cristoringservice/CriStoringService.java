@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -98,7 +99,8 @@ public class CriStoringService {
             String ipAddress,
             String ipvSessionId,
             List<SignedJWT> vcs,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem)
             throws SqsException, ParseException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException, VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
@@ -107,6 +109,7 @@ public class CriStoringService {
         var auditEventUser =
                 new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
+        List<String> vcReceived = ipvSessionItem.getVcReceivedThisSession();
         for (SignedJWT vc : vcs) {
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -120,7 +123,9 @@ public class CriStoringService {
                     List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, criId, userId);
+            vcReceived.add(vc.getJWTClaimsSet().getJWTID());
         }
+        ipvSessionItem.setVcReceivedThisSession(vcReceived);
 
         sendAuditEventForProcessedVcResponse(
                 vcs.isEmpty()

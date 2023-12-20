@@ -317,8 +317,6 @@ CALL_TICF_CRI:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: main
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
@@ -331,8 +329,6 @@ CALL_TICF_CRI_ON_REUSE:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: reuse
   events:
     next:
       targetState: IPV_IDENTITY_REUSE_PAGE

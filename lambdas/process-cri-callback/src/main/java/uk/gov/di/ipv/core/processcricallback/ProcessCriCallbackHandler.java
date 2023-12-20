@@ -301,7 +301,9 @@ public class ProcessCriCallbackHandler
                     callbackRequest.getIpAddress(),
                     callbackRequest.getIpvSessionId(),
                     vcResponse.getVerifiableCredentials(),
-                    clientOAuthSessionItem);
+                    clientOAuthSessionItem,
+                    ipvSessionItem);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
         return criCheckingService.checkVcResponse(

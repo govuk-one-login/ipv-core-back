@@ -134,12 +134,6 @@ public class RequestHelper {
                 request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD, Integer.class);
     }
 
-    public static String getJourneyType(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        return extractValueFromLambdaInput(
-                request, "journeyType", ErrorResponse.MISSING_JOURNEY_TYPE, String.class);
-    }
-
     public static Boolean getIsUserInitiated(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         return extractValueFromLambdaInput(
