@@ -128,6 +128,9 @@ IPV_IDENTITY_PENDING_PAGE:
   response:
     type: page
     pageId: page-ipv-pending
+  events:
+    next:
+      targetState: END
 
 IPV_IDENTITY_START_PAGE:
   response:
