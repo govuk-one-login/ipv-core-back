@@ -7,6 +7,9 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
@@ -33,6 +36,7 @@ import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -45,9 +49,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_CREDENTIAL_ATTRIBUTES;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
@@ -65,6 +70,7 @@ public class ContractTest {
             "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}";
     public static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
             "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
@@ -104,6 +110,11 @@ public class ContractTest {
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
+                .given("VC givenName is Mary")
+                .given("VC familyName is Watson")
+                .given("VC birthDate is 1932-02-25")
+                .given("VC passport documentNumber is 824159121")
+                .given("VC passport expiryDate is 2030-01-01")
                 .uponReceiving("Valid POST request")
                 .path("/credential")
                 .method("POST")
@@ -112,7 +123,7 @@ public class ContractTest {
                 .status(200)
                 .body(
                         generateVerifiableCredential(
-                                vcClaim(CREDENTIAL_ATTRIBUTES_2), TEST_USER, TEST_ISSUER),
+                                vcClaim(PASSPORT_CREDENTIAL_ATTRIBUTES), TEST_USER, TEST_ISSUER),
                         "application/jwt; charset=UTF-8")
                 .toPact();
     }
@@ -232,7 +243,31 @@ public class ContractTest {
                             try {
                                 verifiableCredentialJwtValidator.validate(
                                         credential, credentialIssuerConfig, TEST_USER);
-                            } catch (VerifiableCredentialException e) {
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode passportNode = credentialSubject.get("passport").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Mary", nameParts.get(0).get("value").asText());
+                                assertEquals("Watson", nameParts.get(1).get("value").asText());
+
+                                assertEquals("2030-01-01", passportNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "824159121", passportNode.get("documentNumber").asText());
+
+                                assertEquals("1932-02-25", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
