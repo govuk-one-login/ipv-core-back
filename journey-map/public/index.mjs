@@ -123,7 +123,10 @@ const setupMermaidClickHandlers = () => {
         if (def.pageId) {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the page in build';
-            link.href = `https://identity.build.account.gov.uk/ipv/page/${encodeURIComponent(def.pageId)}?preview=true&lng=en`;
+            link.href = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(def.pageId)}/en`;
+            if (def.context) {
+                link.href += `?context=${def.context}`
+            }
             link.target = '_blank';
             nodeDesc.append(link);
         }
