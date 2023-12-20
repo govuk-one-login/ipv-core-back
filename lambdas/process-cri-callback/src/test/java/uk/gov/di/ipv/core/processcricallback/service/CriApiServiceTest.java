@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
@@ -31,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Clock;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -70,7 +72,12 @@ public class CriApiServiceTest {
     void setUp(WireMockRuntimeInfo wmRuntimeInfo)
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
         mockSigner = new ECDSASigner(getPrivateKey());
-        criApiService = new CriApiService(mockConfigService, mockSigner);
+        criApiService =
+                new CriApiService(
+                        mockConfigService,
+                        mockSigner,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
 
         var criConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
         when(mockConfigService.getCriConfig(any())).thenReturn(criConfig);
@@ -192,7 +199,7 @@ public class CriApiServiceTest {
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
 
         // Act
-        var request = criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
         assertEquals(request.getHeaderMap().get(API_KEY_HEADER).get(0), TEST_API_KEY);
@@ -206,7 +213,7 @@ public class CriApiServiceTest {
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
 
         // Act
-        var request = criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
         assertEquals(
@@ -229,7 +236,7 @@ public class CriApiServiceTest {
             assertThrows(
                     CriApiException.class,
                     () -> {
-                        criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+                        criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
                     });
         }
     }
@@ -243,7 +250,7 @@ public class CriApiServiceTest {
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
 
         // Act
-        var httpRequest = criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+        var httpRequest = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
         assertNotEquals("InvalidApiKey", httpRequest.getAuthorization());
@@ -257,7 +264,7 @@ public class CriApiServiceTest {
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
 
         // Act
-        var request = criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
         assertTrue(request.getQuery().contains("code=" + TEST_AUTHORISATION_CODE));
@@ -271,7 +278,7 @@ public class CriApiServiceTest {
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
 
         // Act
-        var request = criApiService.buildfetchAccessTokenRequest(callbackRequest, null);
+        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
         assertTrue(request.getQuery().contains("redirect_uri="));

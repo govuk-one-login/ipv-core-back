@@ -142,7 +142,7 @@ public class InitialiseIpvSessionHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientOAuthSessionId, null, emailAddress);
@@ -174,8 +174,6 @@ public class InitialiseIpvSessionHandler
                             auditEventUser,
                             reproveAuditExtension);
 
-            LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
-
             auditService.sendAuditEvent(auditEvent);
 
             Map<String, String> response =
@@ -194,7 +192,7 @@ public class InitialiseIpvSessionHandler
             LogHelper.logErrorMessage(
                     "Recoverable Jar validation failed.", e.getErrorObject().getDescription());
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(

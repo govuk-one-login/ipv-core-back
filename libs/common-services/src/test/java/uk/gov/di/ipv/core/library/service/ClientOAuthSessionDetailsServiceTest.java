@@ -32,7 +32,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldReturnClientOAuthSessionItem() {
-        String clientOAuthSessionId = SecureTokenHelper.generate();
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
@@ -67,7 +67,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        String clientOAuthSessionId = SecureTokenHelper.generate();
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         JWTClaimsSet testClaimSet =
                 new JWTClaimsSet.Builder()
                         .claim("response_type", "test-type")
@@ -109,7 +109,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
-        String clientOAuthSessionId = SecureTokenHelper.generate();
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(
                         clientOAuthSessionId,

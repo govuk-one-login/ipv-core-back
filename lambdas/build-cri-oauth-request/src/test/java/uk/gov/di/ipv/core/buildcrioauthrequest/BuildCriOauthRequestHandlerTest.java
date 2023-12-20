@@ -126,7 +126,8 @@ class BuildCriOauthRequestHandlerTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     public static final String MAIN_CONNECTION = "main";
 
     @Mock private Context context;

@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -52,6 +53,7 @@ import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.text.ParseException;
+import java.time.Clock;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -113,7 +115,12 @@ public class ProcessCriCallbackHandler
         signer.setKeyId(configService.getSigningKeyId());
         VcHelper.setConfigService(configService);
 
-        criApiService = new CriApiService(configService, signer);
+        criApiService =
+                new CriApiService(
+                        configService,
+                        signer,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
         criCheckingService =
                 new CriCheckingService(
                         configService,
