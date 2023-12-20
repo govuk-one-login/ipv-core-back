@@ -111,7 +111,7 @@ public class ContractTest {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
-                .given("dummyPassportComponentId is a valid issuer" )
+                .given("dummyPassportComponentId is a valid issuer")
                 .given("VC givenName is Mary")
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
