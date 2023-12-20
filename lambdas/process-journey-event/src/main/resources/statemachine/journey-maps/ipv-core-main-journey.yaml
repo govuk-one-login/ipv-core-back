@@ -85,6 +85,9 @@ CHECK_EXISTING_IDENTITY:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
     fail-with-ci:
       targetState: PYI_NO_MATCH
     f2f-fail:
@@ -112,13 +115,19 @@ IPV_IDENTITY_REUSE_PAGE:
     next:
       targetState: END
 
-IPV_IDENTITY_PENDING_PAGE:
+IPV_IDENTITY_PENDING_PAGE_TEST:
   response:
     type: page
+    context: f2f-delete-details
     pageId: page-ipv-pending
   events:
     next:
       targetState: PYI_F2F_DELETE_PAGE
+
+IPV_IDENTITY_PENDING_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-pending
 
 IPV_IDENTITY_START_PAGE:
   response:
@@ -397,7 +406,7 @@ PYI_F2F_DELETE_PAGE:
         PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
     end:
       targetState:
-        IPV_IDENTITY_PENDING_PAGE
+        IPV_IDENTITY_PENDING_PAGE_TEST
 
 PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
   response:
@@ -410,7 +419,7 @@ PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
         RESET_IDENTITY_USER_INITIATED
     end:
       targetState:
-        IPV_IDENTITY_PENDING_PAGE
+        IPV_IDENTITY_PENDING_PAGE_TEST
 
 PYI_NEW_DETAILS_PAGE:
   response:
