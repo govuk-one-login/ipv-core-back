@@ -513,6 +513,22 @@ CRI_HMRC_KBV_J6:
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: MITIGATION_02_OPTIONS
+
+CRI_HMRC_KBV_M2B:
+  response:
+    type: cri
+    criId: hmrcKbv
+  parent: CRI_STATE
+  events:
+    fail-with-no-ci:
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
       targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
       checkIfDisabled:
         f2f:
@@ -554,12 +570,12 @@ ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: CRI_HMRC_KBV_J6
+      targetState: CRI_HMRC_KBV_M2B
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
     enhanced-verification:
-      targetState: CRI_HMRC_KBV_J6
+      targetState: CRI_HMRC_KBV_M2B
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
