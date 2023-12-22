@@ -16,7 +16,10 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONTEXT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SCOPE;
 
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
@@ -46,9 +49,9 @@ public class CriStepResponse implements StepResponse {
             LOGGER.error(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
-                            .with("criId", criId)
-                            .with("context", context)
-                            .with("scope", scope));
+                            .with(LOG_CRI_ID.getFieldName(), criId)
+                            .with(LOG_CONTEXT.getFieldName(), context)
+                            .with(LOG_SCOPE.getFieldName(), scope));
             throw new StepResponseException(e);
         }
     }

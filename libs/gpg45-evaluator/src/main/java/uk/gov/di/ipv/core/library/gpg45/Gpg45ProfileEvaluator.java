@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class Gpg45ProfileEvaluator {
@@ -43,7 +44,9 @@ public class Gpg45ProfileEvaluator {
                                                 .with(
                                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                                         "GPG45 profile has been met.")
-                                                .with("gpg45Profile", profile.getLabel());
+                                                .with(
+                                                        LOG_GPG45_PROFILE.getFieldName(),
+                                                        profile.getLabel());
                                 LOGGER.info(message);
                             }
                             return profileMet;

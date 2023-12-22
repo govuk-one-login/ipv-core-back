@@ -18,6 +18,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpHeaders;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -106,7 +107,7 @@ public class CriApiService {
             }
 
             var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-            LOGGER.info("Auth Code exchanged for Access Token.");
+            LogHelper.logMessage(Level.INFO, "Auth Code exchanged for Access Token.");
             return token;
         } catch (IOException | ParseException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
@@ -205,13 +206,15 @@ public class CriApiService {
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(Collections.singletonList(vcJwt))
                                 .build();
-                LOGGER.info("Verifiable Credential retrieved from JWT response.");
+                LogHelper.logMessage(
+                        Level.INFO, "Verifiable Credential retrieved from JWT response.");
                 return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
                         getVerifiableCredentialResponseForApplicationJson(response.getContent());
-                LOGGER.info("Verifiable Credential retrieved from json response.");
+                LogHelper.logMessage(
+                        Level.INFO, "Verifiable Credential retrieved from json response.");
                 return verifiableCredentialResponse;
             } else {
                 LOGGER.error(

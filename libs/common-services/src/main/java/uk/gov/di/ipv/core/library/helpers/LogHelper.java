@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.util.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -8,6 +9,11 @@ import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
@@ -21,6 +27,7 @@ public class LogHelper {
         LOG_CLIENT_OAUTH_SESSION_ID("clientOAuthSessionId"),
         LOG_COMPONENT_ID("componentId"),
         LOG_CONNECTION("connection"),
+        LOG_CONTEXT("context"),
         LOG_CRI_ID("criId"),
         LOG_CRI_ISSUER("criIssuer"),
         LOG_CRI_OAUTH_SESSION_ID("criOAuthSessionId"),
@@ -31,10 +38,12 @@ public class LogHelper {
         LOG_ERROR_JOURNEY_RESPONSE("errorJourneyResponse"),
         LOG_FEATURE_SET("featureSet"),
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
+        LOG_GPG45_PROFILE("gpg45Profile"),
         LOG_IS_USER_INITIATED("isUserInitiated"),
         LOG_IPV_SESSION_ID("ipvSessionId"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
         LOG_JOURNEY_EVENT("journeyEvent"),
+        LOG_JOURNEY_RESPONSE("journeyResponse"),
         LOG_JOURNEY_TYPE("journeyType"),
         LOG_JTI("jti"),
         LOG_JTI_USED_AT("jtiUsedAt"),
@@ -51,6 +60,7 @@ public class LogHelper {
         LOG_PROFILE("profile"),
         LOG_REDIRECT_URI("redirectUri"),
         LOG_RESPONSE_CONTENT_TYPE("responseContentType"),
+        LOG_SCOPE("scope"),
         LOG_SCORE_TYPE("scoreType"),
         LOG_SECRET_ID("secretId"),
         LOG_SHA256_ACCESS_TOKEN("sha256AccessToken"),
@@ -85,7 +95,7 @@ public class LogHelper {
     }
 
     public static void attachCriIdToLogs(String criId) {
-        attachFieldToLogs(LogField.LOG_CRI_ID, criId);
+        attachFieldToLogs(LOG_CRI_ID, criId);
     }
 
     public static void attachIpvSessionIdToLogs(String sessionId) {
@@ -113,6 +123,10 @@ public class LogHelper {
         attachFieldToLogs(LogField.LOG_IS_USER_INITIATED, isUserInitiated.toString());
     }
 
+    public static void logErrorMessage(String message) {
+        logErrMessage(message, null, null, null);
+    }
+
     public static void logErrorMessage(String message, String errorDescription) {
         logErrMessage(message, null, errorDescription, null);
     }
@@ -133,15 +147,28 @@ public class LogHelper {
     private static void logErrMessage(
             String message, String errorCode, String errorDescription, String criId) {
         var mapMessage =
-                new StringMapMessage()
-                        .with(LogField.LOG_MESSAGE_DESCRIPTION.getFieldName(), message)
-                        .with(LogField.LOG_ERROR_DESCRIPTION.getFieldName(), errorDescription);
-        if (errorCode != null) mapMessage.with(LogField.LOG_ERROR_CODE.getFieldName(), errorCode);
-        if (criId != null) mapMessage.with(LogField.LOG_CRI_ID.getFieldName(), criId);
+                new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message);
+        if (errorDescription != null)
+            mapMessage.with(LOG_ERROR_DESCRIPTION.getFieldName(), errorDescription);
+        if (errorCode != null) mapMessage.with(LOG_ERROR_CODE.getFieldName(), errorCode);
+        if (criId != null) mapMessage.with(LOG_CRI_ID.getFieldName(), criId);
         LOGGER.error(mapMessage);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {
         LoggingUtils.appendKey(field.getFieldName(), value);
+    }
+
+    public static void logMessage(Level level, String message) {
+        LOGGER.log(
+                level,
+                new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message));
+    }
+
+    public static void logExceptionDetails(String message, Exception e) {
+        LOGGER.error(
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message)
+                        .with(LOG_ERROR_DESCRIPTION.getFieldName(), e));
     }
 }

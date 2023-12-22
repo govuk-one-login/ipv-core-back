@@ -3,13 +3,13 @@ package uk.gov.di.ipv.core.callticfcri.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -26,7 +26,6 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
 public class TicfCriService {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     public static final String TRUSTMARK = "https://oidc.account.gov.uk/trustmark";
     public static final String X_API_KEY_HEADER = "x-api-key";
@@ -89,7 +88,8 @@ public class TicfCriService {
                     | SecurityException
                     | TicfCriServiceException e) {
                 // In the case of unavailability, the TICF CRI is deemed optional.
-                LOGGER.error("Request to TICF CRI failed. Allowing user journey to continue", e);
+                LogHelper.logExceptionDetails(
+                        "Request to TICF CRI failed. Allowing user journey to continue", e);
                 return List.of();
             }
 
@@ -121,13 +121,13 @@ public class TicfCriService {
                     String.format(
                             "Non 200 HTTP status code: '%s'", ticfCriHttpResponse.statusCode()));
         }
-        LOGGER.info("Successful HTTP response from TICF CRI");
+        LogHelper.logMessage(Level.INFO, "Successful HTTP response from TICF CRI");
     }
 
     @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest ticfCriHttpRequest)
             throws IOException, InterruptedException {
-        LOGGER.info("Sending HTTP request to TICF CRI");
+        LogHelper.logMessage(Level.INFO, "Sending HTTP request to TICF CRI");
         return httpClient.send(ticfCriHttpRequest, HttpResponse.BodyHandlers.ofString());
     }
 }

@@ -1,9 +1,11 @@
 package uk.gov.di.ipv.core.library.service;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -40,7 +42,8 @@ public class EmailService {
         Map<String, Object> templateParameters = new HashMap<>();
         templateParameters.put("fullName", fullName);
 
-        LOGGER.info("Attempting to send user triggered identity reset confirmation email");
+        LogHelper.logMessage(
+                Level.INFO, "Attempting to send user triggered identity reset confirmation email");
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
         final String templateId =
@@ -58,9 +61,9 @@ public class EmailService {
 
         while (true) {
             try {
-                LOGGER.debug("About to send email");
+                LogHelper.logMessage(Level.DEBUG, "About to send email");
                 notificationClient.sendEmail(templateId, toAddress, personalisation, null, null);
-                LOGGER.debug("Email sent");
+                LogHelper.logMessage(Level.DEBUG, "Email sent");
                 return;
             } catch (NotificationClientException e) {
                 LOGGER.warn(
@@ -72,13 +75,14 @@ public class EmailService {
 
                 if (httpResult == 400 || httpResult == 403) {
                     // A 400 or 403 is not going to be fixed by retrying so don't bother.
-                    LOGGER.error("Error sending email is not retryable. Email has NOT been sent");
+                    LogHelper.logErrorMessage(
+                            "Error sending email is not retryable. Email has NOT been sent");
                     return;
                 }
             }
 
             if (retries >= NUMBER_OF_RETRIES) {
-                LOGGER.error("Number of retries exceeded. Email has NOT been sent");
+                LogHelper.logErrorMessage("Number of retries exceeded. Email has NOT been sent");
                 return;
             }
             retries++;
@@ -89,7 +93,8 @@ public class EmailService {
                 // Set the interruption flag
                 Thread.currentThread().interrupt();
                 // If we're interrupted then give up on sending the email
-                LOGGER.error("Interrupted while waiting to retry email. Email has NOT been sent");
+                LogHelper.logErrorMessage(
+                        "Interrupted while waiting to retry email. Email has NOT been sent");
                 return;
             }
         }

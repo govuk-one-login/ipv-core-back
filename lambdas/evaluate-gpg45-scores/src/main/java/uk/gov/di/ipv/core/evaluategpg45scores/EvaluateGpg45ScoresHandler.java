@@ -52,6 +52,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_MET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_UNMET_PATH;
@@ -143,39 +145,31 @@ public class EvaluateGpg45ScoresHandler
                             ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error("Received HTTP response exception", e);
+            LogHelper.logExceptionDetails("Received HTTP response exception", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (ParseException e) {
-            LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
+            LogHelper.logExceptionDetails(
+                    "Unable to parse GPG45 scores from existing credentials", e);
+            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error("Unable to determine type of credential", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
-                    .toObjectMap();
+            LogHelper.logExceptionDetails("Unable to determine type of credential", e);
+            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
-                    .toObjectMap();
+            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (CredentialParseException e) {
-            LOGGER.error("Unable to parse credential", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
-                    .toObjectMap();
+            LogHelper.logExceptionDetails("Unable to parse credential", e);
+            return buildJourneyErrorResponse(
+                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         }
+    }
+
+    private Map<String, Object> buildJourneyErrorResponse(ErrorResponse errorResponse) {
+        return new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
+                .toObjectMap();
     }
 
     @Tracing
@@ -204,19 +198,20 @@ public class EvaluateGpg45ScoresHandler
                 ipvSessionItem.setVot(VOT_P2);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with("lambdaResult", "A GPG45 profile has been met")
-                                .with("journeyResponse", JOURNEY_MET));
+                logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
                 return JOURNEY_MET;
             }
         }
-        LOGGER.info(
-                new StringMapMessage()
-                        .with("lambdaResult", "No GPG45 profiles have been met")
-                        .with("journeyResponse", JOURNEY_UNMET));
-
+        logLambdaResponse("No GPG45 profiles have been met", JOURNEY_UNMET);
         return JOURNEY_UNMET;
+    }
+
+    private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {
+        var message =
+                new StringMapMessage()
+                        .with(LOG_LAMBDA_RESULT.getFieldName(), lambdaResult)
+                        .with(LOG_JOURNEY_RESPONSE.getFieldName(), journeyResponse);
+        LOGGER.info(message);
     }
 
     @Tracing

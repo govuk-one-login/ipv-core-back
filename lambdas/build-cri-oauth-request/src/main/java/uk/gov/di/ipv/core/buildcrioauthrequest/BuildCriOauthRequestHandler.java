@@ -13,6 +13,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -264,7 +265,7 @@ public class BuildCriOauthRequestHandler
                             e.getMessage())
                     .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error("Unable to determine type of credential.", e);
+            LogHelper.logExceptionDetails("Unable to determine type of credential.", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -362,7 +363,8 @@ public class BuildCriOauthRequestHandler
                         .min();
 
         if (minViableStrengthOpt.isEmpty()) {
-            LOGGER.error("Minimum strength evidence required cannot be attained.");
+            LogHelper.logMessage(
+                    Level.WARN, "Minimum strength evidence required cannot be attained.");
             return null;
         }
 
@@ -413,7 +415,8 @@ public class BuildCriOauthRequestHandler
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {
-                        LOGGER.error("Credential subject missing from verified credential");
+                        LogHelper.logErrorMessage(
+                                "Credential subject missing from verified credential");
                         throw new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                     }

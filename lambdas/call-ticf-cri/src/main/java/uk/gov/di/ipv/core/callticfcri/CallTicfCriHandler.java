@@ -5,8 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
@@ -47,7 +46,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WI
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final String VOT_P0 = "P0";
     private static final Map<String, Object> JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH).toObjectMap();
@@ -135,7 +133,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                                                     clientOAuthSessionItem.getUserId())));
 
             if (ticfVcs.isEmpty()) {
-                LOGGER.info("No VC to process - returning next");
+                LogHelper.logMessage(Level.INFO, "No VC to process - returning next");
                 return JOURNEY_NEXT;
             }
 
@@ -149,18 +147,19 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             input.getIpAddress());
 
             if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-                LOGGER.info("CI score is breaching threshold - setting VOT to P0");
+                LogHelper.logMessage(
+                        Level.INFO, "CI score is breaching threshold - setting VOT to P0");
                 ipvSessionItem.setVot(VOT_P0);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 return JOURNEY_FAIL_WITH_CI;
             }
 
-            LOGGER.info("CI score not breaching threshold");
+            LogHelper.logMessage(Level.INFO, "CI score not breaching threshold");
             return JOURNEY_NEXT;
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error("Error calling TICF CRI", e);
+            LogHelper.logExceptionDetails("Error calling TICF CRI", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -172,7 +171,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | ParseException
                 | CiRetrievalException
                 | JsonProcessingException e) {
-            LOGGER.error("Error processing response from TICF CRI", e);
+            LogHelper.logExceptionDetails("Error processing response from TICF CRI", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,

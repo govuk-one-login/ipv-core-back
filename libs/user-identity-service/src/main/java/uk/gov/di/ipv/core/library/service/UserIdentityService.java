@@ -10,6 +10,7 @@ import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -174,7 +176,7 @@ public class UserIdentityService {
         }
 
         if (identityClaims.isEmpty()) {
-            LOGGER.warn("Failed to generate identity claim");
+            LogHelper.logMessage(Level.INFO, "Failed to empty identity claim");
             return Optional.empty();
         }
 
@@ -187,7 +189,7 @@ public class UserIdentityService {
                         .filter(identityClaim -> !identityClaim.getBirthDate().isEmpty())
                         .findFirst();
         if (claimWithName.isEmpty() || claimWithBirthDate.isEmpty()) {
-            LOGGER.error("Failed to generate identity claim");
+            LogHelper.logErrorMessage("Failed to generate identity claim");
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
         }
@@ -444,7 +446,7 @@ public class UserIdentityService {
             try {
                 return objectMapper.readValue(new JSONArray().toJSONString(), valueType);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to generate empty list: {}", e.getMessage());
+                LogHelper.logErrorMessage("Failed to generate empty list", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
             }
@@ -452,7 +454,7 @@ public class UserIdentityService {
         try {
             return objectMapper.treeToValue(propertyNode, valueType);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse VC JWT", e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
         }
@@ -484,7 +486,7 @@ public class UserIdentityService {
         var addressStoreItem = findStoreItem(ADDRESS_CRI, vcStoreItems);
 
         if (addressStoreItem.isEmpty()) {
-            LOGGER.warn("Failed to find Address CRI credential");
+            LogHelper.logMessage(Level.WARN, "Failed to find Address CRI credential");
             return Optional.empty();
         }
 
@@ -496,7 +498,7 @@ public class UserIdentityService {
                         ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
 
         if (addressNode.isMissingNode()) {
-            LOGGER.error("Address property is missing from address VC");
+            LogHelper.logErrorMessage("Address property is missing from address VC");
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
@@ -509,7 +511,7 @@ public class UserIdentityService {
         var ninoStoreItem = findStoreItem(NINO_CRI, successfulVCStoreItems);
 
         if (ninoStoreItem.isEmpty()) {
-            LOGGER.warn("Failed to find Nino CRI credential");
+            LogHelper.logMessage(Level.WARN, "Failed to find Nino CRI credential");
             return Optional.empty();
         }
 
@@ -542,7 +544,7 @@ public class UserIdentityService {
         var passportVc = findStoreItem(PASSPORT_CRI_TYPES, successfulVCStoreItems);
 
         if (passportVc.isEmpty()) {
-            LOGGER.warn("Failed to find Passport CRI credential");
+            LogHelper.logMessage(Level.WARN, "Failed to find Passport CRI credential");
             return Optional.empty();
         }
 
@@ -575,7 +577,7 @@ public class UserIdentityService {
         var drivingPermitVc = findStoreItem(DRIVING_PERMIT_CRI_TYPES, successfulVCStoreItems);
 
         if (drivingPermitVc.isEmpty()) {
-            LOGGER.warn("Failed to find Driving Permit CRI credential");
+            LogHelper.logMessage(Level.WARN, "Failed to find Driving Permit CRI credential");
             return Optional.empty();
         }
 
@@ -631,7 +633,7 @@ public class UserIdentityService {
             return getVCClaimNode(credentialItem.getCredential(), VC_CREDENTIAL_SUBJECT)
                     .path(detailName);
         } catch (CredentialParseException e) {
-            LOGGER.error("{}: '{}'", errorLog, e.getMessage());
+            LogHelper.logErrorMessage(errorLog, e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
         }
