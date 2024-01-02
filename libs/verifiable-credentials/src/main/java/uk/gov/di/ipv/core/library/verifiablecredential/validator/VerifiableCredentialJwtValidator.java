@@ -52,8 +52,7 @@ public class VerifiableCredentialJwtValidator {
         try {
             signingKey = credentialIssuerConfig.getSigningKey();
         } catch (ParseException e) {
-            LogHelper.logErrorMessage(
-                    "Error parsing credential issuer public JWK", e.getMessage());
+            LogHelper.logErrorMessage("Error parsing credential issuer public JWK", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
         }
