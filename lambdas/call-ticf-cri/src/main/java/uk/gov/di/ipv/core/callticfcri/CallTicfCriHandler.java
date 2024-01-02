@@ -159,7 +159,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             return JOURNEY_NEXT;
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logExceptionDetails("Error calling TICF CRI", e);
+            LogHelper.logErrorMessage("Error calling TICF CRI", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -171,7 +171,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | ParseException
                 | CiRetrievalException
                 | JsonProcessingException e) {
-            LogHelper.logExceptionDetails("Error processing response from TICF CRI", e);
+            LogHelper.logErrorMessage("Error processing response from TICF CRI", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,

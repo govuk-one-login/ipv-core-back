@@ -317,7 +317,7 @@ public class ProcessCriCallbackHandler
 
     private APIGatewayProxyResponseEvent buildErrorResponse(
             Exception e, int status, ErrorResponse errorResponse) {
-        LogHelper.logExceptionDetails(errorResponse.getMessage(), e);
+        LogHelper.logErrorMessage(errorResponse.getMessage(), e);
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 status,
                 new JourneyErrorResponse(

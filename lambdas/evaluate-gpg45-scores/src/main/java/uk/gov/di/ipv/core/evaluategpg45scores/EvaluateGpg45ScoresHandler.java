@@ -145,22 +145,21 @@ public class EvaluateGpg45ScoresHandler
                             ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logExceptionDetails("Received HTTP response exception", e);
+            LogHelper.logErrorMessage("Received HTTP response exception", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (ParseException e) {
-            LogHelper.logExceptionDetails(
-                    "Unable to parse GPG45 scores from existing credentials", e);
+            LogHelper.logErrorMessage("Unable to parse GPG45 scores from existing credentials", e);
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
-            LogHelper.logExceptionDetails("Unable to determine type of credential", e);
+            LogHelper.logErrorMessage("Unable to determine type of credential", e);
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (CredentialParseException e) {
-            LogHelper.logExceptionDetails("Unable to parse credential", e);
+            LogHelper.logErrorMessage("Unable to parse credential", e);
             return buildJourneyErrorResponse(
                     ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         }

@@ -176,7 +176,7 @@ public class UserIdentityService {
         }
 
         if (identityClaims.isEmpty()) {
-            LogHelper.logMessage(Level.INFO, "Failed to empty identity claim");
+            LogHelper.logMessage(Level.WARN, "Failed to find any identity claims in VCs");
             return Optional.empty();
         }
 

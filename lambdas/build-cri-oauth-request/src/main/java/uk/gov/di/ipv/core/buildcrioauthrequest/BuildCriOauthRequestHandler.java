@@ -265,7 +265,7 @@ public class BuildCriOauthRequestHandler
                             e.getMessage())
                     .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
-            LogHelper.logExceptionDetails("Unable to determine type of credential.", e);
+            LogHelper.logErrorMessage("Unable to determine type of credential.", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,

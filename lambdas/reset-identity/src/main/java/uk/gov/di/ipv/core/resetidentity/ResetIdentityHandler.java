@@ -132,12 +132,12 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logExceptionDetails("HTTP response exception", e);
+            LogHelper.logErrorMessage("HTTP response exception", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (SqsException e) {
-            LogHelper.logExceptionDetails(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e);
+            LogHelper.logErrorMessage(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -174,7 +174,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             return identityClaim.get().getFullName();
         } catch (Exception e) {
-            LogHelper.logExceptionDetails("Exception caught trying to find user's identity", e);
+            LogHelper.logErrorMessage("Exception caught trying to find user's identity", e);
         }
 
         return null;

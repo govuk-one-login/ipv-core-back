@@ -23,7 +23,7 @@ public class ApiGatewayResponseGenerator {
         try {
             return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
         } catch (JsonProcessingException e) {
-            LogHelper.logExceptionDetails("Unable to generateApiGatewayProxyErrorResponse", e);
+            LogHelper.logErrorMessage("Unable to generateApiGatewayProxyErrorResponse", e);
             return proxyResponse(500, "Internal server error", Collections.emptyMap());
         }
     }

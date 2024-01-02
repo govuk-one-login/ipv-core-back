@@ -88,7 +88,7 @@ public class TicfCriService {
                     | SecurityException
                     | TicfCriServiceException e) {
                 // In the case of unavailability, the TICF CRI is deemed optional.
-                LogHelper.logExceptionDetails(
+                LogHelper.logErrorMessage(
                         "Request to TICF CRI failed. Allowing user journey to continue", e);
                 return List.of();
             }

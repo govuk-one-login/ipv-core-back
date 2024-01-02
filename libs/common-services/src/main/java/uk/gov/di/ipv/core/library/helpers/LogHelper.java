@@ -165,7 +165,7 @@ public class LogHelper {
                 new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message));
     }
 
-    public static void logExceptionDetails(String message, Exception e) {
+    public static void logErrorMessage(String message, Exception e) {
         LOGGER.error(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message)

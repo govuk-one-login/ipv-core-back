@@ -188,7 +188,7 @@ public class BuildClientOauthResponseHandler
 
             return clientResponse.toObjectMap();
         } catch (ParseException e) {
-            LogHelper.logExceptionDetails("Authentication request could not be parsed", e);
+            LogHelper.logErrorMessage("Authentication request could not be parsed", e);
             return buildJourneyErrorResponse(
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);

@@ -247,7 +247,7 @@ public class CheckExistingIdentityHandler
 
             return buildProfileMatchedResponse(matchedProfile.get(), auditEventUser);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logExceptionDetails(e.getErrorResponse().getMessage(), e);
+            LogHelper.logErrorMessage(e.getErrorResponse().getMessage(), e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -276,7 +276,7 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_PENDING;
             }
             case CriResponseService.STATUS_ERROR -> {
-                LogHelper.logMessage(Level.INFO, "F2F cri error");
+                LogHelper.logMessage(Level.WARN, "F2F cri error");
                 return JOURNEY_F2F_FAIL;
             }
             default -> {
@@ -319,7 +319,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        LogHelper.logMessage(Level.WARN, "F2F return - failed to match a profile.");
+        LogHelper.logMessage(Level.INFO, "F2F return - failed to match a profile.");
 
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -333,7 +333,7 @@ public class CheckExistingIdentityHandler
     private Map<String, Object> buildNoMatchResponse(
             List<SignedJWT> credentials, AuditEventUser auditEventUser) throws SqsException {
         if (!credentials.isEmpty()) {
-            LogHelper.logMessage(Level.WARN, "Failed to match profile so resetting identity.");
+            LogHelper.logMessage(Level.INFO, "Failed to match profile so resetting identity.");
 
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -367,7 +367,7 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
-        LogHelper.logExceptionDetails(errorResponse.getMessage(), e);
+        LogHelper.logErrorMessage(errorResponse.getMessage(), e);
         return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();
