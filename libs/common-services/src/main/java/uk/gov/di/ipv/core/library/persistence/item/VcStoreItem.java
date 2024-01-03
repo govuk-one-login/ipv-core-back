@@ -24,7 +24,6 @@ public class VcStoreItem implements DynamodbItem {
     private String credential;
     private Instant dateCreated;
     private Instant expirationTime;
-    private long ttl;
 
     @DynamoDbPartitionKey
     public String getUserId() {
@@ -34,5 +33,10 @@ public class VcStoreItem implements DynamodbItem {
     @DynamoDbSortKey
     public String getCredentialIssuer() {
         return credentialIssuer;
+    }
+
+    @Override
+    public void setTtl(long ttl) {
+        throw new UnsupportedOperationException("VC store items do not use TTL");
     }
 }

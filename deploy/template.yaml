@@ -2315,12 +2315,6 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"
-      TimeToLiveSpecification:
-        AttributeName: "ttl"
-        Enabled: !If
-          - IsProduction
-          - true #false set to true until user privacy notice is updated
-          - true
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS
