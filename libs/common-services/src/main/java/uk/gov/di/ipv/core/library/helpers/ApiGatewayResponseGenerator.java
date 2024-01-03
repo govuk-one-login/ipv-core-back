@@ -5,15 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.Map;
 
 public class ApiGatewayResponseGenerator {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -27,7 +23,7 @@ public class ApiGatewayResponseGenerator {
         try {
             return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Unable to generateApiGatewayProxyErrorResponse", e);
+            LogHelper.logErrorMessage("Unable to generateApiGatewayProxyErrorResponse", e);
             return proxyResponse(500, "Internal server error", Collections.emptyMap());
         }
     }

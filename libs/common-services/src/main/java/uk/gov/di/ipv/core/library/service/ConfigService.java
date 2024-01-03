@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.net.URI;
@@ -287,7 +288,7 @@ public class ConfigService {
             }
             return configMap;
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse contra-indicator config");
+            LogHelper.logErrorMessage("Failed to parse contra-indicator config");
             return Collections.emptyMap();
         }
     }
@@ -321,19 +322,20 @@ public class ConfigService {
         try {
             return secretsProvider.get(secretId);
         } catch (DecryptionFailureException e) {
-            LOGGER.error(
-                    "Secrets manager failed to decrypt the protected secret using the configured KMS key because: {}",
+            LogHelper.logErrorMessage(
+                    "Secrets manager failed to decrypt the protected secret using the configured KMS key",
                     e.getMessage());
         } catch (InternalServiceErrorException e) {
-            LOGGER.error("Internal server error occurred with Secrets manager: {}", e.getMessage());
+            LogHelper.logErrorMessage(
+                    "Internal server error occurred with Secrets manager", e.getMessage());
         } catch (InvalidParameterException e) {
             LOGGER.error(
                     "An invalid value was provided for the param value: {}, details: {}",
                     secretId,
                     e.getMessage());
         } catch (InvalidRequestException e) {
-            LOGGER.error(
-                    "Parameter value is not valid for the current state of the resource, details: {}",
+            LogHelper.logErrorMessage(
+                    "Parameter value is not valid for the current state of the resource",
                     e.getMessage());
         } catch (ResourceNotFoundException e) {
             LOGGER.error(

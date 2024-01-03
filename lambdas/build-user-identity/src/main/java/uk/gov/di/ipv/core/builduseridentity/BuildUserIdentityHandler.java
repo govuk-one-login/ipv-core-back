@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -51,7 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
 public class BuildUserIdentityHandler
@@ -174,7 +174,7 @@ public class BuildUserIdentityHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
-            LOGGER.error("Failed to parse access token");
+            LogHelper.logErrorMessage("Failed to parse access token");
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
@@ -216,11 +216,7 @@ public class BuildUserIdentityHandler
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Sending audit event IPV_IDENTITY_ISSUED message."));
+        LogHelper.logMessage(Level.INFO, "Sending audit event IPV_IDENTITY_ISSUED message.");
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_IDENTITY_ISSUED,
@@ -271,7 +267,7 @@ public class BuildUserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getUnknownAccessTokenApiGatewayProxyResponseEvent() {
-        LOGGER.error(
+        LogHelper.logErrorMessage(
                 "User credential could not be retrieved. The supplied access token was not found in the database.");
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),

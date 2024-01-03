@@ -57,7 +57,7 @@ public class JarValidator {
 
             return jweObject.getPayload().toSignedJWT();
         } catch (JOSEException e) {
-            LOGGER.error("Failed to decrypt the JWE");
+            LogHelper.logErrorMessage("Failed to decrypt the JWE");
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to decrypt the contents of the JAR"));
@@ -135,13 +135,13 @@ public class JarValidator {
                                             .toECPublicKey()));
 
             if (!valid) {
-                LOGGER.error("JWT signature validation failed");
+                LogHelper.logErrorMessage("JWT signature validation failed");
                 throw new JarValidationException(
                         OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                                 "JWT signature validation failed"));
             }
         } catch (JOSEException | ParseException e) {
-            LOGGER.error("Failed to parse JWT when attempting signature validation");
+            LogHelper.logErrorMessage("Failed to parse JWT when attempting signature validation");
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to parse JWT when attempting signature validation"));
@@ -175,7 +175,7 @@ public class JarValidator {
 
             return signedJWT.getJWTClaimsSet();
         } catch (BadJWTException | ParseException e) {
-            LOGGER.error("Claim set validation failed");
+            LogHelper.logErrorMessage("Claim set validation failed");
             throw new JarValidationException(
                     OAuth2Error.INVALID_GRANT.setDescription(e.getMessage()));
         }
@@ -189,7 +189,7 @@ public class JarValidator {
                 LocalDateTime.ofInstant(claimsSet.getExpirationTime().toInstant(), ZoneOffset.UTC);
 
         if (expirationTime.isAfter(maximumExpirationTime)) {
-            LOGGER.error("Client JWT expiry date is too far in the future");
+            LogHelper.logErrorMessage("Client JWT expiry date is too far in the future");
             throw new JarValidationException(
                     OAuth2Error.INVALID_GRANT.setDescription(
                             "The client JWT expiry date has surpassed the maximum allowed ttl value"));
@@ -216,7 +216,7 @@ public class JarValidator {
             }
             return redirectUri;
         } catch (ParseException e) {
-            LOGGER.error(
+            LogHelper.logErrorMessage(
                     "Failed to parse JWT claim set in order to access to the redirect_uri claim");
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
