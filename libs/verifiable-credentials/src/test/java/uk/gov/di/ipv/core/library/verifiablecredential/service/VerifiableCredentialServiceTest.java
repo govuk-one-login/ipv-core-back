@@ -30,18 +30,15 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_TTL;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -73,7 +70,7 @@ class VerifiableCredentialServiceTest {
 
         verifiableCredentialService.persistUserCredentials(
                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), credentialIssuerId, userId);
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
@@ -100,14 +97,13 @@ class VerifiableCredentialServiceTest {
 
         verifiableCredentialService.persistUserCredentials(signedJwt, credentialIssuerId, userId);
 
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
 
         assertNull(vcStoreItem.getExpirationTime());
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
         assertEquals(signedJwt.serialize(), vcStoreItem.getCredential());
-        verify(mockDataStore, Mockito.times(1)).create(any(), any());
     }
 
     @Test

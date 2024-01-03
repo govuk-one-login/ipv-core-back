@@ -65,6 +65,10 @@ public class DataStore<T extends DynamodbItem> {
                 Instant.now()
                         .plusSeconds(Long.parseLong(configService.getSsmParameter(tableTtl)))
                         .getEpochSecond());
+        create(item);
+    }
+
+    public void create(T item) {
         table.putItem(item);
     }
 
