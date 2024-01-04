@@ -118,9 +118,9 @@ public class ProcessCriCallbackHandlerTest {
                 .storeVcs(
                         callbackRequest.getCredentialIssuerId(),
                         callbackRequest.getIpAddress(),
-                        callbackRequest.getIpvSessionId(),
                         vcResponse.getVerifiableCredentials(),
-                        clientOAuthSessionItem);
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
     }
 
     @Test

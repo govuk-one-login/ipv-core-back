@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
-    public static final String REUSE_JOURNEY_TYPE = "reuse";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -106,57 +106,16 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest input, Context context) {
+    public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentIdToLogs(configService);
         LogHelper.attachCriIdToLogs(TICF_CRI);
 
+        IpvSessionItem ipvSessionItem = null;
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            String featureSet = RequestHelper.getFeatureSet(input);
-            String journeyType = RequestHelper.getJourneyType(input);
-            configService.setFeatureSet(featureSet);
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
+            ipvSessionItem =
+                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
 
-            List<SignedJWT> ticfVcs =
-                    ticfCriService.getTicfVc(
-                            clientOAuthSessionItem,
-                            ipvSessionItem,
-                            journeyType.equals(REUSE_JOURNEY_TYPE)
-                                    ? List.of()
-                                    : userIdentityService.getUserIssuedCredentials(
-                                            verifiableCredentialService.getVcStoreItems(
-                                                    clientOAuthSessionItem.getUserId())));
-
-            if (ticfVcs.isEmpty()) {
-                LogHelper.logMessage(Level.INFO, "No VC to process - returning next");
-                return JOURNEY_NEXT;
-            }
-
-            criStoringService.storeVcs(
-                    TICF_CRI, input.getIpAddress(), ipvSessionId, ticfVcs, clientOAuthSessionItem);
-
-            ContraIndicators cis =
-                    ciMitService.getContraIndicatorsVC(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            input.getIpAddress());
-
-            if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-                LogHelper.logMessage(
-                        Level.INFO, "CI score is breaching threshold - setting VOT to P0");
-                ipvSessionItem.setVot(VOT_P0);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return JOURNEY_FAIL_WITH_CI;
-            }
-
-            LogHelper.logMessage(Level.INFO, "CI score not breaching threshold");
-            return JOURNEY_NEXT;
+            return callTicfCri(ipvSessionItem, request);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LogHelper.logErrorMessage("Error calling TICF CRI", e);
@@ -177,6 +136,69 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ERROR_PROCESSING_TICF_CRI_RESPONSE)
                     .toObjectMap();
+        } finally {
+            if (ipvSessionItem != null) {
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+            }
         }
+    }
+
+    @Tracing
+    private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
+            throws ParseException, TicfCriServiceException, CiRetrievalException, SqsException,
+                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+                    JsonProcessingException {
+        String featureSet = RequestHelper.getFeatureSet(request);
+        configService.setFeatureSet(featureSet);
+        ClientOAuthSessionItem clientOAuthSessionItem =
+                clientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId());
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientOAuthSessionItem.getGovukSigninJourneyId());
+
+        List<String> vcToSendToTicf =
+                getVcToSendToTicf(clientOAuthSessionItem.getUserId(), ipvSessionItem);
+
+        List<SignedJWT> ticfVcs =
+                ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem, vcToSendToTicf);
+
+        if (ticfVcs.isEmpty()) {
+            LogHelper.logMessage(Level.INFO, "No TICF VC to process - returning next");
+            return JOURNEY_NEXT;
+        }
+
+        criStoringService.storeVcs(
+                TICF_CRI, request.getIpAddress(), ticfVcs, clientOAuthSessionItem, ipvSessionItem);
+
+        ContraIndicators cis =
+                ciMitService.getContraIndicatorsVC(
+                        clientOAuthSessionItem.getUserId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        request.getIpAddress());
+
+        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
+            LogHelper.logMessage(Level.INFO, "CI score is breaching threshold - setting VOT to P0");
+            ipvSessionItem.setVot(VOT_P0);
+
+            return JOURNEY_FAIL_WITH_CI;
+        }
+
+        LogHelper.logMessage(Level.INFO, "CI score not breaching threshold");
+        return JOURNEY_NEXT;
+    }
+
+    @Tracing
+    private List<String> getVcToSendToTicf(String userId, IpvSessionItem ipvSessionItem) {
+        List<String> vcInStore =
+                userIdentityService.getUserIssuedCredentials(
+                        verifiableCredentialService.getVcStoreItems(userId));
+        List<String> vcReceivedThisSession = ipvSessionItem.getVcReceivedThisSession();
+
+        List<String> vcToSendToTicf = new ArrayList<>();
+        if (vcReceivedThisSession != null) {
+            vcToSendToTicf = vcInStore.stream().filter(vcReceivedThisSession::contains).toList();
+        }
+
+        return vcToSendToTicf;
     }
 }
