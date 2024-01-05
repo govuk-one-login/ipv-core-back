@@ -334,12 +334,12 @@ EVALUATE_GPG45_SCORES:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_CRI
+          targetState: CALL_TICF_CRI_ON_NO_MATCH_ERR
     vcs-not-correlated:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_CRI
+          targetState: CALL_TICF_CRI_ON_NO_MATCH_ERR
 
 IPV_SUCCESS_PAGE:
   response:
@@ -387,8 +387,6 @@ CALL_TICF_CRI_ON_NO_MATCH_ERR:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: error
   events:
     next:
       targetState: PYI_NO_MATCH
@@ -401,8 +399,6 @@ CALL_TICF_CRI_ON_ANOTHER_WAY_ERR:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: error
   events:
     next:
       targetState: PYI_ANOTHER_WAY
@@ -415,8 +411,6 @@ CALL_TICF_CRI_ON_TECHNICAL_ERR:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: error
   events:
     next:
       targetState: ERROR
