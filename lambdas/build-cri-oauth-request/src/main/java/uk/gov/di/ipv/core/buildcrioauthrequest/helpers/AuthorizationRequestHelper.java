@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.NinoSharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -49,7 +49,7 @@ public class AuthorizationRequestHelper {
     public static SignedJWT createSignedJWT(
             SharedClaimsResponse sharedClaims,
             JWSSigner signer,
-            CredentialIssuerConfig credentialIssuerConfig,
+            OauthCriConfig oauthCriConfig,
             ConfigService configService,
             String oauthState,
             String userId,
@@ -65,16 +65,15 @@ public class AuthorizationRequestHelper {
 
         JWTClaimsSet authClaimsSet =
                 new AuthorizationRequest.Builder(
-                                ResponseType.CODE,
-                                new ClientID(credentialIssuerConfig.getClientId()))
-                        .redirectionURI(credentialIssuerConfig.getClientCallbackUrl())
+                                ResponseType.CODE, new ClientID(oauthCriConfig.getClientId()))
+                        .redirectionURI(oauthCriConfig.getClientCallbackUrl())
                         .state(new State(oauthState))
                         .build()
                         .toJWTClaimsSet();
 
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
-                        .audience(credentialIssuerConfig.getComponentId())
+                        .audience(oauthCriConfig.getComponentId())
                         .issuer(configService.getSsmParameter(COMPONENT_ID))
                         .issueTime(Date.from(now))
                         .expirationTime(

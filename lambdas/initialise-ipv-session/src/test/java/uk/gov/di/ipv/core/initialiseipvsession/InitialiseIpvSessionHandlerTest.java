@@ -91,7 +91,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        JWTClaimsSet claimsSet =
+        JWTClaimsSet claimsSet = // this should indicate something about the vtrs
                 new JWTClaimsSet.Builder()
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                         .issueTime(new Date())

@@ -20,7 +20,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -169,15 +169,13 @@ public class ProcessAsyncCriCredentialHandler
                 parseVerifiableCredentialJWTs(
                         successAsyncCriResponse.getVerifiableCredentialJWTs());
 
-        final CredentialIssuerConfig credentialIssuerConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(
+        final OauthCriConfig oauthCriConfig =
+                configService.getOauthCriActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
 
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
-                    verifiableCredential,
-                    credentialIssuerConfig,
-                    successAsyncCriResponse.getUserId());
+                    verifiableCredential, oauthCriConfig, successAsyncCriResponse.getUserId());
 
             boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential);
 

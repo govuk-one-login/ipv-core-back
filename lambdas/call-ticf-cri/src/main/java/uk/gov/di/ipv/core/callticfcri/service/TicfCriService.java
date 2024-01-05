@@ -9,7 +9,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
-import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
+import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -58,7 +58,7 @@ public class TicfCriService {
             List<String> credentials)
             throws TicfCriServiceException {
         try {
-            BackendCriConfig ticfCriConfig = configService.getBackendCriConfig(TICF_CRI);
+            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF_CRI);
 
             TicfCriDto ticfCriRequest =
                     new TicfCriDto(
@@ -75,7 +75,7 @@ public class TicfCriService {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             objectMapper.writeValueAsString(ticfCriRequest)));
-            if (ticfCriConfig.requiresApiKey()) {
+            if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
                         configService.getCriPrivateApiKeyForActiveConnection(TICF_CRI));

@@ -27,9 +27,12 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -40,6 +43,8 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;
@@ -48,6 +53,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class InitialiseIpvSessionHandler
@@ -56,14 +62,19 @@ public class InitialiseIpvSessionHandler
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
+    private static final String REQUEST_SUB_KEY = "sub";
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
+    private static final String REQUEST_INHERITED_IDENTITY_JWT_KEY =
+            "https://vocab.account.gov.uk/v1/inheritedIdentityJWT";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
+    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
@@ -74,6 +85,8 @@ public class InitialiseIpvSessionHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
@@ -83,12 +96,16 @@ public class InitialiseIpvSessionHandler
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             ConfigService configService,
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
+            VerifiableCredentialService verifiableCredentialService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
             AuditService auditService) {
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.configService = configService;
+        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
+        this.verifiableCredentialService = verifiableCredentialService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
@@ -135,6 +152,15 @@ public class InitialiseIpvSessionHandler
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
+            }
+
+            // Inherited identity logic is behind a featureFlag
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                String inheritedIdentityJWT =
+                        claimsSet.getStringClaim(REQUEST_INHERITED_IDENTITY_JWT_KEY);
+                if (inheritedIdentityJWT != null) {
+                    validateAndStoreInheritedIdentity(inheritedIdentityJWT, claimsSet);
+                }
             }
 
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
@@ -228,7 +254,28 @@ public class InitialiseIpvSessionHandler
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
+        } catch (VerifiableCredentialException e) {
+            LogHelper.logErrorMessage(
+                    "Inherited identity validation failed.", e.getErrorResponse().getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         }
+    }
+
+    private void validateAndStoreInheritedIdentity(
+            String inheritedIdentityJWT, JWTClaimsSet claimsSet)
+            throws ParseException, VerifiableCredentialException {
+        // We get the userId from the above claimsSet sub,
+        // though this is validated to be the same as in the signedInheritedIdentityJWT claimSet
+        String userId = claimsSet.getStringClaim(REQUEST_SUB_KEY);
+        SignedJWT signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJWT);
+        CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
+
+        verifiableCredentialJwtValidator.validate(
+                signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
+
+        verifiableCredentialService.persistUserCredentials(
+                signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
     }
 
     @Tracing

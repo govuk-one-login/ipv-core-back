@@ -13,7 +13,7 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -58,9 +58,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final CredentialIssuerConfig ISSUER_CONFIG_ADDRESS =
+    private static final OauthCriConfig ISSUER_CONFIG_ADDRESS =
             createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");
-    private static final CredentialIssuerConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
+    private static final OauthCriConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
             createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
 
     @Mock private Context context;
@@ -494,18 +494,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return vcStoreItem;
     }
 
-    private static CredentialIssuerConfig createCredentialIssuerConfig(String componentId) {
-        return new CredentialIssuerConfig(
-                URI.create("https://example.com/token"),
-                URI.create("https://example.com/credential"),
-                URI.create("https://example.com/authorize"),
-                "ipv-core",
-                "test-jwk",
-                "test-jwk",
-                componentId,
-                URI.create("https://example.com/callback"),
-                true,
-                false);
+    private static OauthCriConfig createCredentialIssuerConfig(String componentId) {
+        return OauthCriConfig.builder()
+                .tokenUrl(URI.create("https://example.com/token"))
+                .credentialUrl(URI.create("https://example.com/credential"))
+                .authorizeUrl(URI.create("https://example.com/authorize"))
+                .clientId("ipv-core")
+                .signingKey("test-jwk")
+                .encryptionKey("test-jwk")
+                .componentId(componentId)
+                .clientCallbackUrl(URI.create("https://example.com/callback"))
+                .requiresApiKey(true)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

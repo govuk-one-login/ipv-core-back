@@ -18,6 +18,7 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":libs:common-services"),
+			project(":libs:verifiable-credentials"),
 			project(":libs:audit-service"),
 			project(":libs:user-identity-service")
 

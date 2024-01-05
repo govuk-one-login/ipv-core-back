@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -50,7 +50,7 @@ class VerifiableCredentialJwtValidatorTest {
         }
     }
 
-    @Mock private CredentialIssuerConfig credentialIssuerConfig;
+    @Mock private OauthCriConfig oauthCriConfig;
     @Mock private ConfigService mockConfigService;
     private SignedJWT verifiableCredentials;
 
@@ -67,18 +67,18 @@ class VerifiableCredentialJwtValidatorTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(CI_MAP);
 
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
-        vcJwtValidator.validate(verifiableCredentials, credentialIssuerConfig, TEST_USER);
+        vcJwtValidator.validate(verifiableCredentials, oauthCriConfig, TEST_USER);
     }
 
     @Test
     void validatesThrowParseException() throws ParseException {
-        when(credentialIssuerConfig.getSigningKey()).thenThrow(new ParseException("Whoops", 0));
+        when(oauthCriConfig.getSigningKey()).thenThrow(new ParseException("Whoops", 0));
         var exception =
                 assertThrows(
                         VerifiableCredentialException.class,
                         () -> {
                             vcJwtValidator.validate(
-                                    verifiableCredentials, credentialIssuerConfig, TEST_USER);
+                                    verifiableCredentials, oauthCriConfig, TEST_USER);
                         });
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, exception.getErrorResponse());
@@ -92,9 +92,7 @@ class VerifiableCredentialJwtValidatorTest {
                         VerifiableCredentialException.class,
                         () -> {
                             vcJwtValidator.validate(
-                                    verifiableCredentials,
-                                    credentialIssuerConfig,
-                                    "a different user");
+                                    verifiableCredentials, oauthCriConfig, "a different user");
                         });
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
@@ -105,7 +103,7 @@ class VerifiableCredentialJwtValidatorTest {
     @Test
     void validateThrowsErrorOnInvalidVerifiableCredentialsSignature() {
         try {
-            when(credentialIssuerConfig.getSigningKey()).thenReturn(TEST_SIGNING_KEY2);
+            when(oauthCriConfig.getSigningKey()).thenReturn(TEST_SIGNING_KEY2);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -114,7 +112,7 @@ class VerifiableCredentialJwtValidatorTest {
                         VerifiableCredentialException.class,
                         () -> {
                             vcJwtValidator.validate(
-                                    verifiableCredentials, credentialIssuerConfig, TEST_USER);
+                                    verifiableCredentials, oauthCriConfig, TEST_USER);
                         });
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
@@ -135,8 +133,7 @@ class VerifiableCredentialJwtValidatorTest {
                         Base64URL.encode(
                                 ECDSA.transcodeSignatureToDER(
                                         verifiableCredentials.getSignature().decode())));
-        vcJwtValidator.validate(
-                verifiableCredentialsWithDerSignature, credentialIssuerConfig, TEST_USER);
+        vcJwtValidator.validate(verifiableCredentialsWithDerSignature, oauthCriConfig, TEST_USER);
     }
 
     @Test
@@ -157,7 +154,7 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> {
                             vcJwtValidator.validate(
                                     verifiableCredentialsWithDerSignature,
-                                    credentialIssuerConfig,
+                                    oauthCriConfig,
                                     TEST_USER);
                         });
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
@@ -173,8 +170,8 @@ class VerifiableCredentialJwtValidatorTest {
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         vcJwtValidator.validate(
                 verifiableCredentials,
-                credentialIssuerConfig.getSigningKey(),
-                credentialIssuerConfig.getComponentId(),
+                oauthCriConfig.getSigningKey(),
+                oauthCriConfig.getComponentId(),
                 TEST_USER);
     }
 
@@ -183,8 +180,8 @@ class VerifiableCredentialJwtValidatorTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("NO", new ContraIndicatorConfig()));
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
-        ECKey signingKey = credentialIssuerConfig.getSigningKey();
-        String componentId = credentialIssuerConfig.getComponentId();
+        ECKey signingKey = oauthCriConfig.getSigningKey();
+        String componentId = oauthCriConfig.getComponentId();
 
         VerifiableCredentialException exception =
                 assertThrows(
@@ -201,10 +198,10 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     private void setCredentialIssuerConfigMockResponses(ECKey signingKey) {
-        when(credentialIssuerConfig.getComponentId())
+        when(oauthCriConfig.getComponentId())
                 .thenReturn("https://staging-di-ipv-cri-address-front.london.cloudapps.digital");
         try {
-            when(credentialIssuerConfig.getSigningKey()).thenReturn(signingKey);
+            when(oauthCriConfig.getSigningKey()).thenReturn(signingKey);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
