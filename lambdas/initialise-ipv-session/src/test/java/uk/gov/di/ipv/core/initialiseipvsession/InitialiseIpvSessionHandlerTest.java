@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -33,9 +34,12 @@ import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -45,7 +49,11 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
@@ -62,8 +70,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,6 +91,8 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private VerifiableCredentialJwtValidator mockVerifiableCredentialJwtValidator;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -104,6 +117,9 @@ class InitialiseIpvSessionHandlerTest {
                         .claim("state", "test-state")
                         .claim("client_id", "test-client")
                         .claim("vtr", List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
+                        .claim(
+                                "https://vocab.account.gov.uk/v1/inheritedIdentityJWT",
+                                getInheritedIdentityJWT().serialize())
                         .build();
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
@@ -345,6 +361,43 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
+    @Test
+    void shouldValidateAndStoreAnyInheritedIdentity()
+            throws JsonProcessingException, JarValidationException, ParseException,
+                    VerifiableCredentialException, URISyntaxException {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
+                .thenReturn(true); // Mock enabled inherited identity feature flag
+        CriConfig testCriConfig =
+                CriConfig.builder()
+                        .credentialUrl(new URI("test-credential-url"))
+                        .componentId("test-component-id")
+                        .signingKey("test-signing-key")
+                        .build();
+        when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(testCriConfig);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        // Act
+        initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        // Assert
+        verify(mockVerifiableCredentialJwtValidator, times(1))
+                .validate(any(), eq(testCriConfig), eq("test-user-id"));
+        verify(mockVerifiableCredentialService, times(1))
+                .persistUserCredentials(any(), eq(HMRC_MIGRATION_CRI), eq("test-user-id"));
+    }
+
     private static ECPrivateKey getPrivateKey()
             throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
@@ -352,5 +405,33 @@ class InitialiseIpvSessionHandlerTest {
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    }
+
+    private static SignedJWT getInheritedIdentityJWT()
+            throws JOSEException, InvalidKeySpecException, NoSuchAlgorithmException {
+        SignedJWT inheritedIdentityJWT =
+                new SignedJWT(
+                        new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build(),
+                        new JWTClaimsSet.Builder()
+                                .subject(
+                                        "urn:fdc:gov.uk:2022:A_w9_Or3gyI-ygrzH7cNZe9qTYFkUOzHF-KoPWmb9QY")
+                                .issuer("<https://oidc.hmrc.gov.uk/migration/v1>")
+                                .notBeforeTime(new Date(1694430000L * 1000))
+                                .claim("vot", "PCL200")
+                                .claim("vtm", "<https://hmrc.gov.uk/trustmark>")
+                                .claim(
+                                        "vc",
+                                        Map.of(
+                                                "type",
+                                                List.of(
+                                                        "VerifiableCredential",
+                                                        "InheritedIdentityCredential"),
+                                                "credentialSubject",
+                                                TestFixtures.CREDENTIAL_ATTRIBUTES_1))
+                                .claim("evidence", List.of())
+                                .build());
+        inheritedIdentityJWT.sign(new ECDSASigner(getPrivateKey()));
+
+        return inheritedIdentityJWT;
     }
 }

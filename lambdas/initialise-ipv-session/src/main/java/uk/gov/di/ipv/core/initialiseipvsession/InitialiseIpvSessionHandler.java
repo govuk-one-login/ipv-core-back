@@ -154,7 +154,6 @@ public class InitialiseIpvSessionHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
 
-            // Inherited identity logic is behind a featureFlag
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 String inheritedIdentityJWT =
                         claimsSet.getStringClaim(REQUEST_INHERITED_IDENTITY_JWT_KEY);
