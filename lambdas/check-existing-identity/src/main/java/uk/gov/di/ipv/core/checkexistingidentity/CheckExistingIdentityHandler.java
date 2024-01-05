@@ -6,6 +6,7 @@ import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -246,7 +247,7 @@ public class CheckExistingIdentityHandler
 
             return buildProfileMatchedResponse(matchedProfile.get(), auditEventUser);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(e.getErrorResponse().getMessage(), e);
+            LogHelper.logErrorMessage(e.getErrorResponse().getMessage(), e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -271,25 +272,16 @@ public class CheckExistingIdentityHandler
     private Map<String, Object> buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
         switch (faceToFaceRequest.getStatus()) {
             case CriResponseService.STATUS_PENDING -> {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification."));
+                LogHelper.logMessage(Level.INFO, "F2F cri pending verification.");
                 return JOURNEY_PENDING;
             }
             case CriResponseService.STATUS_ERROR -> {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
+                LogHelper.logMessage(Level.WARN, "F2F cri error");
                 return JOURNEY_F2F_FAIL;
             }
             default -> {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F unexpected status: " + faceToFaceRequest.getStatus()));
+                LogHelper.logMessage(
+                        Level.WARN, "F2F unexpected status: " + faceToFaceRequest.getStatus());
                 return JOURNEY_F2F_FAIL;
             }
         }
@@ -297,12 +289,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildF2FNotCorrelatedResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        var message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "F2F return - failed to correlate VC data");
-        LOGGER.info(message);
+        LogHelper.logMessage(Level.WARN, "F2F return - failed to correlate VC data");
 
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -315,12 +302,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildNotCorrelatedResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "VC data does not correlate so resetting identity."));
-
+        LogHelper.logMessage(Level.INFO, "VC data does not correlate so resetting identity.");
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
@@ -331,18 +313,13 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildForceResetResponse() {
-        LOGGER.info("resetIdentity flag is enabled, reset users identity.");
+        LogHelper.logMessage(Level.INFO, "resetIdentity flag is enabled, reset users identity.");
         return JOURNEY_RESET_IDENTITY;
     }
 
     private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        var message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "F2F return - failed to match a profile.");
-        LOGGER.info(message);
+        LogHelper.logMessage(Level.INFO, "F2F return - failed to match a profile.");
 
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -356,12 +333,7 @@ public class CheckExistingIdentityHandler
     private Map<String, Object> buildNoMatchResponse(
             List<SignedJWT> credentials, AuditEventUser auditEventUser) throws SqsException {
         if (!credentials.isEmpty()) {
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Failed to match profile so resetting identity.");
-            LOGGER.info(message);
+            LogHelper.logMessage(Level.INFO, "Failed to match profile so resetting identity.");
 
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -371,13 +343,7 @@ public class CheckExistingIdentityHandler
 
             return JOURNEY_RESET_IDENTITY;
         }
-        var message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "New user so returning next.");
-        LOGGER.info(message);
-
+        LogHelper.logMessage(Level.INFO, "New user so returning next.");
         return JOURNEY_NEXT;
     }
 
@@ -401,7 +367,7 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
-        LOGGER.error(errorResponse.getMessage(), e);
+        LogHelper.logErrorMessage(errorResponse.getMessage(), e);
         return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();

@@ -70,7 +70,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 class InitialiseIpvSessionHandlerTest {
 
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
-    public static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    public static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.getInstance().generate();
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
@@ -114,10 +114,10 @@ class InitialiseIpvSessionHandlerTest {
                         signedJWT);
 
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
 
         clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);

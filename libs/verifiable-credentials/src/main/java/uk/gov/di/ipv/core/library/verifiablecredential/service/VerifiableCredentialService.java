@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -51,7 +50,7 @@ public class VerifiableCredentialService {
             throws VerifiableCredentialException {
         try {
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
-            dataStore.create(vcStoreItem, ConfigurationVariable.VC_TTL);
+            dataStore.create(vcStoreItem);
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(

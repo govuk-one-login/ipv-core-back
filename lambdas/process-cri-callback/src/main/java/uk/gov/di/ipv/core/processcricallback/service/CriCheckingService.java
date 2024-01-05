@@ -3,8 +3,7 @@ package uk.gov.di.ipv.core.processcricallback.service;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -49,7 +48,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class CriCheckingService {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
@@ -124,7 +122,7 @@ public class CriCheckingService {
                         extensions));
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
-            LOGGER.warn("Unknown Oauth error code received");
+            LogHelper.logMessage(Level.WARN, "Unknown Oauth error code received");
         }
 
         LogHelper.logCriOauthError("OAuth error received from CRI", error, errorDescription, criId);

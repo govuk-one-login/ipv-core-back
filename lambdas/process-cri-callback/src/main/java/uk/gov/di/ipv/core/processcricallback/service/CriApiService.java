@@ -18,6 +18,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpHeaders;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,11 +56,19 @@ public class CriApiService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final JWSSigner signer;
+    private final SecureTokenHelper secureTokenHelper;
+    private final Clock clock;
 
     @ExcludeFromGeneratedCoverageReport
-    public CriApiService(ConfigService configService, JWSSigner signer) {
+    public CriApiService(
+            ConfigService configService,
+            JWSSigner signer,
+            SecureTokenHelper secureTokenHelper,
+            Clock clock) {
         this.configService = configService;
         this.signer = signer;
+        this.secureTokenHelper = secureTokenHelper;
+        this.clock = clock;
     }
 
     private String getApiKey(
@@ -75,7 +85,7 @@ public class CriApiService {
         var criConfig = configService.getCriConfig(criOAuthSessionItem);
 
         try {
-            var httpRequest = buildfetchAccessTokenRequest(callbackRequest, criOAuthSessionItem);
+            var httpRequest = buildFetchAccessTokenRequest(callbackRequest, criOAuthSessionItem);
             var httpResponse = httpRequest.send();
             var tokenResponse = TokenResponse.parse(httpResponse);
 
@@ -97,7 +107,7 @@ public class CriApiService {
             }
 
             var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-            LOGGER.info("Auth Code exchanged for Access Token.");
+            LogHelper.logMessage(Level.INFO, "Auth Code exchanged for Access Token.");
             return token;
         } catch (IOException | ParseException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
@@ -107,7 +117,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildfetchAccessTokenRequest(
+    public HTTPRequest buildFetchAccessTokenRequest(
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criId = callbackRequest.getCredentialIssuerId();
@@ -117,7 +127,7 @@ public class CriApiService {
         var authorizationCode = new AuthorizationCode(authorisationCode);
 
         try {
-            var dateTime = OffsetDateTime.now();
+            var dateTime = OffsetDateTime.now(clock);
             var clientAuthClaims =
                     new ClientAuthClaims(
                             criConfig.getClientId(),
@@ -128,7 +138,7 @@ public class CriApiService {
                                                     configService.getSsmParameter(
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
-                            SecureTokenHelper.generate());
+                            secureTokenHelper.generate());
             var signedClientJwt = JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
@@ -196,13 +206,15 @@ public class CriApiService {
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(Collections.singletonList(vcJwt))
                                 .build();
-                LOGGER.info("Verifiable Credential retrieved from JWT response.");
+                LogHelper.logMessage(
+                        Level.INFO, "Verifiable Credential retrieved from JWT response.");
                 return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
                         getVerifiableCredentialResponseForApplicationJson(response.getContent());
-                LOGGER.info("Verifiable Credential retrieved from json response.");
+                LogHelper.logMessage(
+                        Level.INFO, "Verifiable Credential retrieved from json response.");
                 return verifiableCredentialResponse;
             } else {
                 LOGGER.error(

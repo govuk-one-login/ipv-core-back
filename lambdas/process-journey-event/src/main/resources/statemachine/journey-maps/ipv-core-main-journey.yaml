@@ -112,6 +112,9 @@ CHECK_EXISTING_IDENTITY:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
     fail-with-ci:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
@@ -145,10 +148,23 @@ IPV_IDENTITY_REUSE_PAGE:
     next:
       targetState: END
 
+# User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
+IPV_IDENTITY_PENDING_PAGE_TEST:
+  response:
+    type: page
+    context: f2f-delete-details
+    pageId: page-ipv-pending
+  events:
+    next:
+      targetState: PYI_F2F_DELETE_PAGE
+
 IPV_IDENTITY_PENDING_PAGE:
   response:
     type: page
     pageId: page-ipv-pending
+  events:
+    next:
+      targetState: END
 
 IPV_IDENTITY_START_PAGE:
   response:
@@ -356,8 +372,6 @@ CALL_TICF_CRI:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: main
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
@@ -370,8 +384,6 @@ CALL_TICF_CRI_ON_REUSE:
   response:
     type: process
     lambda: call-ticf-cri
-    lambdaInput:
-      journeyType: reuse
   events:
     next:
       targetState: IPV_IDENTITY_REUSE_PAGE
@@ -458,6 +470,32 @@ IPV_IDENTITY_REUSE_PAGE_TEST:
       targetState:
         PYI_NEW_DETAILS_PAGE
 
+PYI_F2F_DELETE_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-delete-details
+  parent: END_JOURNEY
+  events:
+    next:
+      targetState:
+        PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE_TEST
+
+PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
+  response:
+    type: page
+    context: f2f
+    pageId: pyi-confirm-delete-details
+  events:
+    next:
+      targetState:
+        RESET_IDENTITY_USER_INITIATED_F2F
+    end:
+      targetState:
+        IPV_IDENTITY_PENDING_PAGE_TEST
+
 PYI_NEW_DETAILS_PAGE:
   response:
     type: page
@@ -493,6 +531,26 @@ RESET_IDENTITY_USER_INITIATED:
 PYI_DETAILS_DELETED_PAGE:
   response:
     type: page
+    pageId: pyi-details-deleted
+  events:
+    next:
+      targetState:
+        IPV_IDENTITY_START_PAGE
+
+RESET_IDENTITY_USER_INITIATED_F2F:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: true
+  events:
+    next:
+      targetState: PYI_DETAILS_DELETED_PAGE_F2F
+
+PYI_DETAILS_DELETED_PAGE_F2F:
+  response:
+    type: page
+    context: f2f
     pageId: pyi-details-deleted
   events:
     next:
@@ -633,6 +691,27 @@ CRI_HMRC_KBV_J6:
       targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     next:
       targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F
+      checkIfDisabled:
+        f2f:
+          targetState: MITIGATION_02_OPTIONS
+
+CRI_HMRC_KBV_M2B:
+  response:
+    type: cri
+    criId: hmrcKbv
+  parent: CRI_STATE
+  events:
+    fail-with-no-ci:
+      targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+      checkIfDisabled:
+        f2f:
+          targetState: MITIGATION_02_OPTIONS
 
 # No photo id journey (M2B)
 CRI_CLAIMED_IDENTITY_M2B:
@@ -670,12 +749,12 @@ ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: CRI_HMRC_KBV_J6
+      targetState: CRI_HMRC_KBV_M2B
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
     enhanced-verification:
-      targetState: CRI_HMRC_KBV_J6
+      targetState: CRI_HMRC_KBV_M2B
       checkIfDisabled:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B

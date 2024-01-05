@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -37,12 +38,13 @@ public class AuthRequestValidator {
     public ValidationResult<ErrorResponse> validateRequest(
             Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (queryStringParamsMissing(queryStringParameters)) {
-            LOGGER.error("Missing required query parameters for authorisation request");
+            LogHelper.logErrorMessage(
+                    "Missing required query parameters for authorisation request");
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
         if (sessionIdMissing(requestHeaders) && clientSessionIdMissing(requestHeaders)) {
-            LOGGER.error("Missing IPV session and client session ID from headers");
+            LogHelper.logErrorMessage("Missing IPV session and client session ID from headers");
             return new ValidationResult<>(false, ErrorResponse.MISSING_SESSION_ID);
         }
 
@@ -89,7 +91,7 @@ public class AuthRequestValidator {
             }
             return Optional.empty();
         } catch (IllegalArgumentException e) {
-            LOGGER.error(e.getMessage());
+            LogHelper.logErrorMessage(e.getMessage());
             return Optional.of(ErrorResponse.INVALID_REQUEST_PARAM);
         }
     }

@@ -42,7 +42,8 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";

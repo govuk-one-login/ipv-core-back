@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -134,12 +135,6 @@ public class RequestHelper {
                 request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD, Integer.class);
     }
 
-    public static String getJourneyType(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        return extractValueFromLambdaInput(
-                request, "journeyType", ErrorResponse.MISSING_JOURNEY_TYPE, String.class);
-    }
-
     public static Boolean getIsUserInitiated(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         return extractValueFromLambdaInput(
@@ -154,12 +149,12 @@ public class RequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         Map<String, Object> lambdaInput = request.getLambdaInput();
         if (lambdaInput == null) {
-            LOGGER.error("Missing lambdaInput map");
+            LogHelper.logErrorMessage("Missing lambdaInput map");
             throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
         T value = (T) lambdaInput.get(key);
         if (value == null) {
-            LOGGER.error(String.format("Missing '%s' in lambdaInput", key));
+            LogHelper.logErrorMessage(String.format("Missing '%s' in lambdaInput", key));
             throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
         return value;
@@ -181,9 +176,9 @@ public class RequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         if (ipvSessionId == null) {
             if (allowNull) {
-                LOGGER.warn(errorMessage);
+                LogHelper.logMessage(Level.WARN, errorMessage);
             } else {
-                LOGGER.error(errorMessage);
+                LogHelper.logErrorMessage(errorMessage);
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
             }
@@ -200,7 +195,7 @@ public class RequestHelper {
     private static void validateIpAddress(String ipAddress, String errorMessage)
             throws HttpResponseExceptionWithErrorBody {
         if (ipAddress == null) {
-            LOGGER.error(errorMessage, IP_ADDRESS_HEADER);
+            LogHelper.logErrorMessage(errorMessage, IP_ADDRESS_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }

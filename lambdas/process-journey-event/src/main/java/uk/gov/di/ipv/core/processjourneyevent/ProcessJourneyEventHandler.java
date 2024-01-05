@@ -56,8 +56,6 @@ public class ProcessJourneyEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
-    private static final String MITIGATION_START = "mitigationStart";
-
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -106,7 +104,7 @@ public class ProcessJourneyEventHandler
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (ipvSessionItem == null) {
-                LOGGER.warn("Failed to find ipv-session");
+                LogHelper.logErrorMessage("Failed to find ipv-session");
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }

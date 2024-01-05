@@ -12,6 +12,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -49,7 +50,6 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -132,17 +132,12 @@ public class InitialiseIpvSessionHandler
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
             if (vtr == null || vtr.isEmpty() || vtr.stream().allMatch(String::isEmpty)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        ErrorResponse.MISSING_VTR.getMessage());
-                LOGGER.error(message);
+                LogHelper.logErrorMessage(ErrorResponse.MISSING_VTR.getMessage());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientOAuthSessionId, null, emailAddress);
@@ -174,8 +169,6 @@ public class InitialiseIpvSessionHandler
                             auditEventUser,
                             reproveAuditExtension);
 
-            LOGGER.warn("Audit Event: " + auditEvent.getExtensions());
-
             auditService.sendAuditEvent(auditEvent);
 
             Map<String, String> response =
@@ -194,7 +187,7 @@ public class InitialiseIpvSessionHandler
             LogHelper.logErrorMessage(
                     "Recoverable Jar validation failed.", e.getErrorObject().getDescription());
 
-            String clientOAuthSessionId = SecureTokenHelper.generate();
+            String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
@@ -239,13 +232,13 @@ public class InitialiseIpvSessionHandler
         boolean isInvalid = false;
 
         if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
-            LOGGER.warn("Missing client_id query parameter");
+            LogHelper.logMessage(Level.WARN, "Missing client_id query parameter");
             isInvalid = true;
         }
         LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
-            LOGGER.warn("Missing request query parameter");
+            LogHelper.logMessage(Level.WARN, "Missing request query parameter");
             isInvalid = true;
         }
 

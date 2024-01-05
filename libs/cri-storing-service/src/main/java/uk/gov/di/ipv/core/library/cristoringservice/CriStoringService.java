@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -96,17 +98,22 @@ public class CriStoringService {
     public void storeVcs(
             String criId,
             String ipAddress,
-            String ipvSessionId,
             List<SignedJWT> vcs,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem)
             throws SqsException, ParseException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException, VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         var auditEventUser =
-                new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+                new AuditEventUser(
+                        userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
+        List<String> vcReceivedThisSession =
+                ipvSessionItem.getVcReceivedThisSession() == null
+                        ? new ArrayList<>()
+                        : ipvSessionItem.getVcReceivedThisSession();
         for (SignedJWT vc : vcs) {
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -120,7 +127,9 @@ public class CriStoringService {
                     List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, criId, userId);
+            vcReceivedThisSession.add(vc.serialize());
         }
+        ipvSessionItem.setVcReceivedThisSession(vcReceivedThisSession);
 
         sendAuditEventForProcessedVcResponse(
                 vcs.isEmpty()

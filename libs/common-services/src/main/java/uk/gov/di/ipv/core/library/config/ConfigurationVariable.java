@@ -15,7 +15,6 @@ public enum ConfigurationVariable {
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     CI_CONFIG("self/ci-config"),
     CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
-    VC_TTL("self/vcTtl"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
     FEATURE_FLAGS("featureFlags/%s"),
     CRI_RESPONSE_TTL("self/criResponseTtl"),

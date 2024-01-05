@@ -116,7 +116,7 @@ public class BuildClientOauthResponseHandler
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "No ipvSession for existing ClientOAuthSession.")
                                 .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId);
-                LOGGER.info(mapMessage);
+                LOGGER.warn(mapMessage);
                 return generateClientOAuthSessionErrorResponse(clientOAuthSessionItem)
                         .toObjectMap();
             } else {
@@ -188,33 +188,30 @@ public class BuildClientOauthResponseHandler
 
             return clientResponse.toObjectMap();
         } catch (ParseException e) {
-            LOGGER.error("Authentication request could not be parsed", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
-                            ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS)
-                    .toObjectMap();
+            LogHelper.logErrorMessage("Authentication request could not be parsed", e);
+            return buildJourneyErrorResponse(
+                    HttpStatus.SC_BAD_REQUEST,
+                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
-                            e.getMessage())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
-                            e.getMessage())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI);
         } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         }
+    }
+
+    private Map<String, Object> buildJourneyErrorResponse(
+            int statusCode, ErrorResponse errorResponse) {
+        return new JourneyErrorResponse(JOURNEY_ERROR_PATH, statusCode, errorResponse)
+                .toObjectMap();
     }
 
     private ClientResponse generateClientSuccessResponse(

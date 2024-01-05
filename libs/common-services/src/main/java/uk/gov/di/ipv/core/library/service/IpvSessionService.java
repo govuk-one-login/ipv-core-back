@@ -4,8 +4,7 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -26,8 +25,6 @@ public class IpvSessionService {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String VOT_P0 = "P0";
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigService configService;
@@ -76,7 +73,8 @@ public class IpvSessionService {
                 try {
                     Thread.sleep(backoff);
                 } catch (InterruptedException e) {
-                    LOGGER.warn(
+                    LogHelper.logMessage(
+                            Level.WARN,
                             "getIpvSessionByAccessToken() backoff and retry sleep was interrupted");
                     Thread.currentThread().interrupt();
                 }
@@ -86,7 +84,7 @@ public class IpvSessionService {
         }
 
         if (attempts > 0) {
-            LOGGER.warn("getIpvSessionByAccessToken() required retries");
+            LogHelper.logMessage(Level.WARN, "getIpvSessionByAccessToken() required retries");
         }
         return Optional.ofNullable(ipvSessionItem);
     }
@@ -95,7 +93,7 @@ public class IpvSessionService {
             String clientOAuthSessionId, ErrorObject errorObject, String emailAddress) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 

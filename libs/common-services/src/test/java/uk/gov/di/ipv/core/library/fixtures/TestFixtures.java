@@ -243,6 +243,23 @@ public interface TestFixtures {
                                     "addressCountry", "GB",
                                     "validFrom", "2018-06-23")));
 
+    Map<String, Object> PASSPORT_CREDENTIAL_ATTRIBUTES =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Mary", "type", "GivenName"),
+                                            Map.of("value", "Watson", "type", "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "1932-02-25")),
+                    "passport",
+                    List.of(
+                            Map.of(
+                                    "documentNumber", "824159121",
+                                    "expiryDate", "2030-01-01")));
+
     String ADDRESS_JSON_1 =
             "{\"buildingNumber\":10,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
     String ADDRESS_JSON_2 =

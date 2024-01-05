@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jwt.SignedJWT;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -112,12 +113,7 @@ public class ProcessAsyncCriCredentialHandler
                     | CiPutException
                     | AsyncVerifiableCredentialException
                     | CiPostMitigationsException e) {
-                LOGGER.error(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to process VC response message.")
-                                .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage()));
+                LogHelper.logErrorMessage("Failed to process VC response message.", e.getMessage());
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             } catch (VerifiableCredentialException e) {
                 LOGGER.error(
@@ -217,20 +213,15 @@ public class ProcessAsyncCriCredentialHandler
                         successAsyncCriResponse.getUserId(),
                         successAsyncCriResponse.getCredentialIssuer());
         if (criResponseItem == null) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), "No response item found"));
+            LogHelper.logErrorMessage("No response item found");
             throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
         }
         if (criResponseItem.getOauthState() == null
                 || !criResponseItem
                         .getOauthState()
                         .equals(successAsyncCriResponse.getOauthState())) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    "State mismatch between response item and async response message"));
+            LogHelper.logErrorMessage(
+                    "State mismatch between response item and async response message");
             throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
         }
     }
@@ -279,11 +270,7 @@ public class ProcessAsyncCriCredentialHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         extensionErrorParams);
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Sending audit event IPV_F2F_CRI_VC_ERROR message."));
+        LogHelper.logMessage(Level.INFO, "Sending audit event IPV_F2F_CRI_VC_ERROR message.");
         auditService.sendAuditEvent(auditEvent);
     }
 

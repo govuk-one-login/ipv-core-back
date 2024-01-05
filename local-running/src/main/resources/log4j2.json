@@ -16,6 +16,10 @@
         "AppenderRef": {
           "ref": "STDOUT"
         }
+      },
+      "Logger": {
+        "level": "off",
+        "name": "com.amazonaws.xray.contexts.LambdaSegmentContext"
       }
     }
   }

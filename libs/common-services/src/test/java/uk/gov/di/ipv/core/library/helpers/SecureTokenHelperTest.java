@@ -12,7 +12,7 @@ class SecureTokenHelperTest {
 
     @Test
     void generateShouldGiveAB64StringOfKnownLength() {
-        String token = SecureTokenHelper.generate();
+        String token = SecureTokenHelper.getInstance().generate();
 
         byte[] bytes = assertDoesNotThrow(() -> Base64.getUrlDecoder().decode(token));
         assertEquals(BYTES_OF_ENTROPY, bytes.length);
