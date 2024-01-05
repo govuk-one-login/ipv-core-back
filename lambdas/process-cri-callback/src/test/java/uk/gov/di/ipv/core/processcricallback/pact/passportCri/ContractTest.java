@@ -373,7 +373,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidRequestReturnsError")
     void testCallToDummyPassportIssueCredentialWithWrongAccessToken(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
