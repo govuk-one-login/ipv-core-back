@@ -371,7 +371,7 @@ class InitialiseIpvSessionHandlerTest {
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                         .issueTime(new Date())
                         .notBeforeTime(new Date())
-                        .subject("test-user-id")
+                        .subject("test-user-id") // the inherited identity subject must equal this
                         .audience("test-audience")
                         .issuer("test-issuer")
                         .claim("response_type", "code")
@@ -424,8 +424,7 @@ class InitialiseIpvSessionHandlerTest {
                 new SignedJWT(
                         new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build(),
                         new JWTClaimsSet.Builder()
-                                .subject(
-                                        "urn:fdc:gov.uk:2022:A_w9_Or3gyI-ygrzH7cNZe9qTYFkUOzHF-KoPWmb9QY")
+                                .subject("test-user-id")
                                 .issuer("<https://oidc.hmrc.gov.uk/migration/v1>")
                                 .notBeforeTime(new Date(1694430000L * 1000))
                                 .claim("vot", "PCL200")
