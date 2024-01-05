@@ -6,14 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.net.URI;
 import java.text.ParseException;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
 public class CriConfig {
-    @Getter private URI credentialUrl;
     @Getter private String componentId;
     private String signingKey;
 

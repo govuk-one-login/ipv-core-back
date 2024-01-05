@@ -10,11 +10,13 @@ import java.net.URI;
 @Getter
 @NoArgsConstructor
 public class RestCriConfig extends CriConfig {
+    private URI credentialUrl;
     private boolean requiresApiKey;
 
     public RestCriConfig(
             URI credentialUrl, String signingKey, String componentId, boolean requiresApiKey) {
-        super(credentialUrl, signingKey, componentId);
+        super(signingKey, componentId);
+        this.credentialUrl = credentialUrl;
         this.requiresApiKey = requiresApiKey;
     }
 }

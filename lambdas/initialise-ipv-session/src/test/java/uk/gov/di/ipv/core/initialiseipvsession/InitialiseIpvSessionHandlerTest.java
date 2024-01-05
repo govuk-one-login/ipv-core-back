@@ -52,8 +52,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
@@ -104,7 +102,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        JWTClaimsSet claimsSet = // this should indicate something about the vtrs
+        JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                         .issueTime(new Date())
@@ -117,9 +115,6 @@ class InitialiseIpvSessionHandlerTest {
                         .claim("state", "test-state")
                         .claim("client_id", "test-client")
                         .claim("vtr", List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
-                        .claim(
-                                "https://vocab.account.gov.uk/v1/inheritedIdentityJWT",
-                                getInheritedIdentityJWT().serialize())
                         .build();
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
@@ -364,19 +359,35 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldValidateAndStoreAnyInheritedIdentity()
             throws JsonProcessingException, JarValidationException, ParseException,
-                    VerifiableCredentialException, URISyntaxException {
+                    VerifiableCredentialException, InvalidKeySpecException,
+                    NoSuchAlgorithmException, JOSEException {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(signedJWT.getJWTClaimsSet());
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
+                        .issueTime(new Date())
+                        .notBeforeTime(new Date())
+                        .subject("test-user-id")
+                        .audience("test-audience")
+                        .issuer("test-issuer")
+                        .claim("response_type", "code")
+                        .claim("redirect_uri", "http://example.com")
+                        .claim("state", "test-state")
+                        .claim("client_id", "test-client")
+                        .claim("vtr", List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
+                        .claim(
+                                "https://vocab.account.gov.uk/v1/inheritedIdentityJWT",
+                                getInheritedIdentityJWT().serialize())
+                        .build();
+        when(mockJarValidator.validateRequestJwt(any(), any())).thenReturn(claimsSet);
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
         CriConfig testCriConfig =
                 CriConfig.builder()
-                        .credentialUrl(new URI("test-credential-url"))
                         .componentId("test-component-id")
                         .signingKey("test-signing-key")
                         .build();

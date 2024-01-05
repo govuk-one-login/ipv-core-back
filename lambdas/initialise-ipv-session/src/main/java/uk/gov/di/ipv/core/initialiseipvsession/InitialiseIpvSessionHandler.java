@@ -62,12 +62,11 @@ public class InitialiseIpvSessionHandler
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
-    private static final String REQUEST_SUB_KEY = "sub";
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
-    private static final String REQUEST_INHERITED_IDENTITY_JWT_KEY =
+    private static final String REQUEST_HMRC_INHERITED_IDENTITY_JWT_KEY =
             "https://vocab.account.gov.uk/v1/inheritedIdentityJWT";
 
     private final ConfigService configService;
@@ -154,14 +153,6 @@ public class InitialiseIpvSessionHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                String inheritedIdentityJWT =
-                        claimsSet.getStringClaim(REQUEST_INHERITED_IDENTITY_JWT_KEY);
-                if (inheritedIdentityJWT != null) {
-                    validateAndStoreInheritedIdentity(inheritedIdentityJWT, claimsSet);
-                }
-            }
-
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             IpvSessionItem ipvSessionItem =
@@ -179,6 +170,15 @@ public class InitialiseIpvSessionHandler
                             ipvSessionItem.getIpvSessionId(),
                             govukSigninJourneyId,
                             ipAddress);
+
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                String inheritedIdentityJWT =
+                        claimsSet.getStringClaim(REQUEST_HMRC_INHERITED_IDENTITY_JWT_KEY);
+                if (inheritedIdentityJWT != null) {
+                    validateAndStoreHMRCInheritedIdentity(
+                            inheritedIdentityJWT, clientOAuthSessionItem.getUserId());
+                }
+            }
 
             Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
 
@@ -261,12 +261,8 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    private void validateAndStoreInheritedIdentity(
-            String inheritedIdentityJWT, JWTClaimsSet claimsSet)
+    private void validateAndStoreHMRCInheritedIdentity(String inheritedIdentityJWT, String userId)
             throws ParseException, VerifiableCredentialException {
-        // We get the userId from the above claimsSet sub,
-        // though this is validated to be the same as in the signedInheritedIdentityJWT claimSet
-        String userId = claimsSet.getStringClaim(REQUEST_SUB_KEY);
         SignedJWT signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJWT);
         CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
