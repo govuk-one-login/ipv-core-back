@@ -210,6 +210,20 @@ class ContractTest {
                 .toPact();
     }
 
+    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidRequestReturnsError(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is an invalid access token")
+                .uponReceiving("Invalid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
     void fetchAccessToken_whenCalledAgainstPassportCri_retrievesAValidAccessToken(
@@ -354,6 +368,57 @@ class ContractTest {
                                 throw new RuntimeException(e);
                             }
                         });
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidRequestReturnsError")
+    void testCallToDummyPassportIssueCredentialWithWrongAccessToken(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
+        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
+
+        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
+        ciConfigMap.put("A02", ciConfig1);
+        ciConfigMap.put("A03", ciConfig2);
+
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockSigner,
+                        mockSecureTokenHelper,
+                        Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC));
+
+        // Act
+        try {
+            underTest.fetchVerifiableCredential(
+                    new BearerAccessToken("dummyAccessToken"),
+                    new CriCallbackRequest(
+                            "dummyAuthCode",
+                            credentialIssuerConfig.getClientId(),
+                            "dummySessionId",
+                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
+                            "dummyState",
+                            null,
+                            null,
+                            "dummyIpAddress",
+                            "dummyFeatureSet"),
+                    new CriOAuthSessionItem(
+                            "dummySessionId",
+                            "dummyOAuthSessionId",
+                            "dummyCriId",
+                            "dummyConnection",
+                            900));
+        } catch (CriApiException e) {
+            assertEquals(500, e.getHttpStatusCode());
+        }
     }
 
     @NotNull
