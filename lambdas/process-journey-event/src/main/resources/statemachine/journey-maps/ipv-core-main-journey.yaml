@@ -303,6 +303,9 @@ PYI_CRI_ESCAPE:
       targetState: CRI_DCMAW_PYI_ESCAPE
     f2f:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
     end:
       targetState: END
 
@@ -390,6 +393,18 @@ CALL_TICF_CRI_ON_REUSE:
       checkFeatureFlag:
         deleteDetailsEnabled:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
+    fail-with-ci:
+      targetState: PYI_NO_MATCH
+    error:
+      targetState: ERROR
+
+CALL_TICF_CRI_BEFORE_F2F:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: CRI_F2F
     fail-with-ci:
       targetState: PYI_NO_MATCH
     error:
@@ -666,8 +681,14 @@ ADDRESS_AND_FRAUD_J4:
   exitEvents:
     next:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
     enhanced-verification:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
 
 # HMRC KBV journey (J6)
 CRI_NINO_J6:
@@ -961,6 +982,9 @@ MITIGATION_02_OPTIONS_WITH_F2F:
   events:
     f2f:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
@@ -978,6 +1002,9 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
   events:
     f2f:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
@@ -993,6 +1020,9 @@ PYI_POST_OFFICE:
   events:
     next:
       targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CALL_TICF_CRI_BEFORE_F2F
     end:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
