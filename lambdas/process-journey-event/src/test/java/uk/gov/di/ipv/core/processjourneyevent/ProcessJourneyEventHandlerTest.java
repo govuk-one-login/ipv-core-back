@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepEvents;
-import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepPages;
 import uk.gov.di.ipv.core.processjourneyevent.utils.ProcessJourneyStepStates;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
@@ -50,6 +49,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JO
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class ProcessJourneyEventHandlerTest {
+    private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
@@ -185,8 +185,7 @@ class ProcessJourneyEventHandlerTest {
                 OAuth2Error.ACCESS_DENIED.getDescription(),
                 capturedIpvSessionItem.getErrorDescription());
 
-        assertEquals(
-                ProcessJourneyStepPages.PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE, output.get("page"));
+        assertEquals(PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE, output.get("page"));
     }
 
     @Test
