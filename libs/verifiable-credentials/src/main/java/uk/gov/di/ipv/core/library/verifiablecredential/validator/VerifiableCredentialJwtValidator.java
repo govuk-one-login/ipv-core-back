@@ -40,8 +40,22 @@ public class VerifiableCredentialJwtValidator {
     private static final Gson gson = new Gson();
     private final ConfigService configService;
 
+    public interface IClaimsVerifierFactory {
+        DefaultJWTClaimsVerifier<SimpleSecurityContext> createVerifier(
+                JWTClaimsSet exactMatchClaims, HashSet<String> requiredClaims);
+    }
+
+    private IClaimsVerifierFactory claimsVerifierFactory = DefaultJWTClaimsVerifier::new;
+
     public VerifiableCredentialJwtValidator(ConfigService configService) {
         this.configService = configService;
+    }
+
+    // Constructor for tests where we need to use a fixed time.
+    public VerifiableCredentialJwtValidator(
+            ConfigService configService, IClaimsVerifierFactory claimsVerifierFactory) {
+        this.configService = configService;
+        this.claimsVerifierFactory = claimsVerifierFactory;
     }
 
     public void validate(
@@ -124,10 +138,13 @@ public class VerifiableCredentialJwtValidator {
     private void validateClaimsSet(
             SignedJWT verifiableCredential, String componentId, String userId)
             throws VerifiableCredentialException {
+
+        var exactMatchClaims =
+                new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build();
+        var requiredClaims = new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME));
+
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
-                new DefaultJWTClaimsVerifier<>(
-                        new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build(),
-                        new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME)));
+                claimsVerifierFactory.createVerifier(exactMatchClaims, requiredClaims);
 
         try {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
