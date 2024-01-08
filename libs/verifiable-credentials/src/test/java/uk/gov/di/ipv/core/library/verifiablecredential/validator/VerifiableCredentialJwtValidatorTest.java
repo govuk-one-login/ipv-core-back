@@ -55,11 +55,12 @@ class VerifiableCredentialJwtValidatorTest {
     @Mock private ConfigService mockConfigService;
     private SignedJWT verifiableCredentials;
 
-    @InjectMocks private VerifiableCredentialJwtValidator vcJwtValidator;
+    private VerifiableCredentialJwtValidator vcJwtValidator;
 
     @BeforeEach
     void setUp() throws Exception {
         verifiableCredentials = createTestVerifiableCredentials(TEST_USER, TEST_ISSUER);
+        vcJwtValidator = new VerifiableCredentialJwtValidator(mockConfigService);
     }
 
     @Test
