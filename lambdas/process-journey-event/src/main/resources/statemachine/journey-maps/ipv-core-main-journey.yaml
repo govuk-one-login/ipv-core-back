@@ -6,11 +6,6 @@ END_JOURNEY:
 
 CRI_STATE:
   events:
-    next:
-      targetState: UNEXPECTED_EVENT
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CALL_TICF_CRI_ON_TECHNICAL_ERR
     not-found:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
@@ -320,13 +315,6 @@ PYI_CRI_ESCAPE_NO_F2F:
       targetState: END
 
 ERROR:
-  response:
-    type: error
-    pageId: pyi-technical
-    statusCode: 500
-  parent: END_JOURNEY
-
-UNEXPECTED_EVENT:
   response:
     type: error
     pageId: pyi-technical
