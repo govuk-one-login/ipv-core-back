@@ -2492,22 +2492,11 @@ Resources:
           AttributeType: "S"
         - AttributeName: "credentialIssuer"
           AttributeType: "S"
-        - AttributeName: "dateCreated"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "userId"
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"
-      GlobalSecondaryIndexes:
-        - IndexName: "dateCreated"
-          KeySchema:
-            - AttributeName: "userId"
-              KeyType: "HASH"
-            - AttributeName: "dateCreated"
-              KeyType: "RANGE"
-          Projection:
-            ProjectionType: "ALL"
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: !If
