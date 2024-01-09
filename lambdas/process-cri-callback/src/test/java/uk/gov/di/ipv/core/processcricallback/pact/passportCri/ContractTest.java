@@ -17,7 +17,6 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -56,7 +55,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "PassportCriProvider")
@@ -299,12 +297,22 @@ class ContractTest {
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is an invalid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyPassportComponentId is a valid issuer")
+                .given("VC givenName is Mary")
+                .given("VC familyName is Watson")
+                .given("VC birthDate is 1932-02-25")
+                .given("VC passport documentNumber is 123456789")
+                .given("VC passport expiryDate is 2030-12-12")
                 .uponReceiving("Invalid POST request")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
-                .status(404)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, IN_VALID_VC_BODY, VALID_VC_SIGNATURE))
+                .status(200)
                 .toPact();
     }
 
@@ -515,7 +523,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidRequestReturnsError")
     void testCallToDummyPassportIssueCredentialWithWrongAccessToken(MockServer mockServer)
-            throws URISyntaxException {
+            throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -529,6 +537,15 @@ class ContractTest {
         when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
+        var verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
         var underTest =
@@ -536,30 +553,42 @@ class ContractTest {
                         mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
-        try {
-            underTest.fetchVerifiableCredential(
-                    new BearerAccessToken("dummyAccessToken"),
-                    new CriCallbackRequest(
-                            "dummyAuthCode",
-                            credentialIssuerConfig.getClientId(),
-                            "dummySessionId",
-                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
-                            "dummyState",
-                            null,
-                            null,
-                            "dummyIpAddress",
-                            "dummyFeatureSet"),
-                    new CriOAuthSessionItem(
-                            "dummySessionId",
-                            "dummyOAuthSessionId",
-                            "dummyCriId",
-                            "dummyConnection",
-                            900));
-        } catch (CriApiException e) {
-            // Assert
-            assertEquals(500, e.getHttpStatusCode());
-            assertEquals("Failed to get credential from issuer", e.getErrorResponse().getMessage());
-        }
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        new CriCallbackRequest(
+                                "dummyAuthCode",
+                                credentialIssuerConfig.getClientId(),
+                                "dummySessionId",
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
+                                "dummyState",
+                                null,
+                                null,
+                                "dummyIpAddress",
+                                "dummyFeatureSet"),
+                        new CriOAuthSessionItem(
+                                "dummySessionId",
+                                "dummyOAuthSessionId",
+                                "dummyCriId",
+                                "dummyConnection",
+                                900));
+
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                            } catch (VerifiableCredentialException e) {
+                                // Assert
+                                assertEquals(500, e.getHttpStatusCode());
+                                assertEquals(
+                                        "Failed to validate verifiable credential",
+                                        e.getErrorResponse().getMessage());
+                            }
+                        });
     }
 
     @NotNull
