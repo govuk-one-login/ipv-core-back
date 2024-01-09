@@ -146,6 +146,69 @@ class ContractTest {
             }
             """;
 
+    private static final String IN_VALID_VC_BODY =
+            """
+                    {
+                      "iss": "dummyPassportComponentId",
+                      "sub": "test-subject",
+                      "nbf": 4070908800,
+                      "exp": 4070909400,
+                      "vc": {
+                        "@context": [
+                          "https://www.w3.org/2018/credentials/v1",
+                          "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
+                        ],
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "passport": [
+                            {
+                              "expiryDate": "2030-12-12",
+                              "documentNumber": "123456789"
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1932-02-25"
+                            }
+                          ],
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Mary"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Watson"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "evidence": [
+                            {
+                                "failedCheckDetails": [
+                                    {
+                                        "checkMethod": "data"
+                                    }
+                                ],
+                                "validityScore": 0,
+                                "strengthScore": 4,
+                                "ci": [
+                                    "D02"
+                                ],
+                                "txn": "c070fc08-cd26-41d8-8ef6-72bb270aa783",
+                                "type": "IdentityCheck"
+                            }
+                        ]
+                      }
+                    }
+                    """;
+
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
