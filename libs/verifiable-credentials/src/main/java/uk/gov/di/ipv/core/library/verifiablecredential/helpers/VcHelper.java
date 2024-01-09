@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45F2fValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45NinoValidator;
+import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45TicfValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -79,7 +80,7 @@ public class VcHelper {
     private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
-                switch (item.getType()) {
+                switch (item.getEvidenceType()) {
                     case EVIDENCE -> {
                         return Gpg45EvidenceValidator.isSuccessful(item);
                     }
@@ -98,7 +99,10 @@ public class VcHelper {
                     case NINO -> {
                         return Gpg45NinoValidator.isSuccessful(item);
                     }
-                    default -> LOGGER.info("Unexpected evidence type: {}", item.getType());
+                    case TICF -> {
+                        return Gpg45TicfValidator.isSuccessful(item);
+                    }
+                    default -> LOGGER.info("Unexpected evidence type: {}", item.getEvidenceType());
                 }
             }
             return false;

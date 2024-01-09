@@ -44,6 +44,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -69,6 +70,7 @@ import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -374,7 +376,7 @@ public class BuildCriOauthRequestHandler
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
         List<String> credentials =
                 userIdentityService.getUserIssuedCredentials(
-                        verifiableCredentialService.getVcStoreItems(userId));
+                        excludeTicfVC(verifiableCredentialService.getVcStoreItems(userId)));
         List<SignedJWT> signedJWTs = new ArrayList<>();
 
         for (String credential : credentials) {
@@ -386,6 +388,12 @@ public class BuildCriOauthRequestHandler
             }
         }
         return signedJWTs;
+    }
+
+    private List<VcStoreItem> excludeTicfVC(List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
+                .filter(vcStoreItem -> !vcStoreItem.getCredentialIssuer().equals(TICF_CRI))
+                .toList();
     }
 
     @Tracing
@@ -416,7 +424,7 @@ public class BuildCriOauthRequestHandler
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {
                         LogHelper.logErrorMessage(
-                                "Credential subject missing from verified credential");
+                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage());
                         throw new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                     }

@@ -396,6 +396,18 @@ CRI_TICF_BEFORE_F2F:
     error:
       targetState: ERROR
 
+CRI_TICF_BEFORE_F2F_MITIGATION:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: CRI_F2F
+    fail-with-ci:
+      targetState: CRI_F2F
+    error:
+      targetState: ERROR
+
 CRI_TICF_BEFORE_NO_MATCH:
   response:
     type: process
@@ -970,7 +982,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       targetState: CRI_F2F
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
+          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
@@ -990,7 +1002,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       targetState: CRI_F2F
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
+          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:

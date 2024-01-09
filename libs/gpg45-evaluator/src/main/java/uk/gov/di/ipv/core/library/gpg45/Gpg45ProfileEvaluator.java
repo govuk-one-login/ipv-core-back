@@ -108,7 +108,7 @@ public class Gpg45ProfileEvaluator {
             List<CredentialEvidenceItem> gpg45EvidenceItems =
                     convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
             for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
-                evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
+                evidenceMap.get(gpg45EvidenceItem.getEvidenceType()).add(gpg45EvidenceItem);
             }
         }
     }
@@ -124,8 +124,8 @@ public class Gpg45ProfileEvaluator {
 
     private boolean isRelevantEvidence(CredentialEvidenceItem evidenceItem)
             throws UnknownEvidenceTypeException {
-        return (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
-                || evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.F2F));
+        return (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
+                || evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.F2F));
     }
 
     private List<CredentialEvidenceItem> convertEvidenceItemToGpg45EvidenceItems(
@@ -143,7 +143,7 @@ public class Gpg45ProfileEvaluator {
                         .build());
 
         int verificationScore;
-        if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
+        if (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
             if (evidenceItem.getActivityHistoryScore() != null) {
                 gpg45CredentialItems.add(
                         new CredentialEvidenceItem(
@@ -197,14 +197,15 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.FRAUD_WITH_ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>());
+                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.TICF, new ArrayList<>());
 
         for (SignedJWT signedJWT : credentials) {
             List<CredentialEvidenceItem> credentialEvidenceList =
                     parseCredentialEvidence(signedJWT);
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
                 evidenceItem.setCredentialIss(signedJWT.getJWTClaimsSet().getIssuer());
-                evidenceMap.get(evidenceItem.getType()).add(evidenceItem);
+                evidenceMap.get(evidenceItem.getEvidenceType()).add(evidenceItem);
             }
         }
 

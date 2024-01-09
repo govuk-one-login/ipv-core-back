@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.TICF_EVIDENCE_TYPE;
 
 class CredentialEvidenceItemTest {
     @ParameterizedTest
@@ -82,7 +83,7 @@ class CredentialEvidenceItemTest {
     void shouldGetTypeActivity() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder().activityHistoryScore(30).build();
-        assertEquals(EvidenceType.ACTIVITY, credentialEvidenceItem.getType());
+        assertEquals(EvidenceType.ACTIVITY, credentialEvidenceItem.getEvidenceType());
         assertEquals(30, credentialEvidenceItem.getActivityHistoryScore());
     }
 
@@ -90,9 +91,9 @@ class CredentialEvidenceItemTest {
     @MethodSource("provideCasesForNotActivity")
     void shouldNotGetTypeActivity(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.ACTIVITY, item.getType());
+            assertNotEquals(EvidenceType.ACTIVITY, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -116,7 +117,7 @@ class CredentialEvidenceItemTest {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         EvidenceType.IDENTITY_FRAUD, 30, Collections.emptyList());
-        assertEquals(EvidenceType.IDENTITY_FRAUD, credentialEvidenceItem.getType());
+        assertEquals(EvidenceType.IDENTITY_FRAUD, credentialEvidenceItem.getEvidenceType());
         assertEquals(30, credentialEvidenceItem.getIdentityFraudScore());
     }
 
@@ -124,9 +125,9 @@ class CredentialEvidenceItemTest {
     @MethodSource("provideCasesForNotIdentityFraud")
     void shouldNotGetTypeIdentityFraud(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.IDENTITY_FRAUD, item.getType());
+            assertNotEquals(EvidenceType.IDENTITY_FRAUD, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -149,7 +150,7 @@ class CredentialEvidenceItemTest {
     void shouldGetTypeVerification() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(EvidenceType.VERIFICATION, 30, Collections.emptyList());
-        assertEquals(EvidenceType.VERIFICATION, credentialEvidenceItem.getType());
+        assertEquals(EvidenceType.VERIFICATION, credentialEvidenceItem.getEvidenceType());
         assertEquals(30, credentialEvidenceItem.getVerificationScore());
     }
 
@@ -157,9 +158,9 @@ class CredentialEvidenceItemTest {
     @MethodSource("provideCasesForNotVerification")
     void shouldNotGetTypeVerification(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.VERIFICATION, item.getType());
+            assertNotEquals(EvidenceType.VERIFICATION, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -182,23 +183,23 @@ class CredentialEvidenceItemTest {
     void throwsForEvidenceTypeConstructorGetTypeNotActivityIdentityFraudNorVerification() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(EvidenceType.EVIDENCE, 30, Collections.emptyList());
-        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
+        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getEvidenceType);
     }
 
     @Test
     void shouldGetTypeEvidence() throws UnknownEvidenceTypeException {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder().strengthScore(30).validityScore(30).build();
-        assertEquals(EvidenceType.EVIDENCE, credentialEvidenceItem.getType());
+        assertEquals(EvidenceType.EVIDENCE, credentialEvidenceItem.getEvidenceType());
     }
 
     @ParameterizedTest
     @MethodSource("provideCasesForNotEvidence")
     void shouldNotGetTypeEvidence(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.EVIDENCE, item.getType());
+            assertNotEquals(EvidenceType.EVIDENCE, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -223,7 +224,7 @@ class CredentialEvidenceItemTest {
                         .checkDetails(List.of(new CheckDetail()))
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem1.getType());
+        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem1.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem2 =
                 CredentialEvidenceItem.builder()
@@ -231,7 +232,7 @@ class CredentialEvidenceItemTest {
                         .validityScore(30)
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem2.getType());
+        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem2.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem3 =
                 CredentialEvidenceItem.builder()
@@ -239,16 +240,16 @@ class CredentialEvidenceItemTest {
                         .validityScore(30)
                         .checkDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem3.getType());
+        assertEquals(EvidenceType.DCMAW, credentialEvidenceItem3.getEvidenceType());
     }
 
     @ParameterizedTest
     @MethodSource("provideCasesForNotDcmaw")
     void shouldNotGetTypeDcmaw(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.DCMAW, item.getType());
+            assertNotEquals(EvidenceType.DCMAW, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -271,7 +272,7 @@ class CredentialEvidenceItemTest {
                         .checkDetails(List.of(new CheckDetail()))
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.F2F, credentialEvidenceItem1.getType());
+        assertEquals(EvidenceType.F2F, credentialEvidenceItem1.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem2 =
                 CredentialEvidenceItem.builder()
@@ -280,7 +281,7 @@ class CredentialEvidenceItemTest {
                         .verificationScore(30)
                         .checkDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.F2F, credentialEvidenceItem2.getType());
+        assertEquals(EvidenceType.F2F, credentialEvidenceItem2.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem3 =
                 CredentialEvidenceItem.builder()
@@ -289,16 +290,16 @@ class CredentialEvidenceItemTest {
                         .verificationScore(30)
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.F2F, credentialEvidenceItem3.getType());
+        assertEquals(EvidenceType.F2F, credentialEvidenceItem3.getEvidenceType());
     }
 
     @ParameterizedTest
     @MethodSource("provideCasesForNotF2F")
     void shouldNotGetTypeF2F(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.F2F, item.getType());
+            assertNotEquals(EvidenceType.F2F, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -318,16 +319,16 @@ class CredentialEvidenceItemTest {
                         .identityFraudScore(30)
                         .activityHistoryScore(30)
                         .build();
-        assertEquals(EvidenceType.FRAUD_WITH_ACTIVITY, credentialEvidenceItem.getType());
+        assertEquals(EvidenceType.FRAUD_WITH_ACTIVITY, credentialEvidenceItem.getEvidenceType());
     }
 
     @ParameterizedTest
     @MethodSource("provideCasesForNotFraudWithActivity")
     void shouldNotGetTypeFraudWithActivity(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.FRAUD_WITH_ACTIVITY, item.getType());
+            assertNotEquals(EvidenceType.FRAUD_WITH_ACTIVITY, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
     }
 
@@ -348,27 +349,44 @@ class CredentialEvidenceItemTest {
                         .checkDetails(List.of(new CheckDetail()))
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.NINO, credentialEvidenceItem1.getType());
+        assertEquals(EvidenceType.NINO, credentialEvidenceItem1.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem2 =
                 CredentialEvidenceItem.builder()
                         .failedCheckDetails(List.of(new CheckDetail()))
                         .build();
-        assertEquals(EvidenceType.NINO, credentialEvidenceItem2.getType());
+        assertEquals(EvidenceType.NINO, credentialEvidenceItem2.getEvidenceType());
 
         CredentialEvidenceItem credentialEvidenceItem3 =
                 CredentialEvidenceItem.builder().checkDetails(List.of(new CheckDetail())).build();
-        assertEquals(EvidenceType.NINO, credentialEvidenceItem3.getType());
+        assertEquals(EvidenceType.NINO, credentialEvidenceItem3.getEvidenceType());
     }
 
     @ParameterizedTest
     @MethodSource("provideCasesForNotNino")
     void shouldNotGetTypeNino(CredentialEvidenceItem item) {
         try {
-            assertNotEquals(EvidenceType.NINO, item.getType());
+            assertNotEquals(EvidenceType.NINO, item.getEvidenceType());
         } catch (UnknownEvidenceTypeException exception) {
-            assertThrows(UnknownEvidenceTypeException.class, item::getType);
+            assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
+    }
+
+    @Test
+    void shouldGetTypeTicf() throws UnknownEvidenceTypeException {
+        CredentialEvidenceItem credentialEvidenceItem1 = CredentialEvidenceItem.builder().build();
+        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem1::getEvidenceType);
+
+        CredentialEvidenceItem credentialEvidenceItem2 =
+                CredentialEvidenceItem.builder().type(TICF_EVIDENCE_TYPE).build();
+        assertEquals(EvidenceType.TICF, credentialEvidenceItem2.getEvidenceType());
+    }
+
+    @Test
+    void shouldNotGetTypeTicf() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder().type("IdentityCheck").build();
+        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getEvidenceType);
     }
 
     private static Stream<CredentialEvidenceItem> provideCasesForNotNino() {
@@ -383,7 +401,7 @@ class CredentialEvidenceItemTest {
     @Test
     void throwsForGetTypeUnknown() {
         CredentialEvidenceItem credentialEvidenceItem = CredentialEvidenceItem.builder().build();
-        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getType);
+        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem::getEvidenceType);
     }
 
     @Test
