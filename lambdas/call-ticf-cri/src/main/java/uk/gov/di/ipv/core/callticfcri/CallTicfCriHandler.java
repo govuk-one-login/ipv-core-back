@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -48,8 +49,8 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     public static final String VOT_P0 = "P0";
-    private static final Map<String, Object> JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
 
@@ -129,6 +130,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiPutException
                 | ParseException
                 | CiRetrievalException
+                | ConfigException
                 | JsonProcessingException e) {
             LogHelper.logErrorMessage("Error processing response from TICF CRI", e);
             return new JourneyErrorResponse(
@@ -147,7 +149,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws ParseException, TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    JsonProcessingException {
+                    JsonProcessingException, ConfigException {
         String featureSet = RequestHelper.getFeatureSet(request);
         configService.setFeatureSet(featureSet);
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -180,7 +182,10 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LogHelper.logMessage(Level.INFO, "CI score is breaching threshold - setting VOT to P0");
             ipvSessionItem.setVot(VOT_P0);
 
-            return JOURNEY_FAIL_WITH_CI;
+            return ciMitUtilityService
+                    .getCiMitigationJourneyStep(cis)
+                    .orElse(JOURNEY_FAIL_WITH_CI)
+                    .toObjectMap();
         }
 
         LogHelper.logMessage(Level.INFO, "CI score not breaching threshold");
@@ -190,7 +195,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Tracing
     private List<String> getVcToSendToTicf(String userId, IpvSessionItem ipvSessionItem) {
         List<String> vcInStore =
-                userIdentityService.getUserIssuedCredentials(
+                userIdentityService.getIdentityCredentials(
                         verifiableCredentialService.getVcStoreItems(userId));
         List<String> vcReceivedThisSession = ipvSessionItem.getVcReceivedThisSession();
 

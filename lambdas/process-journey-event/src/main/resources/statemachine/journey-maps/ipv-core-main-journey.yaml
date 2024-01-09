@@ -364,6 +364,8 @@ CRI_TICF_BEFORE_SUCCESS:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
+    enhanced-verification:
+      targetState: PYI_NO_MATCH
     fail-with-ci:
       targetState: PYI_NO_MATCH
     error:
@@ -379,6 +381,8 @@ CRI_TICF_BEFORE_REUSE:
       checkFeatureFlag:
         deleteDetailsEnabled:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
+    enhanced-verification:
+      targetState: PYI_NO_MATCH
     fail-with-ci:
       targetState: PYI_NO_MATCH
     error:
@@ -391,20 +395,10 @@ CRI_TICF_BEFORE_F2F:
   events:
     next:
       targetState: CRI_F2F
+    enhanced-verification:
+      targetState: CRI_F2F
     fail-with-ci:
       targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
-
-CRI_TICF_BEFORE_F2F_MITIGATION:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: CRI_F2F
-    fail-with-ci:
-      targetState: CRI_F2F
     error:
       targetState: ERROR
 
@@ -414,6 +408,8 @@ CRI_TICF_BEFORE_NO_MATCH:
     lambda: call-ticf-cri
   events:
     next:
+      targetState: PYI_NO_MATCH
+    enhanced-verification:
       targetState: PYI_NO_MATCH
     fail-with-ci:
       targetState: PYI_NO_MATCH
@@ -427,6 +423,8 @@ CRI_TICF_BEFORE_ANOTHER_WAY:
   events:
     next:
       targetState: PYI_ANOTHER_WAY
+    enhanced-verification:
+      targetState: PYI_ANOTHER_WAY
     fail-with-ci:
       targetState: PYI_ANOTHER_WAY
     error:
@@ -438,6 +436,8 @@ CRI_TICF_BEFORE_ERROR:
     lambda: call-ticf-cri
   events:
     next:
+      targetState: ERROR
+    enhanced-verification:
       targetState: ERROR
     fail-with-ci:
       targetState: ERROR
@@ -688,32 +688,6 @@ ADDRESS_AND_FRAUD_J4:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
 
-# F2F journey (J4) - Mitigation
-CRI_CLAIMED_IDENTITY_J4_MITIGATION:
-  response:
-    type: cri
-    criId: claimedIdentity
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: ADDRESS_AND_FRAUD_J4_MITIGATION
-    enhanced-verification:
-      targetState: ADDRESS_AND_FRAUD_J4_MITIGATION
-
-ADDRESS_AND_FRAUD_J4_MITIGATION:
-  nestedJourney: ADDRESS_AND_FRAUD
-  exitEvents:
-    next:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
-    enhanced-verification:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
-
 # HMRC KBV journey (J6)
 CRI_NINO_J6:
   response:
@@ -917,7 +891,7 @@ MITIGATION_01_F2F_START_PAGE:
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_CLAIMED_IDENTITY_J4_MITIGATION
+          targetState: CRI_CLAIMED_IDENTITY_J4
     end:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
@@ -933,7 +907,7 @@ MITIGATION_01_PYI_POST_OFFICE:
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_CLAIMED_IDENTITY_J4_MITIGATION
+          targetState: CRI_CLAIMED_IDENTITY_J4
     end:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
@@ -1014,7 +988,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       targetState: CRI_F2F
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
+          targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
@@ -1034,7 +1008,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       targetState: CRI_F2F
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
+          targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:

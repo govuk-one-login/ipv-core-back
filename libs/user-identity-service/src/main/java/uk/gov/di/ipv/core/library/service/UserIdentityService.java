@@ -55,6 +55,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -116,8 +117,8 @@ public class UserIdentityService {
         VcHelper.setConfigService(configService);
     }
 
-    public List<String> getUserIssuedCredentials(List<VcStoreItem> vcStoreItems) {
-        return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
+    public List<String> getIdentityCredentials(List<VcStoreItem> vcStoreItems) {
+        return excludeTicfVC(vcStoreItems).stream().map(VcStoreItem::getCredential).toList();
     }
 
     public UserIdentity generateUserIdentity(
@@ -255,6 +256,12 @@ public class UserIdentityService {
             return false;
         }
         return true;
+    }
+
+    private List<VcStoreItem> excludeTicfVC(List<VcStoreItem> vcStoreItems) {
+        return vcStoreItems.stream()
+                .filter(vcStoreItem -> !vcStoreItem.getCredentialIssuer().equals(TICF_CRI))
+                .toList();
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(

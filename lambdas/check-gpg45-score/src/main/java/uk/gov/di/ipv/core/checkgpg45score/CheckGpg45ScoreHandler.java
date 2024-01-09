@@ -157,7 +157,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
         return gpg45ProfileEvaluator.parseCredentials(
-                userIdentityService.getUserIssuedCredentials(
+                userIdentityService.getIdentityCredentials(
                         verifiableCredentialService.getVcStoreItems(userId)));
     }
 }

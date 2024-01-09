@@ -17,7 +17,7 @@ class Gpg45TicfValidatorTest {
     }
 
     @Test
-    void isSuccessfulShouldReturnFalseOnValidCredential() {
+    void isSuccessfulShouldReturnFalseOnInValidCredential() {
         CredentialEvidenceItem credentialEvidenceItem =
                 CredentialEvidenceItem.builder().type("IdentityCheck").build();
 

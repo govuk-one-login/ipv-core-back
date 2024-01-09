@@ -56,6 +56,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -75,6 +76,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSI
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_FULL_NAME_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
@@ -910,9 +912,10 @@ class UserIdentityServiceTest {
                                 PASSPORT_CRI,
                                 VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
                                 Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()),
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
-        List<String> vcList = userIdentityService.getUserIssuedCredentials(vcStoreItems);
+        List<String> vcList = userIdentityService.getIdentityCredentials(vcStoreItems);
 
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcList.get(0));
         assertEquals(VC_FRAUD_SCORE_1, vcList.get(1));

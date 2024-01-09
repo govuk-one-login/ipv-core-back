@@ -207,7 +207,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyResetIdentityIfResetIdentityFeatureFlagIsEnabled() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -248,7 +248,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -285,7 +285,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyResetIdentityResponseIfScoresDoNotSatisfyM1AGpg45Profile()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -316,8 +316,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldNotSendAuditEventIfNewUser() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any()))
-                .thenReturn(Collections.emptyList());
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(Collections.emptyList());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
@@ -515,7 +514,7 @@ class CheckExistingIdentityHandlerTest {
                 journeyResponse.getMessage());
 
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
-        verify(userIdentityService).getUserIssuedCredentials(any());
+        verify(userIdentityService).getIdentityCredentials(any());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -548,7 +547,7 @@ class CheckExistingIdentityHandlerTest {
                 journeyResponse.getMessage());
 
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
-        verify(userIdentityService).getUserIssuedCredentials(any());
+        verify(userIdentityService).getIdentityCredentials(any());
         verify(criResponseService).getFaceToFaceRequest(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -731,7 +730,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyReuseResponseIfCheckRequiresAdditionalEvidenceResponseFalse()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -768,7 +767,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyResetIdentityResponseIfCheckRequiresAdditionalEvidenceResponseTrue()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(any())).thenReturn(CREDENTIALS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
