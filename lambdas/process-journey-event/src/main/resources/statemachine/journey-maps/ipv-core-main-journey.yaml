@@ -688,6 +688,32 @@ ADDRESS_AND_FRAUD_J4:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
 
+# F2F journey (J4) - Mitigation
+CRI_CLAIMED_IDENTITY_J4_MITIGATION:
+  response:
+    type: cri
+    criId: claimedIdentity
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: ADDRESS_AND_FRAUD_J4_MITIGATION
+    enhanced-verification:
+      targetState: ADDRESS_AND_FRAUD_J4_MITIGATION
+
+ADDRESS_AND_FRAUD_J4_MITIGATION:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
+    enhanced-verification:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F_MITIGATION
+
 # HMRC KBV journey (J6)
 CRI_NINO_J6:
   response:
@@ -889,6 +915,9 @@ MITIGATION_01_F2F_START_PAGE:
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_CLAIMED_IDENTITY_J4_MITIGATION
     end:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
@@ -902,6 +931,9 @@ MITIGATION_01_PYI_POST_OFFICE:
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_CLAIMED_IDENTITY_J4_MITIGATION
     end:
       targetState: PYI_ANOTHER_WAY
       checkFeatureFlag:
