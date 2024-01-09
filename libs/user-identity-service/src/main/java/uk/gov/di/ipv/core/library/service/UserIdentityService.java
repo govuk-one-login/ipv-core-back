@@ -294,11 +294,12 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
             IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
-            if (isNamesEmpty(identityClaim.getName())) {
+            String missingNames = getMissingNames(identityClaim.getName());
+            if (!missingNames.isBlank()) {
                 if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
-                addLogMessage(item, "Name property is missing from VC");
+                addLogMessage(item, "Names missing from VC: " + missingNames);
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
             }
@@ -661,12 +662,21 @@ public class UserIdentityService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isNamesEmpty(List<Name> names) {
-        return CollectionUtils.isEmpty(names)
-                || names.stream()
-                        .flatMap(name -> name.getNameParts().stream())
-                        .map(NameParts::getValue)
-                        .anyMatch(StringUtils::isBlank);
+    private String getMissingNames(List<Name> names) {
+        if (CollectionUtils.isEmpty(names)) {
+            return "Name list";
+        }
+
+        return names.stream()
+                .flatMap(name -> name.getNameParts().stream())
+                .filter(namePart -> StringUtils.isBlank(namePart.getValue()))
+                .map(
+                        namePart ->
+                                String.format(
+                                        "%s is '%s'",
+                                        namePart.getType(),
+                                        namePart.getValue() == null ? "null" : namePart.getValue()))
+                .collect(Collectors.joining("and"));
     }
 
     private void addLogMessage(VcStoreItem item, String error) {
