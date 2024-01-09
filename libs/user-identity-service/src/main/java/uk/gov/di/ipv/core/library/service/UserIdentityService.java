@@ -329,31 +329,25 @@ public class UserIdentityService {
 
     private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
         return identityClaims.stream()
-                .flatMap(id -> id.getName().stream())
+                .flatMap(claim -> claim.getName().stream())
                 .map(Name::getNameParts)
                 .map(
                         nameParts -> {
                             String givenNames =
                                     nameParts.stream()
                                             .filter(
-                                                    nameParts1 ->
+                                                    namePart ->
                                                             GIVEN_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
+                                                                    namePart.getType()))
                                             .map(NameParts::getValue)
                                             .collect(Collectors.joining(" "));
 
                             String familyNames =
                                     nameParts.stream()
                                             .filter(
-                                                    nameParts1 ->
+                                                    namePart ->
                                                             FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
+                                                                    namePart.getType()))
                                             .map(NameParts::getValue)
                                             .collect(Collectors.joining(" "));
 
@@ -672,7 +666,7 @@ public class UserIdentityService {
                 || names.stream()
                         .flatMap(name -> name.getNameParts().stream())
                         .map(NameParts::getValue)
-                        .allMatch(StringUtils::isEmpty);
+                        .anyMatch(StringUtils::isBlank);
     }
 
     private void addLogMessage(VcStoreItem item, String error) {
