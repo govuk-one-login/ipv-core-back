@@ -2,28 +2,34 @@
 Help()
 {
    # Display Help
-   echo "Syntax: scriptTemplate [-e]"
+   echo "Syntax: scriptTemplate [-e|p]"
    echo "options:"
    echo "e     Specifies the environment label for the script output"
+   echo "p     Specifies the AWS profile to use with the script"
    echo
 }
 
 # Set variables
 Env="build"
+Profile="None"
 
 # Script options
-while getopts ":he:" option; do
+while getopts ":he:p:" option; do
    case $option in
       h) # display Help
          Help
          exit;;
       e) # Enter an environment
          Env=$OPTARG;;
+      p) # Enter an AWS profile
+         Profile=$OPTARG;;
      \?) # Invalid option
          echo "Error: Invalid option"
          exit;;
    esac
 done
+
+echo Performing scan for $Profile in $Env
 
 # Scan script
 aws dynamodb scan \
@@ -31,46 +37,54 @@ aws dynamodb scan \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-address.json > ./$Env/address-results.json &&
+--expression-attribute-values file://expression-attribute-values-address.json > ./$Env/address-results.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-claimed-identity.json > ./$Env/claimed-identity.json &&
+--expression-attribute-values file://expression-attribute-values-claimed-identity.json > ./$Env/claimed-identity.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-dcmaw.json > ./$Env/dcmaw.json &&
+--expression-attribute-values file://expression-attribute-values-dcmaw.json > ./$Env/dcmaw.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-driving-license.json > ./$Env/driving-license.json &&
+--expression-attribute-values file://expression-attribute-values-driving-license.json > ./$Env/driving-license.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-f2f.json > ./$Env/f2f.json &&
+--expression-attribute-values file://expression-attribute-values-f2f.json > ./$Env/f2f.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-fraud.json > ./$Env/fraud.json &&
+--expression-attribute-values file://expression-attribute-values-fraud.json > ./$Env/fraud.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-kbv.json > ./$Env/kbv.json &&
+--expression-attribute-values file://expression-attribute-values-kbv.json > ./$Env/kbv.json \
+--profile $Profile &&
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-uk-passport.json > ./$Env/uk-passport.json &&
+--expression-attribute-values file://expression-attribute-values-uk-passport.json > ./$Env/uk-passport.json \
+--profile $Profile
