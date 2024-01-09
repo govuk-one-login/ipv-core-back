@@ -428,7 +428,7 @@ CRI_TICF_BEFORE_ANOTHER_WAY:
     next:
       targetState: PYI_ANOTHER_WAY
     fail-with-ci:
-      targetState: PYI_NO_MATCH
+      targetState: PYI_ANOTHER_WAY
     error:
       targetState: ERROR
 
@@ -440,7 +440,7 @@ CRI_TICF_BEFORE_ERROR:
     next:
       targetState: ERROR
     fail-with-ci:
-      targetState: PYI_NO_MATCH
+      targetState: ERROR
     error:
       targetState: ERROR
 
