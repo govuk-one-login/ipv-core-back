@@ -170,7 +170,7 @@ public class CheckExistingIdentityHandler
 
             // Reset identity if reprove is true.
             Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (!Objects.isNull(reproveIdentity) && reproveIdentity) {
+            if (reproveIdentity != null && reproveIdentity) {
                 return buildForceResetResponse();
             }
 
