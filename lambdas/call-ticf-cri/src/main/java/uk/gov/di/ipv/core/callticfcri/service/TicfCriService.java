@@ -6,6 +6,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.Level;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
+import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -78,20 +79,8 @@ public class TicfCriService {
                         configService.getCriPrivateApiKeyForActiveConnection(TICF_CRI));
             }
 
-            HttpResponse<String> ticfCriHttpResponse;
-            try {
-                ticfCriHttpResponse = sendHttpRequest(httpRequestBuilder.build());
-                checkStatusCode(ticfCriHttpResponse);
-            } catch (IOException
-                    | InterruptedException
-                    | IllegalArgumentException
-                    | SecurityException
-                    | TicfCriServiceException e) {
-                // In the case of unavailability, the TICF CRI is deemed optional.
-                LogHelper.logErrorMessage(
-                        "Request to TICF CRI failed. Allowing user journey to continue", e);
-                return List.of();
-            }
+            var ticfCriHttpResponse = sendHttpRequest(httpRequestBuilder.build());
+            checkStatusCode(ticfCriHttpResponse);
 
             TicfCriDto ticfCriResponse =
                     objectMapper.readValue(ticfCriHttpResponse.body(), TicfCriDto.class);
@@ -111,13 +100,22 @@ public class TicfCriService {
 
         } catch (ParseException | VerifiableCredentialException | JsonProcessingException e) {
             throw new TicfCriServiceException(e);
+        } catch (IOException
+                | InterruptedException
+                | IllegalArgumentException
+                | SecurityException
+                | TicfCriHttpResponseException e) {
+            // In the case of unavailability, the TICF CRI is deemed optional.
+            LogHelper.logErrorMessage(
+                    "Request to TICF CRI failed. Allowing user journey to continue", e);
+            return List.of();
         }
     }
 
     private void checkStatusCode(HttpResponse<String> ticfCriHttpResponse)
-            throws TicfCriServiceException {
+            throws TicfCriHttpResponseException {
         if (200 > ticfCriHttpResponse.statusCode() || ticfCriHttpResponse.statusCode() > 299) {
-            throw new TicfCriServiceException(
+            throw new TicfCriHttpResponseException(
                     String.format(
                             "Non 200 HTTP status code: '%s'", ticfCriHttpResponse.statusCode()));
         }
