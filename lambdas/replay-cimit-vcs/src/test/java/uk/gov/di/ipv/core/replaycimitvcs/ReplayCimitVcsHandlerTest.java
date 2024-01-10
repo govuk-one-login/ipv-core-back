@@ -10,7 +10,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @ExtendWith(MockitoExtension.class)
-public class ReplayCimitVcsHandlerTest {
+class ReplayCimitVcsHandlerTest {
     @InjectMocks private ReplayCimitVcsHandler replayCimitVcsHandler;
 
     @Test

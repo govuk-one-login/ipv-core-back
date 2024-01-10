@@ -34,56 +34,56 @@ echo Performing scan for $Profile in $Env
 # Scan script
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-address.json > ./$Env/address-results.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-claimed-identity.json > ./$Env/claimed-identity.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-dcmaw.json > ./$Env/dcmaw.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-driving-license.json > ./$Env/driving-license.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-f2f.json > ./$Env/f2f.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-fraud.json > ./$Env/fraud.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-kbv.json > ./$Env/kbv.json \
---profile $Profile &&
+--profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc" \
+--filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
 --projection-expression "#ci, #dc, #uid" \
 --expression-attribute-names file://expression-attribute-names.json \
 --expression-attribute-values file://expression-attribute-values-uk-passport.json > ./$Env/uk-passport.json \

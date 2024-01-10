@@ -1,3 +1,5 @@
 {
-	":vc" : {"S": "claimedIdentity"}
+	":vc" : {"S": "claimedIdentity"},
+	":start" : {"S": "2023-08-04"},
+	":end": {"S": "2023-08-05"}
 }
