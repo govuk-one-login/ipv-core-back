@@ -58,7 +58,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORA
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
 
 @ExtendWith(MockitoExtension.class)
-public class CriCheckingServiceTest {
+class CriCheckingServiceTest {
     private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";

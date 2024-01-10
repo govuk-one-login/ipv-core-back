@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class NameTest {
+class NameTest {
 
     @Test
     void getFullName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
