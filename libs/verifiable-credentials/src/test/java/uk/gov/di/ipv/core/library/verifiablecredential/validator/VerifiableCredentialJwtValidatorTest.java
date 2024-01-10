@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -55,11 +54,12 @@ class VerifiableCredentialJwtValidatorTest {
     @Mock private ConfigService mockConfigService;
     private SignedJWT verifiableCredentials;
 
-    @InjectMocks private VerifiableCredentialJwtValidator vcJwtValidator;
+    private VerifiableCredentialJwtValidator vcJwtValidator;
 
     @BeforeEach
     void setUp() throws Exception {
         verifiableCredentials = createTestVerifiableCredentials(TEST_USER, TEST_ISSUER);
+        vcJwtValidator = new VerifiableCredentialJwtValidator(mockConfigService);
     }
 
     @Test

@@ -17,8 +17,10 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
@@ -236,7 +238,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnNullFromJourneyifNoFeatureSet() {
+    void getFeatureSetShouldReturnNullFromJourneyIfNoFeatureSet() {
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_IPV_SESSION_ID)
@@ -321,5 +323,40 @@ class RequestHelperTest {
         assertEquals(
                 ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
                 exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getIsUserInitiatedShouldReturnTrue() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("isUserInitiated", true))
+                        .build();
+
+        assertTrue(RequestHelper.getIsUserInitiated(request));
+    }
+
+    @Test
+    void getIsUserInitiatedShouldReturnFalse() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("isUserInitiated", false))
+                        .build();
+
+        assertFalse(RequestHelper.getIsUserInitiated(request));
+    }
+
+    @Test
+    void getIsUserInitiatedShouldThrowIfNull() {
+        var lambdaInput = new HashMap<String, Object>();
+        lambdaInput.put("isUserInitiated", null);
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
+
+        HttpResponseExceptionWithErrorBody thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getIsUserInitiated(request));
+
+        assertEquals(ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER, thrown.getErrorResponse());
     }
 }

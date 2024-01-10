@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class IdentityClaimTest {
+class IdentityClaimTest {
 
     @Test
     void getFullName_whenCalledWithMultipleNames_ReturnsOnlyTheFirstName() {

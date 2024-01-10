@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+@SuppressWarnings("java:S6548") // The Singleton design pattern should be used with care
 public class SecureTokenHelper {
     private SecureTokenHelper() {}
 

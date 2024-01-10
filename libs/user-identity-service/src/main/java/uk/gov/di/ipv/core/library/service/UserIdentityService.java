@@ -200,8 +200,7 @@ public class UserIdentityService {
         return Optional.of(identityClaim);
     }
 
-    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems)
-            throws ParseException {
+    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems) {
         if (!vcStoreItems.isEmpty()) {
             List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
             if (filterValidVCs.size() == 1) {
@@ -301,11 +300,12 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
             IdentityClaim identityClaim = getIdentityClaim(item.getCredential());
-            if (isNamesEmpty(identityClaim.getName())) {
+            String missingNames = getMissingNames(identityClaim.getName());
+            if (!missingNames.isBlank()) {
                 if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(item.getCredentialIssuer())) {
                     continue;
                 }
-                addLogMessage(item, "Name property is missing from VC");
+                addLogMessage(item, "Names missing from VC: " + missingNames);
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
             }
@@ -336,31 +336,25 @@ public class UserIdentityService {
 
     private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
         return identityClaims.stream()
-                .flatMap(id -> id.getName().stream())
+                .flatMap(claim -> claim.getName().stream())
                 .map(Name::getNameParts)
                 .map(
                         nameParts -> {
                             String givenNames =
                                     nameParts.stream()
                                             .filter(
-                                                    nameParts1 ->
+                                                    namePart ->
                                                             GIVEN_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
+                                                                    namePart.getType()))
                                             .map(NameParts::getValue)
                                             .collect(Collectors.joining(" "));
 
                             String familyNames =
                                     nameParts.stream()
                                             .filter(
-                                                    nameParts1 ->
+                                                    namePart ->
                                                             FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                            nameParts1.getType())
-                                                                    && !nameParts1
-                                                                            .getValue()
-                                                                            .equals(""))
+                                                                    namePart.getType()))
                                             .map(NameParts::getValue)
                                             .collect(Collectors.joining(" "));
 
@@ -671,15 +665,24 @@ public class UserIdentityService {
                                 return false;
                             }
                         })
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    private boolean isNamesEmpty(List<Name> names) {
-        return CollectionUtils.isEmpty(names)
-                || names.stream()
-                        .flatMap(name -> name.getNameParts().stream())
-                        .map(NameParts::getValue)
-                        .allMatch(StringUtils::isEmpty);
+    private String getMissingNames(List<Name> names) {
+        if (CollectionUtils.isEmpty(names)) {
+            return "Name list";
+        }
+
+        return names.stream()
+                .flatMap(name -> name.getNameParts().stream())
+                .filter(namePart -> StringUtils.isBlank(namePart.getValue()))
+                .map(
+                        namePart ->
+                                String.format(
+                                        "%s is '%s'",
+                                        namePart.getType(),
+                                        namePart.getValue() == null ? "null" : namePart.getValue()))
+                .collect(Collectors.joining("and"));
     }
 
     private void addLogMessage(VcStoreItem item, String error) {

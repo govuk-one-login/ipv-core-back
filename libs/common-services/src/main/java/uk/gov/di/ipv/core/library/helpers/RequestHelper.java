@@ -125,27 +125,26 @@ public class RequestHelper {
 
     public static String getScoreType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        return extractValueFromLambdaInput(
-                request, "scoreType", ErrorResponse.MISSING_SCORE_TYPE, String.class);
+        return extractValueFromLambdaInput(request, "scoreType", ErrorResponse.MISSING_SCORE_TYPE);
     }
 
     public static Integer getScoreThreshold(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         return extractValueFromLambdaInput(
-                request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD, Integer.class);
+                request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD);
     }
 
-    public static Boolean getIsUserInitiated(ProcessRequest request)
+    public static boolean getIsUserInitiated(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        return extractValueFromLambdaInput(
-                request,
-                "isUserInitiated",
-                ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER,
-                Boolean.class);
+        return Boolean.TRUE.equals(
+                extractValueFromLambdaInput(
+                        request,
+                        "isUserInitiated",
+                        ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER));
     }
 
     private static <T> T extractValueFromLambdaInput(
-            ProcessRequest request, String key, ErrorResponse errorResponse, Class<T> returnType)
+            ProcessRequest request, String key, ErrorResponse errorResponse)
             throws HttpResponseExceptionWithErrorBody {
         Map<String, Object> lambdaInput = request.getLambdaInput();
         if (lambdaInput == null) {

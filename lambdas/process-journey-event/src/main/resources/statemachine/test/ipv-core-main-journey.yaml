@@ -99,6 +99,7 @@ PROCESS_STATE:
     lambdaInput:
       input1: the-first-input
       input2: 2
+      input3: true
   events:
     met:
       targetState: CRI_STATE

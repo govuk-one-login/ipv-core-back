@@ -147,6 +147,7 @@ public class CheckExistingIdentityHandler
         VcHelper.setConfigService(this.configService);
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -169,7 +170,7 @@ public class CheckExistingIdentityHandler
 
             // Reset identity if reprove is true.
             Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (!Objects.isNull(reproveIdentity) && reproveIdentity) {
+            if (reproveIdentity != null && reproveIdentity) {
                 return buildForceResetResponse();
             }
 

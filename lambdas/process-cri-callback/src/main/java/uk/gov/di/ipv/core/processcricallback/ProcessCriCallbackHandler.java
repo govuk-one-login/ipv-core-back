@@ -42,7 +42,6 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -76,6 +75,7 @@ public class ProcessCriCallbackHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessCriCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
@@ -138,6 +138,7 @@ public class ProcessCriCallbackHandler
                         ciMitService);
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -195,8 +196,6 @@ public class ProcessCriCallbackHandler
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (VerifiableCredentialException e) {
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
-        } catch (VerifiableCredentialResponseException e) {
-            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         } catch (CiPutException | CiPostMitigationsException e) {
             return buildErrorResponse(
                     e,
@@ -242,9 +241,8 @@ public class ProcessCriCallbackHandler
     public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
             throws SqsException, ParseException, JsonProcessingException,
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
-                    CriApiException, VerifiableCredentialResponseException,
-                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    CredentialParseException, InvalidCriCallbackRequestException {
+                    CriApiException, VerifiableCredentialException, CiPostMitigationsException,
+                    CiPutException, CredentialParseException, InvalidCriCallbackRequestException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
