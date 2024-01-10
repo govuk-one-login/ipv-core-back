@@ -166,15 +166,11 @@ public class ProcessCriCallbackHandler
                                 "error",
                                 HttpStatus.SC_UNAUTHORIZED,
                                 PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
-                if (callbackRequest != null) {
-                    var criOAuthSessionItem =
-                            criOAuthSessionService.getCriOauthSessionItem(
-                                    callbackRequest.getState());
-                    if (criOAuthSessionItem != null) {
-                        pageOutput.put(
-                                "clientOAuthSessionId",
-                                criOAuthSessionItem.getClientOAuthSessionId());
-                    }
+                var criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
+                if (criOAuthSessionItem != null) {
+                    pageOutput.put(
+                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
                 }
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_UNAUTHORIZED, pageOutput);
@@ -232,7 +228,7 @@ public class ProcessCriCallbackHandler
     }
 
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
-            throws ParseCriCallbackRequestException, InvalidCriCallbackRequestException {
+            throws ParseCriCallbackRequestException {
         try {
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
