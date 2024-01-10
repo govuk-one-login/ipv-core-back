@@ -139,6 +139,7 @@ public class ProcessCriCallbackHandler
                         ciMitService);
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
