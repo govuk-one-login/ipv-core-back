@@ -199,8 +199,7 @@ public class UserIdentityService {
         return Optional.of(identityClaim);
     }
 
-    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems)
-            throws ParseException {
+    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems) {
         if (!vcStoreItems.isEmpty()) {
             List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
             if (filterValidVCs.size() == 1) {
@@ -659,7 +658,7 @@ public class UserIdentityService {
                                 return false;
                             }
                         })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String getMissingNames(List<Name> names) {

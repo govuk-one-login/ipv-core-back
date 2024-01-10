@@ -82,6 +82,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public CallTicfCriHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,

@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -213,11 +214,9 @@ class BuildUserIdentityHandlerTest {
 
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
         assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
-        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
-        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
-        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
@@ -235,7 +234,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
         assertFalse(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
-        assertEquals(responseBody.getReturnCode().size(), 3);
+        assertEquals(3, responseBody.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
@@ -282,11 +281,9 @@ class BuildUserIdentityHandlerTest {
 
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
         assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
-        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
-        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
-        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
@@ -300,22 +297,25 @@ class BuildUserIdentityHandlerTest {
 
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        AuditExtensionsUserIdentity extensions =
-                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertFalse(extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCodes().size(), 3);
-        assertEquals(extensions.getReturnCodes().get(0).code(), "1");
-        assertEquals(extensions.getReturnCodes().get(0).issuers(), Collections.emptyList());
-        assertEquals(extensions.getReturnCodes().get(1).code(), "2");
-        assertEquals(
-                extensions.getReturnCodes().get(1).issuers(),
-                List.of("https://review-q.account.gov.uk", "https://review-f.account.gov.uk"));
-        assertEquals(extensions.getReturnCodes().get(2).code(), "3");
-        assertEquals(
-                extensions.getReturnCodes().get(2).issuers(),
-                List.of("https://review-z.account.gov.uk", "https://review-f.account.gov.uk"));
+        var expectedExtension =
+                new AuditExtensionsUserIdentity(
+                        VectorOfTrust.P0.toString(),
+                        false,
+                        false,
+                        List.of(
+                                new AuditEventReturnCode("1", List.of()),
+                                new AuditEventReturnCode(
+                                        "2",
+                                        List.of(
+                                                "https://review-q.account.gov.uk",
+                                                "https://review-f.account.gov.uk")),
+                                new AuditEventReturnCode(
+                                        "3",
+                                        List.of(
+                                                "https://review-z.account.gov.uk",
+                                                "https://review-f.account.gov.uk"))));
+        assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
+
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
@@ -392,11 +392,9 @@ class BuildUserIdentityHandlerTest {
 
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
         assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
-        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
-        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
-        assertEquals(SIGNED_CONTRA_INDICATOR_VC, responseBody.getVcs().get(3));
+        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
@@ -410,22 +408,25 @@ class BuildUserIdentityHandlerTest {
 
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        AuditExtensionsUserIdentity extensions =
-                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P0.toString(), extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertFalse(extensions.isHasMitigations());
-        assertEquals(extensions.getReturnCodes().size(), 3);
-        assertEquals(extensions.getReturnCodes().get(0).code(), "1");
-        assertEquals(
-                extensions.getReturnCodes().get(0).issuers(),
-                List.of("https://review-d.account.gov.uk", "https://review-f.account.gov.uk"));
-        assertEquals(extensions.getReturnCodes().get(1).code(), "2");
-        assertEquals(extensions.getReturnCodes().get(1).issuers(), Collections.emptyList());
-        assertEquals(extensions.getReturnCodes().get(2).code(), "3");
-        assertEquals(
-                extensions.getReturnCodes().get(2).issuers(),
-                List.of("https://review-w.account.gov.uk", "https://review-x.account.gov.uk"));
+        var expectedExtension =
+                new AuditExtensionsUserIdentity(
+                        VectorOfTrust.P0.toString(),
+                        false,
+                        false,
+                        List.of(
+                                new AuditEventReturnCode(
+                                        "1",
+                                        List.of(
+                                                "https://review-d.account.gov.uk",
+                                                "https://review-f.account.gov.uk")),
+                                new AuditEventReturnCode("2", List.of()),
+                                new AuditEventReturnCode(
+                                        "3",
+                                        List.of(
+                                                "https://review-w.account.gov.uk",
+                                                "https://review-x.account.gov.uk"))));
+        assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
+
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 

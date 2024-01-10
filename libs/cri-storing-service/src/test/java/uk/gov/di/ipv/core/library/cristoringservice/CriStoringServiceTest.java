@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 
 @ExtendWith(MockitoExtension.class)
-public class CriStoringServiceTest {
+class CriStoringServiceTest {
     private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";

@@ -58,7 +58,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_D
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
-public class CriApiServiceTest {
+class CriApiServiceTest {
     private static final String TEST_CRI_ID = "test_cri_id";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
@@ -202,11 +202,11 @@ public class CriApiServiceTest {
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
-        assertEquals(request.getHeaderMap().get(API_KEY_HEADER).get(0), TEST_API_KEY);
+        assertEquals(TEST_API_KEY, request.getHeaderMap().get(API_KEY_HEADER).get(0));
     }
 
     @Test
-    public void buildFetchAccessTokenRequestShouldUseCorrectTokenEndpoint(
+    void buildFetchAccessTokenRequestShouldUseCorrectTokenEndpoint(
             WireMockRuntimeInfo wmRuntimeInfo) throws CriApiException {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
@@ -222,7 +222,7 @@ public class CriApiServiceTest {
     }
 
     @Test
-    public void buildFetchAccessTokenRequestShouldHandleJOSEException() {
+    void buildFetchAccessTokenRequestShouldHandleJOSEException() {
         // Arrange
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
@@ -242,7 +242,7 @@ public class CriApiServiceTest {
     }
 
     @Test
-    public void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey()
+    void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey()
             throws CriApiException {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
@@ -257,7 +257,7 @@ public class CriApiServiceTest {
     }
 
     @Test
-    public void buildFetchAccessTokenRequestShouldIncludeAuthorizationCodeInRequestBody()
+    void buildFetchAccessTokenRequestShouldIncludeAuthorizationCodeInRequestBody()
             throws CriApiException {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
@@ -271,7 +271,7 @@ public class CriApiServiceTest {
     }
 
     @Test
-    public void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody()
+    void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody()
             throws CriApiException {
         // Arrange
         var callbackRequest = getValidCallbackRequest();

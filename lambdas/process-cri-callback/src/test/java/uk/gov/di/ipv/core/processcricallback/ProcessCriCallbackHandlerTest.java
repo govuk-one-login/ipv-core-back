@@ -42,7 +42,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
-public class ProcessCriCallbackHandlerTest {
+class ProcessCriCallbackHandlerTest {
     private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
@@ -111,9 +111,9 @@ public class ProcessCriCallbackHandlerTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-        verify(mockCriCheckingService).validateSessionIds(eq(callbackRequest));
+        verify(mockCriCheckingService).validateSessionIds(callbackRequest);
         verify(mockCriCheckingService)
-                .validateCallbackRequest(eq(callbackRequest), eq(criOAuthSessionItem));
+                .validateCallbackRequest(callbackRequest, criOAuthSessionItem);
         verify(mockCriStoringService)
                 .storeVcs(
                         callbackRequest.getCredentialIssuerId(),
@@ -159,9 +159,8 @@ public class ProcessCriCallbackHandlerTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-        verify(mockCriCheckingService).validateSessionIds(eq(callbackRequest));
-        verify(mockCriStoringService)
-                .storeCriResponse(eq(callbackRequest), eq(clientOAuthSessionItem));
+        verify(mockCriCheckingService).validateSessionIds(callbackRequest);
+        verify(mockCriStoringService).storeCriResponse(callbackRequest, clientOAuthSessionItem);
     }
 
     @Test
@@ -171,7 +170,7 @@ public class ProcessCriCallbackHandlerTest {
         var callbackRequest = buildValidCallbackRequest();
         doThrow(new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE))
                 .when(mockCriCheckingService)
-                .validateSessionIds(eq(callbackRequest));
+                .validateSessionIds(callbackRequest);
 
         // Act & Assert
         assertThrows(
@@ -279,7 +278,7 @@ public class ProcessCriCallbackHandlerTest {
         var callbackRequest = buildValidCallbackRequest();
         doThrow(new InvalidCriCallbackRequestException(ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION))
                 .when(mockCriCheckingService)
-                .validateSessionIds(eq(callbackRequest));
+                .validateSessionIds(callbackRequest);
 
         // Act & Assert
         assertThrows(
