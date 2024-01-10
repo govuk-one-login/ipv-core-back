@@ -191,13 +191,22 @@ CRI_F2F:
   events:
     next:
       targetState: F2F_HANDOFF_PAGE
-    access-denied:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
     enhanced-verification:
       targetState: F2F_HANDOFF_PAGE
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+    not-found:
+      targetState: PYI_NO_MATCH
+    fail-with-no-ci:
+      targetState: PYI_NO_MATCH
+    fail-with-ci:
+      targetState: PYI_NO_MATCH
+    vcs-not-correlated:
+      targetState: PYI_NO_MATCH
+    error:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: ERROR
 
 F2F_HANDOFF_PAGE:
   response:
