@@ -658,7 +658,7 @@ public class UserIdentityService {
                                 return false;
                             }
                         })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String getMissingNames(List<Name> names) {
