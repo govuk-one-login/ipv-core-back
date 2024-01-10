@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -29,7 +30,6 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
-import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
@@ -196,11 +196,11 @@ public class CriCheckingService {
 
     public void validatePendingVcResponse(
             VerifiableCredentialResponse vcResponse, ClientOAuthSessionItem clientOAuthSessionItem)
-            throws VerifiableCredentialResponseException {
+            throws VerifiableCredentialException {
         var userId = clientOAuthSessionItem.getUserId();
 
         if (!vcResponse.getUserId().equals(userId)) {
-            throw new VerifiableCredentialResponseException(
+            throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE);
         }

@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -33,7 +34,6 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
-import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
@@ -445,7 +445,7 @@ public class CriCheckingServiceTest {
         // Act & Assert
         var exception =
                 assertThrows(
-                        VerifiableCredentialResponseException.class,
+                        VerifiableCredentialException.class,
                         () ->
                                 criCheckingService.validatePendingVcResponse(
                                         vcResponse, clientOAuthSessionItem));
