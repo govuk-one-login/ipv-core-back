@@ -105,6 +105,10 @@ public class TicfCriService {
                 | IllegalArgumentException
                 | SecurityException
                 | TicfCriHttpResponseException e) {
+            if (e instanceof InterruptedException) {
+                // This should never happen running in Lambda as it's single threaded.
+                Thread.currentThread().interrupt();
+            }
             // In the case of unavailability, the TICF CRI is deemed optional.
             LogHelper.logErrorMessage(
                     "Request to TICF CRI failed. Allowing user journey to continue", e);
