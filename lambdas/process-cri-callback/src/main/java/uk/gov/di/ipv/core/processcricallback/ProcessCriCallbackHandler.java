@@ -288,7 +288,7 @@ public class ProcessCriCallbackHandler
             for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
                 if (criOAuthSessionItem == null) {
                     // We should never get here due to earlier null checks.
-                    // This is to satisfy a compile time warning
+                    // This is to satisfy compile time warning
                     throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
                 } else {
                     verifiableCredentialJwtValidator.validate(

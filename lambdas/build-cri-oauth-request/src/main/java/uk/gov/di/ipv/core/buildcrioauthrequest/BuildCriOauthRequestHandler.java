@@ -373,7 +373,7 @@ public class BuildCriOauthRequestHandler
 
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
         List<String> credentials =
-                userIdentityService.getUserIssuedCredentials(
+                userIdentityService.getIdentityCredentials(
                         verifiableCredentialService.getVcStoreItems(userId));
         List<SignedJWT> signedJWTs = new ArrayList<>();
 
@@ -416,7 +416,7 @@ public class BuildCriOauthRequestHandler
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {
                         LogHelper.logErrorMessage(
-                                "Credential subject missing from verified credential");
+                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage());
                         throw new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                     }

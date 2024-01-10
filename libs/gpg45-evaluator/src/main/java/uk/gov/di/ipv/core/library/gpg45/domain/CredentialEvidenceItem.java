@@ -14,6 +14,7 @@ import java.util.function.Function;
 @Builder
 @Getter
 public class CredentialEvidenceItem {
+    public static final String TICF_EVIDENCE_TYPE = "RiskAssessment";
     private String credentialIss;
     private Integer activityHistoryScore;
     private Integer identityFraudScore;
@@ -23,6 +24,7 @@ public class CredentialEvidenceItem {
     private List<CheckDetail> checkDetails;
     private List<CheckDetail> failedCheckDetails;
     private final List<String> ci;
+    private String type;
 
     public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
         if (EvidenceType.ACTIVITY.equals(evidenceType)) {
@@ -58,7 +60,7 @@ public class CredentialEvidenceItem {
         this.ci = ci;
     }
 
-    public EvidenceType getType() throws UnknownEvidenceTypeException {
+    public EvidenceType getEvidenceType() throws UnknownEvidenceTypeException {
         if (isActivityHistory()) {
             return EvidenceType.ACTIVITY;
         } else if (isIdentityFraud()) {
@@ -77,6 +79,8 @@ public class CredentialEvidenceItem {
             return EvidenceType.FRAUD_WITH_ACTIVITY;
         } else if (isNino()) {
             return EvidenceType.NINO;
+        } else if (isTicf()) {
+            return EvidenceType.TICF;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -156,6 +160,10 @@ public class CredentialEvidenceItem {
                 && (checkDetails != null || failedCheckDetails != null);
     }
 
+    private boolean isTicf() {
+        return type != null && type.equals(TICF_EVIDENCE_TYPE);
+    }
+
     @Getter
     public enum EvidenceType {
         ACTIVITY(
@@ -171,7 +179,8 @@ public class CredentialEvidenceItem {
         DCMAW(null, null),
         F2F(null, null),
         NINO(null, null),
-        FRAUD_WITH_ACTIVITY(null, null);
+        FRAUD_WITH_ACTIVITY(null, null),
+        TICF(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;

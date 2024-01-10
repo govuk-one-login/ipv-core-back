@@ -1,6 +1,6 @@
 const initialStates = ['INITIAL_IPV_JOURNEY'];
-const errorStates = ['ERROR'];
-const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
+const errorStates = ['ERROR', 'CRI_TICF_BEFORE_ERROR'];
+const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY', 'CRI_TICF_BEFORE_NO_MATCH', 'CRI_TICF_BEFORE_ANOTHER_WAY'];
 
 const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
     Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {

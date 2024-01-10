@@ -69,6 +69,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -94,6 +95,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSI
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
@@ -214,7 +216,8 @@ class UserIdentityServiceTest {
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
@@ -241,7 +244,8 @@ class UserIdentityServiceTest {
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
@@ -1146,7 +1150,7 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
-        List<String> vcList = userIdentityService.getUserIssuedCredentials(vcStoreItems);
+        List<String> vcList = userIdentityService.getIdentityCredentials(vcStoreItems);
 
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcList.get(0));
         assertEquals(VC_FRAUD_SCORE_1, vcList.get(1));
@@ -1509,7 +1513,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
+    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
@@ -1521,8 +1525,7 @@ class UserIdentityServiceTest {
 
     @Test
     void
-            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
-                    throws Exception {
+            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
@@ -1533,7 +1536,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
@@ -1542,7 +1545,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1, Instant.now()),
@@ -1551,7 +1554,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),

@@ -131,7 +131,7 @@ public class EvaluateGpg45ScoresHandler
             List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
+                            userIdentityService.getIdentityCredentials(vcStoreItems));
 
             if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();

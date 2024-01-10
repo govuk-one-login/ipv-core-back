@@ -211,7 +211,7 @@ public class CheckExistingIdentityHandler
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getUserIssuedCredentials(vcStoreItems));
+                            userIdentityService.getIdentityCredentials(vcStoreItems));
 
             // Credential correlation failure
             if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
