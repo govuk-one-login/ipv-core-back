@@ -199,8 +199,7 @@ public class UserIdentityService {
         return Optional.of(identityClaim);
     }
 
-    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems)
-            throws ParseException {
+    public boolean checkRequiresAdditionalEvidence(List<VcStoreItem> vcStoreItems) {
         if (!vcStoreItems.isEmpty()) {
             List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
             if (filterValidVCs.size() == 1) {
