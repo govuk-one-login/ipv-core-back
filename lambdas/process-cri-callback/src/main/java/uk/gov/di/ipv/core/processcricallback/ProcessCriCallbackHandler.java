@@ -164,15 +164,11 @@ public class ProcessCriCallbackHandler
                                 "error",
                                 HttpStatus.SC_UNAUTHORIZED,
                                 PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
-                if (callbackRequest != null) {
-                    var criOAuthSessionItem =
-                            criOAuthSessionService.getCriOauthSessionItem(
-                                    callbackRequest.getState());
-                    if (criOAuthSessionItem != null) {
-                        pageOutput.put(
-                                "clientOAuthSessionId",
-                                criOAuthSessionItem.getClientOAuthSessionId());
-                    }
+                var criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
+                if (criOAuthSessionItem != null) {
+                    pageOutput.put(
+                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
                 }
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_UNAUTHORIZED, pageOutput);
@@ -230,7 +226,7 @@ public class ProcessCriCallbackHandler
     }
 
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
-            throws ParseCriCallbackRequestException, InvalidCriCallbackRequestException {
+            throws ParseCriCallbackRequestException {
         try {
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
@@ -294,7 +290,7 @@ public class ProcessCriCallbackHandler
             for (SignedJWT vc : vcResponse.getVerifiableCredentials()) {
                 if (criOAuthSessionItem == null) {
                     // We should never get here due to earlier null checks.
-                    // This is to satisfy a compile time warning
+                    // This is to satisfy compile time warning
                     throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
                 } else {
                     verifiableCredentialJwtValidator.validate(

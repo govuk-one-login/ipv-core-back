@@ -11,9 +11,6 @@ public class Gpg45TicfValidator {
     }
 
     public static boolean isSuccessful(CredentialEvidenceItem item) {
-        if (item.getType().equals(CredentialEvidenceItem.TICF_EVIDENCE_TYPE)) {
-            return true;
-        }
-        return false;
+        return item.getType().equals(CredentialEvidenceItem.TICF_EVIDENCE_TYPE);
     }
 }

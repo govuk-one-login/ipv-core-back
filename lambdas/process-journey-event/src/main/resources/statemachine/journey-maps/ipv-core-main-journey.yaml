@@ -426,7 +426,7 @@ CRI_TICF_BEFORE_ANOTHER_WAY:
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
     fail-with-ci:
-      targetState: PYI_ANOTHER_WAY
+      targetState: PYI_NO_MATCH
     error:
       targetState: ERROR
 
@@ -440,7 +440,7 @@ CRI_TICF_BEFORE_ERROR:
     enhanced-verification:
       targetState: ERROR
     fail-with-ci:
-      targetState: ERROR
+      targetState: PYI_NO_MATCH
     error:
       targetState: ERROR
 
