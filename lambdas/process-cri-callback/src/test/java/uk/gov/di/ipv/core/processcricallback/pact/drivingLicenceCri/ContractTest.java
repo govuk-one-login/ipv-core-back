@@ -100,7 +100,7 @@ public class ContractTest {
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_VC_BODY =
+    private static final String VALID_DVLA_VC_BODY =
             """
             {
               "sub": "test-subject",
@@ -174,10 +174,10 @@ public class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String VALID_VC_SIGNATURE =
+    private static final String VALID_DVLA_VC_SIGNATURE =
             "kZLEZfJU5XI7lEs0J-BZi5he4DBF5SUWauozDHsvvQRfCobVGasX4BWodMA3rBY2V9BeQE9KdQQ7L3Hg_zJhGw";
 
-    private static final String FAILED_VC_BODY =
+    private static final String FAILED_DVLA_VC_BODY =
             """
             {
               "sub": "test-subject",
@@ -251,8 +251,161 @@ public class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String FAILED_VC_SIGNATURE =
+    private static final String FAILED_DVLA_VC_SIGNATURE =
             "BtCD3UyqQHhNQLd7RotfC3lGYk0ooGzTCBAAMuT6GHJL_P5Punkml7xWfAxWhmJ9w1p-oZl8Kw-aCv5WUNrTHA";
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_DVA_VC_BODY =
+            """
+            {
+              "sub": "test-subject",
+              "iss": "dummyDrivingLicenceComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "activityHistoryScore": 1,
+                    "checkDetails": [
+                      {
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "1982-05-23",
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "validityScore": 2,
+                    "strengthScore": 3,
+                    "txn": "dummyTxn",
+                    "type": "IDENTITY_CHECK"
+                  }
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "addressCountry": "GB",
+                      "postalCode": "BS981TL"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "PETER"
+                        },
+                        {
+                          "type": "GivenName",
+                          "value": "BENJAMIN"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "PARKER"
+                        }
+                      ]
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "expiryDate": "2062-12-09",
+                      "issuedBy": "DVA",
+                      "personalNumber": "55667788",
+                      "issueDate": "1982-05-23"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_DVA_VC_SIGNATURE =
+            "OAb52qC_2MO94SbdJVxFvy9vTwrFD3qBAndTe1qDxjATZdTDP6dYZXBDjX4OozRuD2b7sZP8gVzYUPdJ09CWfQ";
+
+    private static final String FAILED_DVA_VC_BODY =
+            """
+            {
+              "sub": "test-subject",
+              "iss": "dummyDrivingLicenceComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "activityHistoryScore": 0,
+                    "ci": ["D02"],
+                    "failedCheckDetails": [
+                      {
+                        "identityCheckPolicy": "published",
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "validityScore": 0,
+                    "strengthScore": 3,
+                    "txn": "dummyTxn",
+                    "type": "IDENTITY_CHECK"
+                  }
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "addressCountry": "GB",
+                      "postalCode": "BS981TL"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "PETER"
+                        },
+                        {
+                          "type": "GivenName",
+                          "value": "BENJAMIN"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "PARKER"
+                        }
+                      ]
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "expiryDate": "2062-12-09",
+                      "issuedBy": "DVA",
+                      "personalNumber": "55667780",
+                      "issueDate": "1982-05-23"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_DVA_VC_SIGNATURE =
+            "Olph1tC4Tlbz2aQ2d5kaYjuXtZFowhelxS2rP_KmSNI50ZZMRa1z-ClE-vZDqKD4ETDs4871w_pGb2vh6nepVQ";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -397,7 +550,8 @@ public class ContractTest {
     }
 
     @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsDvlaIssuedCredential(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -422,13 +576,13 @@ public class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_BODY, VALID_VC_SIGNATURE))
+                                VALID_VC_HEADER, VALID_DVLA_VC_BODY, VALID_DVLA_VC_SIGNATURE))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
-    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesAValidVc(
+    @PactTestFor(pactMethod = "validRequestReturnsDvlaIssuedCredential")
+    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesAValidDvlaVc(
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -485,6 +639,7 @@ public class ContractTest {
                                 assertEquals(
                                         "PARKE610112PBFGH",
                                         drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
 
                                 assertEquals("1962-10-11", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
@@ -496,7 +651,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsResponseWithCi(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsDvlaResponseWithCi(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -520,13 +675,13 @@ public class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_VC_BODY, FAILED_VC_SIGNATURE))
+                                VALID_VC_HEADER, FAILED_DVLA_VC_BODY, FAILED_DVLA_VC_SIGNATURE))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsResponseWithCi")
-    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesAVcWithACi(
+    @PactTestFor(pactMethod = "validRequestReturnsDvlaResponseWithCi")
+    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesADvlaVcWithACi(
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -588,6 +743,210 @@ public class ContractTest {
                                 assertEquals(
                                         "PARKE610112PBFGH",
                                         drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
+
+                                assertEquals("1962-10-11", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsDvaIssuedCredential(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyDrivingLicenceComponentId is a valid issuer")
+                .given("VC evidence activityHistoryScore is 1")
+                .given("VC evidence validityScore is 2")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC evidence checkDetails activityFrom is 1982-05-23")
+                .given("VC address is BS981TL, GB")
+                .given("VC is for Peter Benjamin Parker")
+                .given("VC driving licence expiryDate is 2062-12-09")
+                .given("VC driving licence issuedBy is DVA")
+                .given("VC driving licence personalNumber is 55667788")
+                .given("VC driving licence issuedDate is 1982-05-23")
+                .given("VC birthDate is 1962-10-11")
+                .uponReceiving("Valid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_DVA_VC_BODY, VALID_DVA_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsDvaIssuedCredential")
+    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesAValidDvaVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode drivingPermitNode =
+                                        credentialSubject.get("drivingPermit").get(0);
+
+                                assertEquals("GB", addressNode.get("addressCountry").asText());
+                                assertEquals("BS981TL", addressNode.get("postalCode").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
+                                assertEquals("PETER", nameParts.get(0).get("value").asText());
+                                assertEquals("BENJAMIN", nameParts.get(1).get("value").asText());
+                                assertEquals("PARKER", nameParts.get(2).get("value").asText());
+
+                                assertEquals(
+                                        "2062-12-09", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "55667788",
+                                        drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVA", drivingPermitNode.get("issuedBy").asText());
+
+                                assertEquals("1962-10-11", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsDvaResponseWithCi(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyDrivingLicenceComponentId is a valid issuer")
+                .given("VC has a CI of D02")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC evidence checkDetails activityFrom is 1982-05-23")
+                .given("VC address is BS981TL, GB")
+                .given("VC is for Peter Benjamin Parker")
+                .given("VC driving licence expiryDate is 2062-12-09")
+                .given("VC driving licence issueNumber is 12")
+                .given("VC driving licence issuedBy is DVA")
+                .given("VC driving licence personalNumber is 55667780")
+                .given("VC driving licence issuedDate is 1982-05-23")
+                .given("VC birthDate is 1962-10-11")
+                .uponReceiving("Valid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, FAILED_DVA_VC_BODY, FAILED_DVA_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsDvaResponseWithCi")
+    void fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCri_retrievesADvaVcWithACi(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode ciNode = evidence.get("ci");
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode drivingPermitNode =
+                                        credentialSubject.get("drivingPermit").get(0);
+
+                                assertEquals("D02", ciNode.get(0).asText());
+
+                                assertEquals("GB", addressNode.get("addressCountry").asText());
+                                assertEquals("BS981TL", addressNode.get("postalCode").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
+                                assertEquals("PETER", nameParts.get(0).get("value").asText());
+                                assertEquals("BENJAMIN", nameParts.get(1).get("value").asText());
+                                assertEquals("PARKER", nameParts.get(2).get("value").asText());
+
+                                assertEquals(
+                                        "2062-12-09", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "55667780",
+                                        drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVA", drivingPermitNode.get("issuedBy").asText());
 
                                 assertEquals("1962-10-11", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
@@ -705,7 +1064,7 @@ public class ContractTest {
                 IPV_CORE_CLIENT_ID,
                 CRI_SIGNING_PRIVATE_KEY_JWK,
                 CRI_RSA_ENCRYPTION_PUBLIC_JWK,
-                "dummyDrivingLicenceComponentId",
+                TEST_ISSUER,
                 URI.create(
                         "https://identity.staging.account.gov.uk/credential-issuer/callback?id=drivingLicence"),
                 true,
