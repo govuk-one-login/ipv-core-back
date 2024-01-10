@@ -181,7 +181,8 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, PASSPORT_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        createVcStoreItem(USER_ID_1, DCMAW_CRI, VC_KBV_SCORE_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
         boolean isValid = userIdentityService.areVCsCorrelated(vcStoreItems);
@@ -207,7 +208,8 @@ class UserIdentityServiceTest {
                                 USER_ID_1,
                                 BAV_CRI,
                                 VC_PASSPORT_NON_DCMAW_FULL_NAME_SUCCESSFUL,
-                                Instant.now()));
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
         boolean isValid = userIdentityService.areVCsCorrelated(vcStoreItems);

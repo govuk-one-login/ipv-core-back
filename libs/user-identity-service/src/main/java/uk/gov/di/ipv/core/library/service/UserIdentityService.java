@@ -74,9 +74,9 @@ public class UserIdentityService {
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
 
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION =
-            List.of(ADDRESS_CRI);
+            List.of(ADDRESS_CRI, TICF_CRI);
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
-            List.of(ADDRESS_CRI, BAV_CRI);
+            List.of(ADDRESS_CRI, BAV_CRI, TICF_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String ADDRESS_PROPERTY_NAME = "address";
