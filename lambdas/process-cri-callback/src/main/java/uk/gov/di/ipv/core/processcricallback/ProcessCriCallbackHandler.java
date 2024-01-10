@@ -76,6 +76,7 @@ public class ProcessCriCallbackHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessCriCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
