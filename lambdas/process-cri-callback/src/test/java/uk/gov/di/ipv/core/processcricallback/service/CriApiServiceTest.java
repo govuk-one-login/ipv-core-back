@@ -202,7 +202,7 @@ class CriApiServiceTest {
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
 
         // Assert
-        assertEquals(request.getHeaderMap().get(API_KEY_HEADER).get(0), TEST_API_KEY);
+        assertEquals(TEST_API_KEY, request.getHeaderMap().get(API_KEY_HEADER).get(0));
     }
 
     @Test

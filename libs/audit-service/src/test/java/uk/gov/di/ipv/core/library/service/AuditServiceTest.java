@@ -198,8 +198,8 @@ class AuditServiceTest {
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
         JsonNode returnCodeJson = auditExtensionsUserIdentity.get(RETURN_CODE_KEY);
-        assertEquals(returnCodeJson.size(), 2);
-        assertEquals(returnCodeJson, objectMapper.readTree(FAILURE_RETURN_CODES_TEST));
+        assertEquals(2, returnCodeJson.size());
+        assertEquals(objectMapper.readTree(FAILURE_RETURN_CODES_TEST), returnCodeJson);
     }
 
     @Test
