@@ -97,7 +97,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         try {
             String ipvSessionId = getIpvSessionId(event);
             String featureSet = RequestHelper.getFeatureSet(event);
-            Boolean isUserInitiated = RequestHelper.getIsUserInitiated(event);
+            boolean isUserInitiated = RequestHelper.getIsUserInitiated(event);
 
             configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);

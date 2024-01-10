@@ -135,13 +135,14 @@ public class RequestHelper {
                 request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD, Integer.class);
     }
 
-    public static Boolean getIsUserInitiated(ProcessRequest request)
+    public static boolean getIsUserInitiated(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        return extractValueFromLambdaInput(
-                request,
-                "isUserInitiated",
-                ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER,
-                Boolean.class);
+        return Boolean.TRUE.equals(
+                extractValueFromLambdaInput(
+                        request,
+                        "isUserInitiated",
+                        ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER,
+                        Boolean.class));
     }
 
     private static <T> T extractValueFromLambdaInput(

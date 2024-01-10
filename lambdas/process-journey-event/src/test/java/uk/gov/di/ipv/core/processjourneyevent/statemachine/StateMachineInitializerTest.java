@@ -144,7 +144,7 @@ class StateMachineInitializerTest {
                         "journey",
                         "/journey/a-lambda-to-invoke",
                         "lambdaInput",
-                        Map.of("input1", "the-first-input", "input2", 2)),
+                        Map.of("input1", "the-first-input", "input2", 2, "input3", true)),
                 processState.getResponse().value());
         assertEquals(
                 criState, ((BasicEvent) processState.getEvents().get("met")).getTargetStateObj());
