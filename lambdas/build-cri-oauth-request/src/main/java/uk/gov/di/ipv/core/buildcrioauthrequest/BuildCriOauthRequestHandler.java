@@ -334,7 +334,7 @@ public class BuildCriOauthRequestHandler
                         context,
                         scope);
 
-        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getEncryptionKey());
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 

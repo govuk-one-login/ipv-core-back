@@ -72,7 +72,7 @@ class VerifiableCredentialJwtValidatorTest {
 
     @Test
     void validatesThrowParseException() throws ParseException {
-        when(oauthCriConfig.getSigningKey()).thenThrow(new ParseException("Whoops", 0));
+        when(oauthCriConfig.getParsedSigningKey()).thenThrow(new ParseException("Whoops", 0));
         var exception =
                 assertThrows(
                         VerifiableCredentialException.class,
@@ -103,7 +103,7 @@ class VerifiableCredentialJwtValidatorTest {
     @Test
     void validateThrowsErrorOnInvalidVerifiableCredentialsSignature() {
         try {
-            when(oauthCriConfig.getSigningKey()).thenReturn(TEST_SIGNING_KEY2);
+            when(oauthCriConfig.getParsedSigningKey()).thenReturn(TEST_SIGNING_KEY2);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -170,7 +170,7 @@ class VerifiableCredentialJwtValidatorTest {
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         vcJwtValidator.validate(
                 verifiableCredentials,
-                oauthCriConfig.getSigningKey(),
+                oauthCriConfig.getParsedSigningKey(),
                 oauthCriConfig.getComponentId(),
                 TEST_USER);
     }
@@ -180,7 +180,7 @@ class VerifiableCredentialJwtValidatorTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("NO", new ContraIndicatorConfig()));
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
-        ECKey signingKey = oauthCriConfig.getSigningKey();
+        ECKey signingKey = oauthCriConfig.getParsedSigningKey();
         String componentId = oauthCriConfig.getComponentId();
 
         VerifiableCredentialException exception =
@@ -201,7 +201,7 @@ class VerifiableCredentialJwtValidatorTest {
         when(oauthCriConfig.getComponentId())
                 .thenReturn("https://staging-di-ipv-cri-address-front.london.cloudapps.digital");
         try {
-            when(oauthCriConfig.getSigningKey()).thenReturn(signingKey);
+            when(oauthCriConfig.getParsedSigningKey()).thenReturn(signingKey);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }

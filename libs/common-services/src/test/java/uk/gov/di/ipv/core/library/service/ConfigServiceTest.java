@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.gson.Gson;
-import com.nimbusds.jose.jwk.ECKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,6 +26,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -39,7 +39,6 @@ import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,18 +137,13 @@ class ConfigServiceTest {
                         "requiresApiKey",
                         "true");
 
-        private final String jsonCredentialIssuerConfig =
+        private final String oauthCriJsonConfig =
                 String.format(
                         "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
                         EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
                         RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
 
-        private final String backEndJsonCriConfig =
-                String.format(
-                        "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
-                        EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED);
-
-        private final OauthCriConfig expectedBaseOauthCriConfig =
+        private final OauthCriConfig expectedOauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(URI.create("https://testTokenUrl"))
                         .credentialUrl(URI.create("https://testCredentialUrl"))
@@ -183,42 +177,26 @@ class ConfigServiceTest {
                         .requiresAdditionalEvidence(false)
                         .build();
 
-        private void checkCredentialIssuerConfig(OauthCriConfig expected, OauthCriConfig actual)
-                throws ParseException {
-            // CredentialIssuerConfig equality currently checks only clientId, tokenUrl, and
-            // credentialUrl
-            assertEquals(expected, actual);
-            assertEquals(expected.getAuthorizeUrl(), actual.getAuthorizeUrl());
-            assertEquals(
-                    expected.getSigningKey().toJSONString(), actual.getSigningKey().toJSONString());
-            assertEquals(
-                    expected.getEncryptionKey().toJSONString(),
-                    actual.getEncryptionKey().toJSONString());
-            assertEquals(expected.getComponentId(), actual.getComponentId());
-            assertEquals(expected.getClientCallbackUrl(), actual.getClientCallbackUrl());
-            assertEquals(expected.isRequiresApiKey(), actual.isRequiresApiKey());
-        }
-
         @Test
-        void shouldGetCredentialIssuerFromParameterStore() throws ParseException {
+        void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(jsonCredentialIssuerConfig);
+                    .thenReturn(oauthCriJsonConfig);
 
             OauthCriConfig result = configService.getOauthCriActiveConnectionConfig("passportCri");
 
-            checkCredentialIssuerConfig(expectedBaseOauthCriConfig, result);
+            assertEquals(expectedOauthCriConfig, result);
         }
 
         @Test
-        void getCriConfigShouldGetConfigForCriOauthSessionItem() throws ParseException {
+        void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(jsonCredentialIssuerConfig);
+                    .thenReturn(oauthCriJsonConfig);
 
             OauthCriConfig result =
                     configService.getOauthCriConfig(
@@ -227,11 +205,22 @@ class ConfigServiceTest {
                                     .connection("stub")
                                     .build());
 
-            checkCredentialIssuerConfig(expectedBaseOauthCriConfig, result);
+            assertEquals(expectedOauthCriConfig, result);
         }
 
         @Test
-        void getCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
+        void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(oauthCriJsonConfig);
+
+            var result = configService.getOauthCriConfigForConnection("stub", "passportCri");
+
+            assertEquals(expectedOauthCriConfig, result);
+        }
+
+        @Test
+        void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenThrow(ParameterNotFoundException.builder().build());
@@ -242,20 +231,51 @@ class ConfigServiceTest {
         }
 
         @Test
-        void getBackendCriConfigShouldReturnABackendCriConfig() throws Exception {
+        void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/restCri/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(backEndJsonCriConfig);
+            when(ssmProvider.get("/test/core/credentialIssuers/restCri/connections/stub"))
+                    .thenReturn(
+                            String.format(
+                                    "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
+                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            RestCriConfig backEndCriConfig = configService.getRestCriConfig("passportCri");
+            RestCriConfig restCriConfig = configService.getRestCriConfig("restCri");
 
-            assertEquals("https://testComponentId", backEndCriConfig.getComponentId());
-            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), backEndCriConfig.getSigningKey());
-            assertEquals(new URI("https://testCredentialUrl"), backEndCriConfig.getCredentialUrl());
-            assertTrue(backEndCriConfig.isRequiresApiKey());
+            var expectedRestCriConfig =
+                    RestCriConfig.builder()
+                            .credentialUrl(new URI("https://testCredentialUrl"))
+                            .requiresApiKey(true)
+                            .signingKey(EC_PRIVATE_KEY_JWK)
+                            .componentId("https://testComponentId")
+                            .build();
+
+            assertEquals(expectedRestCriConfig, restCriConfig);
+        }
+
+        @Test
+        void getCriConfigShouldReturnACriConfig() {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
+                    .thenReturn(
+                            String.format(
+                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
+                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
+
+            CriConfig criConfig = configService.getCriConfig("cri");
+
+            var expectedCriConfig =
+                    CriConfig.builder()
+                            .signingKey(EC_PRIVATE_KEY_JWK)
+                            .componentId("https://testComponentId")
+                            .build();
+
+            assertEquals(expectedCriConfig, criConfig);
         }
 
         @Test

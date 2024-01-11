@@ -93,21 +93,23 @@ class TicfCriServiceTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setVot("P2");
         ticfCriConfig =
-                new RestCriConfig(
-                        new URI("https://credential.example.com"),
-                        "signing-key",
-                        "https://ticf-cri.example.com",
-                        false);
+                RestCriConfig.builder()
+                        .credentialUrl(new URI("https://credential.example.com"))
+                        .signingKey("singing-key")
+                        .componentId("https://ticf-cri.example.com")
+                        .requiresApiKey(false)
+                        .build();
     }
 
     @Test
     void getTicfVcShouldReturnASignedJwtForASuccessfulInvocation() throws Exception {
         RestCriConfig ticfConfigWithApiKeyRequired =
-                new RestCriConfig(
-                        new URI("https://credential.example.com"),
-                        "signing-key",
-                        "https://ticf-cri.example.com",
-                        true);
+                RestCriConfig.builder()
+                        .credentialUrl(new URI("https://credential.example.com"))
+                        .signingKey("singing-key")
+                        .componentId("https://ticf-cri.example.com")
+                        .requiresApiKey(true)
+                        .build();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfConfigWithApiKeyRequired);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn("api-key");
@@ -130,14 +132,7 @@ class TicfCriServiceTest {
 
     @Test
     void getTicfVcShouldNotIncludeApiKeyIfNotRequired() throws Exception {
-        RestCriConfig ticfCriConfigWithoutApiKey =
-                new RestCriConfig(
-                        new URI("https://credential.example.com"),
-                        "signing-key",
-                        "https://ticf-cri.example.com",
-                        false);
-
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfigWithoutApiKey);
+        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);

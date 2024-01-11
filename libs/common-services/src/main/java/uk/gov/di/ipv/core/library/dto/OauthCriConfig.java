@@ -15,17 +15,17 @@ import java.text.ParseException;
 @Setter
 @NoArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @ExcludeFromGeneratedCoverageReport
 public class OauthCriConfig extends RestCriConfig {
     private URI tokenUrl;
     private URI authorizeUrl;
     private String clientId;
-    @EqualsAndHashCode.Exclude private String encryptionKey;
+    private String encryptionKey;
     private URI clientCallbackUrl;
     private boolean requiresAdditionalEvidence;
 
-    public RSAKey getEncryptionKey() throws ParseException {
+    public RSAKey getParsedEncryptionKey() throws ParseException {
         return RSAKey.parse(encryptionKey);
     }
 }
