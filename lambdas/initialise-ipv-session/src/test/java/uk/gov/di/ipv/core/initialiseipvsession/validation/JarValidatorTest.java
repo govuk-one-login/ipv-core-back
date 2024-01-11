@@ -254,28 +254,8 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        "invalid-audience",
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidAudienceClaims = getValidClaimsSetValues();
+        invalidAudienceClaims.put(JWTClaimNames.AUDIENCE, "invalid-audience");
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
@@ -299,30 +279,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        "invalid-issuer",
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidIssuerClaims = getValidClaimsSetValues();
+        invalidIssuerClaims.put(JWTClaimNames.ISSUER, "invalid-issuer");
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(invalidIssuerClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -346,30 +306,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        "invalid-response-type",
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidResponseTypeClaim = getValidClaimsSetValues();
+        invalidResponseTypeClaim.put("response_type", "invalid-response-type");
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(invalidResponseTypeClaim);
 
         JarValidationException thrown =
                 assertThrows(
@@ -394,30 +334,7 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        "code",
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
-
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
         JarValidationException thrown =
                 assertThrows(
@@ -441,30 +358,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesInPast(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> expiredClaims = getValidClaimsSetValues();
+        expiredClaims.put(JWTClaimNames.EXPIRATION_TIME, fifteenMinutesInPast());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(expiredClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -486,30 +383,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> notValidYet = getValidClaimsSetValues();
+        notValidYet.put(JWTClaimNames.NOT_BEFORE, fifteenMinutesFromNow());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(notValidYet);
 
         JarValidationException thrown =
                 assertThrows(
@@ -532,30 +409,11 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        OffsetDateTime.now().plusYears(100).toEpochSecond(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> futureClaims = getValidClaimsSetValues();
+        futureClaims.put(
+                JWTClaimNames.EXPIRATION_TIME, OffsetDateTime.now().plusYears(100).toEpochSecond());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(futureClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -600,30 +458,10 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
 
-        Map<String, Object> claims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        "({[]})./sd-234345////invalid-redirect-uri",
-                        "state",
-                        stateClaim);
+        Map<String, Object> badRedirectClaims = getValidClaimsSetValues();
+        badRedirectClaims.put("redirect_uri", "({[]})./sd-234345////invalid-redirect-uri");
 
-        SignedJWT signedJWT = generateJWT(claims);
+        SignedJWT signedJWT = generateJWT(badRedirectClaims);
 
         JarValidationException thrown =
                 assertThrows(
