@@ -212,9 +212,9 @@ public class ContractTest {
                                 900));
 
         assertEquals(
-                verifiableCredentialResponse.getCredentialStatus(),
-                VerifiableCredentialStatus.PENDING);
-        assertEquals(verifiableCredentialResponse.getUserId(), "dummyTestUser");
+                VerifiableCredentialStatus.PENDING,
+                verifiableCredentialResponse.getCredentialStatus());
+        assertEquals("dummyTestUser", verifiableCredentialResponse.getUserId());
     }
 
     @Test
