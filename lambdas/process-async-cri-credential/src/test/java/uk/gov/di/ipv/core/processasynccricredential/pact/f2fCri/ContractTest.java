@@ -12,16 +12,15 @@ import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
@@ -40,7 +39,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 
-// @Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "PassportCriProvider")
@@ -51,7 +50,6 @@ public class ContractTest {
     private static final String TEST_USER = "test-subject";
     private static final String TEST_OAUTH_STATE = "f5f0d4d1-b937-4abe-b379-8269f600ad44";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
@@ -373,10 +371,8 @@ public class ContractTest {
     public static final String PASSPORT = "passport";
 
     @Mock private ConfigService mockConfigService;
-    @Mock private JWSSigner mockSigner;
-    @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public MessagePact validF2fMessageReturnsIssuedPassportCredential(MessagePactBuilder builder)
             throws JsonProcessingException {
         return builder.given("test-subject is a valid subject")
@@ -401,7 +397,7 @@ public class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public MessagePact validF2fMessageReturnsIssuedDrivingLicenseCredential(
             MessagePactBuilder builder) throws Exception {
         return builder.given("dummyApiKey is a valid api key")
@@ -431,7 +427,7 @@ public class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public MessagePact validF2fRequestReturnsIssuedEeaCardCredential(MessagePactBuilder builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
@@ -461,7 +457,7 @@ public class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public MessagePact validF2fRequestReturnsIssuedBrpCredential(MessagePactBuilder builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")

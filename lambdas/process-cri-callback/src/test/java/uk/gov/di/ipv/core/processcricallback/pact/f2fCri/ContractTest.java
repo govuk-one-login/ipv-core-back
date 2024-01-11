@@ -11,6 +11,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
@@ -20,11 +21,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
@@ -40,6 +43,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -65,7 +70,7 @@ public class ContractTest {
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validF2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
         return builder.given("dummyAuthCode is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
@@ -94,8 +99,8 @@ public class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidGrantType_F2FRequestReturnsValidAccessToken(
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAuthCode_F2FRequestReturnsBadRequest(
             PactDslWithProvider builder) {
         return builder.given("dummyAuthCode is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
@@ -106,7 +111,7 @@ public class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=auth_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -117,7 +122,7 @@ public class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact missingRedirectUri_F2FRequestReturnsValidAccessToken(
             PactDslWithProvider builder) {
         return builder.given("dummyAuthCode is a valid authorization code")
@@ -129,7 +134,7 @@ public class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=auth_code&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -140,12 +145,90 @@ public class ContractTest {
                 .toPact();
     }
 
+    @Pact(provider = "F2fCriProvider", consumer = "IPVCoreBack")
+    public RequestResponsePact issueCredentialsUri_returnsValidPendingVc(
+            PactDslWithProvider builder) {
+        final String pendingResponse =
+                "{\"sub\":\""
+                        + "dummyTestUser"
+                        + "\",\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
+
+        return builder.given("")
+                .uponReceiving("Valid credential request body")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                        (body) -> {
+                                            body.stringValue("sub", "dummyTestUser");
+                                            body.stringValue(
+                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
+                                                    "pending");
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "issueCredentialsUri_returnsValidPendingVc")
+    void testCallToDummyPassportIssueCredential(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig =
+                getMockF2FCredentialIssuerConfig(
+                        mockServer,
+                        URI.create(
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"));
+
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        new CriCallbackRequest(
+                                "dummyAuthCode",
+                                credentialIssuerConfig.getClientId(),
+                                "dummySessionId",
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
+                                "dummyState",
+                                null,
+                                null,
+                                "dummyIpAddress",
+                                "dummyFeatureSet"),
+                        new CriOAuthSessionItem(
+                                "dummySessionId",
+                                "dummyOAuthSessionId",
+                                "dummyCriId",
+                                "dummyConnection",
+                                900));
+
+        assertEquals(
+                verifiableCredentialResponse.getCredentialStatus(),
+                VerifiableCredentialStatus.PENDING);
+        assertEquals(verifiableCredentialResponse.getUserId(), "dummyTestUser");
+    }
+
     @Test
     @PactTestFor(pactMethod = "validF2FRequestReturnsValidAccessToken")
     void fetchAccessToken_whenCalledAgainstF2FCri_retrievesAValidAccessToken(MockServer mockServer)
             throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
-        var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
+        var credentialIssuerConfig =
+                getMockF2FCredentialIssuerConfig(
+                        mockServer,
+                        URI.create(
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"));
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
@@ -194,9 +277,127 @@ public class ContractTest {
         assertThat(accessToken.getLifetime(), greaterThan(0L));
     }
 
+    @Test
+    @PactTestFor(pactMethod = "invalidAuthCode_F2FRequestReturnsBadRequest")
+    void fetchAccessToken_whenCalledAgainstF2FCri_receivesUnauthorizedWithInvalidAuthCode(
+            MockServer mockServer) throws URISyntaxException, JOSEException {
+        // Arrange
+        var credentialIssuerConfig =
+                getMockF2FCredentialIssuerConfig(
+                        mockServer,
+                        URI.create(
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"));
+
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn("900");
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
+        // generated by the test as mocking out the AWSKMS class inside the real signer would be
+        // painful.
+        when(mockSigner.sign(any(), any()))
+                .thenReturn(
+                        new Base64URL(
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSecureTokenHelper.generate())
+                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () -> {
+                            underTest.fetchAccessToken(
+                                    new CriCallbackRequest(
+                                            "dummyInvalidAuthCode",
+                                            credentialIssuerConfig.getClientId(),
+                                            "dummySessionId",
+                                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
+                                            "dummyState",
+                                            null,
+                                            null,
+                                            "dummyIpAddress",
+                                            "dummyFeatureSet"),
+                                    new CriOAuthSessionItem(
+                                            "dummySessionId",
+                                            "dummyOAuthSessionId",
+                                            "dummyCriId",
+                                            "dummyConnection",
+                                            900));
+                        });
+
+        // Assert
+        assertThat(exception.getErrorResponse(), is(ErrorResponse.INVALID_TOKEN_REQUEST));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "missingRedirectUri_F2FRequestReturnsValidAccessToken")
+    void fetchAccessToken_whenCalledAgainstF2FCri_receivesBadRequestWithMissingRedirectUri(
+            MockServer mockServer) throws URISyntaxException, JOSEException {
+        // Arrange
+        var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer, null);
+
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn("900");
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
+        // generated by the test as mocking out the AWSKMS class inside the real signer would be
+        // painful.
+        when(mockSigner.sign(any(), any()))
+                .thenReturn(
+                        new Base64URL(
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSecureTokenHelper.generate())
+                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () -> {
+                            underTest.fetchAccessToken(
+                                    new CriCallbackRequest(
+                                            "dummyAuthCode",
+                                            credentialIssuerConfig.getClientId(),
+                                            "dummySessionId",
+                                            null,
+                                            "dummyState",
+                                            null,
+                                            null,
+                                            "dummyIpAddress",
+                                            "dummyFeatureSet"),
+                                    new CriOAuthSessionItem(
+                                            "dummySessionId",
+                                            "dummyOAuthSessionId",
+                                            "dummyCriId",
+                                            "dummyConnection",
+                                            900));
+                        });
+
+        // Assert
+        assertThat(exception.getErrorResponse(), is(ErrorResponse.INVALID_TOKEN_REQUEST));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
+    }
+
     @NotNull
-    private static CredentialIssuerConfig getMockF2FCredentialIssuerConfig(MockServer mockServer)
-            throws URISyntaxException {
+    private static CredentialIssuerConfig getMockF2FCredentialIssuerConfig(
+            MockServer mockServer, URI clientCallbackUrl) throws URISyntaxException {
         return new CredentialIssuerConfig(
                 new URI("http://localhost:" + mockServer.getPort() + "/token"),
                 new URI("http://localhost:" + mockServer.getPort() + "/credential"),
@@ -205,8 +406,7 @@ public class ContractTest {
                 CRI_SIGNING_PRIVATE_KEY_JWK,
                 CRI_RSA_ENCRYPTION_PUBLIC_JWK,
                 "dummyF2fComponentId",
-                URI.create(
-                        "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"),
+                clientCallbackUrl,
                 true,
                 false);
     }
