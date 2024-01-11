@@ -93,6 +93,7 @@ public class InitialiseIpvSessionHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public InitialiseIpvSessionHandler(
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
@@ -175,7 +176,7 @@ public class InitialiseIpvSessionHandler
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 validateAndStoreHMRCInheritedIdentity(
-                        clientOAuthSessionItem.getUserId(), claimsSet);
+                        clientOAuthSessionItem.getUserId(), claimsSet, ipvSessionItem);
             }
 
             Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
@@ -292,6 +293,10 @@ public class InitialiseIpvSessionHandler
         try {
             verifiableCredentialService.persistUserCredentials(
                     signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
+            ipvSessionItem.setVcReceivedThisSession(
+                    List.of(signedInheritedIdentityJWT.serialize()));
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+            LogHelper.logMessage(Level.INFO, "Migration VC successfully persisted");
         } catch (VerifiableCredentialException e) {
             throw buildRecoverableException(
                     OAuth2Error.SERVER_ERROR

@@ -27,8 +27,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
@@ -82,6 +84,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -125,7 +128,7 @@ class InitialiseIpvSessionHandlerTest {
     private static SignedJWT inheritedIdentitySignedJwt;
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
-    private static IpvSessionItem ipvSessionItem;
+    private static @Spy IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeAll
@@ -434,6 +437,11 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(
                 inheritedIdentitySignedJwt.serialize(),
                 signedJWTArgumentCaptor.getValue().serialize());
+
+        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+        inOrder.verify(ipvSessionItem)
+                .setVcReceivedThisSession(List.of(inheritedIdentitySignedJwt.serialize()));
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
     }
 
     @Test
