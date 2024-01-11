@@ -1,15 +1,14 @@
 package uk.gov.di.ipv.core.processasynccricredential.helpers;
 
 import com.nimbusds.jwt.SignedJWT;
+import lombok.NoArgsConstructor;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor
 public class JwtParser {
-
-    public JwtParser() {}
-    ;
 
     public List<SignedJWT> parseVerifiableCredentialJWTs(
             List<String> verifiableCredentialJWTStrings) throws ParseException {
