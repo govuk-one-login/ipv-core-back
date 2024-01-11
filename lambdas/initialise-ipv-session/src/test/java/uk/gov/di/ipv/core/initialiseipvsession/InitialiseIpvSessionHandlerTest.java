@@ -437,6 +437,40 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
+    void shouldAllowRequestsThatDoNotIncludeAnInheritedIdentityJwtClaim() throws Exception {
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var claimsSetBuilder = new JWTClaimsSet.Builder();
+        var claimsWithoutInheritedIdentityJwtClaim = new HashMap<>(claimsToBuild);
+        claimsWithoutInheritedIdentityJwtClaim.put(
+                CLAIMS, new JarClaims(new JarUserInfo(null, null, null, null)));
+        claimsWithoutInheritedIdentityJwtClaim.forEach(claimsSetBuilder::claim);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(claimsSetBuilder.build());
+
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
+                .thenReturn(true); // Mock enabled inherited identity feature flag
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+    }
+
+    @Test
     void shouldRecoverIfInheritedIdentityJwtCanNotBeParsed() throws Exception {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);

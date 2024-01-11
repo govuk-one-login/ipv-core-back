@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
@@ -254,21 +255,32 @@ public class InitialiseIpvSessionHandler
     }
 
     @Tracing
-    private void validateAndStoreHMRCInheritedIdentity(String userId, JWTClaimsSet claimsSet)
+    private void validateAndStoreHMRCInheritedIdentity(
+            String userId, JWTClaimsSet claimsSet, IpvSessionItem ipvSessionItem)
             throws RecoverableJarValidationException, ParseException {
+        var claims = (JarClaims) claimsSet.getClaim(CLAIMS_CLAIM);
+        if (claims == null) {
+            return;
+        }
+
+        var userInfo = claims.userInfo();
+        if (userInfo == null) {
+            return;
+        }
+
+        var inheritedIdentityJwtClaim = userInfo.inheritedIdentityClaim();
+        if (inheritedIdentityJwtClaim == null) {
+            return;
+        }
+
         SignedJWT signedInheritedIdentityJWT;
         try {
-            signedInheritedIdentityJWT =
-                    SignedJWT.parse(
-                            ((JarClaims) claimsSet.getClaim("claims"))
-                                    .userInfo()
-                                    .inheritedIdentityClaim()
-                                    .value()
-                                    .get(0));
+            signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJwtClaim.value().get(0));
             CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
             verifiableCredentialJwtValidator.validate(
                     signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
+            LogHelper.logMessage(Level.INFO, "Migration VC successfully validated");
         } catch (VerifiableCredentialException | ParseException e) {
             throw buildRecoverableException(
                     OAuth2Error.INVALID_REQUEST_OBJECT
