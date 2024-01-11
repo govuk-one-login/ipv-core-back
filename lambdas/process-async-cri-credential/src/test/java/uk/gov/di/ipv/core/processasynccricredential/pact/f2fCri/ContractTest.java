@@ -369,8 +369,15 @@ public class ContractTest {
     public static final String CREDENTIAL_SUBJECT = "credentialSubject";
     public static final String VC = "vc";
     public static final String PASSPORT = "passport";
-
     @Mock private ConfigService mockConfigService;
+    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
+            new VerifiableCredentialJwtValidator(
+                    mockConfigService,
+                    ((exactMatchClaims, requiredClaims) ->
+                            new FixedTimeJWTClaimsVerifier<>(
+                                    exactMatchClaims,
+                                    requiredClaims,
+                                    Date.from(CURRENT_TIME.instant()))));
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public MessagePact validF2fMessageReturnsIssuedPassportCredential(MessagePactBuilder builder)
@@ -436,14 +443,13 @@ public class ContractTest {
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
                 .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
-                .given("VC givenName is Alice")
-                .given("VC middle name is Jane")
-                .given("VC familyName is Parker")
+                .given("VC givenName is Saul")
+                .given("VC familyName is Goodman")
                 .given("VC birthDate is 1970-01-01")
-                .given("VC driving license personalNumber is PARKE710112PBFGA")
-                .given("VC driving license expiryDate is 2032-02-02")
-                .given("VC driving license issueDate is 2005-02-02")
-                .given("VC driving license issuedBy is DVLA")
+                .given("VC EEA card icaoIssuerCode is NLD")
+                .given("VC EEA card documentNumber is SPEC12031")
+                .given("VC EEA card expiryDate is 2031-08-02")
+                .given("VC EEA card issueDate is 2021-08-02")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence verificationScore is 3")
                 .given("VC evidence strengthScore is 4")
@@ -466,14 +472,13 @@ public class ContractTest {
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
                 .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
-                .given("VC givenName is Alice")
-                .given("VC middle name is Jane")
-                .given("VC familyName is Parker")
+                .given("VC givenName is Saul")
+                .given("VC familyName is Goodman")
                 .given("VC birthDate is 1970-01-01")
-                .given("VC driving license personalNumber is PARKE710112PBFGA")
-                .given("VC driving license expiryDate is 2032-02-02")
-                .given("VC driving license issueDate is 2005-02-02")
-                .given("VC driving license issuedBy is DVLA")
+                .given("VC BRP icaoIssuerCode is UTO")
+                .given("VC BRP documentType is CR")
+                .given("VC BRP documentNumber is AX66K69P2")
+                .given("VC BRP expiryDate is 2030-07-13")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence verificationScore is 3")
                 .given("VC evidence strengthScore is 4")
@@ -493,14 +498,6 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testCallToDummyF2fIssueCredential(List<Message> messageList, MockServer mockServer)
             throws URISyntaxException {
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
 
         var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
 
@@ -589,14 +586,6 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void eeaCardTestCallToDummyF2fIssueCredential(List<Message> messageList, MockServer mockServer)
             throws URISyntaxException {
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
 
         var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
 
@@ -654,14 +643,6 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void drivingLicenseTestCallToDummyF2fIssueCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
 
         var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
 
@@ -727,14 +708,6 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void brpTestCallToDummyF2fIssueCredential(List<Message> messageList, MockServer mockServer)
             throws URISyntaxException {
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
 
         var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
 

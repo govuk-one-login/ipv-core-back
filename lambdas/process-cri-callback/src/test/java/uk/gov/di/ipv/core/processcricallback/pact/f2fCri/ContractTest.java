@@ -148,13 +148,11 @@ public class ContractTest {
     @Pact(provider = "F2fCriProvider", consumer = "IPVCoreBack")
     public RequestResponsePact issueCredentialsUri_returnsValidPendingVc(
             PactDslWithProvider builder) {
-        final String pendingResponse =
-                "{\"sub\":\""
-                        + "dummyTestUser"
-                        + "\",\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
-
-        return builder.given("")
-                .uponReceiving("Valid credential request body")
+        return builder.given("dummyTestUser is a valid subject")
+                .given("dummyApiKey is a valid x-api-key")
+                .given("dummyAccessToken is a valid Authorization header")
+                .given("credentialStatus is pending")
+                .uponReceiving("Valid credential request")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
