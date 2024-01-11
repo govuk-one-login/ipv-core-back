@@ -63,7 +63,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_R
 public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
@@ -125,7 +125,7 @@ public class InitialiseIpvSessionHandler
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             Map<String, String> sessionParams =
-                    objectMapper.readValue(input.getBody(), new TypeReference<>() {});
+                    OBJECT_MAPPER.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
             if (error.isPresent()) {
                 LOGGER.error(
@@ -259,7 +259,16 @@ public class InitialiseIpvSessionHandler
     private void validateAndStoreHMRCInheritedIdentity(
             String userId, JWTClaimsSet claimsSet, IpvSessionItem ipvSessionItem)
             throws RecoverableJarValidationException, ParseException {
-        var claims = (JarClaims) claimsSet.getClaim(CLAIMS_CLAIM);
+        JarClaims claims;
+        try {
+            claims =
+                    OBJECT_MAPPER.convertValue(
+                            claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class);
+        } catch (IllegalArgumentException | ParseException e) {
+            throw buildRecoverableException(
+                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription("Unable to process claims"),
+                    claimsSet);
+        }
         if (claims == null) {
             return;
         }

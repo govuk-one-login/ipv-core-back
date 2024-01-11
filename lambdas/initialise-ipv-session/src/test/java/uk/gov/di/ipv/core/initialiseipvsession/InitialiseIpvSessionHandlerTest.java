@@ -124,7 +124,7 @@ class InitialiseIpvSessionHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static Map<String, Object> claimsToBuild;
+    private static Map<String, Object> jarClaims;
     private static SignedJWT inheritedIdentitySignedJwt;
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
@@ -134,20 +134,19 @@ class InitialiseIpvSessionHandlerTest {
     @BeforeAll
     static void setUp() throws Exception {
         inheritedIdentitySignedJwt = getInheritedIdentityJWT();
-        claimsToBuild = new HashMap<>();
-        claimsToBuild.put(
-                EXPIRATION_TIME, new Date(Instant.now().plusSeconds(1000).getEpochSecond()));
-        claimsToBuild.put(ISSUED_AT, new Date());
-        claimsToBuild.put(NOT_BEFORE, new Date());
-        claimsToBuild.put(SUBJECT, "test-user-id");
-        claimsToBuild.put(AUDIENCE, "test-audience");
-        claimsToBuild.put(ISSUER, "test-issuer");
-        claimsToBuild.put(RESPONSE_TYPE, "code");
-        claimsToBuild.put(REDIRECT_URI, "https://example.com");
-        claimsToBuild.put(STATE, "test-state");
-        claimsToBuild.put(CLIENT_ID, "test-client");
-        claimsToBuild.put(VTR, List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
-        claimsToBuild.put(
+        jarClaims = new HashMap<>();
+        jarClaims.put(EXPIRATION_TIME, new Date(Instant.now().plusSeconds(1000).getEpochSecond()));
+        jarClaims.put(ISSUED_AT, new Date());
+        jarClaims.put(NOT_BEFORE, new Date());
+        jarClaims.put(SUBJECT, "test-user-id");
+        jarClaims.put(AUDIENCE, "test-audience");
+        jarClaims.put(ISSUER, "test-issuer");
+        jarClaims.put(RESPONSE_TYPE, "code");
+        jarClaims.put(REDIRECT_URI, "https://example.com");
+        jarClaims.put(STATE, "test-state");
+        jarClaims.put(CLIENT_ID, "test-client");
+        jarClaims.put(VTR, List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
+        jarClaims.put(
                 CLAIMS,
                 new JarClaims(
                         new JarUserInfo(
@@ -158,7 +157,7 @@ class InitialiseIpvSessionHandlerTest {
                                 null)));
 
         var claimsSetBuilder = new JWTClaimsSet.Builder();
-        claimsToBuild.forEach(claimsSetBuilder::claim);
+        jarClaims.forEach(claimsSetBuilder::claim);
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSetBuilder.build());
         signedJWT.sign(new ECDSASigner(getPrivateKey()));
@@ -221,7 +220,7 @@ class InitialiseIpvSessionHandlerTest {
                     JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
                     JarValidationException {
 
-        var claimsWithoutVtr = new HashMap<>(claimsToBuild);
+        var claimsWithoutVtr = new HashMap<>(jarClaims);
         claimsWithoutVtr.remove(VTR);
         var claimsSetBuilder = new JWTClaimsSet.Builder();
         claimsWithoutVtr.forEach(claimsSetBuilder::claim);
@@ -395,19 +394,15 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldValidateAndStoreAnyInheritedIdentity()
-            throws JsonProcessingException, JarValidationException, ParseException,
-                    VerifiableCredentialException {
+    void shouldValidateAndStoreAnyInheritedIdentity() throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        claimsToBuild.forEach(claimsSetBuilder::claim);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(claimsSetBuilder.build());
+                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
@@ -451,13 +446,14 @@ class InitialiseIpvSessionHandlerTest {
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        var claimsWithoutInheritedIdentityJwtClaim = new HashMap<>(claimsToBuild);
+        var claimsWithoutInheritedIdentityJwtClaim = new HashMap<>(jarClaims);
         claimsWithoutInheritedIdentityJwtClaim.put(
                 CLAIMS, new JarClaims(new JarUserInfo(null, null, null, null)));
-        claimsWithoutInheritedIdentityJwtClaim.forEach(claimsSetBuilder::claim);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(claimsSetBuilder.build());
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                objectMapper.writeValueAsString(
+                                        claimsWithoutInheritedIdentityJwtClaim)));
 
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
@@ -479,22 +475,62 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
+    void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var claimsThatWillNotConvert = new HashMap<>(jarClaims);
+        claimsThatWillNotConvert.put(CLAIMS, Map.of("This", "shouldn't work?"));
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                objectMapper.writeValueAsString(claimsThatWillNotConvert)));
+
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
+                .thenReturn(true); // Mock enabled inherited identity feature flag
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+    }
+
+    @Test
     void shouldRecoverIfInheritedIdentityJwtCanNotBeParsed() throws Exception {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        var claimsToBuildWithBadInheritedJwt = new HashMap<>(claimsToBuild);
-        claimsToBuildWithBadInheritedJwt.put(
+        var claimsWithBadInheritedJwt = new HashMap<>(jarClaims);
+        claimsWithBadInheritedJwt.put(
                 CLAIMS,
                 new JarClaims(
                         new JarUserInfo(
                                 null, null, new InheritedIdentityJwtClaim(List.of("🌭")), null)));
-        claimsToBuildWithBadInheritedJwt.forEach(claimsSetBuilder::claim);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(claimsSetBuilder.build());
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                objectMapper.writeValueAsString(claimsWithBadInheritedJwt)));
 
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
@@ -529,10 +565,8 @@ class InitialiseIpvSessionHandlerTest {
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        claimsToBuild.forEach(claimsSetBuilder::claim);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(claimsSetBuilder.build());
+                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
 
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
@@ -575,10 +609,8 @@ class InitialiseIpvSessionHandlerTest {
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        claimsToBuild.forEach(claimsSetBuilder::claim);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(claimsSetBuilder.build());
+                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
 
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
