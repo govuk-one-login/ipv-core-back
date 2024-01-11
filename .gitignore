@@ -45,6 +45,5 @@ deploy/core-back-*.yaml
 
 # Ignore dynamo script outputs
 dev
-build
-prod
+production
 uuid_results

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 Help()
 {
    # Display Help
@@ -32,13 +33,13 @@ done
 echo Performing scan for $Profile in $Env
 
 # Scan script
-aws dynamodb scan \
---table-name user-issued-credentials-v2-$Env \
---filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
---projection-expression "#ci, #dc, #uid" \
---expression-attribute-names file://expression-attribute-names.json \
---expression-attribute-values file://expression-attribute-values-address.json > ./$Env/address-results.json \
---profile $Profile
+ aws dynamodb scan \
+ --table-name user-issued-credentials-v2-$Env \
+ --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \
+ --projection-expression "#ci, #dc, #uid" \
+ --expression-attribute-names file://expression-attribute-names.json \
+ --expression-attribute-values file://expression-attribute-values-address.json > ./$Env/address-results.json \
+ --profile $Profile
 aws dynamodb scan \
 --table-name user-issued-credentials-v2-$Env \
 --filter-expression "attribute_exists(dateCreated) AND credentialIssuer = :vc AND dateCreated BETWEEN :start AND :end" \

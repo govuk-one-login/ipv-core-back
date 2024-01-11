@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class ReplayRequest {
-    private List<ReplayItem> items;
+public class ReplayItem {
+    Map<String, String> dateCreated;
+    Map<String, String> credentialIssuer;
+    Map<String, String> userId;
 }

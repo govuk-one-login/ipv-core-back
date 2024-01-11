@@ -8,6 +8,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
+import uk.gov.di.ipv.core.library.domain.ReplayItem;
 import uk.gov.di.ipv.core.library.domain.ReplayRequest;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -15,6 +16,7 @@ import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +51,15 @@ public class ReplayCimitVcsHandler implements RequestHandler<ReplayRequest, Map<
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ReplayRequest event, Context context) {
         LogHelper.attachComponentIdToLogs(configService);
-        LOGGER.info("Retrieving VCs between {} and {}", event.getStartDate(), event.getEndDate());
-        List<VcStoreItem> vcStoreItems =
-                this.verifiableCredentialService.getVcStoreItems(
-                        null, "dateCreated", event.getStartDate(), event.getEndDate());
+        LOGGER.info(event);
+        LOGGER.info("Retrieving {} VCs", event.getItems().size());
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        for (ReplayItem item : event.getItems()) {
+            VcStoreItem vcStoreItem =
+                    this.verifiableCredentialService.getVcStoreItem(
+                            item.getUserId().get("S"), item.getCredentialIssuer().get("SRE"));
+            vcStoreItems.add(vcStoreItem);
+        }
         List<String> vcs = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
         LOGGER.info("Submitting {} VCs to CIMIT", vcs.size());
         try {
