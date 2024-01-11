@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
+import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class ProcessAsyncCriCredentialHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final AuditService auditService;
     private final CiMitService ciMitService;
-
+    private final JwtParser jwtParser;
     private final CriResponseService criResponseService;
 
     public ProcessAsyncCriCredentialHandler(
@@ -69,12 +70,14 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             AuditService auditService,
             CiMitService ciMitService,
+            JwtParser jwtParser,
             CriResponseService criResponseService) {
         this.configService = configService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.ciMitService = ciMitService;
+        this.jwtParser = jwtParser;
         this.criResponseService = criResponseService;
         VcHelper.setConfigService(this.configService);
     }
@@ -87,6 +90,7 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
+        this.jwtParser = new JwtParser();
         VcHelper.setConfigService(this.configService);
     }
 
@@ -166,7 +170,7 @@ public class ProcessAsyncCriCredentialHandler
         validateOAuthState(successAsyncCriResponse);
 
         final List<SignedJWT> verifiableCredentials =
-                parseVerifiableCredentialJWTs(
+                jwtParser.parseVerifiableCredentialJWTs(
                         successAsyncCriResponse.getVerifiableCredentialJWTs());
 
         final CredentialIssuerConfig credentialIssuerConfig =
@@ -195,15 +199,6 @@ public class ProcessAsyncCriCredentialHandler
 
             sendIpvVcConsumedAuditEvent(auditEventUser, verifiableCredential);
         }
-    }
-
-    private List<SignedJWT> parseVerifiableCredentialJWTs(
-            List<String> verifiableCredentialJWTStrings) throws ParseException {
-        final List<SignedJWT> verifiableCredentials = new ArrayList<>();
-        for (String verifiableCredentialString : verifiableCredentialJWTStrings) {
-            verifiableCredentials.add(SignedJWT.parse(verifiableCredentialString));
-        }
-        return verifiableCredentials;
     }
 
     private void validateOAuthState(SuccessAsyncCriResponse successAsyncCriResponse)
