@@ -11,22 +11,19 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.DRIVING_PERMIT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.IDENTITY_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.NINO_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.RETURN_CODE_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VCS_CLAIM_NAME;
+
 @Getter
 @Setter
 @ExcludeFromGeneratedCoverageReport
 @Builder
 public class UserIdentity {
-
-    public static final String VCS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/credentialJWT";
-    public static final String ADDRESS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/address";
-    private static final String IDENTITY_CLAIM_NAME =
-            "https://vocab.account.gov.uk/v1/coreIdentity";
-    private static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
-    private static final String DRIVING_PERMIT_CLAIM_NAME =
-            "https://vocab.account.gov.uk/v1/drivingPermit";
-    private static final String NINO_CLAIM_NAME =
-            "https://vocab.account.gov.uk/v1/socialSecurityRecord";
-    public static final String RETURN_CODE_NAME = "https://vocab.account.gov.uk/v1/returnCode";
 
     @JsonProperty(VCS_CLAIM_NAME)
     private List<String> vcs;

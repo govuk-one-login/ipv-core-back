@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -66,8 +69,6 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
-    private static final String REQUEST_HMRC_INHERITED_IDENTITY_JWT_KEY =
-            "https://vocab.account.gov.uk/v1/inheritedIdentityJWT";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -172,12 +173,8 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                String inheritedIdentityJWT =
-                        claimsSet.getStringClaim(REQUEST_HMRC_INHERITED_IDENTITY_JWT_KEY);
-                if (inheritedIdentityJWT != null) {
-                    validateAndStoreHMRCInheritedIdentity(
-                            inheritedIdentityJWT, clientOAuthSessionItem.getUserId());
-                }
+                validateAndStoreHMRCInheritedIdentity(
+                        clientOAuthSessionItem.getUserId(), claimsSet);
             }
 
             Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
@@ -253,24 +250,53 @@ public class InitialiseIpvSessionHandler
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
-        } catch (VerifiableCredentialException e) {
-            LogHelper.logErrorMessage(
-                    "Inherited identity validation failed.", e.getErrorResponse().getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         }
     }
 
-    private void validateAndStoreHMRCInheritedIdentity(String inheritedIdentityJWT, String userId)
-            throws ParseException, VerifiableCredentialException {
-        SignedJWT signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJWT);
-        CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
+    @Tracing
+    private void validateAndStoreHMRCInheritedIdentity(String userId, JWTClaimsSet claimsSet)
+            throws RecoverableJarValidationException, ParseException {
+        SignedJWT signedInheritedIdentityJWT;
+        try {
+            signedInheritedIdentityJWT =
+                    SignedJWT.parse(
+                            ((JarClaims) claimsSet.getClaim("claims"))
+                                    .userInfo()
+                                    .inheritedIdentityClaim()
+                                    .value()
+                                    .get(0));
+            CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
-        verifiableCredentialJwtValidator.validate(
-                signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
+            verifiableCredentialJwtValidator.validate(
+                    signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
+        } catch (VerifiableCredentialException | ParseException e) {
+            throw buildRecoverableException(
+                    OAuth2Error.INVALID_REQUEST_OBJECT
+                            .setDescription("Inherited identity JWT failed to validate - ")
+                            .appendDescription(e.getMessage()),
+                    claimsSet);
+        }
 
-        verifiableCredentialService.persistUserCredentials(
-                signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
+        try {
+            verifiableCredentialService.persistUserCredentials(
+                    signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
+        } catch (VerifiableCredentialException e) {
+            throw buildRecoverableException(
+                    OAuth2Error.SERVER_ERROR
+                            .setDescription("Failed to persist inherited identity JWT - ")
+                            .appendDescription(e.getMessage()),
+                    claimsSet);
+        }
+    }
+
+    private RecoverableJarValidationException buildRecoverableException(
+            ErrorObject errorObject, JWTClaimsSet claimsSet) throws ParseException {
+        return new RecoverableJarValidationException(
+                errorObject,
+                claimsSet.getURIClaim("redirect_uri").toString(),
+                claimsSet.getStringClaim("client_id"),
+                claimsSet.getStringClaim("state"),
+                claimsSet.getStringClaim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY));
     }
 
     @Tracing

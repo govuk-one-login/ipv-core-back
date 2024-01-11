@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -41,6 +42,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
+    public static final String CLAIMS_CLAIM = "claims";
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;
@@ -171,11 +173,13 @@ public class JarValidator {
                                 JWTClaimNames.SUBJECT));
 
         try {
-            verifier.verify(signedJWT.getJWTClaimsSet(), null);
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+            verifier.verify(claimsSet, null);
 
-            validateMaxAllowedJarTtl(signedJWT.getJWTClaimsSet());
+            validateMaxAllowedJarTtl(claimsSet);
+            validateInheritedIdentityJwtClaim(claimsSet);
 
-            return signedJWT.getJWTClaimsSet();
+            return claimsSet;
         } catch (BadJWTException | ParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Claim set validation failed"));
             throw new JarValidationException(
@@ -225,6 +229,38 @@ public class JarValidator {
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to parse JWT claim set in order to access redirect_uri claim"));
+        }
+    }
+
+    private void validateInheritedIdentityJwtClaim(JWTClaimsSet claimsSet)
+            throws JarValidationException {
+        var claims = (JarClaims) claimsSet.getClaim(CLAIMS_CLAIM);
+        if (claims == null) {
+            return;
+        }
+
+        var userInfo = claims.userInfo();
+        if (userInfo == null) {
+            return;
+        }
+
+        var inheritedIdentityJwtClaim = userInfo.inheritedIdentityClaim();
+        if (inheritedIdentityJwtClaim == null) {
+            return;
+        }
+
+        List<String> inheritedIdentityJwtList = inheritedIdentityJwtClaim.value();
+        if (inheritedIdentityJwtList == null) {
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                            "Inherited identity jwt claim received but value is null"));
+        }
+        if (inheritedIdentityJwtList.size() != 1) {
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                            String.format(
+                                    "%d inherited identity jwts received - one expected",
+                                    inheritedIdentityJwtList.size())));
         }
     }
 }
