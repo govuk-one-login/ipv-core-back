@@ -26,7 +26,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
-import uk.gov.di.ipv.core.processasynccricredential.pact.JwtBuilder;
+import uk.gov.di.ipv.core.processasynccricredential.pact.JwtTestHelper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -573,7 +573,7 @@ public class ContractTest {
                         "f2f",
                         TEST_USER,
                         TEST_OAUTH_STATE,
-                        List.of(new JwtBuilder(VALID_VC_HEADER, jwtBody, jwtSignature).build()),
+                        List.of(new JwtTestHelper(VALID_VC_HEADER, jwtBody, jwtSignature).build()),
                         null,
                         null);
         return OBJECT_MAPPER.writeValueAsString(criResponseMessageDto);
