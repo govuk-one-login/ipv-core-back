@@ -70,14 +70,13 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             AuditService auditService,
             CiMitService ciMitService,
-            JwtParser jwtParser,
             CriResponseService criResponseService) {
         this.configService = configService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.ciMitService = ciMitService;
-        this.jwtParser = jwtParser;
+        this.jwtParser = new JwtParser();
         this.criResponseService = criResponseService;
         VcHelper.setConfigService(this.configService);
     }
