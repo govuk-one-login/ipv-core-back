@@ -483,7 +483,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyDrivingLicenceComponentId is the driving licence CRI component ID")
@@ -505,12 +505,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(404)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturns404")
+    @PactTestFor(pactMethod = "invalidAuthCodeReturns401")
     void fetchAccessToken_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
@@ -972,7 +972,7 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(401)
+                .status(404)
                 .toPact();
     }
 
