@@ -58,7 +58,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             request = mapper.readValue(inputStream, ReplayRequest.class);
         } catch (IOException e) {
             LOGGER.error("Failed to map request to valid replay event", e);
-            return;
+            throw new RuntimeException(e);
         }
         LOGGER.info("Retrieving {} VCs", request.getItems().size());
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
@@ -74,6 +74,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             ciMitService.submitMitigatingVcList(vcs, null, null);
         } catch (CiPostMitigationsException e) {
             LOGGER.error("Failed to send VCs to CIMIT", e);
+            throw new RuntimeException(e);
         }
     }
 }
