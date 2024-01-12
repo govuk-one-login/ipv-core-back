@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
+import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -79,7 +80,7 @@ class ReplayCimitVcsHandlerTest {
                     .submitMitigatingVcList(anyList(), eq(null), eq(null));
 
             assertThrows(
-                    RuntimeException.class,
+                    FailedVcReplayException.class,
                     () -> this.replayCimitVcsHandler.handleRequest(inputStream, null, null));
         }
     }

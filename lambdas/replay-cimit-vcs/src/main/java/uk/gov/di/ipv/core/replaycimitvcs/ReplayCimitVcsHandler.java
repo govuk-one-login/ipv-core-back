@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.domain.ReplayItem;
 import uk.gov.di.ipv.core.library.domain.ReplayRequest;
+import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -58,7 +59,8 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             request = mapper.readValue(inputStream, ReplayRequest.class);
         } catch (IOException e) {
             LOGGER.error("Failed to map request to valid replay event", e);
-            throw new RuntimeException(e);
+            throw new FailedVcReplayException(
+                    String.format("Failed to replay VCs to CIMIT because: '%s'", e));
         }
         LOGGER.info("Retrieving {} VCs", request.getItems().size());
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
@@ -74,7 +76,8 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             ciMitService.submitMitigatingVcList(vcs, null, null);
         } catch (CiPostMitigationsException e) {
             LOGGER.error("Failed to send VCs to CIMIT", e);
-            throw new RuntimeException(e);
+            throw new FailedVcReplayException(
+                    String.format("Failed to replay VCs to CIMIT because: '%s'", e));
         }
     }
 }
