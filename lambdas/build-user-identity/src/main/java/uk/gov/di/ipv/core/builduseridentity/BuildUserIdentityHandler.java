@@ -11,7 +11,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -174,14 +173,15 @@ public class BuildUserIdentityHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Failed to parse access token");
+            LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
             return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage(
-                    "Failed to generate the user identity output.", e.getErrorReason());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Failed to generate the user identity output.", e.getErrorReason()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
@@ -216,7 +216,7 @@ public class BuildUserIdentityHandler
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 
-        LogHelper.logMessage(Level.INFO, "Sending audit event IPV_IDENTITY_ISSUED message.");
+        LOGGER.info(LogHelper.buildLogMessage("Sending audit event IPV_IDENTITY_ISSUED message."));
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_IDENTITY_ISSUED,
@@ -267,8 +267,9 @@ public class BuildUserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getUnknownAccessTokenApiGatewayProxyResponseEvent() {
-        LogHelper.logErrorMessage(
-                "User credential could not be retrieved. The supplied access token was not found in the database.");
+        LOGGER.error(
+                LogHelper.buildLogMessage(
+                        "User credential could not be retrieved. The supplied access token was not found in the database."));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED
@@ -285,7 +286,7 @@ public class BuildUserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent serverErrorJsonResponse(String errorHeader, Exception e) {
-        LogHelper.logErrorMessage(errorHeader, e.getMessage());
+        LOGGER.error(LogHelper.buildErrorMessage(errorHeader, e));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
                 OAuth2Error.SERVER_ERROR

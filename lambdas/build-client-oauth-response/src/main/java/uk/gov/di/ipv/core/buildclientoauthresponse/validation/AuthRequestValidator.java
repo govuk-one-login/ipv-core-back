@@ -38,13 +38,16 @@ public class AuthRequestValidator {
     public ValidationResult<ErrorResponse> validateRequest(
             Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (queryStringParamsMissing(queryStringParameters)) {
-            LogHelper.logErrorMessage(
-                    "Missing required query parameters for authorisation request");
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Missing required query parameters for authorisation request"));
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
         if (sessionIdMissing(requestHeaders) && clientSessionIdMissing(requestHeaders)) {
-            LogHelper.logErrorMessage("Missing IPV session and client session ID from headers");
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Missing IPV session and client session ID from headers"));
             return new ValidationResult<>(false, ErrorResponse.MISSING_SESSION_ID);
         }
 
@@ -91,7 +94,7 @@ public class AuthRequestValidator {
             }
             return Optional.empty();
         } catch (IllegalArgumentException e) {
-            LogHelper.logErrorMessage(e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Invalid auth request parameters", e));
             return Optional.of(ErrorResponse.INVALID_REQUEST_PARAM);
         }
     }

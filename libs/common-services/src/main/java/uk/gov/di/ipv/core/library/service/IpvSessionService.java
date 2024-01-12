@@ -4,7 +4,8 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -22,6 +23,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
 public class IpvSessionService {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String VOT_P0 = "P0";
@@ -73,9 +75,9 @@ public class IpvSessionService {
                 try {
                     Thread.sleep(backoff);
                 } catch (InterruptedException e) {
-                    LogHelper.logMessage(
-                            Level.WARN,
-                            "getIpvSessionByAccessToken() backoff and retry sleep was interrupted");
+                    LOGGER.warn(
+                            LogHelper.buildLogMessage(
+                                    "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
                     Thread.currentThread().interrupt();
                 }
             } else {
@@ -84,7 +86,7 @@ public class IpvSessionService {
         }
 
         if (attempts > 0) {
-            LogHelper.logMessage(Level.WARN, "getIpvSessionByAccessToken() required retries");
+            LOGGER.warn(LogHelper.buildLogMessage("getIpvSessionByAccessToken() required retries"));
         }
         return Optional.ofNullable(ipvSessionItem);
     }

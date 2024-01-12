@@ -48,7 +48,6 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONNECTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FEATURE_SET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PARAMETER_PATH;
@@ -288,7 +287,7 @@ public class ConfigService {
             }
             return configMap;
         } catch (JsonProcessingException e) {
-            LogHelper.logErrorMessage("Failed to parse contra-indicator config");
+            LOGGER.error(LogHelper.buildLogMessage("Failed to parse contra-indicator config"));
             return Collections.emptyMap();
         }
     }
@@ -322,29 +321,31 @@ public class ConfigService {
         try {
             return secretsProvider.get(secretId);
         } catch (DecryptionFailureException e) {
-            LogHelper.logErrorMessage(
-                    "Secrets manager failed to decrypt the protected secret using the configured KMS key",
-                    e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Secrets manager failed to decrypt the protected secret using the configured KMS key",
+                            e));
         } catch (InternalServiceErrorException e) {
-            LogHelper.logErrorMessage(
-                    "Internal server error occurred with Secrets manager", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Internal server error occurred with Secrets manager", e));
         } catch (InvalidParameterException e) {
             LOGGER.error(
-                    "An invalid value was provided for the param value: {}, details: {}",
-                    secretId,
-                    e.getMessage());
+                    LogHelper.buildErrorMessage(
+                            String.format(
+                                    "An invalid value was provided for the param value: %s",
+                                    secretId),
+                            e));
         } catch (InvalidRequestException e) {
-            LogHelper.logErrorMessage(
-                    "Parameter value is not valid for the current state of the resource",
-                    e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Parameter value is not valid for the current state of the resource",
+                            e));
         } catch (ResourceNotFoundException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Failed to find the resource within Secrets manager.")
-                            .with(LOG_SECRET_ID.getFieldName(), secretId)
-                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage()));
+                    LogHelper.buildErrorMessage(
+                                    "Failed to find the resource within Secrets manager.", e)
+                            .with(LOG_SECRET_ID.getFieldName(), secretId));
         }
         return null;
     }

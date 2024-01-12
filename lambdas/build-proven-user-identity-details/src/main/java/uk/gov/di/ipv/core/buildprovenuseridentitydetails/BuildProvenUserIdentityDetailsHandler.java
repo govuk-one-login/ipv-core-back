@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.NameAndDateOfBirth;
@@ -51,6 +52,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 
 public class BuildProvenUserIdentityDetailsHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
     private final ConfigService configService;
@@ -116,7 +118,8 @@ public class BuildProvenUserIdentityDetailsHandler
             List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
             provenUserIdentityDetailsBuilder.addresses(addresses);
 
-            LogHelper.logMessage(Level.INFO, "Successfully retrieved proven identity response.");
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Successfully retrieved proven identity response."));
 
             return provenUserIdentityDetailsBuilder.build().toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -134,7 +137,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private Map<String, Object> buildJourneyErrorResponse(ErrorResponse errorResponse) {
-        LogHelper.logErrorMessage(errorResponse.getMessage());
+        LOGGER.error(LogHelper.buildLogMessage(errorResponse.getMessage()));
         return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
                 .toObjectMap();
@@ -149,7 +152,7 @@ public class BuildProvenUserIdentityDetailsHandler
                     userIdentityService.findIdentityClaim(credentialIssuerItems);
 
             if (identityClaim.isEmpty()) {
-                LogHelper.logErrorMessage("Failed to generate identity claim");
+                LOGGER.error(LogHelper.buildLogMessage("Failed to generate identity claim"));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
             }
@@ -159,8 +162,9 @@ public class BuildProvenUserIdentityDetailsHandler
 
             return new NameAndDateOfBirth(identityClaim.get().getFullName(), birthDate.getValue());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage(
-                    "Failed to find name and date of birth of proven user identity");
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Failed to find name and date of birth of proven user identity"));
             throw new ProvenUserIdentityDetailsException(
                     "Failed to find name and date of birth of proven user identity");
         }
@@ -196,7 +200,7 @@ public class BuildProvenUserIdentityDetailsHandler
                         .toList();
             }
         }
-        LogHelper.logErrorMessage("Failed to find addresses of proven user identity");
+        LOGGER.error(LogHelper.buildLogMessage("Failed to find addresses of proven user identity"));
         throw new ProvenUserIdentityDetailsException(
                 "Failed to find addresses of proven user identity");
     }

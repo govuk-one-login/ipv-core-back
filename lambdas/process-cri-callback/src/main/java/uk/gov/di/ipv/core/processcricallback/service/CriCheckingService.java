@@ -3,7 +3,8 @@ package uk.gov.di.ipv.core.processcricallback.service;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -48,6 +49,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class CriCheckingService {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
@@ -95,9 +97,8 @@ public class CriCheckingService {
     public JourneyResponse handleCallbackError(
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException {
-        var criId = callbackRequest.getCredentialIssuerId();
         var ipAddress = callbackRequest.getIpAddress();
-        var error = callbackRequest.getError();
+        var errorCode = callbackRequest.getError();
         var errorDescription =
                 Objects.toString(
                         callbackRequest.getErrorDescription(), "No error description provided");
@@ -110,7 +111,7 @@ public class CriCheckingService {
 
         AuditExtensionErrorParams extensions =
                 new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(error)
+                        .setErrorCode(errorCode)
                         .setErrorDescription(errorDescription)
                         .build();
 
@@ -121,13 +122,15 @@ public class CriCheckingService {
                         auditEventUser,
                         extensions));
 
-        if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
-            LogHelper.logMessage(Level.WARN, "Unknown Oauth error code received");
+        if (!ALLOWED_OAUTH_ERROR_CODES.contains(errorCode)) {
+            LOGGER.warn(LogHelper.buildLogMessage("Unknown Oauth error code received"));
         }
 
-        LogHelper.logCriOauthError("OAuth error received from CRI", error, errorDescription, criId);
+        LOGGER.error(
+                LogHelper.buildErrorMessage(
+                        "OAuth error received from CRI", errorDescription, errorCode));
 
-        return (switch (error) {
+        return (switch (errorCode) {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
             case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
             default -> JOURNEY_ERROR;

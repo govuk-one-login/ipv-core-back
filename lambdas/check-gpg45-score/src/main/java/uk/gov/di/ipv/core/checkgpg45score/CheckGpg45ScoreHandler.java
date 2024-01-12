@@ -106,26 +106,28 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
                 return new JourneyResponse(JOURNEY_UNMET_PATH).toObjectMap();
             }
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage("Received HTTP response exception", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Unable to parse GPG45 scores from existing credentials", e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Unable to parse GPG45 scores from existing credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
-            LogHelper.logErrorMessage("Unable to determine type of credential", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
                     .toObjectMap();
         } catch (UnknownScoreTypeException e) {
-            LogHelper.logErrorMessage("Unable to process score type", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Unable to process score type", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
