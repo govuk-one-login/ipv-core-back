@@ -68,7 +68,8 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList() throws CiPostMitigationsException, IOException {
+    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList()
+            throws CiPostMitigationsException, IOException {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
