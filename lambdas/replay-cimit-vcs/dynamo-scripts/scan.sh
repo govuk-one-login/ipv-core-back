@@ -30,6 +30,15 @@ while getopts ":he:p:" option; do
    esac
 done
 
+while true; do
+    read -p "Warning: the following script will perform several full table scans against the user-issued-credentials-v2-$Env table. Do you wish to continue? (y/n):" yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 echo Performing scan for $Profile in $Env
 
 # Scan script

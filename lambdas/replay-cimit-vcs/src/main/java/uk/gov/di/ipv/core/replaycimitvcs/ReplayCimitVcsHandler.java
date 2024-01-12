@@ -1,7 +1,8 @@
 package uk.gov.di.ipv.core.replaycimitvcs;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -16,14 +17,14 @@ import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-public class ReplayCimitVcsHandler implements RequestHandler<ReplayRequest, Map<String, Object>> {
+public class ReplayCimitVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-
     private final ConfigService configService;
     private final CiMitService ciMitService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -49,15 +50,22 @@ public class ReplayCimitVcsHandler implements RequestHandler<ReplayRequest, Map<
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ReplayRequest event, Context context) {
+    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) {
         LogHelper.attachComponentIdToLogs(configService);
-        LOGGER.info(event);
-        LOGGER.info("Retrieving {} VCs", event.getItems().size());
+        ObjectMapper mapper = new ObjectMapper();
+        ReplayRequest request;
+        try {
+            request = mapper.readValue(inputStream, ReplayRequest.class);
+        } catch (IOException e) {
+            LOGGER.error("Failed to map request to valid replay event", e);
+            return;
+        }
+        LOGGER.info("Retrieving {} VCs", request.getItems().size());
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        for (ReplayItem item : event.getItems()) {
+        for (ReplayItem item : request.getItems()) {
             VcStoreItem vcStoreItem =
                     this.verifiableCredentialService.getVcStoreItem(
-                            item.getUserId().get("S"), item.getCredentialIssuer().get("SRE"));
+                            item.getUserId().get("S"), item.getCredentialIssuer().get("S"));
             vcStoreItems.add(vcStoreItem);
         }
         List<String> vcs = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
@@ -67,6 +75,5 @@ public class ReplayCimitVcsHandler implements RequestHandler<ReplayRequest, Map<
         } catch (CiPostMitigationsException e) {
             LOGGER.error("Failed to send VCs to CIMIT", e);
         }
-        return Collections.emptyMap();
     }
 }
