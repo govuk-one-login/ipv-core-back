@@ -110,10 +110,6 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        List<String> vcReceivedThisSession =
-                ipvSessionItem.getVcReceivedThisSession() == null
-                        ? new ArrayList<>()
-                        : ipvSessionItem.getVcReceivedThisSession();
         for (SignedJWT vc : vcs) {
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -127,9 +123,8 @@ public class CriStoringService {
                     List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, criId, userId);
-            vcReceivedThisSession.add(vc.serialize());
+            ipvSessionItem.addVcReceivedThisSession(vc.serialize());
         }
-        ipvSessionItem.setVcReceivedThisSession(vcReceivedThisSession);
 
         sendAuditEventForProcessedVcResponse(
                 vcs.isEmpty()

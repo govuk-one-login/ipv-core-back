@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @DynamoDbBean
@@ -51,4 +52,12 @@ public class IpvSessionItem implements DynamodbItem {
     public String getAccessToken() {
         return accessToken;
     }
+
+    public void addVcReceivedThisSession(String vc) {
+        if (vcReceivedThisSession == null) {
+            vcReceivedThisSession = new ArrayList<>();
+        }
+        vcReceivedThisSession.add(vc);
+    }
+
 }

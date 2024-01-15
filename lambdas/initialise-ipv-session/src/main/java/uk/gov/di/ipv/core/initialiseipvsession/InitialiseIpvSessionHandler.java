@@ -19,7 +19,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -32,7 +34,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdent
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -175,8 +176,14 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                validateAndStoreHMRCInheritedIdentity(
-                        clientOAuthSessionItem.getUserId(), claimsSet, ipvSessionItem);
+                var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
+                if (inheritedIdentityJwtClaim.isPresent()) {
+                    validateAndStoreHMRCInheritedIdentity(
+                            clientOAuthSessionItem.getUserId(),
+                            inheritedIdentityJwtClaim.get(),
+                            claimsSet,
+                            ipvSessionItem);
+                }
             }
 
             Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
@@ -255,64 +262,76 @@ public class InitialiseIpvSessionHandler
         }
     }
 
+    private static Optional<InheritedIdentityJwtClaim> getInheritedIdentityClaim(
+            JWTClaimsSet claimsSet) throws ParseException {
+        return Optional.ofNullable(
+                        OBJECT_MAPPER.convertValue(
+                                claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
+                .map(JarClaims::userInfo)
+                .map(JarUserInfo::inheritedIdentityClaim);
+    }
+
     @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
-            String userId, JWTClaimsSet claimsSet, IpvSessionItem ipvSessionItem)
+            String userId,
+            InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
+            JWTClaimsSet claimsSet,
+            IpvSessionItem ipvSessionItem)
             throws RecoverableJarValidationException, ParseException {
-        JarClaims claims;
         try {
-            claims =
-                    OBJECT_MAPPER.convertValue(
-                            claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class);
-        } catch (IllegalArgumentException | ParseException e) {
-            throw buildRecoverableException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription("Unable to process claims"),
-                    claimsSet);
-        }
-        if (claims == null) {
-            return;
-        }
+            // Validate
+            var inheritedIdentityJwtList =
+                    validateInheritedIdentityJwtList(inheritedIdentityJwtClaim);
 
-        var userInfo = claims.userInfo();
-        if (userInfo == null) {
-            return;
-        }
-
-        var inheritedIdentityJwtClaim = userInfo.inheritedIdentityClaim();
-        if (inheritedIdentityJwtClaim == null) {
-            return;
-        }
-
-        SignedJWT signedInheritedIdentityJWT;
-        try {
-            signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJwtClaim.value().get(0));
-            CriConfig inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
+            var signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJwtList.get(0));
+            var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
             verifiableCredentialJwtValidator.validate(
                     signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
             LogHelper.logMessage(Level.INFO, "Migration VC successfully validated");
+
+            // Store
+            try {
+                verifiableCredentialService.persistUserCredentials(
+                        signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
+                ipvSessionItem.addVcReceivedThisSession(signedInheritedIdentityJWT.serialize());
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+                LogHelper.logMessage(Level.INFO, "Migration VC successfully persisted");
+            } catch (VerifiableCredentialException e) {
+                throw buildRecoverableException(
+                        OAuth2Error.SERVER_ERROR
+                                .setDescription("Failed to persist inherited identity JWT - ")
+                                .appendDescription(e.getMessage()),
+                        claimsSet);
+            }
         } catch (VerifiableCredentialException | ParseException e) {
             throw buildRecoverableException(
                     OAuth2Error.INVALID_REQUEST_OBJECT
                             .setDescription("Inherited identity JWT failed to validate - ")
                             .appendDescription(e.getMessage()),
                     claimsSet);
+        } catch (JarValidationException e) {
+            throw buildRecoverableException(e.getErrorObject(), claimsSet);
         }
+    }
 
-        try {
-            verifiableCredentialService.persistUserCredentials(
-                    signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
-            ipvSessionItem.setVcReceivedThisSession(
-                    List.of(signedInheritedIdentityJWT.serialize()));
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-            LogHelper.logMessage(Level.INFO, "Migration VC successfully persisted");
-        } catch (VerifiableCredentialException e) {
-            throw buildRecoverableException(
-                    OAuth2Error.SERVER_ERROR
-                            .setDescription("Failed to persist inherited identity JWT - ")
-                            .appendDescription(e.getMessage()),
-                    claimsSet);
+    private static List<String> validateInheritedIdentityJwtList(
+            InheritedIdentityJwtClaim inheritedIdentityJwtClaim) throws JarValidationException {
+        var inheritedIdentityJwtList =
+                Optional.of(inheritedIdentityJwtClaim.value())
+                        .orElseThrow(
+                                () ->
+                                        new JarValidationException(
+                                                OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                                                        "Inherited identity jwt claim received but value is null")));
+        if (inheritedIdentityJwtList.size() != 1) {
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                            String.format(
+                                    "%d inherited identity jwts received - one expected",
+                                    inheritedIdentityJwtList.size())));
         }
+        return inheritedIdentityJwtList;
     }
 
     private RecoverableJarValidationException buildRecoverableException(

@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -179,7 +178,6 @@ public class JarValidator {
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
-            validateInheritedIdentityJwtClaim(claimsSet);
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
@@ -231,46 +229,6 @@ public class JarValidator {
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to parse JWT claim set in order to access redirect_uri claim"));
-        }
-    }
-
-    private void validateInheritedIdentityJwtClaim(JWTClaimsSet claimsSet)
-            throws JarValidationException {
-        JarClaims claims;
-        try {
-            claims =
-                    OBJECT_MAPPER.convertValue(
-                            claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class);
-        } catch (IllegalArgumentException | ParseException e) {
-            throw new JarValidationException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription("Unable to process claims"));
-        }
-        if (claims == null) {
-            return;
-        }
-
-        var userInfo = claims.userInfo();
-        if (userInfo == null) {
-            return;
-        }
-
-        var inheritedIdentityJwtClaim = userInfo.inheritedIdentityClaim();
-        if (inheritedIdentityJwtClaim == null) {
-            return;
-        }
-
-        List<String> inheritedIdentityJwtList = inheritedIdentityJwtClaim.value();
-        if (inheritedIdentityJwtList == null) {
-            throw new JarValidationException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
-                            "Inherited identity jwt claim received but value is null"));
-        }
-        if (inheritedIdentityJwtList.size() != 1) {
-            throw new JarValidationException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
-                            String.format(
-                                    "%d inherited identity jwts received - one expected",
-                                    inheritedIdentityJwtList.size())));
         }
     }
 }
