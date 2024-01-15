@@ -1818,7 +1818,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ResetIdentityFunctionLogGroup
 
-
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -2289,6 +2288,105 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CallTicfCriFunctionLogGroup
+
+  ReplayCimitVcsFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - ReplayCimitVcsFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "replay-cimit-vcs-${Environment}"
+      Handler: uk.gov.di.ipv.core.replaycimitvcs.ReplayCimitVcsHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/replay-cimit-vcs
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub replay-cimit-vcs-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - cimitEnvironment
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  ReplayCimitVcsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/replay-cimit-vcs-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  ReplayCimitVcsFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ReplayCimitVcsFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

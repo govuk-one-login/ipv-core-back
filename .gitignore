@@ -42,3 +42,8 @@ node_modules
 
 # Ignore template written by dev-deploy tool
 deploy/core-back-*.yaml
+
+# Ignore dynamo script outputs
+dev
+production
+uuid_results
