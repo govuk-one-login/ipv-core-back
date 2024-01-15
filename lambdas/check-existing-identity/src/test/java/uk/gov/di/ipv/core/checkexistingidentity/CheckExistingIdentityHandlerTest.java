@@ -65,9 +65,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.VOT_P2;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -198,10 +198,10 @@ class CheckExistingIdentityHandlerTest {
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(VOT_P2);
+        inOrder.verify(ipvSessionItem).setVot(P2.name());
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(VOT_P2, ipvSessionItem.getVot());
+        assertEquals(P2.name(), ipvSessionItem.getVot());
     }
 
     @Test
@@ -275,10 +275,10 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(VOT_P2);
+        inOrder.verify(ipvSessionItem).setVot(P2.name());
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(VOT_P2, ipvSessionItem.getVot());
+        assertEquals(P2.name(), ipvSessionItem.getVot());
     }
 
     @Test
@@ -757,10 +757,10 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(VOT_P2);
+        inOrder.verify(ipvSessionItem).setVot(P2.name());
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(VOT_P2, ipvSessionItem.getVot());
+        assertEquals(P2.name(), ipvSessionItem.getVot());
     }
 
     @Test

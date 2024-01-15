@@ -48,6 +48,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -224,7 +225,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot("P0");
+        inOrder.verify(spyIpvSessionItem).setVot(P0.name());
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
@@ -246,7 +247,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot("P0");
+        inOrder.verify(spyIpvSessionItem).setVot(P0.name());
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 

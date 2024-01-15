@@ -44,13 +44,14 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String VOT_P0 = "P0";
+
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final Map<String, Object> JOURNEY_NEXT =
@@ -185,7 +186,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "CI score is breaching threshold - setting VOT to P0"));
-            ipvSessionItem.setVot(VOT_P0);
+            ipvSessionItem.setVot(P0.name());
 
             return ciMitUtilityService
                     .getCiMitigationJourneyStep(cis)

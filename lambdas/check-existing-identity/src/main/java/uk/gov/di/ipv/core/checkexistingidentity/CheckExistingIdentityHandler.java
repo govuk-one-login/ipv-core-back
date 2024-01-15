@@ -57,6 +57,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -92,7 +93,6 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final String TICF_CRI = "ticf";
-    public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -242,7 +242,7 @@ public class CheckExistingIdentityHandler
             sendProfileMatchedAuditEvent(
                     matchedProfile.get(), gpg45Scores, credentials, auditEventUser);
 
-            ipvSessionItem.setVot(VOT_P2);
+            ipvSessionItem.setVot(P2.name());
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return buildProfileMatchedResponse(matchedProfile.get(), auditEventUser);

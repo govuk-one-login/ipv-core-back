@@ -21,12 +21,12 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
 
 public class IpvSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
-    private static final String VOT_P0 = "P0";
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigService configService;
@@ -103,7 +103,7 @@ public class IpvSessionService {
 
         ipvSessionItem.setUserState(generateStartingState(errorObject));
 
-        ipvSessionItem.setVot(VOT_P0);
+        ipvSessionItem.setVot(P0.toString());
 
         String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.valueOf(journeyType));

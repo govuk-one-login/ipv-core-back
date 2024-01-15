@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -91,7 +92,7 @@ class TicfCriServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setVot("P2");
+        ipvSessionItem.setVot(P2.name());
         ticfCriConfig =
                 new BackendCriConfig(
                         new URI("https://credential.example.com"),

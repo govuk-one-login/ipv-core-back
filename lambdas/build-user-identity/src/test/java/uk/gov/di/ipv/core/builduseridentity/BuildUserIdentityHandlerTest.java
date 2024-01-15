@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -63,6 +62,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
@@ -144,7 +145,7 @@ class BuildUserIdentityHandlerTest {
                         objectMapper.readTree(DRIVING_PERMIT_JSON_1),
                         objectMapper.readTree(NINO_JSON_1),
                         "test-sub",
-                        VectorOfTrust.P2.toString(),
+                        P2.toString(),
                         VTM,
                         List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")));
 
@@ -154,7 +155,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
-        ipvSessionItem.setVot("P2");
+        ipvSessionItem.setVot(P2.name());
         ipvSessionItem.setFeatureSet("someCoolNewThing");
 
         buildUserIdentityHandler =
@@ -231,7 +232,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         AuditExtensionsUserIdentity extensions =
                 (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(VectorOfTrust.P2.toString(), extensions.getLevelOfConfidence());
+        assertEquals(P2.toString(), extensions.getLevelOfConfidence());
         assertFalse(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
         assertEquals(3, responseBody.getReturnCode().size());
@@ -262,7 +263,7 @@ class BuildUserIdentityHandlerTest {
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        ipvSessionItem.setVot("P0");
+        ipvSessionItem.setVot(P0.name());
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
@@ -299,7 +300,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         var expectedExtension =
                 new AuditExtensionsUserIdentity(
-                        VectorOfTrust.P0.toString(),
+                        P0.toString(),
                         false,
                         false,
                         List.of(
@@ -373,7 +374,7 @@ class BuildUserIdentityHandlerTest {
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "1"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        ipvSessionItem.setVot("P0");
+        ipvSessionItem.setVot(P0.name());
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
@@ -410,7 +411,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
         var expectedExtension =
                 new AuditExtensionsUserIdentity(
-                        VectorOfTrust.P0.toString(),
+                        P0.toString(),
                         false,
                         false,
                         List.of(

@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -74,7 +75,6 @@ public class EvaluateGpg45ScoresHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
-    public static final String VOT_P2 = "P2";
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -196,7 +196,7 @@ public class EvaluateGpg45ScoresHandler
                                 gpg45Scores,
                                 credentials,
                                 ipAddress));
-                ipvSessionItem.setVot(VOT_P2);
+                ipvSessionItem.setVot(P2.name());
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
