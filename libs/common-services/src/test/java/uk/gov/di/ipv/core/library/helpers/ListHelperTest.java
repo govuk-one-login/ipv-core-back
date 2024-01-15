@@ -29,11 +29,32 @@ class ListHelperTest {
                                 List.of(3, 2, 1))));
     }
 
+    private static Stream<Arguments> ShouldBatchCorrectlyTestCases() {
+        return Stream.of(
+                Arguments.of(
+                        List.of(1, 2, 3, 4, 5, 6, 7, 8),
+                        List.of(List.of(1, 2, 3), List.of(4, 5, 6), List.of(7, 8))));
+    }
+
     @ParameterizedTest
     @MethodSource("ShouldPermuteCorrectlyTestCases")
     void shouldPermuteCorrectly(List<Integer> listToPermute, List<List<Integer>> expectedResults) {
 
         var result = ListHelper.getPermutations(listToPermute);
+
+        assertThat(
+                result,
+                containsInAnyOrder(
+                        expectedResults.stream()
+                                .map(Matchers::equalTo)
+                                .collect(Collectors.toList())));
+    }
+
+    @ParameterizedTest
+    @MethodSource("ShouldBatchCorrectlyTestCases")
+    void shouldBatchCorrectly(List<Integer> listToPermute, List<List<Integer>> expectedResults) {
+
+        var result = ListHelper.getBatches(listToPermute, 3);
 
         assertThat(
                 result,
