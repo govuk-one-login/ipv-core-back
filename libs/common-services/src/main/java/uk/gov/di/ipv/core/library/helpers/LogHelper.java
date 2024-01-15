@@ -1,14 +1,14 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.util.StringUtils;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -17,7 +17,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
 
     public enum LogField {
@@ -119,56 +118,39 @@ public class LogHelper {
         }
     }
 
-    public static void attachIsUserInitiatedToLogs(Boolean isUserInitiated) {
-        attachFieldToLogs(LogField.LOG_IS_USER_INITIATED, isUserInitiated.toString());
-    }
-
-    public static void logErrorMessage(String message) {
-        logErrMessage(message, null, null, null);
-    }
-
-    public static void logErrorMessage(String message, String errorDescription) {
-        logErrMessage(message, null, errorDescription, null);
-    }
-
-    public static void logErrorMessage(String message, int errorCode, String errorDescription) {
-        logErrMessage(message, Integer.toString(errorCode), errorDescription, null);
-    }
-
-    public static void logOauthError(String message, String errorCode, String errorDescription) {
-        logErrMessage(message, errorCode, errorDescription, null);
-    }
-
-    public static void logCriOauthError(
-            String message, String errorCode, String errorDescription, String criId) {
-        logErrMessage(message, errorCode, errorDescription, criId);
-    }
-
-    private static void logErrMessage(
-            String message, String errorCode, String errorDescription, String criId) {
-        var mapMessage =
-                new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message);
-        if (errorDescription != null)
-            mapMessage.with(LOG_ERROR_DESCRIPTION.getFieldName(), errorDescription);
-        if (errorCode != null) mapMessage.with(LOG_ERROR_CODE.getFieldName(), errorCode);
-        if (criId != null) mapMessage.with(LOG_CRI_ID.getFieldName(), criId);
-        LOGGER.error(mapMessage);
-    }
-
     private static void attachFieldToLogs(LogField field, String value) {
         LoggingUtils.appendKey(field.getFieldName(), value);
     }
 
-    public static void logMessage(Level level, String message) {
-        LOGGER.log(
-                level,
-                new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message));
+    public static StringMapMessage buildLogMessage(String message) {
+        return new StringMapMessage().with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message);
     }
 
-    public static void logErrorMessage(String message, Exception e) {
-        LOGGER.error(
-                new StringMapMessage()
-                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), message)
-                        .with(LOG_ERROR_DESCRIPTION.getFieldName(), e));
+    public static StringMapMessage buildErrorMessage(String message, String errorDescription) {
+        return buildLogMessage(message)
+                .with(
+                        LOG_ERROR_DESCRIPTION.getFieldName(),
+                        Objects.requireNonNullElse(errorDescription, "Unknown"));
+    }
+
+    public static StringMapMessage buildErrorMessage(String message, Exception e) {
+        return buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
+    }
+
+    public static StringMapMessage buildErrorMessage(String message, ErrorObject err) {
+        return buildErrorMessage(message, err.getDescription(), err.getCode());
+    }
+
+    public static StringMapMessage buildErrorMessage(
+            String message, String errorDescription, int errorCode) {
+        return buildErrorMessage(message, errorDescription, Integer.toString(errorCode));
+    }
+
+    public static StringMapMessage buildErrorMessage(
+            String message, String errorDescription, String errorCode) {
+        return buildErrorMessage(message, errorDescription)
+                .with(
+                        LOG_ERROR_CODE.getFieldName(),
+                        Objects.requireNonNullElse(errorCode, "Unknown"));
     }
 }

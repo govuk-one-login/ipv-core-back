@@ -16,7 +16,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
@@ -36,6 +37,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class VerifiableCredentialJwtValidator {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String VC_CLAIM_NAME = "vc";
     private static final Gson gson = new Gson();
     private final ConfigService configService;
@@ -61,12 +63,13 @@ public class VerifiableCredentialJwtValidator {
     public void validate(
             SignedJWT verifiableCredential, CriConfig credentialIssuerConfig, String userId)
             throws VerifiableCredentialException {
-        LogHelper.logMessage(Level.INFO, "Validating Verifiable Credential.");
+        LOGGER.info(LogHelper.buildLogMessage("Validating Verifiable Credential."));
         ECKey signingKey;
         try {
             signingKey = credentialIssuerConfig.getSigningKey();
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Error parsing credential issuer public JWK", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Error parsing credential issuer public JWK", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
         }
@@ -78,7 +81,7 @@ public class VerifiableCredentialJwtValidator {
             throws VerifiableCredentialException {
         validateSignatureAndClaims(verifiableCredential, signingKey, componentId, userId);
         validateCiCodes(verifiableCredential);
-        LogHelper.logMessage(Level.INFO, "Verifiable Credential validated.");
+        LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
     }
 
     public void validateSignatureAndClaims(
@@ -97,7 +100,7 @@ public class VerifiableCredentialJwtValidator {
                             ? transcodeSignature(verifiableCredential)
                             : verifiableCredential;
         } catch (JOSEException | ParseException e) {
-            LogHelper.logErrorMessage("Error transcoding signature.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Error transcoding signature", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -106,13 +109,14 @@ public class VerifiableCredentialJwtValidator {
         try {
             ECDSAVerifier verifier = new ECDSAVerifier(signingKey);
             if (!concatSignatureVerifiableCredential.verify(verifier)) {
-                LogHelper.logErrorMessage("Verifiable credential signature not valid");
+                LOGGER.error(
+                        LogHelper.buildLogMessage("Verifiable credential signature not valid"));
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
             }
         } catch (JOSEException e) {
-            LogHelper.logErrorMessage("JOSE exception when verifying signature.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("JOSE exception when verifying signature", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -120,7 +124,7 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private SignedJWT transcodeSignature(SignedJWT vc) throws JOSEException, ParseException {
-        LogHelper.logMessage(Level.INFO, "Transcoding signature.");
+        LOGGER.info(LogHelper.buildLogMessage("Transcoding signature"));
         Base64URL transcodedSignatureBase64 =
                 Base64URL.encode(
                         ECDSA.transcodeSignatureToConcat(
@@ -149,7 +153,8 @@ public class VerifiableCredentialJwtValidator {
         try {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
         } catch (BadJWTException | ParseException e) {
-            LogHelper.logErrorMessage("Verifiable credential claims set not valid", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Verifiable credential claims set not valid", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -188,16 +193,18 @@ public class VerifiableCredentialJwtValidator {
                 }
 
                 if (anyUnrecognisedCiCodes) {
-                    LogHelper.logErrorMessage(
-                            "Verifiable credential contains unrecognised CI codes");
+                    LOGGER.error(
+                            LogHelper.buildLogMessage(
+                                    "Verifiable credential contains unrecognised CI codes"));
                     throw new VerifiableCredentialException(
                             HTTPResponse.SC_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
         } catch (ParseException | VerifiableCredentialException e) {
-            LogHelper.logErrorMessage(
-                    "Failed to parse verifiable credential claims set", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Failed to parse verifiable credential claims set", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);

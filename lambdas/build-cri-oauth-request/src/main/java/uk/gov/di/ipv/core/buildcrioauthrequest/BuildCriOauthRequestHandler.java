@@ -13,7 +13,6 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -235,14 +234,16 @@ public class BuildCriOauthRequestHandler
                                 JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                         .toObjectMap();
             }
-            LogHelper.logErrorMessage("Failed to create cri JAR", e.getErrorReason());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to create cri JAR", e.getErrorReason()));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             e.getErrorResponse())
                     .toObjectMap();
         } catch (SqsException e) {
-            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -250,14 +251,14 @@ public class BuildCriOauthRequestHandler
                             e.getMessage())
                     .toObjectMap();
         } catch (ParseException | JOSEException e) {
-            LogHelper.logErrorMessage("Failed to parse encryption public JWK.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse encryption public JWK.", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_BAD_REQUEST,
                             ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG)
                     .toObjectMap();
         } catch (URISyntaxException e) {
-            LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to construct redirect uri.", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -265,7 +266,7 @@ public class BuildCriOauthRequestHandler
                             e.getMessage())
                     .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
-            LogHelper.logErrorMessage("Unable to determine type of credential.", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential.", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -363,8 +364,9 @@ public class BuildCriOauthRequestHandler
                         .min();
 
         if (minViableStrengthOpt.isEmpty()) {
-            LogHelper.logMessage(
-                    Level.WARN, "Minimum strength evidence required cannot be attained.");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Minimum strength evidence required cannot be attained."));
             return null;
         }
 
@@ -415,8 +417,9 @@ public class BuildCriOauthRequestHandler
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {
-                        LogHelper.logErrorMessage(
-                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage());
+                        LOGGER.error(
+                                LogHelper.buildLogMessage(
+                                        ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
                         throw new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                     }
@@ -434,11 +437,11 @@ public class BuildCriOauthRequestHandler
                     sharedClaimsSet.add(credentialsSharedClaims);
                 }
             } catch (JsonProcessingException e) {
-                LogHelper.logErrorMessage("Failed to get Shared Attributes.", e.getMessage());
+                LOGGER.error(LogHelper.buildErrorMessage("Failed to get Shared Attributes.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
             } catch (ParseException e) {
-                LogHelper.logErrorMessage("Failed to parse issued credentials.", e.getMessage());
+                LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }

@@ -5,7 +5,6 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -148,12 +147,13 @@ public class RequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         Map<String, Object> lambdaInput = request.getLambdaInput();
         if (lambdaInput == null) {
-            LogHelper.logErrorMessage("Missing lambdaInput map");
+            LOGGER.error(LogHelper.buildLogMessage("Missing lambdaInput map"));
             throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
         T value = (T) lambdaInput.get(key);
         if (value == null) {
-            LogHelper.logErrorMessage(String.format("Missing '%s' in lambdaInput", key));
+            LOGGER.error(
+                    LogHelper.buildLogMessage(String.format("Missing '%s' in lambdaInput", key)));
             throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
         return value;
@@ -175,9 +175,9 @@ public class RequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         if (ipvSessionId == null) {
             if (allowNull) {
-                LogHelper.logMessage(Level.WARN, errorMessage);
+                LOGGER.warn(LogHelper.buildLogMessage(errorMessage));
             } else {
-                LogHelper.logErrorMessage(errorMessage);
+                LOGGER.error(LogHelper.buildLogMessage(errorMessage));
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
             }
@@ -194,7 +194,7 @@ public class RequestHelper {
     private static void validateIpAddress(String ipAddress, String errorMessage)
             throws HttpResponseExceptionWithErrorBody {
         if (ipAddress == null) {
-            LogHelper.logErrorMessage(errorMessage, IP_ADDRESS_HEADER);
+            LOGGER.error(LogHelper.buildErrorMessage(errorMessage, IP_ADDRESS_HEADER));
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }

@@ -215,8 +215,9 @@ public class ProcessCriCallbackHandler
         } catch (CriApiException e) {
             if (DCMAW_CRI.equals(callbackRequest.getCredentialIssuerId())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
-                LogHelper.logErrorMessage(
-                        "404 received from DCMAW CRI", e.getErrorResponse().getMessage());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "404 received from DCMAW CRI", e.getErrorResponse().getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
             }
@@ -312,7 +313,7 @@ public class ProcessCriCallbackHandler
 
     private APIGatewayProxyResponseEvent buildErrorResponse(
             Exception e, int status, ErrorResponse errorResponse) {
-        LogHelper.logErrorMessage(errorResponse.getMessage(), e);
+        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 status,
                 new JourneyErrorResponse(

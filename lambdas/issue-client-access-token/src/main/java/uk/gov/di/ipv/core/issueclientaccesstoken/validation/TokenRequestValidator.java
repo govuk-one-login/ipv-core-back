@@ -9,7 +9,8 @@ import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.JWTID;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.issueclientaccesstoken.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
@@ -26,6 +27,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 public class TokenRequestValidator {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;
 
@@ -51,7 +53,7 @@ public class TokenRequestValidator {
             validateMaxAllowedAuthClientTtl(claimsSet);
             validateJwtId(claimsSet);
         } catch (ParseException | InvalidClientException | JOSEException e) {
-            LogHelper.logErrorMessage("Validation of client_assertion jwt failed");
+            LOGGER.error(LogHelper.buildLogMessage("Validation of client_assertion jwt failed"));
             throw new ClientAuthenticationException(e);
         }
     }
@@ -64,7 +66,8 @@ public class TokenRequestValidator {
         OffsetDateTime offsetDateTime =
                 OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         if (expirationTime.getTime() / 1000L > offsetDateTime.toEpochSecond()) {
-            LogHelper.logErrorMessage("Client JWT expiry date is too far in the future");
+            LOGGER.error(
+                    LogHelper.buildLogMessage("Client JWT expiry date is too far in the future"));
             throw new InvalidClientException(
                     "The client JWT expiry date has surpassed the maximum allowed ttl value");
         }
@@ -73,7 +76,7 @@ public class TokenRequestValidator {
     private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) {
         JWTID jwtId = claimsSet.getJWTID();
         if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
-            LogHelper.logMessage(Level.WARN, "The client auth JWT id (jti) is missing");
+            LOGGER.warn(LogHelper.buildLogMessage("The client auth JWT id (jti) is missing"));
             return;
         }
         ClientAuthJwtIdItem clientAuthJwtIdItem =
@@ -98,7 +101,8 @@ public class TokenRequestValidator {
         LoggingUtils.appendKey(
                 LogHelper.LogField.LOG_JTI_USED_AT.getFieldName(),
                 clientAuthJwtIdItem.getUsedAtDateTime());
-        LogHelper.logMessage(Level.WARN, "The client auth JWT id (jti) has already been used");
+        LOGGER.warn(
+                LogHelper.buildLogMessage("The client auth JWT id (jti) has already been used"));
         LoggingUtils.removeKeys(
                 LogHelper.LogField.LOG_JTI.getFieldName(),
                 LogHelper.LogField.LOG_JTI_USED_AT.getFieldName());

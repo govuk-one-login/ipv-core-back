@@ -188,16 +188,18 @@ public class BuildClientOauthResponseHandler
 
             return clientResponse.toObjectMap();
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Authentication request could not be parsed", e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Authentication request could not be parsed", e));
             return buildJourneyErrorResponse(
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
-            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
             return buildJourneyErrorResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (URISyntaxException e) {
-            LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to construct redirect uri.", e));
             return buildJourneyErrorResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI);

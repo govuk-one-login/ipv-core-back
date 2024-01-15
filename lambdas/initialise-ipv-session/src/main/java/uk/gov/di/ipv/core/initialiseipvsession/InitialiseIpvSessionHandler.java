@@ -12,7 +12,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -110,9 +109,10 @@ public class InitialiseIpvSessionHandler
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
             if (error.isPresent()) {
-                LogHelper.logErrorMessage(
-                        "Validation of the client session params failed.",
-                        error.get().getMessage());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Validation of the client session params failed.",
+                                error.get().getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, error.get());
             }
@@ -132,7 +132,7 @@ public class InitialiseIpvSessionHandler
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
             if (vtr == null || vtr.isEmpty() || vtr.stream().allMatch(String::isEmpty)) {
-                LogHelper.logErrorMessage(ErrorResponse.MISSING_VTR.getMessage());
+                LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
@@ -184,8 +184,10 @@ public class InitialiseIpvSessionHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (RecoverableJarValidationException e) {
-            LogHelper.logErrorMessage(
-                    "Recoverable Jar validation failed.", e.getErrorObject().getDescription());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Recoverable Jar validation failed.",
+                            e.getErrorObject().getDescription()));
 
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
@@ -204,24 +206,26 @@ public class InitialiseIpvSessionHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Failed to parse the decrypted JWE.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse the decrypted JWE.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
-            LogHelper.logErrorMessage(
-                    "Jar validation failed.", e.getErrorObject().getDescription());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Jar validation failed.", e.getErrorObject().getDescription()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (SqsException e) {
-            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException | IllegalArgumentException e) {
-            LogHelper.logErrorMessage("Failed to parse request body into map.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body into map.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage("Failed to parse request body into map.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
@@ -232,13 +236,13 @@ public class InitialiseIpvSessionHandler
         boolean isInvalid = false;
 
         if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
-            LogHelper.logMessage(Level.WARN, "Missing client_id query parameter");
+            LOGGER.warn(LogHelper.buildLogMessage("Missing client_id query parameter"));
             isInvalid = true;
         }
         LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
-            LogHelper.logMessage(Level.WARN, "Missing request query parameter");
+            LOGGER.warn(LogHelper.buildLogMessage("Missing request query parameter"));
             isInvalid = true;
         }
 

@@ -18,7 +18,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpHeaders;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -107,7 +106,7 @@ public class CriApiService {
             }
 
             var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-            LogHelper.logMessage(Level.INFO, "Auth Code exchanged for Access Token.");
+            LOGGER.info(LogHelper.buildLogMessage("Auth Code exchanged for Access Token."));
             return token;
         } catch (IOException | ParseException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
@@ -184,10 +183,11 @@ public class CriApiService {
             var response = credentialRequest.send();
 
             if (!response.indicatesSuccess()) {
-                LogHelper.logErrorMessage(
-                        "Error retrieving credential",
-                        response.getStatusCode(),
-                        response.getStatusMessage());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Error retrieving credential",
+                                response.getStatusMessage(),
+                                response.getStatusCode()));
                 if (DCMAW_CRI.equals(criId)
                         && response.getStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                     throw new CriApiException(
@@ -206,15 +206,17 @@ public class CriApiService {
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(Collections.singletonList(vcJwt))
                                 .build();
-                LogHelper.logMessage(
-                        Level.INFO, "Verifiable Credential retrieved from JWT response.");
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Verifiable Credential retrieved from JWT response."));
                 return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
                         getVerifiableCredentialResponseForApplicationJson(response.getContent());
-                LogHelper.logMessage(
-                        Level.INFO, "Verifiable Credential retrieved from json response.");
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Verifiable Credential retrieved from json response."));
                 return verifiableCredentialResponse;
             } else {
                 LOGGER.error(
@@ -230,7 +232,7 @@ public class CriApiService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
         } catch (IOException | ParseException | java.text.ParseException e) {
-            LogHelper.logErrorMessage("Error retrieving credential.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Error retrieving credential.", e));
             throw new CriApiException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);

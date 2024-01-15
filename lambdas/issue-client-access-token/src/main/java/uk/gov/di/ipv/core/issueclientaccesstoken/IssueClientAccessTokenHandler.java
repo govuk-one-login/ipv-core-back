@@ -92,8 +92,7 @@ public class IssueClientAccessTokenHandler
                     accessTokenService.validateAuthorizationGrant(authorizationGrant);
             if (!validationResult.isValid()) {
                 ErrorObject error = validationResult.getError();
-                LogHelper.logOauthError(
-                        "Invalid auth grant received.", error.getCode(), error.getDescription());
+                LOGGER.error(LogHelper.buildErrorMessage("Invalid auth grant received.", error));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         getHttpStatusCodeForErrorResponse(validationResult.getError()),
                         validationResult.getError().toJSONObject());
@@ -116,10 +115,9 @@ public class IssueClientAccessTokenHandler
 
             if (ipvSessionItem.getAccessToken() != null) {
                 ErrorObject error = revokeAccessToken(ipvSessionItem);
-                LogHelper.logOauthError(
-                        "Auth code has been used multiple times",
-                        error.getCode(),
-                        error.getDescription());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Auth code has been used multiple times", error));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
@@ -133,14 +131,14 @@ public class IssueClientAccessTokenHandler
                                     ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
-                LogHelper.logOauthError(
-                        String.format(
-                                "Access Token could not be issued. The supplied authorization code has expired. Created at: %s",
-                                ipvSessionItem
-                                        .getAuthorizationCodeMetadata()
-                                        .getCreationDateTime()),
-                        error.getCode(),
-                        error.getDescription());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                String.format(
+                                        "Access Token could not be issued. The supplied authorization code has expired. Created at: %s",
+                                        ipvSessionItem
+                                                .getAuthorizationCodeMetadata()
+                                                .getCreationDateTime()),
+                                error));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
@@ -150,12 +148,12 @@ public class IssueClientAccessTokenHandler
                         OAuth2Error.INVALID_GRANT.setDescription(
                                 "Redirect URL in token request does not match redirect URL received in auth code request");
 
-                LogHelper.logOauthError(
-                        String.format(
-                                "Invalid redirect URL value received. Session ID: %s",
-                                ipvSessionItem.getIpvSessionId()),
-                        error.getCode(),
-                        error.getDescription());
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                String.format(
+                                        "Invalid redirect URL value received. Session ID: %s",
+                                        ipvSessionItem.getIpvSessionId()),
+                                error));
 
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
@@ -192,10 +190,9 @@ public class IssueClientAccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
         } catch (ParseException e) {
-            LogHelper.logOauthError(
-                    "Token request could not be parsed",
-                    e.getErrorObject().getCode(),
-                    e.getErrorObject().getDescription());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Token request could not be parsed", e.getErrorObject()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     getHttpStatusCodeForErrorResponse(e.getErrorObject()),
                     e.getErrorObject().toJSONObject());
@@ -204,16 +201,14 @@ public class IssueClientAccessTokenHandler
                     OAuth2Error.INVALID_GRANT.setDescription(
                             "The supplied authorization code was not found in the database");
 
-            LogHelper.logOauthError(
-                    "Access Token could not be issued", error.getCode(), error.getDescription());
+            LOGGER.error(LogHelper.buildErrorMessage("Access Token could not be issued", error));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
         } catch (ClientAuthenticationException e) {
             ErrorObject error = OAuth2Error.INVALID_CLIENT.setDescription(e.getMessage());
 
-            LogHelper.logOauthError(
-                    "Client authentication failed", error.getCode(), error.getDescription());
+            LOGGER.error(LogHelper.buildErrorMessage("Client authentication failed", error));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
@@ -254,7 +249,7 @@ public class IssueClientAccessTokenHandler
             return OAuth2Error.INVALID_GRANT.setDescription(
                     "Authorization code used too many times");
         } catch (IllegalArgumentException e) {
-            LogHelper.logErrorMessage("Failed to revoke access token.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to revoke access token.", e));
             return OAuth2Error.INVALID_GRANT.setDescription("Failed to revoke access token");
         }
     }

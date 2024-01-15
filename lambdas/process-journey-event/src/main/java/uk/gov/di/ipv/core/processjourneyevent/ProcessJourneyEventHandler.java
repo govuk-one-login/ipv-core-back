@@ -104,7 +104,7 @@ public class ProcessJourneyEventHandler
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (ipvSessionItem == null) {
-                LogHelper.logErrorMessage("Failed to find ipv-session");
+                LOGGER.error(LogHelper.buildLogMessage("Failed to find ipv-session"));
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }

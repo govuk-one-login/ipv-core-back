@@ -10,7 +10,6 @@ import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -91,7 +90,7 @@ public class CiMitService {
                                                 ipAddress,
                                                 verifiableCredential.serialize())));
 
-        LogHelper.logMessage(Level.INFO, "Sending VC to CIMIT.");
+        LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -115,7 +114,7 @@ public class CiMitService {
                                                 ipAddress,
                                                 verifiableCredentialList)));
 
-        LogHelper.logMessage(Level.INFO, "Sending mitigating VCs to CIMIT.");
+        LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -161,7 +160,7 @@ public class CiMitService {
             String userId,
             String message)
             throws CiRetrievalException {
-        LogHelper.logMessage(Level.INFO, message);
+        LOGGER.info(LogHelper.buildLogMessage(message));
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(configService.getEnvironmentVariable(lambdaArnToInvoke))
@@ -173,7 +172,8 @@ public class CiMitService {
         try {
             result = lambdaClient.invoke(request);
         } catch (AWSLambdaException awsLEx) {
-            LogHelper.logErrorMessage("AWSLambda client invocation failed.", awsLEx.getMessage());
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("AWSLambda client invocation failed.", awsLEx));
             throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
         }
 
@@ -190,7 +190,7 @@ public class CiMitService {
         try {
             contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC);
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Failed to parse ContraIndicators JWT.", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse ContraIndicators JWT.", e));
             throw new CiRetrievalException("Failed to parse JWT");
         }
 
@@ -201,13 +201,14 @@ public class CiMitService {
         try {
             verifiableCredentialJwtValidator.validateSignatureAndClaims(
                     contraIndicatorsJwt, ECKey.parse(cimitSigningKey), cimitComponentId, userId);
-            LogHelper.logMessage(Level.INFO, "ContraIndicators Verifiable Credential validated.");
+            LOGGER.info(
+                    LogHelper.buildLogMessage("ContraIndicators Verifiable Credential validated."));
         } catch (ParseException e) {
-            LogHelper.logErrorMessage("Error parsing CIMIT signing key", e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage("Error parsing CIMIT signing key", e));
             throw new CiRetrievalException(
                     ErrorResponse.FAILED_TO_PARSE_CIMIT_SIGNING_KEY.getMessage());
         } catch (VerifiableCredentialException vcEx) {
-            LogHelper.logErrorMessage(vcEx.getErrorResponse().getMessage());
+            LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
             throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
         }
 
@@ -222,7 +223,7 @@ public class CiMitService {
             claimSetJsonObject = signedJWT.getJWTClaimsSet().toJSONObject();
         } catch (ParseException e) {
             String message = "Failed to parse ContraIndicators response json";
-            LogHelper.logErrorMessage(message, e.getMessage());
+            LOGGER.error(LogHelper.buildErrorMessage(message, e));
             throw new CiRetrievalException(message);
         }
 
@@ -233,18 +234,19 @@ public class CiMitService {
         CiMitVc vcClaim = ciMitJwt.getVc();
         if (vcClaim == null) {
             String message = "VC claim not found in CiMit JWT";
-            LogHelper.logErrorMessage(message);
+            LOGGER.error(LogHelper.buildLogMessage(message));
             throw new CiRetrievalException(message);
         }
 
         List<EvidenceItem> evidenceList = vcClaim.getEvidence();
         if (evidenceList == null || evidenceList.size() != 1) {
             String message = "Unexpected evidence count";
-            LogHelper.logErrorMessage(
-                    message,
-                    String.format(
-                            "Expected one evidence item, got %d",
-                            evidenceList == null ? 0 : evidenceList.size()));
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            message,
+                            String.format(
+                                    "Expected one evidence item, got %d",
+                                    evidenceList == null ? 0 : evidenceList.size())));
             throw new CiRetrievalException(message);
         }
 

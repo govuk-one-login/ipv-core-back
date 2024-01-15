@@ -3,7 +3,8 @@ package uk.gov.di.ipv.core.resetidentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -44,6 +45,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private final ConfigService configService;
@@ -132,12 +134,14 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage("HTTP response exception", e);
+            LOGGER.error(LogHelper.buildErrorMessage("HTTP response exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (SqsException e) {
-            LogHelper.logErrorMessage(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -168,13 +172,15 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                     userIdentityService.findIdentityClaim(credentials);
 
             if (identityClaim.isEmpty()) {
-                LogHelper.logMessage(Level.WARN, "Failed to find identity claim");
+                LOGGER.warn(LogHelper.buildLogMessage("Failed to find identity claim"));
                 return null;
             }
 
             return identityClaim.get().getFullName();
         } catch (Exception e) {
-            LogHelper.logErrorMessage("Exception caught trying to find user's identity", e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Exception caught trying to find user's identity", e));
         }
 
         return null;

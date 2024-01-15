@@ -5,7 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
@@ -48,6 +49,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WI
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String VOT_P0 = "P0";
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
@@ -120,7 +122,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             return callTicfCri(ipvSessionItem, request);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LogHelper.logErrorMessage("Error calling TICF CRI", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Error calling TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -133,7 +135,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiRetrievalException
                 | ConfigException
                 | JsonProcessingException e) {
-            LogHelper.logErrorMessage("Error processing response from TICF CRI", e);
+            LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -166,7 +168,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem, vcToSendToTicf);
 
         if (ticfVcs.isEmpty()) {
-            LogHelper.logMessage(Level.INFO, "No TICF VC to process - returning next");
+            LOGGER.warn(LogHelper.buildLogMessage("No TICF VC to process - returning next"));
             return JOURNEY_NEXT;
         }
 
@@ -180,7 +182,9 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         request.getIpAddress());
 
         if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-            LogHelper.logMessage(Level.INFO, "CI score is breaching threshold - setting VOT to P0");
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "CI score is breaching threshold - setting VOT to P0"));
             ipvSessionItem.setVot(VOT_P0);
 
             return ciMitUtilityService
@@ -189,7 +193,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     .toObjectMap();
         }
 
-        LogHelper.logMessage(Level.INFO, "CI score not breaching threshold");
+        LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
         return JOURNEY_NEXT;
     }
 
