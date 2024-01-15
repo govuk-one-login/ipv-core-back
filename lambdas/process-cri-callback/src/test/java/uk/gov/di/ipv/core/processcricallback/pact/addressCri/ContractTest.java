@@ -14,15 +14,18 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -52,10 +55,11 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-//@Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "AddressCriProvider")
@@ -224,33 +228,6 @@ class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsExperianIssuedCredential(PactDslWithProvider builder)
-            throws Exception {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyAddressComponentId is a valid issuer")
-                .given("VC givenName is Kenneth")
-                .given("VC familyName is Decerqueira")
-                .given("VC birthDate is 1965-07-08")
-                .given("addressCountry is GB")
-                .given("streetName is HADLEY ROAD")
-                .given("buildingNumber is 8")
-                .given("addressLocality is BATH")
-                .given("validFrom is 2000-01-01")
-                .uponReceiving("Valid POST request")
-                .path("/credential")
-                .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
-                .willRespondWith()
-                .status(200)
-                .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_EXPERIAN_ADDRESS_VC_BODY, VALID_VC_EXPERIAN_SIGNATURE))
-                .toPact();
-    }
-
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
     void fetchAccessToken_whenCalledAgainstAddressCri_retrievesAValidAccessToken(
@@ -303,6 +280,114 @@ class ContractTest {
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
         assertThat(accessToken.getLifetime(), greaterThan(0L));
+    }
+
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAuthCodeReturnsTokenError(PactDslWithProvider builder) {
+        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("dummyAddressComponentId is the address CRI component ID")
+                .given(
+                        "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Valid auth code")
+                .path("/token")
+                .method("POST")
+                .body(
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidAuthCodeReturnsTokenError")
+    void fetchAccessToken_whenCalledAgainstAddressCri_throwsErrorWithInvalidAuthCode(
+            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn("900");
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
+        // generated by the test as mocking out the AWSKMS class inside the real signer would be
+        // painful.
+        when(mockSigner.sign(any(), any()))
+                .thenReturn(
+                        new Base64URL(
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSecureTokenHelper.generate())
+                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () -> {
+                            underTest.fetchAccessToken(
+                                    new CriCallbackRequest(
+                                            "dummyInvalidAuthCode",
+                                            credentialIssuerConfig.getClientId(),
+                                            "dummySessionId",
+                                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
+                                            "dummyState",
+                                            null,
+                                            null,
+                                            "dummyIpAddress",
+                                            "dummyFeatureSet"),
+                                    new CriOAuthSessionItem(
+                                            "dummySessionId",
+                                            "dummyOAuthSessionId",
+                                            "dummyCriId",
+                                            "dummyConnection",
+                                            900));
+                        });
+        // Assert
+        assertEquals(exception.getErrorResponse(), ErrorResponse.INVALID_TOKEN_REQUEST);
+        assertEquals(exception.getHttpStatusCode(), HTTPResponse.SC_BAD_REQUEST);
+    }
+
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsExperianIssuedCredential(
+            PactDslWithProvider builder) throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyAddressComponentId is a valid issuer")
+                .given("VC givenName is Kenneth")
+                .given("VC familyName is Decerqueira")
+                .given("VC birthDate is 1965-07-08")
+                .given("addressCountry is GB")
+                .given("streetName is HADLEY ROAD")
+                .given("buildingNumber is 8")
+                .given("addressLocality is BATH")
+                .given("validFrom is 2000-01-01")
+                .uponReceiving("Valid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_EXPERIAN_ADDRESS_VC_BODY,
+                                VALID_VC_EXPERIAN_SIGNATURE))
+                .toPact();
     }
 
     @Test
@@ -401,8 +486,8 @@ class ContractTest {
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedAddressCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsIssuedAddressCredential(
+            PactDslWithProvider builder) throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -506,20 +591,84 @@ class ContractTest {
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
 
                                 assertEquals("221B", addressNode.get("buildingName").asText());
-                                assertEquals("BAKER STREET", addressNode.get("streetName").asText());
+                                assertEquals(
+                                        "BAKER STREET", addressNode.get("streetName").asText());
                                 assertEquals("NW1 6XE", addressNode.get("postalCode").asText());
                                 assertEquals("LONDON", addressNode.get("addressLocality").asText());
                                 assertEquals("1887-01-01", addressNode.get("validFrom").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
     }
 
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidCredentialsRequestThrowsError(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyInvalidAccessToken is a valid access token")
+                .uponReceiving("Invalid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer dummyInvalidAccessToken")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidCredentialsRequestThrowsError")
+    void testInvalidCredentialCallThrowsError(MockServer mockServer) throws URISyntaxException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () -> {
+                            underTest.fetchVerifiableCredential(
+                                    new BearerAccessToken("dummyInvalidAccessToken"),
+                                    new CriCallbackRequest(
+                                            "dummyAuthCode",
+                                            credentialIssuerConfig.getClientId(),
+                                            "dummySessionId",
+                                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
+                                            "dummyState",
+                                            null,
+                                            null,
+                                            "dummyIpAddress",
+                                            "dummyFeatureSet"),
+                                    new CriOAuthSessionItem(
+                                            "dummySessionId",
+                                            "dummyOAuthSessionId",
+                                            "dummyCriId",
+                                            "dummyConnection",
+                                            900));
+                        });
+
+        assertEquals(exception.getHttpStatusCode(), HTTPResponse.SC_SERVER_ERROR);
+        assertEquals(
+                exception.getErrorResponse(), ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+    }
 
     @NotNull
     private static CredentialIssuerConfig getMockCredentialIssuerConfig(MockServer mockServer)
