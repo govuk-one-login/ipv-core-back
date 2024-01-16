@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -65,12 +64,16 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.PCL200;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -87,6 +90,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
@@ -164,7 +168,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
         assertEquals(VC_FRAUD_SCORE_1, credentials.getVcs().get(1));
@@ -190,9 +194,9 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
-        assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
+        assertEquals(P2.toString(), credentials.getVot());
     }
 
     @Test
@@ -678,7 +682,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -709,7 +713,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -735,7 +739,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -758,7 +762,10 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        P2.toString(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -790,7 +797,10 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        P2.toString(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -821,7 +831,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -845,7 +855,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -869,7 +879,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -894,7 +904,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         // Assert
         JsonNode ninoClaim = credentials.getNinoClaim();
@@ -918,7 +928,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -948,7 +958,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -973,7 +983,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1000,7 +1010,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1012,7 +1022,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertEquals("test-sub", credentials.getSub());
     }
@@ -1023,7 +1033,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -1047,7 +1057,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -1086,7 +1096,10 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        P2.toString(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1118,7 +1131,7 @@ class UserIdentityServiceTest {
                 CredentialParseException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", "P2", emptyContraIndicators));
+                                USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators));
     }
 
     @Test
@@ -1134,7 +1147,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
 
         assertNull(credentials.getAddressClaim());
     }
@@ -1171,7 +1184,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -1194,7 +1207,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -1220,7 +1233,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -1251,7 +1264,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -1274,7 +1287,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertNull(credentials.getDrivingPermitClaim());
     }
@@ -1302,7 +1315,10 @@ class UserIdentityServiceTest {
                         CredentialParseException.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", "P2", emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        P2.toString(),
+                                        emptyContraIndicators));
         assertEquals(
                 "Encountered a parsing error while attempting to parse successful VC Store items.",
                 thrownException.getMessage());
@@ -1331,7 +1347,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", contraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), contraIndicators);
 
         assertEquals(List.of(new ReturnCode("🦆")), userIdentity.getReturnCode());
     }
@@ -1343,7 +1359,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P2", emptyContraIndicators);
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
 
         assertEquals(List.of(), userIdentity.getReturnCode());
     }
@@ -1364,7 +1380,7 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", "P2", contraIndicators));
+                                USER_ID_1, "test-sub", P2.toString(), contraIndicators));
     }
 
     @Test
@@ -1396,7 +1412,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", contraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
 
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
@@ -1419,7 +1435,7 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", "P0", contraIndicators));
+                                USER_ID_1, "test-sub", P0.toString(), contraIndicators));
     }
 
     @Test
@@ -1445,7 +1461,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", contraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
 
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
@@ -1470,7 +1486,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", "P0", contraIndicators);
+                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
 
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
         verify(mockConfigService, never()).getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED);
@@ -1565,6 +1581,88 @@ class UserIdentityServiceTest {
                 .thenReturn(claimedIdentityConfig);
 
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
+    }
+
+    @Test
+    void shouldReturnCredentialsFromDataStoreForGPGProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION, VC_HMRC_MIGRATION, Instant.now()));
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", P2.toString(), emptyContraIndicators);
+
+        assertEquals(2, credentials.getVcs().size());
+        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
+        assertEquals(VC_FRAUD_SCORE_1, credentials.getVcs().get(1));
+        assertEquals("test-sub", credentials.getSub());
+    }
+
+    @Test
+    void shouldReturnCredentialsWithTicfFromDataStoreForOperationalProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION, VC_HMRC_MIGRATION, Instant.now()));
+
+        mockParamStoreCalls(paramsToMockForP2);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", PCL200.toString(), emptyContraIndicators);
+
+        assertEquals(2, credentials.getVcs().size());
+        assertEquals(VC_TICF, credentials.getVcs().get(0));
+        assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(1));
+        assertEquals("test-sub", credentials.getSub());
+    }
+
+    @Test
+    void shouldReturnCredentialsFromDataStoreForOperationalProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION, VC_HMRC_MIGRATION, Instant.now()));
+
+        mockParamStoreCalls(paramsToMockForP2);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", PCL200.toString(), emptyContraIndicators);
+
+        assertEquals(1, credentials.getVcs().size());
+        assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(0));
+        assertEquals("test-sub", credentials.getSub());
     }
 
     private VcStoreItem createVcStoreItem(

@@ -38,12 +38,6 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    private static Set<String> getNonEvidenceCredentialIssuers() {
-        return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
-                .collect(Collectors.toSet());
-    }
-
     public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
@@ -75,6 +69,12 @@ public class VcHelper {
             }
         }
         return true;
+    }
+
+    private static Set<String> getNonEvidenceCredentialIssuers() {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
+                .collect(Collectors.toSet());
     }
 
     private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {

@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
@@ -53,8 +54,10 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -125,7 +128,9 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
-
+        vcStoreItems =
+                filterVCBasedOnProfileType(
+                        vcStoreItems, VectorOfTrust.valueOf(vot).getProfileType());
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
         String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
@@ -133,31 +138,59 @@ public class UserIdentityService {
         UserIdentity.UserIdentityBuilder userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
-        if (vot.equals(VectorOfTrust.P2.toString())) {
-            final List<VcStoreItem> successfulVCStoreItems =
-                    getSuccessfulVCStoreItems(vcStoreItems);
-            Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
-            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+        if (VectorOfTrust.valueOf(vot).getProfileType().equals(ProfileType.GPG45)) {
+            if (vot.equals(P2.toString())) {
+                final List<VcStoreItem> successfulVCStoreItems =
+                        getSuccessfulVCStoreItems(vcStoreItems);
+                Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
+                identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
-            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+                Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
+                addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
-            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+                Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
+                passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
-            Optional<JsonNode> drivingPermitClaim =
-                    generateDrivingPermitClaim(successfulVCStoreItems);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+                Optional<JsonNode> drivingPermitClaim =
+                        generateDrivingPermitClaim(successfulVCStoreItems);
+                drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
 
-            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
-            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
+                Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
+                ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
 
-            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+                userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+            } else {
+                userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+            }
         } else {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+
         }
 
         return userIdentityBuilder.build();
+    }
+
+    private List<VcStoreItem> filterVCBasedOnProfileType(
+            List<VcStoreItem> vcStoreItems, ProfileType profileType) {
+        List<VcStoreItem> filteredVCs;
+        if (profileType.equals(ProfileType.GPG45)) {
+            filteredVCs =
+                    vcStoreItems.stream()
+                            .filter(
+                                    vcItem ->
+                                            !OPERATIONAL_CRIS.contains(
+                                                    vcItem.getCredentialIssuer()))
+                            .toList();
+        } else {
+            filteredVCs =
+                    vcStoreItems.stream()
+                            .filter(
+                                    vcItem ->
+                                            (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
+                                                    || vcItem.getCredentialIssuer()
+                                                            .equals(TICF_CRI)))
+                            .toList();
+        }
+        return filteredVCs;
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
