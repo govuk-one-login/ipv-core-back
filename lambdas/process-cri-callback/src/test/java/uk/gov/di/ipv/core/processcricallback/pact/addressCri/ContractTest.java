@@ -333,8 +333,8 @@ class ContractTest {
                                     CRI_O_AUTH_SESSION_ITEM);
                         });
         // Assert
-        assertEquals(exception.getErrorResponse(), ErrorResponse.INVALID_TOKEN_REQUEST);
-        assertEquals(exception.getHttpStatusCode(), HTTPResponse.SC_BAD_REQUEST);
+        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
@@ -598,9 +598,9 @@ class ContractTest {
                                     CRI_O_AUTH_SESSION_ITEM);
                         });
 
-        assertEquals(exception.getHttpStatusCode(), HTTPResponse.SC_SERVER_ERROR);
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                exception.getErrorResponse(), ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, exception.getErrorResponse());
     }
 
     @NotNull
