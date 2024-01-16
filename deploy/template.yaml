@@ -2301,6 +2301,7 @@ Resources:
       Handler: uk.gov.di.ipv.core.replaycimitvcs.ReplayCimitVcsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/replay-cimit-vcs
+      Timeout: 600
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
