@@ -59,5 +59,4 @@ public class IpvSessionItem implements DynamodbItem {
         }
         vcReceivedThisSession.add(vc);
     }
-
 }

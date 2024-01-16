@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;

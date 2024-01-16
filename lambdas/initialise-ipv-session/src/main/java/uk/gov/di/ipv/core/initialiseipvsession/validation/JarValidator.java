@@ -84,7 +84,8 @@ public class JarValidator {
                     redirectUri.toString(),
                     clientId,
                     jwtClaimsSet.getStringClaim("state"),
-                    jwtClaimsSet.getStringClaim("govuk_signin_journey_id"));
+                    jwtClaimsSet.getStringClaim("govuk_signin_journey_id"),
+                    e);
         }
     }
 
@@ -183,7 +184,7 @@ public class JarValidator {
         } catch (BadJWTException | ParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Claim set validation failed"));
             throw new JarValidationException(
-                    OAuth2Error.INVALID_GRANT.setDescription(e.getMessage()));
+                    OAuth2Error.INVALID_GRANT.setDescription("Claim set validation failed"), e);
         }
     }
 

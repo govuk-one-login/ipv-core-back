@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
-import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -59,20 +58,16 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class JarValidatorTest {
-
     public static final String CLAIMS_CLAIM = "claims";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService configService;
-
     @Mock private KmsRsaDecrypter kmsRsaDecrypter;
-
     private JarValidator jarValidator;
 
     private final String audienceClaim = "test-audience";
     private final String issuerClaim = "test-issuer";
     private final String subjectClaim = "test-subject";
     private final String keyId = "test-key-id";
-
     private final String responseTypeClaim = "code";
     private final String clientIdClaim = "test-client-id";
     private final String redirectUriClaim = "https://example.com";
@@ -267,7 +262,9 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("JWT audience rejected: [invalid-audience]", errorObject.getDescription());
+        assertEquals(
+                "JWT audience rejected: [invalid-audience]",
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -294,7 +291,7 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT iss claim has value invalid-issuer, must be test-issuer",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -321,7 +318,7 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT response_type claim has value invalid-response-type, must be code",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -346,7 +343,7 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT client_id claim has value test-client-id, must be different-client-id",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -371,7 +368,7 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("Expired JWT", errorObject.getDescription());
+        assertEquals("Expired JWT", thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -396,7 +393,7 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("JWT before use time", errorObject.getDescription());
+        assertEquals("JWT before use time", thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -475,146 +472,6 @@ class JarValidatorTest {
         assertEquals(
                 "Failed to parse JWT claim set in order to access redirect_uri claim",
                 errorObject.getDescription());
-    }
-
-    @Test
-    void validateRequestJwtShouldThrowIfClaimsClaimCanNotBeConverted() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.put(CLAIMS_CLAIM, "🦐");
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        assertThrows(
-                RecoverableJarValidationException.class,
-                () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-    }
-
-    @Test
-    void validateRequestJwtShouldAcceptJarWithNoClaimsClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.remove(CLAIMS_CLAIM);
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-    }
-
-    @Test
-    void validateRequestJwtShouldAcceptJarWithNoUserInfoInClaimsClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.put(CLAIMS_CLAIM, new JarClaims(null));
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-    }
-
-    @Test
-    void validateRequestJwtShouldThrowIfInheritedIdentityJwtClaimIsNull() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.put(
-                CLAIMS_CLAIM,
-                new JarClaims(
-                        new JarUserInfo(null, null, new InheritedIdentityJwtClaim(null), null)));
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        RecoverableJarValidationException thrown =
-                assertThrows(
-                        RecoverableJarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-
-        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT, thrown.getErrorObject());
-    }
-
-    @Test
-    void validateRequestJwtShouldThrowIfInheritedIdentityJwtClaimIsEmptyList() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.put(
-                CLAIMS_CLAIM,
-                new JarClaims(
-                        new JarUserInfo(
-                                null, null, new InheritedIdentityJwtClaim(List.of()), null)));
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        RecoverableJarValidationException thrown =
-                assertThrows(
-                        RecoverableJarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-
-        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT, thrown.getErrorObject());
-    }
-
-    @Test
-    void validateRequestJwtShouldThrowIfInheritedIdentityJwtClaimsHasMoreThanOneVc()
-            throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-
-        Map<String, Object> claims = new HashMap<>(getValidClaimsSetValues());
-        claims.put(
-                CLAIMS_CLAIM,
-                new JarClaims(
-                        new JarUserInfo(
-                                null,
-                                null,
-                                new InheritedIdentityJwtClaim(List.of("FIRST", "SECOND")),
-                                null)));
-
-        SignedJWT signedJWT = generateJWT(claims);
-
-        RecoverableJarValidationException thrown =
-                assertThrows(
-                        RecoverableJarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-
-        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT, thrown.getErrorObject());
     }
 
     private SignedJWT generateJWT(Map<String, Object> claimsSetValues) throws Exception {

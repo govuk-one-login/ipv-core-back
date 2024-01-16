@@ -22,6 +22,9 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:user-identity-service")
 
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 	aspect('org.aspectj:aspectjrt') {

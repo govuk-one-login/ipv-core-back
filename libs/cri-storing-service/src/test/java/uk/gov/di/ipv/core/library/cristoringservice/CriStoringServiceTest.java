@@ -169,7 +169,7 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).setVcReceivedThisSession(List.of(M1A_PASSPORT_VC));
+        verify(mockIpvSessionItem).addVcReceivedThisSession(M1A_PASSPORT_VC);
     }
 
     @Test
@@ -190,8 +190,6 @@ class CriStoringServiceTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         var capturedEvent = auditEventCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, capturedEvent.getEventName());
-
-        verify(mockIpvSessionItem).setVcReceivedThisSession(List.of());
     }
 
     @Test

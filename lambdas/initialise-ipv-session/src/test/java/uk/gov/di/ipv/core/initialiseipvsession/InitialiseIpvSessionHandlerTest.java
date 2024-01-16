@@ -435,7 +435,7 @@ class InitialiseIpvSessionHandlerTest {
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
         inOrder.verify(ipvSessionItem)
-                .setVcReceivedThisSession(List.of(inheritedIdentitySignedJwt.serialize()));
+                .addVcReceivedThisSession(inheritedIdentitySignedJwt.serialize());
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
     }
 
