@@ -64,7 +64,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             requestItems = mapper.readValue(inputStream, ReplayRequest.class).getItems();
             LOGGER.info("Retrieving {} VCs", requestItems.size());
             List<List<ReplayItem>> batchedRequest = ListHelper.getBatches(requestItems, 100);
-            for (int i = 0; i < requestItems.size(); i++) {
+            for (int i = 0; i < batchedRequest.size(); i++) {
                 LOGGER.info("Processing batch {} of {}", i, requestItems.size());
                 List<ReplayItem> batch = batchedRequest.get(i);
                 handleBatch(batch);
