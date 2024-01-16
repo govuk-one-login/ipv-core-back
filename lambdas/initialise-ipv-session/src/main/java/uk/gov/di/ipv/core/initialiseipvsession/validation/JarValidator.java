@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.initialiseipvsession.validation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -41,7 +40,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 
 public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
     public static final String CLAIMS_CLAIM = "claims";
 

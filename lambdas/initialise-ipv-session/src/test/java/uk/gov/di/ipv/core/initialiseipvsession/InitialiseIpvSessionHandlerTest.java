@@ -20,6 +20,7 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,14 +28,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -69,31 +66,26 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.nimbusds.jwt.JWTClaimNames.AUDIENCE;
-import static com.nimbusds.jwt.JWTClaimNames.EXPIRATION_TIME;
-import static com.nimbusds.jwt.JWTClaimNames.ISSUED_AT;
-import static com.nimbusds.jwt.JWTClaimNames.ISSUER;
-import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
-import static com.nimbusds.jwt.JWTClaimNames.SUBJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.INHERITED_IDENTITY_JWT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
-
     private static final CriConfig TEST_CRI_CONFIG =
             CriConfig.builder()
                     .componentId("test-component-id")
@@ -107,8 +99,10 @@ class InitialiseIpvSessionHandlerTest {
     public static final String CLIENT_ID = "client_id";
     public static final String VTR = "vtr";
     public static final String CLAIMS = "claims";
-    @Mock private Context mockContext;
+    public static final String USER_INFO = "userInfo";
+    public static final String VALUE = "value";
 
+    @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private ConfigService mockConfigService;
@@ -119,52 +113,49 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private VerifiableCredentialJwtValidator mockVerifiableCredentialJwtValidator;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
-
     @Captor private ArgumentCaptor<SignedJWT> signedJWTArgumentCaptor;
+    @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemCaptor;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private static Map<String, Object> jarClaims;
-    private static SignedJWT inheritedIdentitySignedJwt;
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
     private static @Spy IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
+    private static JWTClaimsSet.Builder claimsBuilder =
+            new JWTClaimsSet.Builder()
+                    .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
+                    .issueTime(new Date())
+                    .notBeforeTime(new Date())
+                    .subject("test-user-id")
+                    .audience("test-audience")
+                    .issuer("test-issuer")
+                    .claim(RESPONSE_TYPE, "code")
+                    .claim(REDIRECT_URI, "https://example.com")
+                    .claim(STATE, "test-state")
+                    .claim(CLIENT_ID, "test-client")
+                    .claim(VTR, List.of("Cl.Cm.P2", "Cl.Cm.PCL200"))
+                    .claim(
+                            CLAIMS,
+                            Map.of(
+                                    USER_INFO,
+                                    Map.of(
+                                            ADDRESS_CLAIM_NAME, "test-address-claim",
+                                            CORE_IDENTITY_JWT_CLAIM_NAME,
+                                                    "test-core-identity-jwt-claim",
+                                            INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                    Map.of(VALUE, List.of()),
+                                            PASSPORT_CLAIM_NAME, "test-passport-claim")));
+    private static String inheritedIdentityJWT;
 
     @BeforeAll
-    static void setUp() throws Exception {
-        inheritedIdentitySignedJwt = getInheritedIdentityJWT();
-        jarClaims = new HashMap<>();
-        jarClaims.put(EXPIRATION_TIME, new Date(Instant.now().plusSeconds(1000).getEpochSecond()));
-        jarClaims.put(ISSUED_AT, new Date());
-        jarClaims.put(NOT_BEFORE, new Date());
-        jarClaims.put(SUBJECT, "test-user-id");
-        jarClaims.put(AUDIENCE, "test-audience");
-        jarClaims.put(ISSUER, "test-issuer");
-        jarClaims.put(RESPONSE_TYPE, "code");
-        jarClaims.put(REDIRECT_URI, "https://example.com");
-        jarClaims.put(STATE, "test-state");
-        jarClaims.put(CLIENT_ID, "test-client");
-        jarClaims.put(VTR, List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
-        jarClaims.put(
-                CLAIMS,
-                new JarClaims(
-                        new JarUserInfo(
-                                null,
-                                null,
-                                new InheritedIdentityJwtClaim(
-                                        List.of(inheritedIdentitySignedJwt.serialize())),
-                                null)));
+    static void setUpBeforeAll()
+            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
+        inheritedIdentityJWT = getInheritedIdentityJWT().serialize();
+    }
 
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        jarClaims.forEach(claimsSetBuilder::claim);
-
-        signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSetBuilder.build());
-        signedJWT.sign(new ECDSASigner(getPrivateKey()));
-        signedEncryptedJwt =
-                TestFixtures.createJweObject(
-                        new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
-                        signedJWT);
+    @BeforeEach
+    void setUp() throws Exception {
+        signClaims(claimsBuilder);
 
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
@@ -186,6 +177,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
@@ -199,9 +191,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -219,35 +213,22 @@ class InitialiseIpvSessionHandlerTest {
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JOSEException, ParseException, HttpResponseExceptionWithErrorBody,
                     JarValidationException {
-
-        var claimsWithoutVtr = new HashMap<>(jarClaims);
-        claimsWithoutVtr.remove(VTR);
-        var claimsSetBuilder = new JWTClaimsSet.Builder();
-        claimsWithoutVtr.forEach(claimsSetBuilder::claim);
-
-        if (vtrList != null) {
-            claimsSetBuilder.claim(VTR, vtrList);
-        }
-
-        signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSetBuilder.build());
-        signedJWT.sign(new ECDSASigner(getPrivateKey()));
-        signedEncryptedJwt =
-                TestFixtures.createJweObject(
-                        new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
-                        signedJWT);
-
+        // Arrange
+        claimsBuilder.claim(VTR, vtrList);
+        signClaims(claimsBuilder);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
-
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
                 Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assrt
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -265,12 +246,15 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturn400IfMissingBody() throws JsonProcessingException {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -282,12 +266,16 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturn400IfInvalidBody() throws JsonProcessingException {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody("invalid-body");
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -299,6 +287,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturn400IfMissingClientIdParameter() throws JsonProcessingException {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, Object> sessionParams = Map.of("request", signedEncryptedJwt.serialize());
@@ -306,9 +295,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -320,6 +311,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturn400IfMissingRequestParameter() throws JsonProcessingException {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, Object> sessionParams = Map.of("clientId", "test-client");
@@ -327,9 +319,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -341,6 +335,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturn400IfRequestObjectNotEncrypted() throws JsonProcessingException {
+        // Arrange
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, Object> sessionParams =
@@ -348,9 +343,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -363,6 +360,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateErrorClientSessionDetails(
@@ -383,9 +381,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -400,9 +400,19 @@ class InitialiseIpvSessionHandlerTest {
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
+                .thenReturn(
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUE,
+                                                                List.of(inheritedIdentityJWT)))))
+                                .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
@@ -420,43 +430,31 @@ class InitialiseIpvSessionHandlerTest {
         verify(mockVerifiableCredentialJwtValidator, times(1))
                 .validate(
                         signedJWTArgumentCaptor.capture(), eq(TEST_CRI_CONFIG), eq("test-user-id"));
-        assertEquals(
-                inheritedIdentitySignedJwt.serialize(),
-                signedJWTArgumentCaptor.getValue().serialize());
+        assertEquals(inheritedIdentityJWT, signedJWTArgumentCaptor.getValue().serialize());
 
         verify(mockVerifiableCredentialService, times(1))
                 .persistUserCredentials(
                         signedJWTArgumentCaptor.capture(),
                         eq(HMRC_MIGRATION_CRI),
                         eq("test-user-id"));
-        assertEquals(
-                inheritedIdentitySignedJwt.serialize(),
-                signedJWTArgumentCaptor.getValue().serialize());
+        assertEquals(inheritedIdentityJWT, signedJWTArgumentCaptor.getValue().serialize());
 
-        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-        inOrder.verify(ipvSessionItem)
-                .addVcReceivedThisSession(inheritedIdentitySignedJwt.serialize());
-        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
+        assertEquals(
+                ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
+                List.of(inheritedIdentityJWT));
     }
 
     @Test
     void shouldAllowRequestsThatDoNotIncludeAnInheritedIdentityJwtClaim() throws Exception {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
-        var claimsWithoutInheritedIdentityJwtClaim = new HashMap<>(jarClaims);
-        claimsWithoutInheritedIdentityJwtClaim.put(
-                CLAIMS, new JarClaims(new JarUserInfo(null, null, null, null)));
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(
-                        JWTClaimsSet.parse(
-                                objectMapper.writeValueAsString(
-                                        claimsWithoutInheritedIdentityJwtClaim)));
-
-        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
-                .thenReturn(true); // Mock enabled inherited identity feature flag
+                .thenReturn(claimsBuilder.claim(CLAIMS, Map.of(USER_INFO, Map.of())).build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -464,9 +462,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -476,20 +476,14 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
-        var claimsThatWillNotConvert = new HashMap<>(jarClaims);
-        claimsThatWillNotConvert.put(CLAIMS, Map.of("This", "shouldn't work?"));
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(
-                        JWTClaimsSet.parse(
-                                objectMapper.writeValueAsString(claimsThatWillNotConvert)));
-
-        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
-                .thenReturn(true); // Mock enabled inherited identity feature flag
+                .thenReturn(claimsBuilder.claim(CLAIMS, Map.of("This", "shouldn't work?")).build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -497,9 +491,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -516,24 +512,23 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldRecoverIfInheritedIdentityJwtCanNotBeParsed() throws Exception {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
-        var claimsWithBadInheritedJwt = new HashMap<>(jarClaims);
-        claimsWithBadInheritedJwt.put(
-                CLAIMS,
-                new JarClaims(
-                        new JarUserInfo(
-                                null, null, new InheritedIdentityJwtClaim(List.of("🌭")), null)));
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(
-                        JWTClaimsSet.parse(
-                                objectMapper.writeValueAsString(claimsWithBadInheritedJwt)));
-
-        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
-                .thenReturn(true); // Mock enabled inherited identity feature flag
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(VALUE, List.of("🌭")))))
+                                .build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -560,17 +555,25 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldRecoverIfInheritedIdentityJwtFailsValidation() throws Exception {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
-
-        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
-                .thenReturn(true); // Mock enabled inherited identity feature flag
-
+                .thenReturn(
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUE,
+                                                                List.of(inheritedIdentityJWT)))))
+                                .build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
         doThrow(
                         new VerifiableCredentialException(
@@ -585,9 +588,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -604,16 +609,25 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldRecoverIfInheritedIdentityJwtFailsToPersist() throws Exception {
+        // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
-
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(JWTClaimsSet.parse(objectMapper.writeValueAsString(jarClaims)));
-
-        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
-                .thenReturn(true); // Mock enabled inherited identity feature flag
+                .thenReturn(
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUE,
+                                                                List.of(inheritedIdentityJWT)))))
+                                .build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         CriConfig testCriConfig =
                 CriConfig.builder()
                         .componentId("test-component-id")
@@ -634,9 +648,11 @@ class InitialiseIpvSessionHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
         event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
+        // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
+        // Assert
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -649,6 +665,17 @@ class InitialiseIpvSessionHandlerTest {
                         eq("test-client"),
                         eq("test-state"),
                         eq(null));
+    }
+
+    private static void signClaims(JWTClaimsSet.Builder claimsBuilder)
+            throws JOSEException, InvalidKeySpecException, NoSuchAlgorithmException,
+                    HttpResponseExceptionWithErrorBody, ParseException {
+        signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsBuilder.build());
+        signedJWT.sign(new ECDSASigner(getPrivateKey()));
+        signedEncryptedJwt =
+                TestFixtures.createJweObject(
+                        new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
+                        signedJWT);
     }
 
     private static ECPrivateKey getPrivateKey()
