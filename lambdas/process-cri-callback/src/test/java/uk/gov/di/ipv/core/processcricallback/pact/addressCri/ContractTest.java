@@ -274,7 +274,7 @@ class ContractTest {
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAuthCodeReturnsTokenError(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is a valid api key")
+                .given("dummyApiKey is an invalid api key")
                 .given("dummyAddressComponentId is the address CRI component ID")
                 .given(
                         "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -588,7 +588,6 @@ class ContractTest {
                         mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
-
         CriApiException exception =
                 assertThrows(
                         CriApiException.class,
