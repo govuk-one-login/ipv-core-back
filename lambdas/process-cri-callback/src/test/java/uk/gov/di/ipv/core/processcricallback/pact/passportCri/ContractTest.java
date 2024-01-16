@@ -266,8 +266,8 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
-    void testCallToDummyPassportIssueCredential(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+    void fetchVerifiableCredential_whenCalledAgainstPassportCri_retrievesAValidVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -318,6 +318,7 @@ class ContractTest {
                                 "dummyConnection",
                                 900));
 
+        // Assert
         verifiableCredentialResponse
                 .getVerifiableCredentials()
                 .forEach(
