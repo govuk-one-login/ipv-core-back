@@ -256,7 +256,7 @@ class ContractTest {
     }
 
     @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyPassportComponentId is the passport CRI component ID")
@@ -326,7 +326,7 @@ class ContractTest {
     }
 
     @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -385,8 +385,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenRequestReturns400")
-    void fetchAccessToken_whenCalledAgainstPassportCri_retrievesAnInvalidAccessToken(
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    void fetchAccessToken_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
 
         // Arrange
@@ -558,22 +558,26 @@ class ContractTest {
                                 verifiableCredentialJwtValidator.validate(
                                         credential, credentialIssuerConfig, TEST_USER);
 
-                                JsonNode credentialSubject =
+                                JsonNode vc =
                                         objectMapper
                                                 .readTree(credential.getJWTClaimsSet().toString())
-                                                .get("vc")
-                                                .get("credentialSubject");
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
 
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode passportNode = credentialSubject.get("passport").get(0);
+                                JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode ciNode = evidence.get("ci");
 
                                 // Assert
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Mary", nameParts.get(0).get("value").asText());
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals("D02", ciNode.get(0).asText());
 
                                 assertEquals("2030-12-12", passportNode.get("expiryDate").asText());
                                 assertEquals(
@@ -589,7 +593,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
                     MockServer mockServer) throws URISyntaxException, CriApiException {
