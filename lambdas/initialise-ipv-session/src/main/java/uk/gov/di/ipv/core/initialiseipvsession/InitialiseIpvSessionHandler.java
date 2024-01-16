@@ -306,7 +306,7 @@ public class InitialiseIpvSessionHandler
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
-                Optional.of(inheritedIdentityJwtClaim.value())
+                Optional.ofNullable(inheritedIdentityJwtClaim.values())
                         .orElseThrow(
                                 () ->
                                         new JarValidationException(
@@ -326,7 +326,7 @@ public class InitialiseIpvSessionHandler
 
         verifiableCredentialJwtValidator.validate(
                 signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
-        LOGGER.info("Migration VC successfully validated");
+        LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));
 
         return signedInheritedIdentityJWT;
     }
@@ -342,7 +342,7 @@ public class InitialiseIpvSessionHandler
                     signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
             ipvSessionItem.addVcReceivedThisSession(signedInheritedIdentityJWT.serialize());
             ipvSessionService.updateIpvSession(ipvSessionItem);
-            LOGGER.info("Migration VC successfully persisted");
+            LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully persisted"));
         } catch (VerifiableCredentialException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.SERVER_ERROR.setDescription(

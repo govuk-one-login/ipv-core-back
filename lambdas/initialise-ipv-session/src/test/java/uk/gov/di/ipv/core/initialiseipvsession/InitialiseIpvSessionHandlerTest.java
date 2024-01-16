@@ -100,7 +100,7 @@ class InitialiseIpvSessionHandlerTest {
     public static final String VTR = "vtr";
     public static final String CLAIMS = "claims";
     public static final String USER_INFO = "userInfo";
-    public static final String VALUE = "value";
+    public static final String VALUES = "values";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -143,7 +143,7 @@ class InitialiseIpvSessionHandlerTest {
                                             CORE_IDENTITY_JWT_CLAIM_NAME,
                                                     "test-core-identity-jwt-claim",
                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                    Map.of(VALUE, List.of()),
+                                                    Map.of(VALUES, List.of()),
                                             PASSPORT_CLAIM_NAME, "test-passport-claim")));
     private static String inheritedIdentityJWT;
 
@@ -410,7 +410,7 @@ class InitialiseIpvSessionHandlerTest {
                                                 Map.of(
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
-                                                                VALUE,
+                                                                VALUES,
                                                                 List.of(inheritedIdentityJWT)))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
@@ -526,7 +526,7 @@ class InitialiseIpvSessionHandlerTest {
                                                 USER_INFO,
                                                 Map.of(
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                        Map.of(VALUE, List.of("🌭")))))
+                                                        Map.of(VALUES, List.of("🌭")))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
 
@@ -570,7 +570,7 @@ class InitialiseIpvSessionHandlerTest {
                                                 Map.of(
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
-                                                                VALUE,
+                                                                VALUES,
                                                                 List.of(inheritedIdentityJWT)))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
@@ -624,7 +624,7 @@ class InitialiseIpvSessionHandlerTest {
                                                 Map.of(
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
-                                                                VALUE,
+                                                                VALUES,
                                                                 List.of(inheritedIdentityJWT)))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
