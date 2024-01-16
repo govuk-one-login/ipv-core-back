@@ -95,12 +95,12 @@ class ContractTest {
     private static final String VALID_VC_HEADER =
             """
             {
-              "alg": "ES256",
-              "typ": "JWT"
+              "typ": "JWT",
+              "alg": "ES256"
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_NINO_VC_BODY =
+    private static final String VALID_NINO_IDENTITY_CHECK_VC_BODY =
             """
         {
            "sub": "test-subject",
@@ -118,8 +118,131 @@ class ContractTest {
                  ],
                  "validityScore": 2,
                  "strengthScore": 2,
-                 "txn": "dummyTxn",
-                 "type": "identityCheck"
+                 "type": "IdentityCheck",
+                 "txn": "dummyTxn"
+               }
+             ],
+             "credentialSubject": {
+               "socialSecurityRecord": [
+                 {
+                   "personalNumber": "AA000003D"
+                 }
+               ],
+               "name": [
+                 {
+                   "nameParts": [
+                     {
+                       "type": "GivenName",
+                       "value": "Kenneth"
+                     },
+                     {
+                       "type": "FamilyName",
+                       "value": "Decerqueira"
+                     }
+                   ]
+                 }
+               ],
+               "birthDate": [
+                 {
+                   "value": "1965-07-08"
+                 }
+               ]
+             },
+             "type": [
+               "VerifiableCredential",
+               "IdentityCheckCredential"
+             ]
+           },
+           "jti":"dummyJti"
+         }
+    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
+            "WHEg4EooDiCdT676GPVE4l4z5YY-Tvl3FTY4bYI_nCzx8mqrg2rTYJUM4SG8azbyBjdSG8UQFyfAuLPeYlMTwg";
+
+    private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
+            """
+            {
+                "sub": "test-subject",
+                "iss": "dummyNinoComponentId",
+                "nbf": 4070908800,
+                "exp": 4070909400,
+                "vc": {
+                 "evidence": [
+                   {
+                     "failedCheckDetails": [
+                       {
+                         "checkMethod": "data"
+                       }
+                     ],
+                     "validityScore": 0,
+                     "strengthScore": 2,
+                     "ci": [
+                        "D02"
+                     ],
+                     "type": "IdentityCheck",
+                     "txn": "dummyTxn"
+                   }
+                 ],
+                 "credentialSubject": {
+                   "socialSecurityRecord": [
+                     {
+                       "personalNumber": "AA000003D"
+                     }
+                   ],
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Kenneth"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Decerqueira"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1965-07-08"
+                     }
+                   ]
+                 },
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ]
+                },
+                "jti":"dummyJti"
+                }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
+            "GdAM1VaIj5fPZD-8mosORKfbqazER2xNzS2wJ-3ksq2HsCLujvK6kTSjER1OxMHTXH4T8wEROVbGIVeaK9vY9A";
+
+    private static final String VALID_NINO_VC_BODY =
+            """
+        {
+           "sub": "test-subject",
+           "iss": "dummyNinoComponentId",
+           "nbf": 4070908800,
+           "exp": 4070909400,
+           "vc": {
+             "evidence": [
+               {
+                 "checkDetails": [
+                   {
+                     "checkMethod": "data"
+                   }
+                 ],
+                 "type": "IdentityCheck",
+                 "txn": "dummyTxn"
                }
              ],
              "credentialSubject": {
@@ -160,7 +283,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "NbGQB9HuVOhRS-GCmJR3oHGRGpZJFuUq8omDdP2odrBmFeqDTwd2NAo0v4k6yl9WLYJtW7XmO1eufdLPy-5Vbg";
+            "WjlFHK3oFx1Wbi1aQ380OJs3Br-aZWCjUsa-BXOg-LnTzdhExZnS2OQ-fckweGzfvZFnuZcC0R8IML6axALGpg";
 
     private static final String FAILED_NINO_VC_BODY =
             """
@@ -177,13 +300,11 @@ class ContractTest {
                          "checkMethod": "data"
                        }
                      ],
-                     "validityScore": 0,
-                     "strengthScore": 2,
                      "ci": [
                         "D02"
                      ],
-                     "txn": "dummyTxn",
-                     "type": "identityCheck"
+                     "type": "IdentityCheck",
+                     "txn": "dummyTxn"
                    }
                  ],
                  "credentialSubject": {
@@ -224,7 +345,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "KMaVibLlS-9rsnH26-M6TV7dlmUMRNISyHD5e0nZHiIWryFLQ67buXVRhxZ-_ZW64TAeVouvmNccmVb1716QfA";
+            "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -366,6 +487,208 @@ class ContractTest {
         // Assert
         assertThat(exception.getErrorResponse(), is(ErrorResponse.INVALID_TOKEN_REQUEST));
         assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
+    }
+
+    @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsNinoIdentityCheckIssuedCredential(
+            PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyNinoComponentId is a valid issuer")
+                .given("VC evidence activityHistoryScore is 1")
+                .given("VC is for Kenneth Decerqueira")
+                .given("VC evidence validityScore is 2")
+                .given("VC evidence strengthScore is 2")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC contains a socialSecurityRecord")
+                .given("VC personalNumber is AA000003D")
+                .given("VC jti is dummyJti")
+                .given("VC birthDate is 1965-07-08")
+                .uponReceiving("Valid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_NINO_IDENTITY_CHECK_VC_BODY,
+                                VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsNinoIdentityCheckIssuedCredential")
+    void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesAValidIdentityCheckVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode socialSecurityRecordNode =
+                                        credentialSubject.get("socialSecurityRecord").get(0);
+
+                                assertEquals("2", evidence.get("strengthScore").asText());
+                                assertEquals("2", evidence.get("validityScore").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Kenneth", nameParts.get(0).get("value").asText());
+                                assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
+
+                                assertEquals(
+                                        "AA000003D",
+                                        socialSecurityRecordNode.get("personalNumber").asText());
+
+                                assertEquals("1965-07-08", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsNinoIdentityCheckResponseWithCi(
+            PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyNinoComponentId is a valid issuer")
+                .given("VC has a CI of D02")
+                .given("VC evidence activityHistoryScore is 1")
+                .given("VC is for Kenneth Decerqueira")
+                .given("VC evidence validityScore is 0")
+                .given("VC evidence strengthScore is 2")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC contains a socialSecurityRecord")
+                .given("VC personalNumber is AA000003D")
+                .given("VC jti is dummyJti")
+                .given("VC birthDate is 1965-07-08")
+                .uponReceiving("Valid POST request")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                FAILED_NINO_IDENTITY_CHECK_VC_BODY,
+                                FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsNinoIdentityCheckResponseWithCi")
+    void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesANinoIdentityCheckVcWithACi(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+
+                                JsonNode ciNode = evidence.get("ci");
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+
+                                assertEquals("D02", ciNode.get(0).asText());
+
+                                JsonNode socialSecurityRecordNode =
+                                        credentialSubject.get("socialSecurityRecord").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Kenneth", nameParts.get(0).get("value").asText());
+                                assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
+
+                                assertEquals("2", evidence.get("strengthScore").asText());
+                                assertEquals("0", evidence.get("validityScore").asText());
+
+                                assertEquals(
+                                        "AA000003D",
+                                        socialSecurityRecordNode.get("personalNumber").asText());
+
+                                assertEquals("1965-07-08", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
@@ -574,7 +897,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
     void fetchVerifiableCredential_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
