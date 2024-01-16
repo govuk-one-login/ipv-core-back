@@ -246,21 +246,8 @@ public class ConfigService {
         return getCriConfigForType(connection, criId, CredentialIssuerConfig.class);
     }
 
-<<<<<<< Updated upstream
     public BackendCriConfig getBackendCriConfig(String criId) {
         return getCriConfigForType(getActiveConnection(criId), criId, BackendCriConfig.class);
-=======
-        LOGGER.warn(result.toString());
-
-        if (result == null || result.isEmpty()) {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
-        }
-
-        return objectMapper.convertValue(result, CredentialIssuerConfig.class);
->>>>>>> Stashed changes
     }
 
     public String getActiveConnection(String credentialIssuerId) {
