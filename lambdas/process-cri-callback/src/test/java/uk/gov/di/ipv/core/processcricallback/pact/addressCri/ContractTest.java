@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@Disabled("PACT tests should not be run in build pipelines at this time")
+ @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "AddressCriProvider")
@@ -193,6 +193,9 @@ class ContractTest {
             "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
     private static final String VALID_VC_ADDRESS_SIGNATURE =
             "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
+    public static final CriOAuthSessionItem CRI_O_AUTH_SESSION_ITEM =
+            new CriOAuthSessionItem(
+                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -260,22 +263,8 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        new CriCallbackRequest(
-                                "dummyAuthCode",
-                                credentialIssuerConfig.getClientId(),
-                                "dummySessionId",
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
-                                "dummyState",
-                                null,
-                                null,
-                                "dummyIpAddress",
-                                "dummyFeatureSet"),
-                        new CriOAuthSessionItem(
-                                "dummySessionId",
-                                "dummyOAuthSessionId",
-                                "dummyCriId",
-                                "dummyConnection",
-                                900));
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -339,22 +328,9 @@ class ContractTest {
                         CriApiException.class,
                         () -> {
                             underTest.fetchAccessToken(
-                                    new CriCallbackRequest(
-                                            "dummyInvalidAuthCode",
-                                            credentialIssuerConfig.getClientId(),
-                                            "dummySessionId",
-                                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
-                                            "dummyState",
-                                            null,
-                                            null,
-                                            "dummyIpAddress",
-                                            "dummyFeatureSet"),
-                                    new CriOAuthSessionItem(
-                                            "dummySessionId",
-                                            "dummyOAuthSessionId",
-                                            "dummyCriId",
-                                            "dummyConnection",
-                                            900));
+                                    getCriCallbackRequest(
+                                            "dummyInvalidAuthCode", credentialIssuerConfig),
+                                    CRI_O_AUTH_SESSION_ITEM);
                         });
         // Assert
         assertEquals(exception.getErrorResponse(), ErrorResponse.INVALID_TOKEN_REQUEST);
@@ -427,22 +403,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        new CriCallbackRequest(
-                                "dummyAuthCode",
-                                credentialIssuerConfig.getClientId(),
-                                "dummySessionId",
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
-                                "dummyState",
-                                null,
-                                null,
-                                "dummyIpAddress",
-                                "dummyFeatureSet"),
-                        new CriOAuthSessionItem(
-                                "dummySessionId",
-                                "dummyOAuthSessionId",
-                                "dummyCriId",
-                                "dummyConnection",
-                                900));
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -549,22 +511,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        new CriCallbackRequest(
-                                "dummyAuthCode",
-                                credentialIssuerConfig.getClientId(),
-                                "dummySessionId",
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
-                                "dummyState",
-                                null,
-                                null,
-                                "dummyIpAddress",
-                                "dummyFeatureSet"),
-                        new CriOAuthSessionItem(
-                                "dummySessionId",
-                                "dummyOAuthSessionId",
-                                "dummyCriId",
-                                "dummyConnection",
-                                900));
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -647,27 +595,28 @@ class ContractTest {
                         () -> {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
-                                    new CriCallbackRequest(
-                                            "dummyAuthCode",
-                                            credentialIssuerConfig.getClientId(),
-                                            "dummySessionId",
-                                            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
-                                            "dummyState",
-                                            null,
-                                            null,
-                                            "dummyIpAddress",
-                                            "dummyFeatureSet"),
-                                    new CriOAuthSessionItem(
-                                            "dummySessionId",
-                                            "dummyOAuthSessionId",
-                                            "dummyCriId",
-                                            "dummyConnection",
-                                            900));
+                                    getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                    CRI_O_AUTH_SESSION_ITEM);
                         });
 
         assertEquals(exception.getHttpStatusCode(), HTTPResponse.SC_SERVER_ERROR);
         assertEquals(
                 exception.getErrorResponse(), ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+    }
+
+    @NotNull
+    private static CriCallbackRequest getCriCallbackRequest(
+            String dummyAuthCode, CredentialIssuerConfig credentialIssuerConfig) {
+        return new CriCallbackRequest(
+                dummyAuthCode,
+                credentialIssuerConfig.getClientId(),
+                "dummySessionId",
+                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
+                "dummyState",
+                null,
+                null,
+                "dummyIpAddress",
+                "dummyFeatureSet");
     }
 
     @NotNull
