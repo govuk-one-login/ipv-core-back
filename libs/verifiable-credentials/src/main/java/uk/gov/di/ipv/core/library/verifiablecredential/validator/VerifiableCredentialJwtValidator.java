@@ -66,7 +66,7 @@ public class VerifiableCredentialJwtValidator {
         LOGGER.info(LogHelper.buildLogMessage("Validating Verifiable Credential."));
         ECKey signingKey;
         try {
-            signingKey = credentialIssuerConfig.getSigningKey();
+            signingKey = credentialIssuerConfig.getParsedSigningKey();
         } catch (ParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Error parsing credential issuer public JWK", e));

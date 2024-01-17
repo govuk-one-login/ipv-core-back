@@ -1,14 +1,24 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import com.nimbusds.jose.jwk.ECKey;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
-import java.net.URI;
 import java.text.ParseException;
 
-public interface CriConfig {
-    URI getCredentialUrl();
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode
+@Getter
+public class CriConfig {
+    private String componentId;
+    private String signingKey;
 
-    ECKey getSigningKey() throws ParseException;
-
-    String getComponentId();
+    public ECKey getParsedSigningKey() throws ParseException {
+        return ECKey.parse(signingKey);
+    }
 }

@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -70,13 +70,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -121,13 +121,13 @@ class UserIdentityServiceTest {
                     "0",
                     RETURN_CODES_NON_CI_BREACHING_P0,
                     "🐧");
-    public static CredentialIssuerConfig claimedIdentityConfig;
+    public static OauthCriConfig claimedIdentityConfig;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
         jwtSigner = new ECDSASigner(ECKey.parse(EC_PRIVATE_KEY_JWK).toECPrivateKey());
         claimedIdentityConfig =
-                CredentialIssuerConfig.builder()
+                OauthCriConfig.builder()
                         .tokenUrl(new URI("http://example.com/token"))
                         .credentialUrl(new URI("http://example.com/credential"))
                         .authorizeUrl(new URI("http://example.com/authorize"))
@@ -1517,7 +1517,7 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+        when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
@@ -1529,7 +1529,7 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+        when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
@@ -1561,7 +1561,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+        when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));

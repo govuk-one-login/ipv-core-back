@@ -23,8 +23,9 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
@@ -231,23 +232,26 @@ public class ConfigService {
                 criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
     }
 
-    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
-            String credentialIssuerId) {
-        return getCriConfigForConnection(
+    public OauthCriConfig getOauthCriActiveConnectionConfig(String credentialIssuerId) {
+        return getOauthCriConfigForConnection(
                 getActiveConnection(credentialIssuerId), credentialIssuerId);
     }
 
-    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
-        return getCriConfigForConnection(
+    public OauthCriConfig getOauthCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
+        return getOauthCriConfigForConnection(
                 criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
     }
 
-    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
-        return getCriConfigForType(connection, criId, CredentialIssuerConfig.class);
+    public OauthCriConfig getOauthCriConfigForConnection(String connection, String criId) {
+        return getCriConfigForType(connection, criId, OauthCriConfig.class);
     }
 
-    public BackendCriConfig getBackendCriConfig(String criId) {
-        return getCriConfigForType(getActiveConnection(criId), criId, BackendCriConfig.class);
+    public RestCriConfig getRestCriConfig(String criId) {
+        return getCriConfigForType(getActiveConnection(criId), criId, RestCriConfig.class);
+    }
+
+    public CriConfig getCriConfig(String criId) {
+        return getCriConfigForType(getActiveConnection(criId), criId, CriConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {

@@ -294,7 +294,7 @@ public class ProcessCriCallbackHandler
                 } else {
                     verifiableCredentialJwtValidator.validate(
                             vc,
-                            configService.getCriConfig(criOAuthSessionItem),
+                            configService.getOauthCriConfig(criOAuthSessionItem),
                             clientOAuthSessionItem.getUserId());
                 }
             }

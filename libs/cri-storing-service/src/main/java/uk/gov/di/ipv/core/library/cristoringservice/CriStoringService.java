@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -110,10 +109,6 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        List<String> vcReceivedThisSession =
-                ipvSessionItem.getVcReceivedThisSession() == null
-                        ? new ArrayList<>()
-                        : ipvSessionItem.getVcReceivedThisSession();
         for (SignedJWT vc : vcs) {
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -127,9 +122,8 @@ public class CriStoringService {
                     List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, criId, userId);
-            vcReceivedThisSession.add(vc.serialize());
+            ipvSessionItem.addVcReceivedThisSession(vc.serialize());
         }
-        ipvSessionItem.setVcReceivedThisSession(vcReceivedThisSession);
 
         sendAuditEventForProcessedVcResponse(
                 vcs.isEmpty()

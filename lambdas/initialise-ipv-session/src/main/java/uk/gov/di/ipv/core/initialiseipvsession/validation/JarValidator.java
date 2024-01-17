@@ -41,6 +41,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
+    public static final String CLAIMS_CLAIM = "claims";
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;
@@ -81,7 +82,8 @@ public class JarValidator {
                     redirectUri.toString(),
                     clientId,
                     jwtClaimsSet.getStringClaim("state"),
-                    jwtClaimsSet.getStringClaim("govuk_signin_journey_id"));
+                    jwtClaimsSet.getStringClaim("govuk_signin_journey_id"),
+                    e);
         }
     }
 
@@ -171,15 +173,16 @@ public class JarValidator {
                                 JWTClaimNames.SUBJECT));
 
         try {
-            verifier.verify(signedJWT.getJWTClaimsSet(), null);
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+            verifier.verify(claimsSet, null);
 
-            validateMaxAllowedJarTtl(signedJWT.getJWTClaimsSet());
+            validateMaxAllowedJarTtl(claimsSet);
 
-            return signedJWT.getJWTClaimsSet();
+            return claimsSet;
         } catch (BadJWTException | ParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Claim set validation failed"));
             throw new JarValidationException(
-                    OAuth2Error.INVALID_GRANT.setDescription(e.getMessage()));
+                    OAuth2Error.INVALID_GRANT.setDescription("Claim set validation failed"), e);
         }
     }
 

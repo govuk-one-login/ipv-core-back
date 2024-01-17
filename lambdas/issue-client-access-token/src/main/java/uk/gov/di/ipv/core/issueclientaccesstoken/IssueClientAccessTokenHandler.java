@@ -206,7 +206,8 @@ public class IssueClientAccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
         } catch (ClientAuthenticationException e) {
-            ErrorObject error = OAuth2Error.INVALID_CLIENT.setDescription(e.getMessage());
+            ErrorObject error =
+                    OAuth2Error.INVALID_CLIENT.setDescription("Client authentication failed");
 
             LOGGER.error(LogHelper.buildErrorMessage("Client authentication failed", error));
 

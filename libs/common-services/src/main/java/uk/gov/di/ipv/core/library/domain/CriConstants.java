@@ -20,6 +20,7 @@ public class CriConstants {
     public static final String F2F_CRI = "f2f";
     public static final String NINO_CRI = "nino";
     public static final String TICF_CRI = "ticf";
+    public static final String HMRC_MIGRATION_CRI = "hmrcMigration";
 
     public static final Set<String> NON_EVIDENCE_CRI_TYPES =
             Set.of(ADDRESS_CRI, CLAIMED_IDENTITY_CRI);

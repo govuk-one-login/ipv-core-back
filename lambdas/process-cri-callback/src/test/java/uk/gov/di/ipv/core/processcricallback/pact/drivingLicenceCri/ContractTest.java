@@ -27,8 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -1016,7 +1016,7 @@ class ContractTest {
 
     @NotNull
     private static CriCallbackRequest getCallbackRequest(
-            String authCode, CredentialIssuerConfig credentialIssuerConfig) {
+            String authCode, OauthCriConfig credentialIssuerConfig) {
         return new CriCallbackRequest(
                 authCode,
                 credentialIssuerConfig.getClientId(),
@@ -1040,7 +1040,7 @@ class ContractTest {
                                 Date.from(CURRENT_TIME.instant()))));
     }
 
-    private void configureMockConfigService(CredentialIssuerConfig credentialIssuerConfig) {
+    private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("D02", ciConfig1);
@@ -1055,19 +1055,21 @@ class ContractTest {
     }
 
     @NotNull
-    private static CredentialIssuerConfig getMockCredentialIssuerConfig(MockServer mockServer)
+    private static OauthCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
-        return new CredentialIssuerConfig(
-                new URI("http://localhost:" + mockServer.getPort() + "/token"),
-                new URI("http://localhost:" + mockServer.getPort() + "/credential"),
-                new URI("http://localhost:" + mockServer.getPort() + "/authorize"),
-                IPV_CORE_CLIENT_ID,
-                CRI_SIGNING_PRIVATE_KEY_JWK,
-                CRI_RSA_ENCRYPTION_PUBLIC_JWK,
-                TEST_ISSUER,
-                URI.create(
-                        "https://identity.staging.account.gov.uk/credential-issuer/callback?id=drivingLicence"),
-                true,
-                false);
+        return OauthCriConfig.builder()
+                .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
+                .clientId(IPV_CORE_CLIENT_ID)
+                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
+                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .componentId(TEST_ISSUER)
+                .clientCallbackUrl(
+                        URI.create(
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=drivingLicence"))
+                .requiresApiKey(true)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 }

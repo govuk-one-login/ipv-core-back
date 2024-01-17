@@ -21,8 +21,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -272,8 +272,8 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem(callbackRequest.getState());
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(new CredentialIssuerConfig());
+        when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
+                .thenReturn(OauthCriConfig.builder().build());
 
         // Act & Assert
         assertDoesNotThrow(
@@ -366,7 +366,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem(callbackRequest.getState());
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any())).thenReturn(null);
+        when(mockConfigService.getOauthCriActiveConnectionConfig(any())).thenReturn(null);
 
         // Act & Assert
         assertThrows(

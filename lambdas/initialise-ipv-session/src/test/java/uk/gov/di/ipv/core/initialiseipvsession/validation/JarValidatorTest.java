@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.initialiseipvsession.validation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWEObject;
@@ -18,6 +19,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -27,14 +31,13 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -52,22 +55,19 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PUBLIC_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class JarValidatorTest {
-
+    public static final String CLAIMS_CLAIM = "claims";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService configService;
-
     @Mock private KmsRsaDecrypter kmsRsaDecrypter;
-
     private JarValidator jarValidator;
 
     private final String audienceClaim = "test-audience";
     private final String issuerClaim = "test-issuer";
     private final String subjectClaim = "test-subject";
     private final String keyId = "test-key-id";
-
     private final String responseTypeClaim = "code";
     private final String clientIdClaim = "test-client-id";
     private final String redirectUriClaim = "https://example.com";
@@ -79,9 +79,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldReturnSignedJwtOnSuccessfulDecryption()
-            throws JOSEException, NoSuchAlgorithmException, InvalidKeySpecException, ParseException,
-                    JarValidationException {
+    void decryptJWEShouldReturnSignedJwtOnSuccessfulDecryption() throws Exception {
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
         when(kmsRsaDecrypter.decrypt(any(), any(), any(), any(), any()))
                 .thenReturn(signedJWT.serialize().getBytes(StandardCharsets.UTF_8));
@@ -98,7 +96,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldThrowExceptionIfDecryptionFails() throws ParseException {
+    void decryptJWEShouldThrowExceptionIfDecryptionFails() {
         String jweObjectString =
                 "eyJ0eXAiOiJKV0UiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.ZpVOfw61XyBBgsR4CRNRMn2oj_S65pMJO-iaEHpR6QrPcIuD4ysZexolo28vsZyZNR-kfVdw_5CjQanwMS-yw3U3nSUvXUrTs3uco-FSXulIeDYTRbBtQuDyvBMVoos6DyIfC6eBj30GMe5g6DF5KJ1Q0eXQdF0kyM9olg76uYAUqZ5rW52rC_SOHb5_tMj7UbO2IViIStdzLgVfgnJr7Ms4bvG0C8-mk4Otd7m2Km2-DNyGaNuFQSKclAGu7Zgg-qDyhH4V1Z6WUHt79TuG4TxseUr-6oaFFVD23JYSBy7Aypt0321ycq13qcN-PBiOWtumeW5-_CQuHLaPuOc4-w.RO9IB2KcS2hD3dWlKXSreQ.93Ntu3e0vNSYv4hoMwZ3Aw.YRvWo4bwsP_l7dL_29imGg";
 
@@ -111,9 +109,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldPassValidationChecksOnValidJARRequest()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -128,8 +124,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidClientId()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidClientId() throws Exception {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
@@ -147,8 +142,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnValidJWTalgHeader()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnValidJWTalgHeader() throws Exception {
 
         RSASSASigner signer = new RSASSASigner(getRsaPrivateKey());
 
@@ -173,8 +167,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidJWTSignature()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidJWTSignature() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK_2);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
@@ -194,8 +187,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidPublicJwk()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidPublicJwk() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn("invalid-jwk");
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
@@ -216,7 +208,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnMissingRequiredClaim()
+    void validateRequestJwtShouldFailValidationChecksOnMissingRequiredClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -249,8 +241,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidAudienceClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidAudienceClaim() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -258,28 +249,8 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        "invalid-audience",
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidAudienceClaims = getValidClaimsSetValues();
+        invalidAudienceClaims.put(JWTClaimNames.AUDIENCE, "invalid-audience");
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
@@ -291,12 +262,13 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("JWT audience rejected: [invalid-audience]", errorObject.getDescription());
+        assertEquals(
+                "JWT audience rejected: [invalid-audience]",
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidIssuerClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidIssuerClaim() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -304,30 +276,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        "invalid-issuer",
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidIssuerClaims = getValidClaimsSetValues();
+        invalidIssuerClaims.put(JWTClaimNames.ISSUER, "invalid-issuer");
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(invalidIssuerClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -339,12 +291,11 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT iss claim has value invalid-issuer, must be test-issuer",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidResponseTypeClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidResponseTypeClaim() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -352,30 +303,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        "invalid-response-type",
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> invalidResponseTypeClaim = getValidClaimsSetValues();
+        invalidResponseTypeClaim.put("response_type", "invalid-response-type");
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(invalidResponseTypeClaim);
 
         JarValidationException thrown =
                 assertThrows(
@@ -387,12 +318,12 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT response_type claim has value invalid-response-type, must be code",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
+            throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -400,30 +331,7 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        "code",
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
-
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
         JarValidationException thrown =
                 assertThrows(
@@ -435,12 +343,11 @@ class JarValidatorTest {
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
                 "JWT client_id claim has value test-client-id, must be different-client-id",
-                errorObject.getDescription());
+                thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksOnExpiredJWT()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnExpiredJWT() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -448,30 +355,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesInPast(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> expiredClaims = getValidClaimsSetValues();
+        expiredClaims.put(JWTClaimNames.EXPIRATION_TIME, fifteenMinutesInPast());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(expiredClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -481,12 +368,11 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("Expired JWT", errorObject.getDescription());
+        assertEquals("Expired JWT", thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksOnFutureNbfClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnFutureNbfClaim() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -494,30 +380,10 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> notValidYet = getValidClaimsSetValues();
+        notValidYet.put(JWTClaimNames.NOT_BEFORE, fifteenMinutesFromNow());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(notValidYet);
 
         JarValidationException thrown =
                 assertThrows(
@@ -527,12 +393,11 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("JWT before use time", errorObject.getDescription());
+        assertEquals("JWT before use time", thrown.getCause().getCause().getMessage());
     }
 
     @Test
-    void shouldFailValidationChecksOnExpiryClaimToFarInFuture()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnExpiryClaimToFarInFuture() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -541,30 +406,11 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        Map<String, Object> invalidAudienceClaims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        OffsetDateTime.now().plusYears(100).toEpochSecond(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        redirectUriClaim,
-                        "state",
-                        stateClaim);
+        Map<String, Object> futureClaims = getValidClaimsSetValues();
+        futureClaims.put(
+                JWTClaimNames.EXPIRATION_TIME, OffsetDateTime.now().plusYears(100).toEpochSecond());
 
-        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+        SignedJWT signedJWT = generateJWT(futureClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -580,8 +426,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnInvalidRedirectUriClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnInvalidRedirectUriClaim() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
@@ -604,36 +449,16 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldFailValidationChecksOnParseFailureOfRedirectUri()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void validateRequestJwtShouldFailValidationChecksOnParseFailureOfRedirectUri()
+            throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
 
-        Map<String, Object> claims =
-                Map.of(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        fifteenMinutesFromNow(),
-                        JWTClaimNames.ISSUED_AT,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.NOT_BEFORE,
-                        OffsetDateTime.now().toEpochSecond(),
-                        JWTClaimNames.AUDIENCE,
-                        audienceClaim,
-                        JWTClaimNames.ISSUER,
-                        issuerClaim,
-                        JWTClaimNames.SUBJECT,
-                        subjectClaim,
-                        "response_type",
-                        responseTypeClaim,
-                        "client_id",
-                        clientIdClaim,
-                        "redirect_uri",
-                        "({[]})./sd-234345////invalid-redirect-uri",
-                        "state",
-                        stateClaim);
+        Map<String, Object> badRedirectClaims = getValidClaimsSetValues();
+        badRedirectClaims.put("redirect_uri", "({[]})./sd-234345////invalid-redirect-uri");
 
-        SignedJWT signedJWT = generateJWT(claims);
+        SignedJWT signedJWT = generateJWT(badRedirectClaims);
 
         JarValidationException thrown =
                 assertThrows(
@@ -649,8 +474,7 @@ class JarValidatorTest {
                 errorObject.getDescription());
     }
 
-    private SignedJWT generateJWT(Map<String, Object> claimsSetValues)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    private SignedJWT generateJWT(Map<String, Object> claimsSetValues) throws Exception {
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
         SignedJWT signedJWT =
@@ -663,44 +487,30 @@ class JarValidatorTest {
     }
 
     private Map<String, Object> getValidClaimsSetValues() {
-        return Map.of(
-                JWTClaimNames.EXPIRATION_TIME,
-                fifteenMinutesFromNow(),
-                JWTClaimNames.ISSUED_AT,
-                OffsetDateTime.now().toEpochSecond(),
-                JWTClaimNames.NOT_BEFORE,
-                OffsetDateTime.now().toEpochSecond(),
-                JWTClaimNames.AUDIENCE,
-                audienceClaim,
-                JWTClaimNames.ISSUER,
-                issuerClaim,
-                JWTClaimNames.SUBJECT,
-                subjectClaim,
-                "response_type",
-                responseTypeClaim,
-                "client_id",
-                clientIdClaim,
-                "redirect_uri",
-                redirectUriClaim,
-                "state",
-                stateClaim);
+        var validClaims = new HashMap<String, Object>();
+        validClaims.put(JWTClaimNames.EXPIRATION_TIME, fifteenMinutesFromNow());
+        validClaims.put(JWTClaimNames.ISSUED_AT, OffsetDateTime.now().toEpochSecond());
+        validClaims.put(JWTClaimNames.NOT_BEFORE, OffsetDateTime.now().toEpochSecond());
+        validClaims.put(JWTClaimNames.AUDIENCE, audienceClaim);
+        validClaims.put(JWTClaimNames.ISSUER, issuerClaim);
+        validClaims.put(JWTClaimNames.SUBJECT, subjectClaim);
+        validClaims.put("response_type", responseTypeClaim);
+        validClaims.put("client_id", clientIdClaim);
+        validClaims.put("redirect_uri", redirectUriClaim);
+        validClaims.put("state", stateClaim);
+        validClaims.put(
+                CLAIMS_CLAIM,
+                new JarClaims(
+                        new JarUserInfo(
+                                null,
+                                null,
+                                new InheritedIdentityJwtClaim(List.of("DEFO.A.JWT")),
+                                null)));
+        return validClaims;
     }
 
-    private JWTClaimsSet generateClaimsSet(Map<String, Object> claimsSetValues) {
-        return new JWTClaimsSet.Builder()
-                .claim(
-                        JWTClaimNames.EXPIRATION_TIME,
-                        claimsSetValues.get(JWTClaimNames.EXPIRATION_TIME))
-                .claim(JWTClaimNames.ISSUED_AT, claimsSetValues.get(JWTClaimNames.ISSUED_AT))
-                .claim(JWTClaimNames.NOT_BEFORE, claimsSetValues.get(JWTClaimNames.NOT_BEFORE))
-                .claim(JWTClaimNames.AUDIENCE, claimsSetValues.get(JWTClaimNames.AUDIENCE))
-                .claim(JWTClaimNames.ISSUER, claimsSetValues.get(JWTClaimNames.ISSUER))
-                .claim(JWTClaimNames.SUBJECT, claimsSetValues.get(JWTClaimNames.SUBJECT))
-                .claim("response_type", claimsSetValues.get("response_type"))
-                .claim("client_id", claimsSetValues.get("client_id"))
-                .claim("redirect_uri", claimsSetValues.get("redirect_uri"))
-                .claim("state", claimsSetValues.get("state"))
-                .build();
+    private JWTClaimsSet generateClaimsSet(Map<String, Object> claimsSetValues) throws Exception {
+        return JWTClaimsSet.parse(objectMapper.writeValueAsString(claimsSetValues));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
@@ -718,13 +528,6 @@ class JarValidatorTest {
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(RSA_PRIVATE_KEY)));
-    }
-
-    private RSAPublicKey getPublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
-        return (RSAPublicKey)
-                KeyFactory.getInstance("RSA")
-                        .generatePublic(
-                                new X509EncodedKeySpec(Base64.getDecoder().decode(RSA_PUBLIC_KEY)));
     }
 
     private static long fifteenMinutesFromNow() {
