@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-//@Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "PassportCriProvider")
@@ -102,11 +102,11 @@ public class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                (body) -> {
-                                    body.stringType("access_token");
-                                    body.stringValue("token_type", "Bearer");
-                                    body.integerType("expires_in");
-                                })
+                                        (body) -> {
+                                            body.stringType("access_token");
+                                            body.stringValue("token_type", "Bearer");
+                                            body.integerType("expires_in");
+                                        })
                                 .build())
                 .toPact();
     }
@@ -154,12 +154,12 @@ public class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                (body) -> {
-                                    body.stringValue("sub", "dummyTestUser");
-                                    body.stringValue(
-                                            "https://vocab.account.gov.uk/v1/credentialStatus",
-                                            "pending");
-                                })
+                                        (body) -> {
+                                            body.stringValue("sub", "dummyTestUser");
+                                            body.stringValue(
+                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
+                                                    "pending");
+                                        })
                                 .build())
                 .toPact();
     }
@@ -169,9 +169,7 @@ public class ContractTest {
     void testCallToDummyPassportIssueCredential(MockServer mockServer)
             throws URISyntaxException, CriApiException {
         // Arrange
-        var credentialIssuerConfig =
-                getMockF2FCredentialIssuerConfig(
-                        mockServer);
+        var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
@@ -214,9 +212,7 @@ public class ContractTest {
     void fetchAccessToken_whenCalledAgainstF2FCri_retrievesAValidAccessToken(MockServer mockServer)
             throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
-        var credentialIssuerConfig =
-                getMockF2FCredentialIssuerConfig(
-                        mockServer);
+        var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
@@ -270,9 +266,7 @@ public class ContractTest {
     void fetchAccessToken_whenCalledAgainstF2FCri_receivesUnauthorizedWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
-        var credentialIssuerConfig =
-                getMockF2FCredentialIssuerConfig(
-                        mockServer);
+        var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
@@ -325,8 +319,8 @@ public class ContractTest {
     }
 
     @NotNull
-    private static OauthCriConfig getMockF2FCredentialIssuerConfig(
-            MockServer mockServer) throws URISyntaxException {
+    private static OauthCriConfig getMockF2FCredentialIssuerConfig(MockServer mockServer)
+            throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
                 .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
