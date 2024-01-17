@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "PassportCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
-public class ContractTest {
+class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final Clock CURRENT_TIME =
