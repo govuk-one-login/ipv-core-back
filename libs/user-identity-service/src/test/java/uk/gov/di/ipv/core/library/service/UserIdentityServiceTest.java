@@ -1626,7 +1626,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
 
-        mockParamStoreCalls(paramsToMockForP2);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
@@ -1653,7 +1653,7 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
 
-        mockParamStoreCalls(paramsToMockForP2);
+        mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =

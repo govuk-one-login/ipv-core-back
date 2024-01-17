@@ -54,7 +54,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
@@ -127,10 +126,9 @@ public class UserIdentityService {
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
-        vcStoreItems =
-                filterVCBasedOnProfileType(
-                        vcStoreItems, VectorOfTrust.valueOf(vot).getProfileType());
+        List<VcStoreItem> vcStoreItems =
+                VcHelper.filterVCBasedOnProfileType(
+                        dataStore.getItems(userId), VectorOfTrust.valueOf(vot).getProfileType());
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
         String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
@@ -163,34 +161,14 @@ public class UserIdentityService {
                 userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
             }
         } else {
-
+            if (vot.equals(P2.toString())) {
+                userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+            } else {
+                userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+            }
         }
 
         return userIdentityBuilder.build();
-    }
-
-    private List<VcStoreItem> filterVCBasedOnProfileType(
-            List<VcStoreItem> vcStoreItems, ProfileType profileType) {
-        List<VcStoreItem> filteredVCs;
-        if (profileType.equals(ProfileType.GPG45)) {
-            filteredVCs =
-                    vcStoreItems.stream()
-                            .filter(
-                                    vcItem ->
-                                            !OPERATIONAL_CRIS.contains(
-                                                    vcItem.getCredentialIssuer()))
-                            .toList();
-        } else {
-            filteredVCs =
-                    vcStoreItems.stream()
-                            .filter(
-                                    vcItem ->
-                                            (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
-                                                    || vcItem.getCredentialIssuer()
-                                                            .equals(TICF_CRI)))
-                            .toList();
-        }
-        return filteredVCs;
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
