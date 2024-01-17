@@ -18,8 +18,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -79,8 +79,8 @@ class CriApiServiceTest {
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
 
-        var criConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
-        when(mockConfigService.getCriConfig(any())).thenReturn(criConfig);
+        var criConfig = getOauthCriConfig(wmRuntimeInfo);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
     }
 
     @Test
@@ -527,23 +527,31 @@ class CriApiServiceTest {
                 .build();
     }
 
-    private CredentialIssuerConfig getStubCredentialIssuerConfig(
-            WireMockRuntimeInfo wmRuntimeInfo) {
-        return new CredentialIssuerConfig(
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
-                URI.create(
-                        "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credentials/issue"),
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/authorizeUrl"),
-                "ipv-core",
-                EC_PUBLIC_JWK,
-                RSA_ENCRYPTION_PUBLIC_JWK,
-                "test-audience",
-                URI.create(
-                        "http://localhost:"
-                                + wmRuntimeInfo.getHttpPort()
-                                + "/credential-issuer/callback?id=StubPassport"),
-                true,
-                false);
+    private OauthCriConfig getOauthCriConfig(WireMockRuntimeInfo wmRuntimeInfo) {
+        return OauthCriConfig.builder()
+                .tokenUrl(URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"))
+                .credentialUrl(
+                        URI.create(
+                                "http://localhost:"
+                                        + wmRuntimeInfo.getHttpPort()
+                                        + "/credentials/issue"))
+                .authorizeUrl(
+                        URI.create(
+                                "http://localhost:"
+                                        + wmRuntimeInfo.getHttpPort()
+                                        + "/authorizeUrl"))
+                .clientId("ipv-core")
+                .signingKey(EC_PUBLIC_JWK)
+                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
+                .componentId("test-audience")
+                .clientCallbackUrl(
+                        URI.create(
+                                "http://localhost:"
+                                        + wmRuntimeInfo.getHttpPort()
+                                        + "/credential-issuer/callback?id=StubPassport"))
+                .requiresApiKey(true)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

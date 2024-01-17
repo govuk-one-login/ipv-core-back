@@ -257,7 +257,7 @@ class IssueClientAccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals("error", errorResponse.getDescription());
+        assertEquals("Client authentication failed", errorResponse.getDescription());
     }
 
     @Test
@@ -278,7 +278,7 @@ class IssueClientAccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals("error", errorResponse.getDescription());
+        assertEquals("Client authentication failed", errorResponse.getDescription());
     }
 
     @Test

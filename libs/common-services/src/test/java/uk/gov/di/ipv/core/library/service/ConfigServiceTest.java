@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.gson.Gson;
-import com.nimbusds.jose.jwk.ECKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,8 +26,9 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.dto.BackendCriConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -114,7 +114,7 @@ class ConfigServiceTest {
 
     @Nested
     @DisplayName("active credential issuer config")
-    class ActiveCredentialIssuerConfig {
+    class ActiveOauthCriConfig {
 
         private final Map<String, String> baseCredentialIssuerConfig =
                 Map.of(
@@ -137,29 +137,25 @@ class ConfigServiceTest {
                         "requiresApiKey",
                         "true");
 
-        private final String jsonCredentialIssuerConfig =
+        private final String oauthCriJsonConfig =
                 String.format(
                         "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
                         EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
                         RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
 
-        private final String backEndJsonCriConfig =
-                String.format(
-                        "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
-                        EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED);
-
-        private final CredentialIssuerConfig expectedBaseCredentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        URI.create("https://testTokenUrl"),
-                        URI.create("https://testCredentialUrl"),
-                        URI.create("https://testAuthoriseUrl"),
-                        "ipv-core-test",
-                        EC_PRIVATE_KEY_JWK,
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "https://testComponentId",
-                        URI.create("https://testClientCallBackUrl"),
-                        true,
-                        false);
+        private final OauthCriConfig expectedOauthCriConfig =
+                OauthCriConfig.builder()
+                        .tokenUrl(URI.create("https://testTokenUrl"))
+                        .credentialUrl(URI.create("https://testCredentialUrl"))
+                        .authorizeUrl(URI.create("https://testAuthoriseUrl"))
+                        .clientId("ipv-core-test")
+                        .signingKey(EC_PRIVATE_KEY_JWK)
+                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
+                        .componentId("https://testComponentId")
+                        .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
+                        .requiresApiKey(true)
+                        .requiresAdditionalEvidence(false)
+                        .build();
 
         private final Map<String, String> featureSetCredentialIssuerConfig =
                 Map.of(
@@ -167,90 +163,119 @@ class ConfigServiceTest {
                         "clientId", "client_for_fs01",
                         "requiresApiKey", "false");
 
-        private final CredentialIssuerConfig expectedFeatureSetCredentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        URI.create("https://testTokenUrl_for_fs01"),
-                        URI.create("https://testCredentialUrl"),
-                        URI.create("https://testAuthoriseUrl"),
-                        "client_for_fs01",
-                        EC_PRIVATE_KEY_JWK,
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "https://testComponentId",
-                        URI.create("https://testClientCallBackUrl"),
-                        false,
-                        false);
-
-        private void checkCredentialIssuerConfig(
-                CredentialIssuerConfig expected, CredentialIssuerConfig actual) {
-            // CredentialIssuerConfig equality currently checks only clientId, tokenUrl, and
-            // credentialUrl
-            assertEquals(expected, actual);
-            assertEquals(expected.getAuthorizeUrl(), actual.getAuthorizeUrl());
-            assertEquals(expected.getSigningKeyString(), actual.getSigningKeyString());
-            assertEquals(expected.getEncryptionKeyString(), actual.getEncryptionKeyString());
-            assertEquals(expected.getComponentId(), actual.getComponentId());
-            assertEquals(expected.getClientCallbackUrl(), actual.getClientCallbackUrl());
-            assertEquals(expected.getRequiresApiKey(), actual.getRequiresApiKey());
-        }
+        private final OauthCriConfig expectedFeatureSetOauthCriConfig =
+                OauthCriConfig.builder()
+                        .tokenUrl(URI.create("https://testTokenUrl_for_fs01"))
+                        .credentialUrl(URI.create("https://testCredentialUrl"))
+                        .authorizeUrl(URI.create("https://testAuthoriseUrl"))
+                        .clientId("client_for_fs01")
+                        .signingKey(EC_PRIVATE_KEY_JWK)
+                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
+                        .componentId("https://testComponentId")
+                        .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
+                        .requiresApiKey(false)
+                        .requiresAdditionalEvidence(false)
+                        .build();
 
         @Test
-        void shouldGetCredentialIssuerFromParameterStore() {
+        void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(jsonCredentialIssuerConfig);
+                    .thenReturn(oauthCriJsonConfig);
 
-            CredentialIssuerConfig result =
-                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+            OauthCriConfig result = configService.getOauthCriActiveConnectionConfig("passportCri");
 
-            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+            assertEquals(expectedOauthCriConfig, result);
         }
 
         @Test
-        void getCriConfigShouldGetConfigForCriOauthSessionItem() {
+        void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(jsonCredentialIssuerConfig);
+                    .thenReturn(oauthCriJsonConfig);
 
-            CredentialIssuerConfig result =
-                    configService.getCriConfig(
+            OauthCriConfig result =
+                    configService.getOauthCriConfig(
                             CriOAuthSessionItem.builder()
                                     .criId("passportCri")
                                     .connection("stub")
                                     .build());
 
-            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+            assertEquals(expectedOauthCriConfig, result);
         }
 
         @Test
-        void getCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
+        void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(oauthCriJsonConfig);
+
+            var result = configService.getOauthCriConfigForConnection("stub", "passportCri");
+
+            assertEquals(expectedOauthCriConfig, result);
+        }
+
+        @Test
+        void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenThrow(ParameterNotFoundException.builder().build());
 
             assertThrows(
                     NoConfigForConnectionException.class,
-                    () -> configService.getCriConfigForConnection("stub", "passportCri"));
+                    () -> configService.getOauthCriConfigForConnection("stub", "passportCri"));
         }
 
         @Test
-        void getBackendCriConfigShouldReturnABackendCriConfig() throws Exception {
+        void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/restCri/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
-                    .thenReturn(backEndJsonCriConfig);
+            when(ssmProvider.get("/test/core/credentialIssuers/restCri/connections/stub"))
+                    .thenReturn(
+                            String.format(
+                                    "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
+                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            BackendCriConfig backEndCriConfig = configService.getBackendCriConfig("passportCri");
+            RestCriConfig restCriConfig = configService.getRestCriConfig("restCri");
 
-            assertEquals("https://testComponentId", backEndCriConfig.getComponentId());
-            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), backEndCriConfig.getSigningKey());
-            assertEquals(new URI("https://testCredentialUrl"), backEndCriConfig.getCredentialUrl());
-            assertTrue(backEndCriConfig.requiresApiKey());
+            var expectedRestCriConfig =
+                    RestCriConfig.builder()
+                            .credentialUrl(new URI("https://testCredentialUrl"))
+                            .requiresApiKey(true)
+                            .signingKey(EC_PRIVATE_KEY_JWK)
+                            .componentId("https://testComponentId")
+                            .build();
+
+            assertEquals(expectedRestCriConfig, restCriConfig);
+        }
+
+        @Test
+        void getCriConfigShouldReturnACriConfig() {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
+                    .thenReturn(
+                            String.format(
+                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
+                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
+
+            CriConfig criConfig = configService.getCriConfig("cri");
+
+            var expectedCriConfig =
+                    CriConfig.builder()
+                            .signingKey(EC_PRIVATE_KEY_JWK)
+                            .componentId("https://testComponentId")
+                            .build();
+
+            assertEquals(expectedCriConfig, criConfig);
         }
 
         @Test
@@ -314,7 +339,7 @@ class ConfigServiceTest {
 
     @Nested
     @DisplayName("credential issuer config items")
-    class CredentialIssuerConfigItems {
+    class OauthCriConfigItems {
 
         private void setupTestData(
                 String credentialIssuer,

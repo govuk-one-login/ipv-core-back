@@ -1,0 +1,18 @@
+{
+  "Items": [
+    {
+      "dateCreated": {
+        "S": "2023-08-04T10:04:49.842410Z"
+      },
+      "credentialIssuer": {
+        "S": "address"
+      },
+      "userId": {
+        "S": "test-user-id"
+      }
+    }
+  ],
+  "Count": 1,
+  "ScannedCount": 1,
+  "ConsumedCapacity": null
+}

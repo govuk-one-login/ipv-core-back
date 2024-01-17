@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
@@ -41,35 +41,14 @@ class VcHelperTest {
     public static Set<String> EXCLUDED_CREDENTIAL_ISSUERS =
             Set.of("https://review-a.integration.account.gov.uk");
 
-    public static CredentialIssuerConfig addressConfig = null;
-    public static CredentialIssuerConfig claimedIdentityConfig = null;
+    public static OauthCriConfig addressConfig = null;
+    public static OauthCriConfig claimedIdentityConfig = null;
 
     static {
         try {
-            addressConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "https://review-a.integration.account.gov.uk",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            false);
+            addressConfig = createOauthCriConfig("https://review-a.integration.account.gov.uk");
             claimedIdentityConfig =
-                    new CredentialIssuerConfig(
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
-                            "ipv-core",
-                            "test-jwk",
-                            "test-encryption-jwk",
-                            "https://review-c.integration.account.gov.uk",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            false);
+                    createOauthCriConfig("https://review-c.integration.account.gov.uk");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -121,5 +100,21 @@ class VcHelperTest {
         when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
         when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(claimedIdentityConfig.getComponentId());
+    }
+
+    private static OauthCriConfig createOauthCriConfig(String componentId)
+            throws URISyntaxException {
+        return OauthCriConfig.builder()
+                .tokenUrl(new URI("http://example.com/token"))
+                .credentialUrl(new URI("http://example.com/credential"))
+                .authorizeUrl(new URI("http://example.com/authorize"))
+                .clientId("ipv-core")
+                .signingKey("test-jwk")
+                .encryptionKey("test-encryption-jwk")
+                .componentId(componentId)
+                .clientCallbackUrl(new URI("http://example.com/redirect"))
+                .requiresApiKey(true)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 }

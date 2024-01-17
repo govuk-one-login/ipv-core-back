@@ -237,7 +237,7 @@ public class UserIdentityService {
             List<VcStoreItem> filterValidVCs = filterValidVCs(vcStoreItems);
             if (filterValidVCs.size() == 1) {
                 return configService
-                        .getCredentialIssuerActiveConnectionConfig(
+                        .getOauthCriActiveConnectionConfig(
                                 filterValidVCs.get(0).getCredentialIssuer())
                         .isRequiresAdditionalEvidence();
             }

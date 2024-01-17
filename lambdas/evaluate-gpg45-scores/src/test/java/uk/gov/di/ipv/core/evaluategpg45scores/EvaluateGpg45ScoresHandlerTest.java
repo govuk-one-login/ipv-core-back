@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -80,8 +80,8 @@ class EvaluateGpg45ScoresHandlerTest {
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    public static CredentialIssuerConfig addressConfig = null;
-    public static CredentialIssuerConfig claimedIdentityConfig = null;
+    public static OauthCriConfig addressConfig = null;
+    public static OauthCriConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
@@ -94,7 +94,7 @@ class EvaluateGpg45ScoresHandlerTest {
     static {
         try {
             addressConfig =
-                    CredentialIssuerConfig.builder()
+                    OauthCriConfig.builder()
                             .tokenUrl(new URI("http://example.com/token"))
                             .credentialUrl(new URI("http://example.com/credential"))
                             .authorizeUrl(new URI("http://example.com/authorize"))
@@ -108,7 +108,7 @@ class EvaluateGpg45ScoresHandlerTest {
                             .build();
 
             claimedIdentityConfig =
-                    CredentialIssuerConfig.builder()
+                    OauthCriConfig.builder()
                             .tokenUrl(new URI("http://example.com/token"))
                             .credentialUrl(new URI("http://example.com/credential"))
                             .authorizeUrl(new URI("http://example.com/authorize"))

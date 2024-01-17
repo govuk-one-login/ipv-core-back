@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -168,8 +168,8 @@ public class BuildCriOauthRequestHandler
 
             String criId = getCriIdFromJourney(journeyPath);
             String connection = configService.getActiveConnection(criId);
-            CredentialIssuerConfig criConfig =
-                    configService.getCriConfigForConnection(connection, criId);
+            OauthCriConfig criConfig =
+                    configService.getOauthCriConfigForConnection(connection, criId);
 
             if (criConfig == null) {
                 return new JourneyErrorResponse(
@@ -285,12 +285,12 @@ public class BuildCriOauthRequestHandler
     }
 
     private CriResponse getCriResponse(
-            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject, String criId)
+            OauthCriConfig oauthCriConfig, JWEObject jweObject, String criId)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
-                new URIBuilder(credentialIssuerConfig.getAuthorizeUrl())
-                        .addParameter("client_id", credentialIssuerConfig.getClientId())
+                new URIBuilder(oauthCriConfig.getAuthorizeUrl())
+                        .addParameter("client_id", oauthCriConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
         if (criId.equals(DCMAW_CRI_ID)) {
@@ -302,7 +302,7 @@ public class BuildCriOauthRequestHandler
 
     private JWEObject signEncryptJar(
             IpvSessionItem ipvSessionItem,
-            CredentialIssuerConfig credentialIssuerConfig,
+            OauthCriConfig oauthCriConfig,
             String userId,
             String oauthState,
             String govukSigninJourneyId,
@@ -325,7 +325,7 @@ public class BuildCriOauthRequestHandler
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
                         signer,
-                        credentialIssuerConfig,
+                        oauthCriConfig,
                         configService,
                         oauthState,
                         userId,
@@ -334,7 +334,7 @@ public class BuildCriOauthRequestHandler
                         context,
                         scope);
 
-        RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 

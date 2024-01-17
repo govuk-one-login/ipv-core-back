@@ -24,7 +24,7 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -91,7 +91,7 @@ class AuthorizationRequestHelperTest {
 
     @Mock JWSSigner jwsSigner;
 
-    @Mock CredentialIssuerConfig credentialIssuerConfig;
+    @Mock OauthCriConfig oauthCriConfig;
 
     @Mock ConfigService configService;
 
@@ -110,15 +110,14 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
-        when(credentialIssuerConfig.getClientCallbackUrl())
-                .thenReturn(URI.create(TEST_REDIRECT_URI));
+        when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaims,
                         signer,
-                        credentialIssuerConfig,
+                        oauthCriConfig,
                         configService,
                         OAUTH_STATE,
                         TEST_USER_ID,
@@ -148,15 +147,14 @@ class AuthorizationRequestHelperTest {
             throws ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
-        when(credentialIssuerConfig.getClientCallbackUrl())
-                .thenReturn(URI.create(TEST_REDIRECT_URI));
+        when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaims,
                         signer,
-                        credentialIssuerConfig,
+                        oauthCriConfig,
                         configService,
                         OAUTH_STATE,
                         TEST_USER_ID,
@@ -197,7 +195,7 @@ class AuthorizationRequestHelperTest {
                 AuthorizationRequestHelper.createSignedJWT(
                         null,
                         signer,
-                        credentialIssuerConfig,
+                        oauthCriConfig,
                         configService,
                         OAUTH_STATE,
                         TEST_USER_ID,
@@ -220,7 +218,7 @@ class AuthorizationRequestHelperTest {
                                 AuthorizationRequestHelper.createSignedJWT(
                                         null,
                                         jwsSigner,
-                                        credentialIssuerConfig,
+                                        oauthCriConfig,
                                         configService,
                                         OAUTH_STATE,
                                         TEST_USER_ID,
@@ -269,7 +267,7 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupCredentialIssuerConfigMock() {
-        when(credentialIssuerConfig.getClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
+        when(oauthCriConfig.getClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
     }
 
     private void setupConfigurationServiceMock() {

@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.CriConstants;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -73,49 +73,17 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_ASYNC_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
             "Additional information on the error";
-    private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG;
-    private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
-    private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
+    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
+    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
+    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
         try {
-            TEST_CREDENTIAL_ISSUER_CONFIG =
-                    new CredentialIssuerConfig(
-                            new URI(""),
-                            new URI(""),
-                            new URI(""),
-                            "ipv-core",
-                            EC_PRIVATE_KEY_JWK,
-                            null,
-                            TEST_COMPONENT_ID,
-                            new URI(""),
-                            false,
-                            false);
-            TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS =
-                    new CredentialIssuerConfig(
-                            new URI(""),
-                            new URI(""),
-                            new URI(""),
-                            "ipv-core",
-                            EC_PRIVATE_KEY_JWK,
-                            null,
-                            TEST_COMPONENT_ID_ADDRESS,
-                            new URI(""),
-                            false,
-                            false);
+            TEST_CREDENTIAL_ISSUER_CONFIG = createOauthCriConfig(TEST_COMPONENT_ID);
+            TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
             TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
-                    new CredentialIssuerConfig(
-                            new URI(""),
-                            new URI(""),
-                            new URI(""),
-                            "ipv-core",
-                            EC_PRIVATE_KEY_JWK,
-                            null,
-                            TEST_COMPONENT_ID_CLAIMED_IDENTITY,
-                            new URI(""),
-                            false,
-                            false);
+                    createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -221,7 +189,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+        when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         doThrow(VerifiableCredentialException.class)
                 .when(verifiableCredentialJwtValidator)
@@ -415,11 +383,27 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+        when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         when(configService.getComponentId(ADDRESS_CRI))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS.getComponentId());
         when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
+    }
+
+    private static OauthCriConfig createOauthCriConfig(String componentId)
+            throws URISyntaxException {
+        return OauthCriConfig.builder()
+                .tokenUrl(new URI(""))
+                .credentialUrl(new URI(""))
+                .authorizeUrl(new URI(""))
+                .clientId("ipv-core")
+                .signingKey(EC_PRIVATE_KEY_JWK)
+                .encryptionKey(null)
+                .componentId(componentId)
+                .clientCallbackUrl(new URI(""))
+                .requiresApiKey(false)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 }
