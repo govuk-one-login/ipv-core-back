@@ -110,6 +110,12 @@ class ContractTest {
               "vc": {
                 "evidence": [
                   {
+                  "checkDetails": [
+                           {
+                             "identityCheckPolicy": "none",
+                             "checkMethod": "data"
+                       }
+                    ],
                     "validityScore": 2,
                     "strengthScore": 3,
                     "txn": "dummyTxn",
@@ -151,7 +157,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "ARHudEXt_OpGqJPP603JvjjmykiibzIUiKD9YvaqLlFAokimzRVDxS3lmu19UMpumLxdXxyz_MMb0ZyB3xgo-A";
+            "eux8ArXcqYGPoAkQIafcs_DobUI9GfYc4L5eQIl_pMIieHdevWoa2ExxoaaeVgXQ-9SFeLn0Ai01_xrAyJLtOw";
 
     private static final String FAILED_BAV_VC_BODY =
             """
@@ -361,6 +367,8 @@ class ContractTest {
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyBavComponentId is a valid issuer")
+                .given("VC evidence checkDetails identityCheckPolicy is none")
+                .given("VC evidence checkDetails checkMethod is data")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence txn is dummyTxn")
