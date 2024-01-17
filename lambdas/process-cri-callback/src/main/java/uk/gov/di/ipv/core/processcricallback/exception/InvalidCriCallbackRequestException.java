@@ -8,6 +8,7 @@ public class InvalidCriCallbackRequestException extends Exception {
     private final ErrorResponse errorResponse;
 
     public InvalidCriCallbackRequestException(ErrorResponse errorResponse) {
+        super(errorResponse.getMessage());
         this.errorResponse = errorResponse;
     }
 }
