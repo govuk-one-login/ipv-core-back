@@ -1,3 +1,13 @@
+x-aws_creds: &aws_creds
+  AWS_REGION:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_SESSION_TOKEN:
+x-generic-cri-config: &cri-config
+  <<: *aws_creds
+  VC_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+  VC_TTL_SECONDS: 300
+
 services:
   orch-stub:
     image: orch-stub:latest
@@ -6,18 +16,18 @@ services:
       context: ../../ipv-stubs/di-ipv-orchestrator-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - ORCHESTRATOR_CLIENT_ID=orchestrator
-      - ORCHESTRATOR_JAR_ENCRYPTION_PUBLIC_KEY=eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsImtpZCI6ImI0NTRhYzA3LWUxODgtNDE1ZC1hM2M4LWYxZDBkMzhhYWVjZCIsIm4iOiJsb0hlYVN4dk1naUhTdEttYi1aSzVaUHB3UldyaFNTUS1uVHl1S1FqLW1ZV1lGTkdnR0dOUC0zN1p2em80NTNiVUd0RWVGdTF6ZGxMQW9IeVQza2dzMVhkcVhDdlBpbk5jY3BKOGxXR1hjRktHUmhqNWp4SWlJTXZFQkhmTHNfLWNNSVdXMDE2Nm5kVFQ5M29jb1hkWGFQNjRtSDJpRjdXV0R5S3FPY3JWanVhVW5iRmJTNFgyZmhKd3dSUGpfS2luNWpwSkN4M01KZDllSXVZeUpCNENsdGJMVHBYMjVvQ3dMdzl0LXAybHpIZmF6SlNJVGNmVHpFYk9aVjQwZlBKSVI2SGxKaTdBcFhZZkFRLWRsYmpNc1lpbkZRblk2SUxKWGtic2pENEpYV1VZYUIwUmJLOFdUVEt5ZWhGVTdQX1E4dkZiN3FXVTRYajlNVEVIYzdXM1EifQ==
-      - ORCHESTRATOR_CLIENT_JWT_TTL=900
-      - IPV_CORE_AUDIENCE=https://${ENVIRONMENT}.${DEV_ACCOUNT_NUM}.dev.identity.account.gov.uk
-      - ORCHESTRATOR_CLIENT_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO
-      - ORCHESTRATOR_REDIRECT_URL=http://localhost:3000/callback
-      - IPV_BACKCHANNEL_TOKEN_PATH=token
-      - IPV_ENDPOINT=http://localhost:3001/
-      - IPV_BACKCHANNEL_ENDPOINT=http://host.docker.internal:3002/
-      - IPV_BACKCHANNEL_USER_IDENTITY_PATH=user-identity
-      - ORCHESTRATOR_PORT=3000
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
+      ORCHESTRATOR_CLIENT_ID: orchestrator
+      ORCHESTRATOR_JAR_ENCRYPTION_PUBLIC_KEY: eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsImtpZCI6ImI0NTRhYzA3LWUxODgtNDE1ZC1hM2M4LWYxZDBkMzhhYWVjZCIsIm4iOiJsb0hlYVN4dk1naUhTdEttYi1aSzVaUHB3UldyaFNTUS1uVHl1S1FqLW1ZV1lGTkdnR0dOUC0zN1p2em80NTNiVUd0RWVGdTF6ZGxMQW9IeVQza2dzMVhkcVhDdlBpbk5jY3BKOGxXR1hjRktHUmhqNWp4SWlJTXZFQkhmTHNfLWNNSVdXMDE2Nm5kVFQ5M29jb1hkWGFQNjRtSDJpRjdXV0R5S3FPY3JWanVhVW5iRmJTNFgyZmhKd3dSUGpfS2luNWpwSkN4M01KZDllSXVZeUpCNENsdGJMVHBYMjVvQ3dMdzl0LXAybHpIZmF6SlNJVGNmVHpFYk9aVjQwZlBKSVI2SGxKaTdBcFhZZkFRLWRsYmpNc1lpbkZRblk2SUxKWGtic2pENEpYV1VZYUIwUmJLOFdUVEt5ZWhGVTdQX1E4dkZiN3FXVTRYajlNVEVIYzdXM1EifQ==
+      ORCHESTRATOR_CLIENT_JWT_TTL: 900
+      IPV_CORE_AUDIENCE: https://${ENVIRONMENT}.${DEV_ACCOUNT_NUM}.dev.identity.account.gov.uk
+      ORCHESTRATOR_CLIENT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO
+      ORCHESTRATOR_REDIRECT_URL: http://localhost:3000/callback
+      IPV_BACKCHANNEL_TOKEN_PATH: token
+      IPV_ENDPOINT: http://localhost:3001/
+      IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:3002/
+      IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity
+      ORCHESTRATOR_PORT: 3000
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
     ports:
       - "3000:3000"
       - "5000:5000"
@@ -29,17 +39,14 @@ services:
       context: ../../ipv-core-front
       dockerfile: dev-deploy/Dockerfile
     environment:
-      - API_BASE_URL=http://host.docker.internal:3002
-      - SESSION_TABLE_NAME=core-front-sessions-${ENVIRONMENT}
-      - SESSION_SECRET=no-secret
-      - NODE_ENV=development
-      - EXTERNAL_WEBSITE_HOST=http://localhost:3001
-      - PORT=3001
-      - CDN_DOMAIN=
-      - AWS_REGION
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_SESSION_TOKEN
+      <<: *aws_creds
+      API_BASE_URL: http://host.docker.internal:3002
+      SESSION_TABLE_NAME: core-front-sessions-${ENVIRONMENT}
+      SESSION_SECRET: no-secret
+      NODE_ENV: development
+      EXTERNAL_WEBSITE_HOST: http://localhost:3001
+      PORT: 3001
+      CDN_DOMAIN:
     ports:
       - "3001:3001"
       - "5001:9229"
@@ -55,29 +62,26 @@ services:
       context: ..
       dockerfile:  local-running/Dockerfile
     environment:
-      - PORT=3002
-      - CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN=arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicatorCredential-production
-      - CI_STORAGE_GET_LAMBDA_ARN=arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
-      - CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN=arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
-      - CI_STORAGE_PUT_LAMBDA_ARN=arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
-      - CLIENT_AUTH_JWT_IDS_TABLE_NAME=client-auth-jwt-ids-${ENVIRONMENT}
-      - CLIENT_OAUTH_SESSIONS_TABLE_NAME=client-oauth-sessions-v2-${ENVIRONMENT}
-      - CONFIG_SERVICE_CACHE_DURATION_MINUTES=0
-      - CRI_OAUTH_SESSIONS_TABLE_NAME=cri-oauth-sessions-${ENVIRONMENT}
-      - CRI_RESPONSE_TABLE_NAME=cri-response-${ENVIRONMENT}
-      - F2F_STUB_QUEUE_NAME=stubQueue_F2FQueue_${ENVIRONMENT}
-      - IPV_SESSIONS_TABLE_NAME=sessions-${ENVIRONMENT}
-      - IS_LOCAL=false
-      - SIGNING_KEY_ID_PARAM=/${ENVIRONMENT}/core/self/signingKeyId
-      - SQS_AUDIT_EVENT_QUEUE_URL=https://sqs.eu-west-2.amazonaws.com/130355686670/audit-sqs-AuditEventQueue-JnUaGH1DLHLZ
-      - USER_ISSUED_CREDENTIALS_TABLE_NAME=user-issued-credentials-v2-${ENVIRONMENT}
-      - LAMBDA_TASK_ROOT=handler
-      - ENVIRONMENT
-      - AWS_REGION
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_SESSION_TOKEN
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
+      <<: *aws_creds
+      PORT: 3002
+      CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicatorCredential-production
+      CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
+      CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
+      CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
+      CLIENT_AUTH_JWT_IDS_TABLE_NAME: client-auth-jwt-ids-${ENVIRONMENT}
+      CLIENT_OAUTH_SESSIONS_TABLE_NAME: client-oauth-sessions-v2-${ENVIRONMENT}
+      CONFIG_SERVICE_CACHE_DURATION_MINUTES: 0
+      CRI_OAUTH_SESSIONS_TABLE_NAME: cri-oauth-sessions-${ENVIRONMENT}
+      CRI_RESPONSE_TABLE_NAME: cri-response-${ENVIRONMENT}
+      F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
+      IPV_SESSIONS_TABLE_NAME: sessions-${ENVIRONMENT}
+      IS_LOCAL: false
+      SIGNING_KEY_ID_PARAM: /${ENVIRONMENT}/core/self/signingKeyId
+      SQS_AUDIT_EVENT_QUEUE_URL: https://sqs.eu-west-2.amazonaws.com/130355686670/audit-sqs-AuditEventQueue-JnUaGH1DLHLZ
+      USER_ISSUED_CREDENTIALS_TABLE_NAME: user-issued-credentials-v2-${ENVIRONMENT}
+      LAMBDA_TASK_ROOT: handler
+      ENVIRONMENT:
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:
       - "3002:3002"
       - "5002:5002"
@@ -89,21 +93,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=DOC Checking App (Stub)
-      - CREDENTIAL_ISSUER_TYPE=DOC_CHECK_APP
-      - CLIENT_AUDIENCE=https://dcmaw-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3003
-      - MITIGATION_ENABLED=true
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://dcmaw-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5003
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: DOC Checking App (Stub)
+      CREDENTIAL_ISSUER_TYPE: DOC_CHECK_APP
+      CLIENT_AUDIENCE: https://dcmaw-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3003
+      MITIGATION_ENABLED: true
+      VC_ISSUER: https://dcmaw-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5003
     ports:
       - "3003:3003"
       - "5003:5003"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   address-stub:
     image: cri-stub:latest
@@ -112,21 +112,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Address (Stub)
-      - CREDENTIAL_ISSUER_TYPE=USER_ASSERTED
-      - CLIENT_AUDIENCE=https://address-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3004
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://address-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5004
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Address (Stub)
+      CREDENTIAL_ISSUER_TYPE: USER_ASSERTED
+      CLIENT_AUDIENCE: https://address-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3004
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://address-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5004
     ports:
       - "3004:3004"
       - "5004:5004"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   fraud-stub:
     image: cri-stub:latest
@@ -135,21 +131,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Fraud Check (Stub)
-      - CREDENTIAL_ISSUER_TYPE=FRAUD
-      - CLIENT_AUDIENCE=https://fraud-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3005
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://fraud-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Fraud Check (Stub)
+      CREDENTIAL_ISSUER_TYPE: FRAUD
+      CLIENT_AUDIENCE: https://fraud-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3005
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://fraud-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     ports:
       - "3005:3005"
       - "5005:5005"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   driving-license-stub:
     image: cri-stub:latest
@@ -158,21 +150,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Driving Licence (Stub)
-      - CREDENTIAL_ISSUER_TYPE=EVIDENCE_DRIVING_LICENCE
-      - CLIENT_AUDIENCE=https://driving-license-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3006
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://driving-license-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Driving Licence (Stub)
+      CREDENTIAL_ISSUER_TYPE: EVIDENCE_DRIVING_LICENCE
+      CLIENT_AUDIENCE: https://driving-license-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3006
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://driving-license-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
     ports:
       - "3006:3006"
       - "5006:5006"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   passport-stub:
     image: cri-stub:latest
@@ -181,21 +169,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=UK Passport (Stub)
-      - CREDENTIAL_ISSUER_TYPE=EVIDENCE
-      - CLIENT_AUDIENCE=https://passport-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3007
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://passport-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: UK Passport (Stub)
+      CREDENTIAL_ISSUER_TYPE: EVIDENCE
+      CLIENT_AUDIENCE: https://passport-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3007
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://passport-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
     ports:
       - "3007:3007"
       - "5007:5007"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   kbv-stub:
     image: cri-stub:latest
@@ -204,21 +188,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Knowledge Based Verification (Stub)
-      - CREDENTIAL_ISSUER_TYPE=VERIFICATION
-      - CLIENT_AUDIENCE=https://kbv-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3008
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://kbv-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Knowledge Based Verification (Stub)
+      CREDENTIAL_ISSUER_TYPE: VERIFICATION
+      CLIENT_AUDIENCE: https://kbv-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3008
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://kbv-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008
     ports:
       - "3008:3008"
       - "5008:5008"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   claimed-identity-stub:
     image: cri-stub:latest
@@ -227,21 +207,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Claimed Identity (Stub)
-      - CREDENTIAL_ISSUER_TYPE=USER_ASSERTED
-      - CLIENT_AUDIENCE=https://claimed-identity-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3009
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://claimed-identity-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5009
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Claimed Identity (Stub)
+      CREDENTIAL_ISSUER_TYPE: USER_ASSERTED
+      CLIENT_AUDIENCE: https://claimed-identity-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3009
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://claimed-identity-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5009
     ports:
       - "3009:3009"
       - "5009:5009"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   f2f-stub:
     image: cri-stub:latest
@@ -250,23 +226,19 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Face to Face Check (Stub)
-      - CREDENTIAL_ISSUER_TYPE=F2F
-      - CLIENT_AUDIENCE=https://f2f-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3010
-      - F2F_STUB_QUEUE_NAME=stubQueue_F2FQueue_${ENVIRONMENT}
-      - F2F_STUB_QUEUE_URL=https://queue-build.build.stubs.account.gov.uk/
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://f2f-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5010
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Face to Face Check (Stub)
+      CREDENTIAL_ISSUER_TYPE: F2F
+      CLIENT_AUDIENCE: https://f2f-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3010
+      F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
+      F2F_STUB_QUEUE_URL: https://queue-build.build.stubs.account.gov.uk/
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://f2f-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5010
     ports:
       - "3010:3010"
       - "5010:5010"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   nino-stub:
     image: cri-stub:latest
@@ -275,21 +247,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=National Insurance Number (Stub)
-      - CREDENTIAL_ISSUER_TYPE=NINO
-      - CLIENT_AUDIENCE=https://nino-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3011
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://nino-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5011
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: National Insurance Number (Stub)
+      CREDENTIAL_ISSUER_TYPE: NINO
+      CLIENT_AUDIENCE: https://nino-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3011
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://nino-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5011
     ports:
       - "3011:3011"
       - "5011:5011"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   hmrc-kbv-stub:
     image: cri-stub:latest
@@ -298,21 +266,17 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=HMRC Knowledge Based Verification (Stub)
-      - CREDENTIAL_ISSUER_TYPE=VERIFICATION
-      - CLIENT_AUDIENCE=https://hmrc-kbv-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3012
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://hmrc-kbv-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5012
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: HMRC Knowledge Based Verification (Stub)
+      CREDENTIAL_ISSUER_TYPE: VERIFICATION
+      CLIENT_AUDIENCE: https://hmrc-kbv-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3012
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://hmrc-kbv-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5012
     ports:
       - "3012:3012"
       - "5012:5012"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
 
   bav-stub:
     image: cri-stub:latest
@@ -321,18 +285,14 @@ services:
       context: ../../ipv-stubs/di-ipv-credential-issuer-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=Bank account verification (Stub)
-      - CREDENTIAL_ISSUER_TYPE=EVIDENCE
-      - CLIENT_AUDIENCE=https://bav-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3013
-      - MITIGATION_ENABLED=false
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://bav-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013
+      <<: *cri-config
+      CREDENTIAL_ISSUER_NAME: Bank account verification (Stub)
+      CREDENTIAL_ISSUER_TYPE: EVIDENCE
+      CLIENT_AUDIENCE: https://bav-cri.stubs.account.gov.uk
+      CREDENTIAL_ISSUER_PORT: 3013
+      MITIGATION_ENABLED: false
+      VC_ISSUER: https://bav-cri.stubs.account.gov.uk
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013
     ports:
       - "3013:3013"
       - "5013:5013"
-    volumes:
-      - "../../ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
