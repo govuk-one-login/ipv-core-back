@@ -278,7 +278,7 @@ class ContractTest {
                 .given("dummyAddressComponentId is the address CRI component ID")
                 .given(
                         "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Valid auth code")
+                .uponReceiving("Invalid auth code")
                 .path("/token")
                 .method("POST")
                 .body(
@@ -352,7 +352,7 @@ class ContractTest {
                 .given("buildingNumber is 8")
                 .given("addressLocality is BATH")
                 .given("validFrom is 2000-01-01")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for Experian VC")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -462,7 +462,7 @@ class ContractTest {
                 .given("postalCode is NW1 6XE")
                 .given("addressLocality is LONDON")
                 .given("validFrom is 1887-01-01")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -559,7 +559,7 @@ class ContractTest {
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is a valid access token")
-                .uponReceiving("Invalid POST request")
+                .uponReceiving("Invalid credential request")
                 .path("/credential")
                 .method("POST")
                 .headers(
