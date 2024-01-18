@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -72,7 +73,7 @@ class TicfCriServiceTest {
     private static final TicfCriDto ticfCriResponse =
             new TicfCriDto(
                     List.of("vtr-value"),
-                    "P2",
+                    Vot.P2.name(),
                     TRUSTMARK,
                     "a-user-id",
                     "a-govuk-journey-id",
@@ -91,7 +92,7 @@ class TicfCriServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setVot("P2");
+        ipvSessionItem.setVot(Vot.P2.name());
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -207,7 +208,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutCreds =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        "P2",
+                        Vot.P2.name(),
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",
@@ -235,7 +236,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutMangledCred =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        "P2",
+                        Vot.P2.name(),
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",

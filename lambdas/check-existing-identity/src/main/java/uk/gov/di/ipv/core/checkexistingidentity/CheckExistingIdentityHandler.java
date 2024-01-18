@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.checkexistingidentity.domain.VotProfilePair;
+import uk.gov.di.ipv.core.checkexistingidentity.exception.JwtClaimsSetParseException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -22,6 +24,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.enums.OperationalProfile;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -60,9 +64,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
-import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -92,7 +96,11 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final String TICF_CRI = "ticf";
-    public static final String VOT_P2 = "P2";
+    public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
+            List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
+    public static final List<String> OPERATIONAL_PROFILE_NAMES =
+            List.of(Vot.PCL250.name(), Vot.PCL200.name());
+    public static final String VOT_CLAIM = "vot";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -105,7 +113,10 @@ public class CheckExistingIdentityHandler
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings({
+        "unused",
+        "java:S107"
+    }) // Used by AWS, methods should not have too many parameters
     public CheckExistingIdentityHandler(
             ConfigService configService,
             UserIdentityService userIdentityService,
@@ -223,29 +234,29 @@ public class CheckExistingIdentityHandler
             if (configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse();
             }
-            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
 
-            Optional<Gpg45Profile> matchedProfile =
-                    !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
-                            ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                    gpg45Scores, CURRENT_ACCEPTED_GPG45_PROFILES)
-                            : Optional.empty();
+            // Check for attained vot from vtr
+            var attainedVotAndProfile =
+                    getAttainedVotAndProfile(
+                            clientOAuthSessionItem.getVtr(),
+                            credentials,
+                            vcStoreItems,
+                            auditEventUser);
 
-            // No profile match
-            if (matchedProfile.isEmpty()) {
-                return isF2FComplete
-                        ? buildF2FNoMatchResponse(auditEventUser)
-                        : buildNoMatchResponse(credentials, auditEventUser);
+            // vot achieved
+            if (attainedVotAndProfile.isPresent()) {
+                Vot attainedVot = attainedVotAndProfile.get().attainedVot();
+                ipvSessionItem.setVot(attainedVot.name());
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+
+                return buildReuseResponse(attainedVot, auditEventUser);
             }
 
-            // Successful match
-            sendProfileMatchedAuditEvent(
-                    matchedProfile.get(), gpg45Scores, credentials, auditEventUser);
+            // No profile match
+            return isF2FComplete
+                    ? buildF2FNoMatchResponse(auditEventUser)
+                    : buildNoMatchResponse(credentials, auditEventUser);
 
-            ipvSessionItem.setVot(VOT_P2);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            return buildProfileMatchedResponse(matchedProfile.get(), auditEventUser);
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse().getMessage(), e));
             return new JourneyErrorResponse(
@@ -253,7 +264,7 @@ public class CheckExistingIdentityHandler
                     .toObjectMap();
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
-        } catch (ParseException e) {
+        } catch (ParseException | JwtClaimsSetParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
         } catch (UnknownEvidenceTypeException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
@@ -333,8 +344,9 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildNoMatchResponse(
-            List<SignedJWT> credentials, AuditEventUser auditEventUser) throws SqsException {
-        if (!credentials.isEmpty()) {
+            List<SignedJWT> credentials, AuditEventUser auditEventUser)
+            throws SqsException, JwtClaimsSetParseException {
+        if (!removeOperationalProfileVcs(credentials).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
 
@@ -346,26 +358,21 @@ public class CheckExistingIdentityHandler
 
             return JOURNEY_RESET_IDENTITY;
         }
-        LOGGER.info(LogHelper.buildLogMessage("New user so returning next."));
+        LOGGER.info(LogHelper.buildLogMessage("New IPV journey required, returning journey next"));
         return JOURNEY_NEXT;
     }
 
-    private Map<String, Object> buildProfileMatchedResponse(
-            Gpg45Profile matchedProfile, AuditEventUser auditEventUser) throws SqsException {
-        var message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Matched profile and within CI threshold so returning reuse journey.")
-                        .with(LOG_PROFILE.getFieldName(), matchedProfile.getLabel());
-        LOGGER.info(message);
+    private Map<String, Object> buildReuseResponse(Vot vot, AuditEventUser auditEventUser)
+            throws SqsException {
+        if (vot.hasGpg45Profiles()) {
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
+        }
 
-        auditService.sendAuditEvent(
-                new AuditEvent(
-                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser));
-
+        LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         return JOURNEY_REUSE;
     }
 
@@ -409,5 +416,103 @@ public class CheckExistingIdentityHandler
             }
         }
         return txnIds;
+    }
+
+    @Tracing
+    private Optional<VotProfilePair> getAttainedVotAndProfile(
+            List<String> vtr,
+            List<SignedJWT> credentials,
+            List<VcStoreItem> vcStoreItems,
+            AuditEventUser auditEventUser)
+            throws UnknownEvidenceTypeException, ParseException, SqsException {
+
+        var requestedVotsByStrength =
+                SUPPORTED_VOTS_BY_STRENGTH.stream()
+                        .filter(vot -> vtr.contains(vot.name()))
+                        .toList();
+
+        for (var requestedVot : requestedVotsByStrength) {
+            var attainedVotAndProfile =
+                    requestedVot.hasGpg45Profiles()
+                            ? matchGpg45Profile(
+                                    credentials, vcStoreItems, requestedVot, auditEventUser)
+                            : matchOperationalProfile(credentials, requestedVot);
+
+            if (attainedVotAndProfile.isPresent()) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Attained vot with profile")
+                                .with(
+                                        LOG_VOT.getFieldName(),
+                                        attainedVotAndProfile.get().attainedVot())
+                                .with(
+                                        LOG_PROFILE.getFieldName(),
+                                        attainedVotAndProfile.get().profileName()));
+
+                return attainedVotAndProfile;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<VotProfilePair> matchGpg45Profile(
+            List<SignedJWT> credentials,
+            List<VcStoreItem> vcStoreItems,
+            Vot requestedVot,
+            AuditEventUser auditEventUser)
+            throws UnknownEvidenceTypeException, ParseException, SqsException {
+
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        Optional<Gpg45Profile> matchedGpg45Profile =
+                !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
+                        ? gpg45ProfileEvaluator.getFirstMatchingProfile(
+                                gpg45Scores, requestedVot.getValidGpg45Profiles())
+                        : Optional.empty();
+
+        // Successful match
+        if (matchedGpg45Profile.isPresent()) {
+            sendProfileMatchedAuditEvent(
+                    matchedGpg45Profile.get(), gpg45Scores, credentials, auditEventUser);
+
+            return Optional.of(new VotProfilePair(requestedVot, matchedGpg45Profile.get().label));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<VotProfilePair> matchOperationalProfile(
+            List<SignedJWT> credentials, Vot requestedVot) throws ParseException {
+        for (SignedJWT cred : credentials) {
+            String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
+            Optional<String> matchedOperationalProfile =
+                    requestedVot.getValidOperationalProfiles().stream()
+                            .map(OperationalProfile::name)
+                            .filter(profileName -> profileName.equals(credentialVot))
+                            .findFirst();
+
+            // Successful match
+            if (matchedOperationalProfile.isPresent()) {
+                return Optional.of(
+                        new VotProfilePair(requestedVot, matchedOperationalProfile.get()));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private List<SignedJWT> removeOperationalProfileVcs(List<SignedJWT> credentials)
+            throws JwtClaimsSetParseException {
+        return credentials.stream()
+                .filter(
+                        cred -> {
+                            try {
+                                String credVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
+                                return credVot == null
+                                        || !OPERATIONAL_PROFILE_NAMES.contains(credVot);
+                            } catch (ParseException e) {
+                                throw new JwtClaimsSetParseException(e);
+                            }
+                        })
+                .toList();
     }
 }

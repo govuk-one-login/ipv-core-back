@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 
@@ -47,7 +47,7 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores m1aScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2);
         assertEquals(
                 Optional.of(M1A),
-                evaluator.getFirstMatchingProfile(m1aScores, CURRENT_ACCEPTED_GPG45_PROFILES));
+                evaluator.getFirstMatchingProfile(m1aScores, Vot.P2.getValidGpg45Profiles()));
     }
 
     @Test

@@ -24,9 +24,9 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -134,7 +134,7 @@ public class UserIdentityService {
         UserIdentity.UserIdentityBuilder userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
-        if (vot.equals(VectorOfTrust.P2.toString())) {
+        if (Vot.P2.name().equals(vot)) {
             final List<VcStoreItem> successfulVCStoreItems =
                     getSuccessfulVCStoreItems(vcStoreItems);
             Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
@@ -482,9 +482,8 @@ public class UserIdentityService {
         return new IdentityClaim(names, birthDates);
     }
 
-    public VectorOfTrust getVot(SignedJWT credential)
-            throws IllegalArgumentException, ParseException {
-        return VectorOfTrust.valueOf(credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME));
+    public Vot getVot(SignedJWT credential) throws IllegalArgumentException, ParseException {
+        return Vot.valueOf(credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
