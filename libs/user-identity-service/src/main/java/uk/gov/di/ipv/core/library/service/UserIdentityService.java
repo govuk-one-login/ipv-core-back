@@ -78,6 +78,7 @@ public class UserIdentityService {
             List.of(ADDRESS_CRI, BAV_CRI, TICF_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String VOT_CLAIM_NAME = "vot";
     private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -479,6 +480,14 @@ public class UserIdentityService {
                                 .constructCollectionType(List.class, BirthDate.class));
 
         return new IdentityClaim(names, birthDates);
+    }
+
+    public VectorOfTrust getVot(SignedJWT credential)
+            throws JsonProcessingException, IllegalArgumentException {
+        var votJson =
+                objectMapper.readTree(credential.getPayload().toString()).path(VOT_CLAIM_NAME);
+
+        return VectorOfTrust.valueOf(votJson.asText());
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
