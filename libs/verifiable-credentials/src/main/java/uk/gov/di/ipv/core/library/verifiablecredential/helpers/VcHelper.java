@@ -75,12 +75,6 @@ public class VcHelper {
         return true;
     }
 
-    private static Set<String> getNonEvidenceCredentialIssuers() {
-        return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
-                .collect(Collectors.toSet());
-    }
-
     public static List<VcStoreItem> filterVCBasedOnProfileType(
             List<VcStoreItem> vcStoreItems, ProfileType profileType) {
         List<VcStoreItem> filteredVCs;
@@ -103,6 +97,12 @@ public class VcHelper {
                             .toList();
         }
         return filteredVCs;
+    }
+
+    private static Set<String> getNonEvidenceCredentialIssuers() {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
+                .collect(Collectors.toSet());
     }
 
     private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {

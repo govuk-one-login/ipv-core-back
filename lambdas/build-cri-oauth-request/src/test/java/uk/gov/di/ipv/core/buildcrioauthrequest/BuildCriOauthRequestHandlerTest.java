@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -499,6 +500,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        mockVcHelper.verify(
+                () -> VcHelper.filterVCBasedOnProfileType(any(), any(ProfileType.class)), times(1));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -571,6 +574,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        mockVcHelper.verify(
+                () -> VcHelper.filterVCBasedOnProfileType(any(), any(ProfileType.class)), times(1));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -643,6 +648,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        mockVcHelper.verify(
+                () -> VcHelper.filterVCBasedOnProfileType(any(), any(ProfileType.class)), times(1));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -1015,6 +1022,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        mockVcHelper.verify(
+                () -> VcHelper.filterVCBasedOnProfileType(any(), any(ProfileType.class)), times(1));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
@@ -1199,6 +1208,8 @@ class BuildCriOauthRequestHandlerTest {
                 TEST_NI_NUMBER,
                 sharedClaims.get("socialSecurityRecord").get(0).get("personalNumber").asText());
         verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        mockVcHelper.verify(
+                () -> VcHelper.filterVCBasedOnProfileType(any(), any(ProfileType.class)), times(1));
     }
 
     @Test
