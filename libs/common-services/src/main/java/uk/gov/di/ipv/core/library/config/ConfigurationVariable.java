@@ -26,7 +26,9 @@ public enum ConfigurationVariable {
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     GOV_UK_NOTIFY_API_KEY("self/gov-uk-notify/api-key"),
     GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation");
+            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
+    GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
+            "self/govUkNotify/emailTemplates/FaceToFaceIdentityResetConfirmation");
 
     private final String path;
 

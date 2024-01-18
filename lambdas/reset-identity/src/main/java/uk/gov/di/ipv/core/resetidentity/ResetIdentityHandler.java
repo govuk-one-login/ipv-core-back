@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -112,7 +113,13 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             // Make sure we do this before deleting the credentials!
             String userName = null;
-            if (isUserInitiated) {
+            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
+
+            if (isUserInitiated && f2fRequest != null) {
+                userName = "testf2f";
+            }
+
+            if (isUserInitiated && f2fRequest == null) {
                 List<VcStoreItem> credentials =
                         verifiableCredentialService.getVcStoreItems(
                                 clientOAuthSessionItem.getUserId());
@@ -122,13 +129,23 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
-            if (isUserInitiated) {
+            if (isUserInitiated && f2fRequest == null) {
                 sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
 
                 // Create a new email service for each request so that we don't risk using stale
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
                 emailService.sendUserTriggeredIdentityResetConfirmation(
+                        ipvSessionItem.getEmailAddress(), userName);
+            }
+
+            if (isUserInitiated && f2fRequest != null) {
+                sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
+
+                // Create a new email service for each request so that we don't risk using stale
+                // configuration.
+                final EmailService emailService = emailServiceFactory.getEmailService();
+                emailService.sendUserTriggeredF2FIdentityResetConfirmation(
                         ipvSessionItem.getEmailAddress(), userName);
             }
 
