@@ -455,7 +455,7 @@ class ContractTest {
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
@@ -518,7 +518,7 @@ class ContractTest {
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
@@ -568,7 +568,7 @@ class ContractTest {
                 .given("VC driving licence personalNumber is PARKE610112PBFGH")
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for DVLA VC")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -667,7 +667,7 @@ class ContractTest {
                 .given("VC driving licence personalNumber is PARKE610112PBFGH")
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for DVLA VC with CI")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -771,7 +771,7 @@ class ContractTest {
                 .given("VC driving licence personalNumber is 55667788")
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for DVA VC")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -870,7 +870,7 @@ class ContractTest {
                 .given("VC driving licence personalNumber is 55667780")
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
-                .uponReceiving("Valid POST request")
+                .uponReceiving("Valid credential request for DVA VC with CI")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -963,7 +963,7 @@ class ContractTest {
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDrivingLicenceComponentId is a valid issuer")
-                .uponReceiving("Invalid POST request due to invalid access token")
+                .uponReceiving("Invalid credential request due to invalid access token")
                 .path("/credential")
                 .method("POST")
                 .headers(
@@ -1045,7 +1045,7 @@ class ContractTest {
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("D02", ciConfig1);
 
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
