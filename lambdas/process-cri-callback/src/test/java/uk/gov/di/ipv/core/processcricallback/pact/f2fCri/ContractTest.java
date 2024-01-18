@@ -110,48 +110,6 @@ class ContractTest {
                                 .build())
                 .toPact();
     }
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidGrantType_F2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("grant_type is invalid (auth_code)")
-                .given("dummyF2fComponentId is the F2F CRI component ID")
-                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Request body with invalid grant_type (auth_code)")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=auth_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(401)
-                .toPact();
-    }
-    @Pact(provider = "F2FCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact missingRedirectUri_F2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("redirect_uri is missing")
-                .given("dummyF2fComponentId is the F2F CRI component ID")
-                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Request body with missing redirect_uri parameter")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=auth_code&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(401)
-                .toPact();
-    }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAuthCode_F2FRequestReturnsBadRequest(

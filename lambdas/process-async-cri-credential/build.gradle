@@ -34,7 +34,8 @@ dependencies {
 
 	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
-			"au.com.dius.pact.consumer:junit5:4.6.3",
+			"org.mockito:mockito-junit-jupiter:5.8.0",
+			"au.com.dius.pact.consumer:junit5:4.6.5",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

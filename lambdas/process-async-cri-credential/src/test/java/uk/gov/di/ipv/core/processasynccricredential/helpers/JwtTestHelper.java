@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processasynccricredential.pact;
+package uk.gov.di.ipv.core.processasynccricredential.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +34,7 @@ public class JwtTestHelper {
     }
 
     private String minifyJson(String prettyJson) {
-        JsonNode jsonNode = null;
+        JsonNode jsonNode;
         try {
             jsonNode = objectMapper.readValue(prettyJson, JsonNode.class);
         } catch (JsonProcessingException e) {

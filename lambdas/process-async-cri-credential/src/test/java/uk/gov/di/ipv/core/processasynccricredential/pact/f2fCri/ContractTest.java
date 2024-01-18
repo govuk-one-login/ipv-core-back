@@ -16,11 +16,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -28,7 +30,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
-import uk.gov.di.ipv.core.processasynccricredential.pact.JwtTestHelper;
+import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtTestHelper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,19 +40,23 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 
-// @Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "PassportCriProvider")
+@PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 public class ContractTest {
     private final JwtParser jwtParser = new JwtParser();
     private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String TEST_ISSUER = "dummyF2fComponentId";
     private static final String TEST_USER = "test-subject";
     private static final String TEST_OAUTH_STATE = "f5f0d4d1-b937-4abe-b379-8269f600ad44";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
@@ -140,6 +146,137 @@ public class ContractTest {
                        "jti": "test-jti"
                      }
                     """;
+
+    private static final String FAILED_F2F_VC_WITH_PASSPORT_BODY =
+            """
+              {
+               "sub": "test-subject",
+               "aud": "dummyF2fComponentId",
+               "nbf": 4070908800,
+               "iss": "dummyF2fComponentId",
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Kenneth"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Decerqueira"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1965-07-08"
+                     }
+                   ],
+                   "socialSecurityRecord": [],
+                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                   "passport": [
+                     {
+                       "expiryDate": "2030-01-01",
+                       "documentNumber": "321654987"
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "failedCheckDetails": [
+                       {
+                         "identityCheckPolicy": "published",
+                         "checkMethod": "vcrypt"
+                       },
+                       {
+                         "biometricVerificationProcessLevel": 3,
+                         "checkMethod": "bvr"
+                       }
+                     ],
+                     "validityScore": 0,
+                     "verificationScore": 3,
+                     "strengthScore": 4,
+                     "type": "IdentityCheck",
+                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+                   }
+                 ]
+               },
+               "jti": "test-jti"
+             }
+            """;
+
+    private static final String FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY =
+            """
+              {
+               "sub": "test-subject",
+               "aud": "dummyF2fComponentId",
+               "nbf": 4070908800,
+               "iss": "dummyF2fComponentId",
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Kenneth"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Decerqueira"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1965-07-08"
+                     }
+                   ],
+                   "socialSecurityRecord": [],
+                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                   "passport": [
+                     {
+                       "expiryDate": "2030-01-01",
+                       "documentNumber": "321654987"
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "failedCheckDetails": [
+                       {
+                         "identityCheckPolicy": "published",
+                         "checkMethod": "vcrypt"
+                       },
+                       {
+                         "biometricVerificationProcessLevel": 3,
+                         "checkMethod": "bvr"
+                       }
+                     ],
+                     "validityScore": 0,
+                     "verificationScore": 3,
+                     "strengthScore": 4,
+                     "ci": ["D14"],
+                     "type": "IdentityCheck",
+                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+                   }
+                 ]
+               },
+               "jti": "test-jti"
+             }
+            """;
     private static final String VALID_F2F_VC_WITH_DVLA_BODY =
             """
                     {
@@ -350,6 +487,10 @@ public class ContractTest {
     // change each time we run the tests.
     private static final String VALID_F2F_VC_PASSPORT_SIGNATURE =
             "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw";
+    private static final String FAILED_F2F_VC_PASSPORT_SIGNATURE =
+            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw";
+    private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
+            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
     private static final String VALID_F2F_VC_DL_SIGNATURE =
             "X5Zh-XeLVwu6RTeRWuqWW-_wNCEct2UMCrcyDbM5XBgYO02gGZGGW0zg03GTLtJCDNfK7EfduLgQo5MyjHX_TA";
     private static final String VALID_F2F_VC_EEA_SIGNATURE =
@@ -376,11 +517,12 @@ public class ContractTest {
     @Mock private ConfigService mockConfigService;
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact validF2fMessageReturnsIssuedPassportCredential(MessagePactBuilder builder)
+    public MessagePact f2fMessageContainsValidPassportCredential(MessagePactBuilder builder)
             throws JsonProcessingException {
         return builder.given("test-subject is a valid subject")
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
+                .given("https://vocab.account.gov.uk/v1/credentialJWT contains a VC")
                 .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
                 .given("VC givenName is Kenneth")
                 .given("VC familyName is Decerqueira")
@@ -397,9 +539,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -412,17 +551,15 @@ public class ContractTest {
                                             body.stringType(
                                                     "state",
                                                     "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
                                             body.minArrayLike(
-                                                    "https://vocab.account.gov.uk.v1/credentialJWT",
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
                                                             jwtHelper
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-                                            actualPactDsl.close();
-
-                                            body.nullValue("error_description");
                                         })
                                 .build())
                 .toPact();
@@ -430,7 +567,7 @@ public class ContractTest {
 
     @Test
     @PactTestFor(
-            pactMethod = "validF2fMessageReturnsIssuedPassportCredential",
+            pactMethod = "f2fMessageContainsValidPassportCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedPassportCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
@@ -498,8 +635,287 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact validF2fMessageReturnsIssuedDrivingLicenseCredential(
-            MessagePactBuilder builder) throws Exception {
+    public MessagePact f2fMessageContainsFailedPassportCredential(MessagePactBuilder builder)
+            throws JsonProcessingException {
+        return builder.given("test-subject is a valid subject")
+                .given("dummyF2fComponentId is a valid issuer")
+                .given("dummyF2fComponentId is a valid audience")
+                .given("https://vocab.account.gov.uk/v1/credentialJWT contains a VC")
+                .given("VC type is [\"VerifiableCredential\", \"IdentityCheckCredential\"]")
+                .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
+                .given("VC givenName is Kenneth")
+                .given("VC familyName is Decerqueira")
+                .given("VC birthDate is 1965-07-08")
+                .given("VC passport documentNumber is 321654987")
+                .given("VC passport expiryDate is 2030-01-01")
+                .given("VC evidence contains failedCheckDetails")
+                .given("VC evidence validityScore is 0")
+                .given("VC evidence verificationScore is 3")
+                .given("VC evidence strengthScore is 4")
+                .given("VC evidence type is IdentityCheck")
+                .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
+                .given("VC jti is test-jti")
+                .expectsToReceive("A valid F2F CRI message from SQS")
+                .withContent(
+                        newJsonBody(
+                                        (body) -> {
+                                            final PactDslJsonBody actualPactDsl =
+                                                    new PactDslJsonBody();
+
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_F2F_VC_WITH_PASSPORT_BODY,
+                                                            FAILED_F2F_VC_PASSPORT_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+
+                                            actualPactDsl.close();
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(
+            pactMethod = "f2fMessageContainsFailedPassportCredential",
+            providerType = ProviderType.ASYNCH)
+    void testF2fMessageReturnsFailedPassportCredential(
+            List<Message> messageList, MockServer mockServer) throws URISyntaxException {
+        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
+        var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
+
+        for (Message message : messageList) {
+            try {
+                SuccessAsyncCriResponse asyncCriResponse =
+                        ((SuccessAsyncCriResponse)
+                                getAsyncResponseMessage(message.contentsAsString()));
+
+                List<SignedJWT> parsedJwts =
+                        jwtParser.parseVerifiableCredentialJWTs(
+                                asyncCriResponse.getVerifiableCredentialJWTs());
+
+                parsedJwts.forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get(VC)
+                                                .get(CREDENTIAL_SUBJECT);
+
+                                JsonNode evidence =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get(VC)
+                                                .get("evidence")
+                                                .get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
+                                JsonNode passportNode = credentialSubject.get(PASSPORT).get(0);
+
+                                assertNotNull(evidence.get("failedCheckDetails").get(0));
+                                assertEquals("0", evidence.get("validityScore").asText());
+                                assertEquals("3", evidence.get("verificationScore").asText());
+                                assertEquals("4", evidence.get("strengthScore").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
+                                assertEquals(
+                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+
+                                assertEquals("Kenneth", nameParts.get(0).get(VALUE).asText());
+                                assertEquals("Decerqueira", nameParts.get(1).get(VALUE).asText());
+
+                                assertEquals("2030-01-01", passportNode.get(EXPIRY_DATE).asText());
+                                assertEquals(
+                                        "321654987", passportNode.get(DOCUMENT_NUMBER).asText());
+
+                                assertEquals("1965-07-08", birthDateNode.get(VALUE).asText());
+
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (JsonProcessingException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public MessagePact f2fMessageContainsFailedWithCiPassportCredential(MessagePactBuilder builder)
+            throws JsonProcessingException {
+        return builder.given("test-subject is a valid subject")
+                .given("dummyF2fComponentId is a valid issuer")
+                .given("dummyF2fComponentId is a valid audience")
+                .given("https://vocab.account.gov.uk/v1/credentialJWT contains a VC")
+                .given("VC type is [\"VerifiableCredential\", \"IdentityCheckCredential\"]")
+                .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
+                .given("VC givenName is Kenneth")
+                .given("VC familyName is Decerqueira")
+                .given("VC birthDate is 1965-07-08")
+                .given("VC passport documentNumber is 321654987")
+                .given("VC passport expiryDate is 2030-01-01")
+                .given("VC evidence contains failedCheckDetails")
+                .given("VC evidence ci is D14")
+                .given("VC evidence validityScore is 2")
+                .given("VC evidence verificationScore is 3")
+                .given("VC evidence strengthScore is 4")
+                .given("VC evidence type is IdentityCheck")
+                .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
+                .given("VC jti is test-jti")
+                .expectsToReceive("A valid F2F CRI message from SQS")
+                .withContent(
+                        newJsonBody(
+                                        (body) -> {
+                                            final PactDslJsonBody actualPactDsl =
+                                                    new PactDslJsonBody();
+
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY,
+                                                            FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+
+                                            actualPactDsl.close();
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(
+            pactMethod = "f2fMessageContainsFailedWithCiPassportCredential",
+            providerType = ProviderType.ASYNCH)
+    void testF2fMessageReturnsFailedPassportCredentialWithCi(
+            List<Message> messageList, MockServer mockServer) throws URISyntaxException {
+        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("D14", new ContraIndicatorConfig("D14", 4, -3, "1")));
+
+        var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
+
+        for (Message message : messageList) {
+            try {
+                SuccessAsyncCriResponse asyncCriResponse =
+                        ((SuccessAsyncCriResponse)
+                                getAsyncResponseMessage(message.contentsAsString()));
+
+                List<SignedJWT> parsedJwts =
+                        jwtParser.parseVerifiableCredentialJWTs(
+                                asyncCriResponse.getVerifiableCredentialJWTs());
+
+                parsedJwts.forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get(VC)
+                                                .get(CREDENTIAL_SUBJECT);
+
+                                JsonNode evidence =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get(VC)
+                                                .get("evidence")
+                                                .get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
+                                JsonNode passportNode = credentialSubject.get(PASSPORT).get(0);
+
+                                assertNotNull(evidence.get("failedCheckDetails").get(0));
+                                assertEquals("D14", evidence.get("ci").get(0).asText());
+                                assertEquals("0", evidence.get("validityScore").asText());
+                                assertEquals("3", evidence.get("verificationScore").asText());
+                                assertEquals("4", evidence.get("strengthScore").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
+                                assertEquals(
+                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+
+                                assertEquals("Kenneth", nameParts.get(0).get(VALUE).asText());
+                                assertEquals("Decerqueira", nameParts.get(1).get(VALUE).asText());
+
+                                assertEquals("2030-01-01", passportNode.get(EXPIRY_DATE).asText());
+                                assertEquals(
+                                        "321654987", passportNode.get(DOCUMENT_NUMBER).asText());
+
+                                assertEquals("1965-07-08", birthDateNode.get(VALUE).asText());
+
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (JsonProcessingException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public MessagePact f2fMessageContainsValidDrivingLicenseCredential(MessagePactBuilder builder)
+            throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -522,14 +938,42 @@ public class ContractTest {
                 .given("VC jti is test-jti")
                 .expectsToReceive("A valid F2F CRI with Driving License")
                 .withContent(
-                        createSuccessTestEvent(
-                                VALID_F2F_VC_WITH_DVLA_BODY, VALID_F2F_VC_DL_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            final PactDslJsonBody actualPactDsl =
+                                                    new PactDslJsonBody();
+
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            VALID_F2F_VC_WITH_DVLA_BODY,
+                                                            VALID_F2F_VC_DL_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+
+                                            actualPactDsl.close();
+                                        })
+                                .build())
                 .toPact();
     }
 
     @Test
     @PactTestFor(
-            pactMethod = "validF2fMessageReturnsIssuedDrivingLicenseCredential",
+            pactMethod = "f2fMessageContainsValidDrivingLicenseCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedDrivingLicenseCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
@@ -605,7 +1049,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact validF2fRequestReturnsIssuedEeaCardCredential(MessagePactBuilder builder)
+    public MessagePact f2fMessageContainsValidEeaCardCredential(MessagePactBuilder builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -626,16 +1070,44 @@ public class ContractTest {
                 .given("VC evidence type is IdentityCheck")
                 .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
                 .given("VC jti is test-jti")
-                .expectsToReceive("A valid F2F CRI with Driving License")
+                .expectsToReceive("A valid F2F CRI with EEA Card")
                 .withContent(
-                        createSuccessTestEvent(
-                                VALID_F2F_VC_WITH_EEA_CARD_BODY, VALID_F2F_VC_EEA_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            final PactDslJsonBody actualPactDsl =
+                                                    new PactDslJsonBody();
+
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            VALID_F2F_VC_WITH_EEA_CARD_BODY,
+                                                            VALID_F2F_VC_EEA_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+
+                                            actualPactDsl.close();
+                                        })
+                                .build())
                 .toPact();
     }
 
     @Test
     @PactTestFor(
-            pactMethod = "validF2fRequestReturnsIssuedEeaCardCredential",
+            pactMethod = "f2fMessageContainsValidEeaCardCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedEeaCardCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
@@ -703,7 +1175,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact validF2fRequestReturnsIssuedBrpCredential(MessagePactBuilder builder)
+    public MessagePact f2fMessageContainsValidBrpCredential(MessagePactBuilder builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -726,14 +1198,42 @@ public class ContractTest {
                 .given("VC jti is test-jti")
                 .expectsToReceive("A valid F2F CRI with BRP Document")
                 .withContent(
-                        createSuccessTestEvent(
-                                VALID_F2F_VC_WITH_BRP_BODY, VALID_F2F_VC_BRP_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            final PactDslJsonBody actualPactDsl =
+                                                    new PactDslJsonBody();
+
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            VALID_F2F_VC_WITH_BRP_BODY,
+                                                            VALID_F2F_VC_BRP_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+
+                                            actualPactDsl.close();
+                                        })
+                                .build())
                 .toPact();
     }
 
     @Test
     @PactTestFor(
-            pactMethod = "validF2fRequestReturnsIssuedBrpCredential",
+            pactMethod = "f2fMessageContainsValidBrpCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedBrpCredential(List<Message> messageList, MockServer mockServer)
             throws URISyntaxException, ParseException {
@@ -808,20 +1308,22 @@ public class ContractTest {
     }
 
     @NotNull
-    private static CredentialIssuerConfig getCredentialIssuerConfig(MockServer mockServer)
+    private static OauthCriConfig getCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
-        return new CredentialIssuerConfig(
-                new URI("http://localhost:" + mockServer.getPort() + "/token"),
-                new URI("http://localhost:" + mockServer.getPort() + "/credential"),
-                new URI("http://localhost:" + mockServer.getPort() + "/authorize"),
-                IPV_CORE_CLIENT_ID,
-                CRI_SIGNING_PRIVATE_KEY_JWK,
-                CRI_RSA_ENCRYPTION_PUBLIC_JWK,
-                "dummyF2fComponentId",
-                URI.create(
-                        "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"),
-                true,
-                false);
+        return OauthCriConfig.builder()
+                .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
+                .clientId(IPV_CORE_CLIENT_ID)
+                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
+                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .componentId(TEST_ISSUER)
+                .clientCallbackUrl(
+                        URI.create(
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"))
+                .requiresApiKey(true)
+                .requiresAdditionalEvidence(false)
+                .build();
     }
 
     private String createSuccessTestEvent(String jwtBody, String jwtSignature)
