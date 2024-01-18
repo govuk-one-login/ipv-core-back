@@ -455,7 +455,7 @@ class ContractTest {
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
@@ -518,7 +518,7 @@ class ContractTest {
 
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
@@ -1045,7 +1045,7 @@ class ContractTest {
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("D02", ciConfig1);
 
-        when(mockConfigService.getCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
