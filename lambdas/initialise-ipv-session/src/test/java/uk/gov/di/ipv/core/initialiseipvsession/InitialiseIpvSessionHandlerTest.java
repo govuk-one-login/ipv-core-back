@@ -528,8 +528,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldHandleParseExceptionFromCheckingInheritedIdentityVotStrength()
-            throws Exception {
+    void shouldHandleParseExceptionFromCheckingInheritedIdentityVotStrength() throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
