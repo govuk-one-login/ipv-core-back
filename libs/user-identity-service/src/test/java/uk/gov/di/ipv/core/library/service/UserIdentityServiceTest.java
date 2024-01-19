@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1565,6 +1566,16 @@ class UserIdentityServiceTest {
                 .thenReturn(claimedIdentityConfig);
 
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
+    }
+
+    @Test
+    void findCriIdentityClaimReturnsValidIdentityClaimWithFullName()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now());
+        Optional<IdentityClaim> result = userIdentityService.findCriIdentityClaim(vcStoreItem);
+        assertTrue(result.isPresent());
+        assertEquals("Chris", result.get().getFullName());
     }
 
     private VcStoreItem createVcStoreItem(

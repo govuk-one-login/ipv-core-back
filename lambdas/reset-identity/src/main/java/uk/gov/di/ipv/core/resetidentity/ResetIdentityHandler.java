@@ -208,12 +208,11 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     }
 
     // Try to get the user's name from their fraud VC. It's not the end of the world if this fails
-    // so
-    // just return null in that case.
+    // so just return null in that case.
     private String getUserName(VcStoreItem credential) {
         try {
             final Optional<IdentityClaim> identityClaim =
-                    userIdentityService.findFraudIdentityClaim(credential);
+                    userIdentityService.findCriIdentityClaim(credential);
 
             if (identityClaim.isEmpty()) {
                 LOGGER.warn(LogHelper.buildLogMessage("Failed to find fraud CRI identity claim"));

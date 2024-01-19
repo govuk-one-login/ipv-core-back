@@ -160,7 +160,7 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
-    public Optional<IdentityClaim> findFraudIdentityClaim(VcStoreItem vcStoreItem)
+    public Optional<IdentityClaim> findCriIdentityClaim(VcStoreItem vcStoreItem)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         IdentityClaim identityClaim = getIdentityClaim(vcStoreItem.getCredential());
         if (identityClaim.getName().isEmpty() || identityClaim.getBirthDate().isEmpty()) {

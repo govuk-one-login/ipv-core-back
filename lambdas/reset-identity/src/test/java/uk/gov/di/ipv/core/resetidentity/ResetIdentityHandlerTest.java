@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -141,6 +142,40 @@ public class ResetIdentityHandlerTest {
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
                 .sendUserTriggeredIdentityResetConfirmation(eq(TEST_EMAIL_ADDRESS), any());
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequest_whenUserInitiatedF2F_shouldSendEmailAndRaiseAuditLog() throws SqsException {
+        // Arrange
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
+                .thenReturn(new CriResponseItem());
+
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_CLIENT_SOURCE_IP)
+                        .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .build();
+        when(emailServiceFactory.getEmailService()).thenReturn(emailService);
+
+        // Act
+        JourneyResponse journeyResponse =
+                objectMapper.convertValue(
+                        resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
+
+        // Assert
+        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+        verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
+        verify(emailService, times(1))
+                .sendUserTriggeredF2FIdentityResetConfirmation(eq(TEST_EMAIL_ADDRESS), any());
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }
