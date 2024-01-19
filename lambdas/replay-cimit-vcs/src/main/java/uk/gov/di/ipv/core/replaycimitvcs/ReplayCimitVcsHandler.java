@@ -65,7 +65,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             LOGGER.info("Retrieving {} VCs", requestItems.size());
             List<List<ReplayItem>> batchedRequest = ListHelper.getBatches(requestItems, 100);
             for (int i = 0; i < batchedRequest.size(); i++) {
-                LOGGER.info("Processing batch {} of {}", i, requestItems.size());
+                LOGGER.info("Processing batch {} of {}", i, batchedRequest.size());
                 List<ReplayItem> batch = batchedRequest.get(i);
                 handleBatch(batch);
             }
@@ -92,9 +92,13 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             VcStoreItem vcStoreItem =
                     this.verifiableCredentialService.getVcStoreItem(
                             item.getUserId().get("S"), item.getCredentialIssuer().get("S"));
-            SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
-            ciMitService.submitVC(vc, null, null);
-            submittedVcs.add(vc.serialize());
+            if (vcStoreItem != null) {
+                SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
+                ciMitService.submitVC(vc, null, null);
+                submittedVcs.add(vc.serialize());
+            } else {
+                LOGGER.warn("VC not found");
+            }
         }
         ciMitService.submitMitigatingVcList(submittedVcs, null, null);
     }
