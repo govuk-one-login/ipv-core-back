@@ -71,11 +71,11 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldNotAttemptSubmitOnNullCredential() throws CiPutException {
+    void shouldNotAttemptSubmitOnNullVc() throws CiPutException {
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                .thenReturn(createNullCredentialVcStoreItem());
+                .thenReturn(null);
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
@@ -143,15 +143,6 @@ class ReplayCimitVcsHandlerTest {
         VcStoreItem vcStoreItem = new VcStoreItem();
         vcStoreItem.setUserId(TEST_USER_ID);
         vcStoreItem.setCredential("invalid-credential");
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
-    }
-
-    private VcStoreItem createNullCredentialVcStoreItem() {
-        Instant dateCreated = Instant.now();
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(TEST_USER_ID);
         vcStoreItem.setDateCreated(dateCreated);
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;

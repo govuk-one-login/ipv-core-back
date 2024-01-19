@@ -92,12 +92,12 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
             VcStoreItem vcStoreItem =
                     this.verifiableCredentialService.getVcStoreItem(
                             item.getUserId().get("S"), item.getCredentialIssuer().get("S"));
-            if (vcStoreItem.getCredential() != null) {
+            if (vcStoreItem != null) {
                 SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
                 ciMitService.submitVC(vc, null, null);
                 submittedVcs.add(vc.serialize());
             } else {
-                LOGGER.warn("Null credential in VC");
+                LOGGER.warn("VC not found");
             }
         }
         ciMitService.submitMitigatingVcList(submittedVcs, null, null);
