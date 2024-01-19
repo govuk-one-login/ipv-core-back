@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.library.domain;
 
-// In order of strength
 public enum VectorOfTrust {
     P0,
+    P1,
+    P2,
     PCL200,
-    PCL250,
-    P2
+    PCL250
 }

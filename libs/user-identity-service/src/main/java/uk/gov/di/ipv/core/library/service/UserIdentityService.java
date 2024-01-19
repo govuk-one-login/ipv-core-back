@@ -483,11 +483,8 @@ public class UserIdentityService {
     }
 
     public VectorOfTrust getVot(SignedJWT credential)
-            throws JsonProcessingException, IllegalArgumentException {
-        var votJson =
-                objectMapper.readTree(credential.getPayload().toString()).path(VOT_CLAIM_NAME);
-
-        return VectorOfTrust.valueOf(votJson.asText());
+            throws IllegalArgumentException, ParseException {
+        return VectorOfTrust.valueOf(credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)

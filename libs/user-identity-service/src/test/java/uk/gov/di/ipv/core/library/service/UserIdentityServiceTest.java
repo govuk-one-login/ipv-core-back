@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
@@ -41,6 +40,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -789,7 +789,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldGetCorrectVot() throws JsonProcessingException {
+    void shouldGetCorrectVot() throws ParseException {
         // Arrange
         JWTClaimsSet claims =
                 new JWTClaimsSet.Builder().claim("vot", VectorOfTrust.PCL200.toString()).build();

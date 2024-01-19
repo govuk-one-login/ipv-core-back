@@ -528,7 +528,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldHandleJsonProcessingExceptionFromCheckingInheritedIdentityVotStrength()
+    void shouldHandleParseExceptionFromCheckingInheritedIdentityVotStrength()
             throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
@@ -560,7 +560,7 @@ class InitialiseIpvSessionHandlerTest {
                                 existingInheritedIdentityJwt.serialize(),
                                 Instant.now(),
                                 Instant.now()));
-        doThrow(new JsonProcessingException("") {}).when(mockUserIdentityService).getVot(any());
+        doThrow(new ParseException("", 0) {}).when(mockUserIdentityService).getVot(any());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =

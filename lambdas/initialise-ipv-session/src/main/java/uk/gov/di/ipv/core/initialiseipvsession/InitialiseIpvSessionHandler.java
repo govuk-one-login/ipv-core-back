@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdent
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -72,6 +73,8 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
+    private static final List<VectorOfTrust> HMRC_PROFILES_BY_STRENGTH =
+            List.of(VectorOfTrust.PCL250, VectorOfTrust.PCL200);
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -379,11 +382,24 @@ public class InitialiseIpvSessionHandler
             var incomingInheritedIdentityVot =
                     userIdentityService.getVot(incomingInheritedIdentity);
 
-            return existingInheritedIdentityVot.compareTo(incomingInheritedIdentityVot) > 0;
-        } catch (JsonProcessingException | ParseException | IllegalArgumentException e) {
+            var indexOfExistingVot =
+                    HMRC_PROFILES_BY_STRENGTH.indexOf(existingInheritedIdentityVot);
+            var indexOfIncomingVot =
+                    HMRC_PROFILES_BY_STRENGTH.indexOf(incomingInheritedIdentityVot);
+
+            if (indexOfExistingVot == -1 || indexOfIncomingVot == -1) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "At least one of the existing (%s) or incoming (%s) VoTs from hmrc aren't expected",
+                                existingInheritedIdentityVot, incomingInheritedIdentityVot));
+            }
+
+            return indexOfExistingVot - indexOfIncomingVot < 0;
+        } catch (ParseException | IllegalArgumentException e) {
             throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse credentials: "
-                            + e.getMessage());
+                    String.format(
+                            "Encountered a parsing error while attempting to parse or compare credentials: %s",
+                            e.getMessage()));
         }
     }
 
