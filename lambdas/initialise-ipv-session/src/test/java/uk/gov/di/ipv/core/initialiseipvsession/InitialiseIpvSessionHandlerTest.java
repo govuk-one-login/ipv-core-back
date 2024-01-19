@@ -648,6 +648,102 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
+    void shouldRecoverIfInheritedIdentityJwtHasMultipleValues() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUES,
+                                                                List.of(
+                                                                        serialisedInheritedIdentityJWT,
+                                                                        serialisedInheritedIdentityJWT)))))
+                                .build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
+                .thenReturn(true); // Mock enabled inherited identity feature flag
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+    }
+
+    @Test
+    void shouldRecoverIfInheritedIdentityJwtHasNullValue() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        claimsBuilder
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of())))
+                                .build());
+        when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
+                .thenReturn(true); // Mock enabled inherited identity feature flag
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+    }
+
+    @Test
     void shouldRecoverIfInheritedIdentityJwtCanNotBeParsed() throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
