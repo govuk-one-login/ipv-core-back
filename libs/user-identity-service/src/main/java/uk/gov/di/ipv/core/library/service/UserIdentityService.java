@@ -160,6 +160,18 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
+    public Optional<IdentityClaim> findFraudIdentityClaim(VcStoreItem vcStoreItem)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        IdentityClaim identityClaim = getIdentityClaim(vcStoreItem.getCredential());
+        if (identityClaim.getName().isEmpty() || identityClaim.getBirthDate().isEmpty()) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage("Failed to find any identity claims in Fraud VC"));
+            return Optional.empty();
+        }
+
+        return Optional.of(identityClaim);
+    }
+
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();

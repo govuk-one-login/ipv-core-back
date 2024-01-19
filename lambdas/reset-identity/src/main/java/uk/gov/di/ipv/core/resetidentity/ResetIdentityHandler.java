@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -116,7 +117,10 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
 
             if (isUserInitiated && f2fRequest != null) {
-                userName = "testf2f";
+                VcStoreItem credential =
+                        verifiableCredentialService.getVcStoreItem(
+                                clientOAuthSessionItem.getUserId(), FRAUD_CRI);
+                userName = getUserName(credential);
             }
 
             if (isUserInitiated && f2fRequest == null) {
@@ -190,6 +194,29 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             if (identityClaim.isEmpty()) {
                 LOGGER.warn(LogHelper.buildLogMessage("Failed to find identity claim"));
+                return null;
+            }
+
+            return identityClaim.get().getFullName();
+        } catch (Exception e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Exception caught trying to find user's identity", e));
+        }
+
+        return null;
+    }
+
+    // Try to get the user's name from their fraud VC. It's not the end of the world if this fails
+    // so
+    // just return null in that case.
+    private String getUserName(VcStoreItem credential) {
+        try {
+            final Optional<IdentityClaim> identityClaim =
+                    userIdentityService.findFraudIdentityClaim(credential);
+
+            if (identityClaim.isEmpty()) {
+                LOGGER.warn(LogHelper.buildLogMessage("Failed to find fraud CRI identity claim"));
                 return null;
             }
 

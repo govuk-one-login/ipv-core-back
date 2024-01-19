@@ -61,7 +61,7 @@ public class EmailService {
 
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        "Attempting to send user triggered identity reset confirmation email"));
+                        "Attempting to send user triggered f2f identity reset confirmation email"));
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
         final String templateId =
