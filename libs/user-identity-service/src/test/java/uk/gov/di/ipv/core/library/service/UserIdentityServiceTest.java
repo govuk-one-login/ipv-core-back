@@ -108,6 +108,7 @@ class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     public static final String VOT_P2 = P2.name();
+    public static final String VOT_P0 = P0.name();
     private static ECDSASigner jwtSigner;
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
@@ -740,7 +741,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -850,7 +851,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -923,7 +924,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1139,7 +1140,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
 
         assertNull(credentials.getAddressClaim());
     }
@@ -1199,7 +1200,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -1401,7 +1402,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
 
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
@@ -1424,7 +1425,7 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", P0.toString(), contraIndicators));
+                                USER_ID_1, "test-sub", VOT_P0, contraIndicators));
     }
 
     @Test
@@ -1450,7 +1451,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
 
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
@@ -1475,7 +1476,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", P0.toString(), contraIndicators);
+                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
 
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
         verify(mockConfigService, never()).getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED);
