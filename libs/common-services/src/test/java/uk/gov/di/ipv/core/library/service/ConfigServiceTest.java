@@ -281,51 +281,17 @@ class ConfigServiceTest {
         @Test
         void shouldGetComponentIdForActiveConnection() {
             environmentVariables.set("ENVIRONMENT", "test");
-            final String testCredentialIssuerId = "address";
+
             final String testComponentId = "testComponentId";
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get(
-                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
-                    .thenReturn(testComponentId);
-            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
-        }
+            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
+                    .thenReturn(
+                            String.format(
+                                    "{\"signingKey\":%s,\"componentId\":\"%s\"}",
+                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED, testComponentId));
 
-        @Test
-        void shouldLookForFeatureSetOverrideOfComponentIdOnActiveConfiguration() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet("fs01");
-            final String testCredentialIssuerId = "address";
-            final String testComponentId = "testComponentId";
-
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/address"))
-                    .thenReturn(Map.of());
-            when(ssmProvider.get(
-                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
-                    .thenReturn(testComponentId);
-            when(ssmProvider.getMultiple(
-                            "/test/core/features/fs01/credentialIssuers/address/connections/stub"))
-                    .thenReturn(Map.of());
-            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
-        }
-
-        @Test
-        void shouldApplyFeatureSetOverrideOfComponentIdOnActiveConfiguration() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet("fs01");
-            final String testCredentialIssuerId = "address";
-            final String testComponentId = "testComponentId";
-
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/address"))
-                    .thenReturn(Map.of());
-            when(ssmProvider.getMultiple(
-                            "/test/core/features/fs01/credentialIssuers/address/connections/stub"))
-                    .thenReturn(Map.of("componentId", "testComponentId"));
-            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
+            assertEquals(testComponentId, configService.getComponentId("cri"));
         }
     }
 
