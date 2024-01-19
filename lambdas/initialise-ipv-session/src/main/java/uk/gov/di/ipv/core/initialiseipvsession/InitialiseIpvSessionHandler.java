@@ -394,12 +394,11 @@ public class InitialiseIpvSessionHandler
                                 existingInheritedIdentityVot, incomingInheritedIdentityVot));
             }
 
-            return indexOfExistingVot - indexOfIncomingVot < 0;
+            return indexOfIncomingVot > indexOfExistingVot;
         } catch (ParseException | IllegalArgumentException e) {
             throw new CredentialParseException(
-                    String.format(
-                            "Encountered a parsing error while attempting to parse or compare credentials: %s",
-                            e.getMessage()));
+                    "Encountered a parsing error while attempting to parse or compare credentials: %s",
+                    e);
         }
     }
 

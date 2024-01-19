@@ -147,14 +147,12 @@ class InitialiseIpvSessionHandlerTest {
                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                     Map.of(VALUES, List.of()),
                                             PASSPORT_CLAIM_NAME, "test-passport-claim")));
-    private static SignedJWT inheritedIdentityJWT;
     private static String serialisedInheritedIdentityJWT;
 
     @BeforeAll
     static void setUpBeforeAll()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        inheritedIdentityJWT = getInheritedIdentityJWT();
-        serialisedInheritedIdentityJWT = inheritedIdentityJWT.serialize();
+        serialisedInheritedIdentityJWT = getInheritedIdentityJWT().serialize();
     }
 
     @BeforeEach
