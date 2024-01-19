@@ -38,6 +38,15 @@ public class EmailService {
 
     public void sendUserTriggeredIdentityResetConfirmation(
             String userEmailAddress, String fullName) {
+        sendUserTriggeredIdentityResetConfirmation(
+                userEmailAddress,
+                fullName,
+                ConfigurationVariable
+                        .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
+    }
+
+    public void sendUserTriggeredIdentityResetConfirmation(
+            String userEmailAddress, String fullName, ConfigurationVariable templateIdKey) {
         Map<String, Object> templateParameters = new HashMap<>();
         templateParameters.put("fullName", fullName);
 
@@ -46,30 +55,18 @@ public class EmailService {
                         "Attempting to send user triggered identity reset confirmation email"));
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
-        final String templateId =
-                configService.getSsmParameter(
-                        ConfigurationVariable
-                                .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
+        final String templateId = configService.getSsmParameter(templateIdKey);
         LOGGER.debug("Got template ID {}", templateId);
         sendEmail(templateId, userEmailAddress, templateParameters);
     }
 
     public void sendUserTriggeredF2FIdentityResetConfirmation(
             String userEmailAddress, String fullName) {
-        Map<String, Object> templateParameters = new HashMap<>();
-        templateParameters.put("fullName", fullName);
-
-        LOGGER.info(
-                LogHelper.buildLogMessage(
-                        "Attempting to send user triggered f2f identity reset confirmation email"));
-        // This template ID can vary between production and the other environments, so it can't be
-        // hardcoded
-        final String templateId =
-                configService.getSsmParameter(
-                        ConfigurationVariable
-                                .GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
-        LOGGER.debug("Got template ID {}", templateId);
-        sendEmail(templateId, userEmailAddress, templateParameters);
+        sendUserTriggeredIdentityResetConfirmation(
+                userEmailAddress,
+                fullName,
+                ConfigurationVariable
+                        .GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
     }
 
     private void sendEmail(
