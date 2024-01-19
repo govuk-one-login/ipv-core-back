@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,6 +68,18 @@ class ReplayCimitVcsHandlerTest {
         List<String> ciIpAddresses = ipAddressCaptor.getAllValues();
         assertEquals(1, ciIpAddresses.size());
         assertNull(ciIpAddresses.get(0));
+    }
+
+    @Test
+    void shouldNotAttemptSubmitOnNullCredential() throws CiPutException {
+        InputStream inputStream =
+                ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
+        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
+                .thenReturn(createNullCredentialVcStoreItem());
+
+        this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
+
+        verify(ciMitService, never()).submitVC(any(), any(), any());
     }
 
     @Test
@@ -130,6 +143,15 @@ class ReplayCimitVcsHandlerTest {
         VcStoreItem vcStoreItem = new VcStoreItem();
         vcStoreItem.setUserId(TEST_USER_ID);
         vcStoreItem.setCredential("invalid-credential");
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
+    }
+
+    private VcStoreItem createNullCredentialVcStoreItem() {
+        Instant dateCreated = Instant.now();
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(TEST_USER_ID);
         vcStoreItem.setDateCreated(dateCreated);
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;
