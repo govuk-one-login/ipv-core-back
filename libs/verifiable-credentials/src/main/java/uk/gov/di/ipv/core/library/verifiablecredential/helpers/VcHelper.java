@@ -77,26 +77,18 @@ public class VcHelper {
 
     public static List<VcStoreItem> filterVCBasedOnProfileType(
             List<VcStoreItem> vcStoreItems, ProfileType profileType) {
-        List<VcStoreItem> filteredVCs;
         if (profileType.equals(ProfileType.GPG45)) {
-            filteredVCs =
-                    vcStoreItems.stream()
-                            .filter(
-                                    vcItem ->
-                                            !OPERATIONAL_CRIS.contains(
-                                                    vcItem.getCredentialIssuer()))
-                            .toList();
+            return vcStoreItems.stream()
+                    .filter(vcItem -> !OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer()))
+                    .toList();
         } else {
-            filteredVCs =
-                    vcStoreItems.stream()
-                            .filter(
-                                    vcItem ->
-                                            (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
-                                                    || vcItem.getCredentialIssuer()
-                                                            .equals(TICF_CRI)))
-                            .toList();
+            return vcStoreItems.stream()
+                    .filter(
+                            vcItem ->
+                                    (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
+                                            || vcItem.getCredentialIssuer().equals(TICF_CRI)))
+                    .toList();
         }
-        return filteredVCs;
     }
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
