@@ -397,7 +397,7 @@ public class InitialiseIpvSessionHandler
             return indexOfIncomingVot > indexOfExistingVot;
         } catch (ParseException | IllegalArgumentException e) {
             throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse or compare credentials: %s",
+                    "Encountered a parsing error while attempting to parse or compare credentials",
                     e);
         }
     }
