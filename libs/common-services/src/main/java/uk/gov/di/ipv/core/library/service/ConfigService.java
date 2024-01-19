@@ -261,11 +261,8 @@ public class ConfigService {
     }
 
     public String getComponentId(String credentialIssuerId) {
-        String activeConnection = getActiveConnection(credentialIssuerId);
-        final String pathTemplate =
-                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()
-                        + "/%s/connections/%s/componentId";
-        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId, activeConnection);
+        var criConfig = getOauthCriActiveConnectionConfig(credentialIssuerId);
+        return criConfig.getComponentId();
     }
 
     public String getAllowedSharedAttributes(String credentialIssuerId) {
