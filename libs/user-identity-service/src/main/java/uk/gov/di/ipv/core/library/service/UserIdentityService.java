@@ -53,6 +53,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -126,9 +127,9 @@ public class UserIdentityService {
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
+        ProfileType profileType = VectorOfTrust.valueOf(vot).getProfileType();
         List<VcStoreItem> vcStoreItems =
-                VcHelper.filterVCBasedOnProfileType(
-                        dataStore.getItems(userId), VectorOfTrust.valueOf(vot).getProfileType());
+                VcHelper.filterVCBasedOnProfileType(dataStore.getItems(userId), profileType);
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
         String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
@@ -136,13 +137,27 @@ public class UserIdentityService {
         UserIdentity.UserIdentityBuilder userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
-        if (VectorOfTrust.valueOf(vot).getProfileType().equals(ProfileType.GPG45)) {
-            if (vot.equals(P2.toString())) {
-                final List<VcStoreItem> successfulVCStoreItems =
-                        getSuccessfulVCStoreItems(vcStoreItems);
-                Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
-                identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+        buildUserIdentityBasedOnProfileType(
+                vot, contraIndicators, profileType, vcStoreItems, userIdentityBuilder);
 
+        return userIdentityBuilder.build();
+    }
+
+    private void buildUserIdentityBasedOnProfileType(
+            String vot,
+            ContraIndicators contraIndicators,
+            ProfileType profileType,
+            List<VcStoreItem> vcStoreItems,
+            UserIdentity.UserIdentityBuilder userIdentityBuilder)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
+        if (!vot.equals(P2.toString()) && profileType.equals(ProfileType.GPG45)) {
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+        } else {
+            Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
+            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+
+            if (profileType.equals(ProfileType.GPG45)) {
                 Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
                 addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
@@ -152,23 +167,13 @@ public class UserIdentityService {
                 Optional<JsonNode> drivingPermitClaim =
                         generateDrivingPermitClaim(successfulVCStoreItems);
                 drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
-
-                Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
-                ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
-
-                userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
-            } else {
-                userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
             }
-        } else {
-            if (vot.equals(P2.toString())) {
-                userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
-            } else {
-                userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
-            }
+
+            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems, profileType);
+            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
+
+            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
         }
-
-        return userIdentityBuilder.build();
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
@@ -517,12 +522,18 @@ public class UserIdentityService {
         return Optional.of(addressNode);
     }
 
-    private Optional<JsonNode> generateNinoClaim(List<VcStoreItem> successfulVCStoreItems)
+    private Optional<JsonNode> generateNinoClaim(
+            List<VcStoreItem> successfulVCStoreItems, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
-        var ninoStoreItem = findStoreItem(NINO_CRI, successfulVCStoreItems);
+        String criToExtractFrom =
+                profileType.equals(ProfileType.GPG45) ? NINO_CRI : HMRC_MIGRATION_CRI;
+        var ninoStoreItem = findStoreItem(criToExtractFrom, successfulVCStoreItems);
 
         if (ninoStoreItem.isEmpty()) {
-            LOGGER.warn(LogHelper.buildLogMessage("Failed to find Nino CRI credential"));
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Failed to find appropriate CRI credential to extract "
+                                    + NINO_PROPERTY_NAME));
             return Optional.empty();
         }
 

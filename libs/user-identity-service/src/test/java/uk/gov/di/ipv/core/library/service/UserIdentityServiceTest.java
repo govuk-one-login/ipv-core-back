@@ -1599,6 +1599,11 @@ class UserIdentityServiceTest {
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
         assertEquals(VC_FRAUD_SCORE_1, credentials.getVcs().get(1));
         assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
     }
 
     @Test
@@ -1616,7 +1621,6 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
@@ -1627,6 +1631,11 @@ class UserIdentityServiceTest {
         assertEquals(VC_TICF, credentials.getVcs().get(0));
         assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(1));
         assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
     @Test
@@ -1643,7 +1652,6 @@ class UserIdentityServiceTest {
                         createVcStoreItem(
                                 USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
@@ -1653,6 +1661,11 @@ class UserIdentityServiceTest {
         assertEquals(1, credentials.getVcs().size());
         assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(0));
         assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
     private VcStoreItem createVcStoreItem(
