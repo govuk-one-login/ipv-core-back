@@ -164,8 +164,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         IdentityClaim identityClaim = getIdentityClaim(vcStoreItem.getCredential());
         if (identityClaim.getName().isEmpty() || identityClaim.getBirthDate().isEmpty()) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage("Failed to find any identity claims in Fraud VC"));
+            LOGGER.warn(LogHelper.buildLogMessage("Failed to find identity claims"));
             return Optional.empty();
         }
 

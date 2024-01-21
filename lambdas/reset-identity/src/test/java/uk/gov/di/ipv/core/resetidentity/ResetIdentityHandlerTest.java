@@ -9,23 +9,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.*;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.service.EmailService;
-import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 
 @ExtendWith(MockitoExtension.class)
 public class ResetIdentityHandlerTest {
@@ -60,6 +59,7 @@ public class ResetIdentityHandlerTest {
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private EmailServiceFactory emailServiceFactory;
     @Mock private EmailService emailService;
+    @Mock private UserIdentityService userIdentityService;
     @InjectMocks private ResetIdentityHandler resetIdentityHandler;
 
     private IpvSessionItem ipvSessionItem;
@@ -146,13 +146,31 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenUserInitiatedF2F_shouldSendEmailAndRaiseAuditLog() throws SqsException {
+    void handleRequest_whenUserInitiatedF2F_shouldSendEmailAndRaiseAuditLog()
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                 .thenReturn(new CriResponseItem());
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        when(verifiableCredentialService.getVcStoreItem(TEST_USER_ID, FRAUD_CRI))
+                .thenReturn(vcStoreItem);
+        var underTest =
+                new IdentityClaim(
+                        Arrays.asList(
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("FirstNamePart1", "dummyType"),
+                                                new NameParts("FirstNamePart2", "dummyType"))),
+                                new Name(
+                                        Arrays.asList(
+                                                new NameParts("SecondNamePart1", "dummyType"),
+                                                new NameParts("SecondNamePart2", "dummyType")))),
+                        Arrays.asList(new BirthDate()));
+        when(userIdentityService.findCriIdentityClaim(vcStoreItem))
+                .thenReturn(Optional.of(underTest));
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
@@ -175,7 +193,47 @@ public class ResetIdentityHandlerTest {
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
-                .sendUserTriggeredF2FIdentityResetConfirmation(eq(TEST_EMAIL_ADDRESS), any());
+                .sendUserTriggeredF2FIdentityResetConfirmation(
+                        TEST_EMAIL_ADDRESS, "FirstNamePart1 FirstNamePart2");
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequest_whenUserInitiatedF2F_shouldSendEmailWithNullFullNameAndRaiseAuditLog()
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
+                .thenReturn(new CriResponseItem());
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        when(verifiableCredentialService.getVcStoreItem(TEST_USER_ID, FRAUD_CRI))
+                .thenReturn(vcStoreItem);
+        when(userIdentityService.findCriIdentityClaim(vcStoreItem)).thenReturn(Optional.empty());
+
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_CLIENT_SOURCE_IP)
+                        .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .build();
+        when(emailServiceFactory.getEmailService()).thenReturn(emailService);
+
+        // Act
+        JourneyResponse journeyResponse =
+                objectMapper.convertValue(
+                        resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
+
+        // Assert
+        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+        verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
+        verify(emailService, times(1))
+                .sendUserTriggeredF2FIdentityResetConfirmation(TEST_EMAIL_ADDRESS, null);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }
