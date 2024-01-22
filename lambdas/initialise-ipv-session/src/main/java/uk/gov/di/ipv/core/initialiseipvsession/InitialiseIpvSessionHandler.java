@@ -194,9 +194,10 @@ public class InitialiseIpvSessionHandler
                 }
             }
 
-            Boolean reproveIdentity = configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_AUDIT_ENABLED)
-                    ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
-                    : null;
+            Boolean reproveIdentity =
+                    configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_AUDIT_ENABLED)
+                            ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
+                            : null;
 
             AuditExtensionsReproveIdentity reproveAuditExtension =
                     reproveIdentity == null
