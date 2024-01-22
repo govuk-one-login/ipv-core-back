@@ -28,7 +28,7 @@ public enum ConfigurationVariable {
     GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
             "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
     GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/FaceToFaceIdentityResetConfirmation");
+            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmationF2f");
 
     private final String path;
 
