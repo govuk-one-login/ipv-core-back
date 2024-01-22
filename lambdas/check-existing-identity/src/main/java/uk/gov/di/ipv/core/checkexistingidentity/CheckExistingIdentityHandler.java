@@ -235,20 +235,19 @@ public class CheckExistingIdentityHandler
             }
 
             // Check for attained vot from vtr
-            var attainedVotAndProfile =
-                    getAttainedVotAndProfile(
+            var attainedVot =
+                    getAttainedVot(
                             clientOAuthSessionItem.getVtr(),
                             credentials,
                             vcStoreItems,
                             auditEventUser);
 
             // vot achieved
-            if (attainedVotAndProfile.isPresent()) {
-                Vot attainedVot = attainedVotAndProfile.get().attainedVot();
-                ipvSessionItem.setVot(attainedVot.name());
+            if (attainedVot.isPresent()) {
+                ipvSessionItem.setVot(attainedVot.get().name());
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                return buildReuseResponse(attainedVot, auditEventUser);
+                return buildReuseResponse(auditEventUser);
             }
 
             // No profile match
@@ -361,15 +360,13 @@ public class CheckExistingIdentityHandler
         return JOURNEY_NEXT;
     }
 
-    private Map<String, Object> buildReuseResponse(Vot vot, AuditEventUser auditEventUser)
+    private Map<String, Object> buildReuseResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        if (vot.isGpg45()) {
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
-        }
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         return JOURNEY_REUSE;
@@ -418,7 +415,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<VotProfilePair> getAttainedVotAndProfile(
+    private Optional<Vot> getAttainedVot(
             List<String> vtr,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
@@ -438,19 +435,18 @@ public class CheckExistingIdentityHandler
                             : matchOperationalProfile(credentials, requestedVot);
 
             if (attainedVotAndProfile.isPresent()) {
+                var vot = attainedVotAndProfile.get().attainedVot();
                 LOGGER.info(
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Attained vot with profile")
-                                .with(
-                                        LOG_VOT.getFieldName(),
-                                        attainedVotAndProfile.get().attainedVot())
+                                .with(LOG_VOT.getFieldName(), vot)
                                 .with(
                                         LOG_PROFILE.getFieldName(),
                                         attainedVotAndProfile.get().profileName()));
 
-                return attainedVotAndProfile;
+                return Optional.of(vot);
             }
         }
         return Optional.empty();
