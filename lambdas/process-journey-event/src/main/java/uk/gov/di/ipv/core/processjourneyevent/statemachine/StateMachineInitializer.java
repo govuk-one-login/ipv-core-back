@@ -169,7 +169,7 @@ public class StateMachineInitializer {
     }
 
     private String getJourneyConfig(IpvJourneyTypes journeyType) throws IOException {
-        return readFileToString(journeyType.getValue());
+        return readFileToString(journeyType.getPath());
     }
 
     private String getNestedJourneyDefinitionsConfig() throws IOException {

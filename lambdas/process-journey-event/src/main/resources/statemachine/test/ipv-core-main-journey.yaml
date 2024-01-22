@@ -19,17 +19,6 @@ PAGE_STATE:
         aCriId:
           targetState: ERROR_STATE
 
-JOURNEY_STATE:
-  response:
-    type: journey
-    journeyStepId: /journey/letsgosomewhere
-  events:
-    eventOne:
-      targetState: CRI_STATE
-      checkFeatureFlag:
-        aFeatureFlagName:
-          targetState: ERROR_STATE
-
 CRI_STATE:
   response:
     type: cri
@@ -45,6 +34,8 @@ CRI_STATE:
       targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
     testWithMitigationStart:
       targetState: PAGE_STATE_AT_START_OF_MITIGATION
+    testJourneyStep:
+      targetState: JOURNEY_STATE
 
 CRI_STATE_WITH_CONTEXT:
   response:
@@ -113,3 +104,9 @@ NESTED_JOURNEY_INVOKE_STATE:
       targetState: JOURNEY_STATE
     exitEventFromDoublyNestedInvokeState:
       targetState: ERROR_STATE
+
+JOURNEY_STATE:
+  response:
+    type: journey
+    journeyType: TECHNICAL_ERROR
+    initialState: INITIAL

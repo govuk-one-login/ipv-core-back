@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -93,17 +95,10 @@ class StateMachineInitializerTest {
                         .getTargetStateObj());
 
         // journey state assertions
-        assertEquals("/journey/letsgosomewhere", journeyState.getResponse().value().get("journey"));
-        assertEquals(
-                criState,
-                ((BasicEvent) journeyState.getEvents().get("eventOne")).getTargetStateObj());
-        assertEquals(
-                errorState,
-                ((BasicEvent)
-                                ((BasicEvent) journeyState.getEvents().get("eventOne"))
-                                        .getCheckFeatureFlag()
-                                        .get("aFeatureFlagName"))
-                        .getTargetStateObj());
+        assertInstanceOf(JourneyStepResponse.class, journeyState.getResponse());
+        var journeyStepResponse = (JourneyStepResponse) journeyState.getResponse();
+        assertEquals(IpvJourneyTypes.TECHNICAL_ERROR, journeyStepResponse.getJourneyType());
+        assertEquals("INITIAL", journeyStepResponse.getInitialState());
 
         // cri state assertions
         assertEquals(
@@ -192,9 +187,7 @@ class StateMachineInitializerTest {
                         .getTargetStateObj());
 
         // nested state one assertions
-        assertEquals(
-                "/journey/nestedStateOneJourneyStepId",
-                nestedStateOne.getResponse().value().get("journey"));
+        assertEquals("page-id-nested-state-one", nestedStateOne.getResponse().value().get("page"));
         assertEquals(parentState, nestedStateOne.getParentObj());
         assertEquals(
                 nestedStateTwo,
@@ -240,8 +233,8 @@ class StateMachineInitializerTest {
 
         // doubly nested state one assertions
         assertEquals(
-                "/journey/doublyNestedStateOneJourneyStepId",
-                doublyNestedStateOne.getResponse().value().get("journey"));
+                "page-id-doubly-nested-state-one",
+                doublyNestedStateOne.getResponse().value().get("page"));
         assertEquals(
                 doublyNestedStateTwo,
                 ((BasicEvent) doublyNestedStateOne.getEvents().get("eventOne"))

@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEve
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
@@ -46,6 +47,7 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -56,6 +58,7 @@ public class ProcessJourneyEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
+    private static final String NEXT_EVENT = "next";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -85,7 +88,8 @@ public class ProcessJourneyEventHandler
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
                 loadStateMachines(
-                        List.of(IPV_CORE_MAIN_JOURNEY), StateMachineInitializerMode.STANDARD);
+                        List.of(IPV_CORE_MAIN_JOURNEY, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.STANDARD);
     }
 
     @Override
@@ -123,6 +127,14 @@ public class ProcessJourneyEventHandler
                 sendMitigationStartAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
             }
 
+            // If we have a new journey response, follow it
+            while (stepResponse instanceof JourneyStepResponse journeyResponse) {
+                ipvSessionItem.setJourneyType(journeyResponse.getJourneyType());
+                ipvSessionItem.setUserState(journeyResponse.getInitialState());
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+                stepResponse = executeJourneyEvent(NEXT_EVENT, ipvSessionItem);
+            }
+
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
@@ -154,8 +166,10 @@ public class ProcessJourneyEventHandler
                                 ipvSessionItem.getJourneyType()));
             }
             LOGGER.info(
-                    "Found state machine for journey type: {}",
-                    ipvSessionItem.getJourneyType().getValue());
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Found state machine for journey type: %s",
+                                    ipvSessionItem.getJourneyType().name())));
 
             BasicState newState =
                     (BasicState)
