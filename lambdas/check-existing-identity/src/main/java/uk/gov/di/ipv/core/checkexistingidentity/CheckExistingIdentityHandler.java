@@ -12,7 +12,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkexistingidentity.domain.VotProfilePair;
-import uk.gov.di.ipv.core.checkexistingidentity.exception.JwtClaimsSetParseException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -264,7 +263,7 @@ public class CheckExistingIdentityHandler
                     .toObjectMap();
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
-        } catch (ParseException | JwtClaimsSetParseException e) {
+        } catch (ParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
         } catch (UnknownEvidenceTypeException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
@@ -345,7 +344,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildNoMatchResponse(
             List<SignedJWT> credentials, AuditEventUser auditEventUser)
-            throws SqsException, JwtClaimsSetParseException {
+            throws SqsException, ParseException {
         if (!removeOperationalProfileVcs(credentials).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
@@ -501,18 +500,14 @@ public class CheckExistingIdentityHandler
     }
 
     private List<SignedJWT> removeOperationalProfileVcs(List<SignedJWT> credentials)
-            throws JwtClaimsSetParseException {
-        return credentials.stream()
-                .filter(
-                        cred -> {
-                            try {
-                                String credVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
-                                return credVot == null
-                                        || !OPERATIONAL_PROFILE_NAMES.contains(credVot);
-                            } catch (ParseException e) {
-                                throw new JwtClaimsSetParseException(e);
-                            }
-                        })
-                .toList();
+            throws ParseException {
+        var gpg45Vcs = new ArrayList<SignedJWT>();
+        for (var credential : credentials) {
+            var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
+            if (credVot == null || !OPERATIONAL_PROFILE_NAMES.contains(credVot)) {
+                gpg45Vcs.add(credential);
+            }
+        }
+        return gpg45Vcs;
     }
 }
