@@ -34,8 +34,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachi
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
@@ -127,14 +128,6 @@ public class ProcessJourneyEventHandler
                 sendMitigationStartAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
             }
 
-            // If we have a new journey response, follow it
-            while (stepResponse instanceof JourneyStepResponse journeyResponse) {
-                ipvSessionItem.setJourneyType(journeyResponse.getJourneyType());
-                ipvSessionItem.setUserState(journeyResponse.getInitialState());
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-                stepResponse = executeJourneyEvent(NEXT_EVENT, ipvSessionItem);
-            }
-
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
@@ -158,29 +151,19 @@ public class ProcessJourneyEventHandler
         }
 
         try {
-            StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
-            if (stateMachine == null) {
-                throw new StateMachineNotFoundException(
-                        String.format(
-                                "State machine not found for journey type: '%s'",
-                                ipvSessionItem.getJourneyType()));
-            }
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Found state machine for journey type: %s",
-                                    ipvSessionItem.getJourneyType().name())));
+            var newState = executeStateTransition(ipvSessionItem, journeyEvent);
 
-            BasicState newState =
-                    (BasicState)
-                            stateMachine.transition(
-                                    ipvSessionItem.getUserState(),
-                                    journeyEvent,
-                                    JourneyContext.withFeatureSet(configService.getFeatureSet()));
+            while (newState instanceof JourneyChangeState journeyChangeState) {
+                ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
+                ipvSessionItem.setUserState(journeyChangeState.getInitialState());
+                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
+            }
+
+            var basicState = (BasicState) newState;
 
             updateUserState(
                     ipvSessionItem.getUserState(),
-                    newState.getName(),
+                    basicState.getName(),
                     journeyEvent,
                     ipvSessionItem);
 
@@ -188,7 +171,7 @@ public class ProcessJourneyEventHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return newState.getResponse();
+            return basicState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -214,6 +197,28 @@ public class ProcessJourneyEventHandler
             throw new JourneyEngineException(
                     "State machine not found for journey type, failed to execute journey engine step");
         }
+    }
+
+    @Tracing
+    private State executeStateTransition(IpvSessionItem ipvSessionItem, String journeyEvent)
+            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
+        StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
+        if (stateMachine == null) {
+            throw new StateMachineNotFoundException(
+                    String.format(
+                            "State machine not found for journey type: '%s'",
+                            ipvSessionItem.getJourneyType()));
+        }
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Found state machine for journey type: %s",
+                                ipvSessionItem.getJourneyType().name())));
+
+        return stateMachine.transition(
+                ipvSessionItem.getUserState(),
+                journeyEvent,
+                JourneyContext.withFeatureSet(configService.getFeatureSet()));
     }
 
     @Tracing

@@ -17,6 +17,7 @@ CRI_STATE:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     access-denied:
       targetState: PYI_NO_MATCH
@@ -29,10 +30,8 @@ CRI_STATE:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH
     temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
     fail-with-ci:
       targetState: PYI_NO_MATCH
       checkFeatureFlag:
@@ -51,6 +50,7 @@ CRI_TICF_STATE:
     fail-with-ci:
       targetState: PYI_NO_MATCH
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR_NO_TICF
 
 # Shared states
@@ -138,10 +138,8 @@ CHECK_EXISTING_IDENTITY:
     f2f-fail:
       targetState: PYI_F2F_TECHNICAL
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
     enhanced-verification:
       targetState: MITIGATION_01
 
@@ -241,8 +239,10 @@ CRI_F2F:
     vcs-not-correlated:
       targetState: PYI_NO_MATCH
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR_NO_TICF
     temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR_NO_TICF
 
 F2F_HANDOFF_PAGE:
@@ -359,18 +359,6 @@ PYI_CRI_ESCAPE_NO_F2F:
     end:
       targetState: END
 
-ERROR:
-  response:
-    type: journey
-    journeyType: TECHNICAL_ERROR
-    initialState: ERROR
-
-ERROR_NO_TICF:
-  response:
-    type: journey
-    journeyType: TECHNICAL_ERROR
-    initialState: ERROR_NO_TICF
-
 CORE_SESSION_TIMEOUT:
   response:
     type: page
@@ -478,17 +466,6 @@ CRI_TICF_BEFORE_ANOTHER_WAY:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
-
-CRI_TICF_BEFORE_ERROR:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: ERROR
-    enhanced-verification:
-      targetState: ERROR
 
 # Common pages
 PRE_EXPERIAN_KBV_TRANSITION_PAGE:

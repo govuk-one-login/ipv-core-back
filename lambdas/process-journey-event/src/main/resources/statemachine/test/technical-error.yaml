@@ -1,4 +1,4 @@
-INITIAL:
+ERROR:
   events:
     next:
       targetState: TECHNICAL_ERROR_PAGE

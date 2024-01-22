@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -23,7 +22,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -93,12 +91,6 @@ class StateMachineInitializerTest {
                                         .getCheckIfDisabled()
                                         .get("aCriId"))
                         .getTargetStateObj());
-
-        // journey state assertions
-        assertInstanceOf(JourneyStepResponse.class, journeyState.getResponse());
-        var journeyStepResponse = (JourneyStepResponse) journeyState.getResponse();
-        assertEquals(IpvJourneyTypes.TECHNICAL_ERROR, journeyStepResponse.getJourneyType());
-        assertEquals("INITIAL", journeyStepResponse.getInitialState());
 
         // cri state assertions
         assertEquals(

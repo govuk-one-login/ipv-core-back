@@ -66,7 +66,7 @@ class ProcessJourneyEventHandlerTest {
     @SystemStub static EnvironmentVariables environmentVariables;
 
     @BeforeAll
-    private static void beforeAll() {
+    public static void beforeAll() {
         environmentVariables.set("IS_LOCAL", true);
     }
 

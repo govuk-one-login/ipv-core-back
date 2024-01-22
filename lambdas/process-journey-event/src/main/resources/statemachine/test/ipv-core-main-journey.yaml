@@ -35,7 +35,8 @@ CRI_STATE:
     testWithMitigationStart:
       targetState: PAGE_STATE_AT_START_OF_MITIGATION
     testJourneyStep:
-      targetState: JOURNEY_STATE
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
 
 CRI_STATE_WITH_CONTEXT:
   response:

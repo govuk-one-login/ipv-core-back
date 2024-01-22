@@ -164,7 +164,8 @@ public class StateMachineInitializer {
         initializeEvents(state.getExitEvents(), eventStatesSource, null);
     }
 
-    private String createNestedJourneyStateName(State state, String nestedJourneyStateName) {
+    private String createNestedJourneyStateName(
+            NestedJourneyInvokeState state, String nestedJourneyStateName) {
         return String.format("%s/%s", state.getName(), nestedJourneyStateName);
     }
 
