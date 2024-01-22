@@ -178,7 +178,7 @@ class ContractTest {
                          "validityScore": 0,
                          "strengthScore": 3,
                          "ci": [
-                           "D02"
+                           "D15"
                             ],
                          "txn": "dummyTxn",
                          "type": "IdentityCheck"
@@ -219,7 +219,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "tl8zA_YC6J64PqseVN7ITAWabKb5Xoa9I9bDUzzElrGXjc2i1A7NOG0j_yglZT1Q15syH76UmfSa3FMa7Sfkew";
+            "V9CEL4TCIGFeSJgY9-UePbmm2ot9G3pRTmf4edmHknBfmhL1bum5FeJr69JTVX-CWZ51uXWun9lkHwy1jYuaaQ";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -458,7 +458,7 @@ class ContractTest {
                 .given("dummyBavComponentId is a valid issuer")
                 .given("VC evidence failedCheckDetails identityCheckPolicy is none")
                 .given("VC evidence failedCheckDetails checkMethod is data")
-                .given("VC evidence has a CI of D02")
+                .given("VC evidence has a CI of D15")
                 .given("VC evidence validityScore is 0")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence txn is dummyTxn")
@@ -523,7 +523,7 @@ class ContractTest {
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
 
-                                assertEquals("D02", ciNode.get(0).asText());
+                                assertEquals("D15", ciNode.get(0).asText());
 
                                 JsonNode bankAccountNode =
                                         credentialSubject.get("bankAccount").get(0);
@@ -631,7 +631,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D02", ciConfig1);
+        ciConfigMap.put("D15", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
