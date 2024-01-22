@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -269,6 +270,24 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
+    void shouldFollowJourneyChanges() throws Exception {
+        // arrange
+        var sessionId = "1234";
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+        var input = Map.of(JOURNEY, "testJourneyStep", IPV_SESSION_ID, sessionId);
+
+        // act
+        var output =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                        .handleRequest(input, mockContext);
+
+        // assert
+        assertEquals("technical-error-page", output.get("page"));
+        assertEquals(
+                TECHNICAL_ERROR, mockIpvSessionService.getIpvSession(sessionId).getJourneyType());
+    }
+
+    @Test
     void shouldSendAuditEventForMitigationStart() throws Exception {
         Map<String, String> input =
                 Map.of(JOURNEY, "testWithMitigationStart", IPV_SESSION_ID, "1234");
@@ -322,7 +341,7 @@ class ProcessJourneyEventHandlerTest {
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
-                List.of(IPV_CORE_MAIN_JOURNEY),
+                List.of(IPV_CORE_MAIN_JOURNEY, TECHNICAL_ERROR),
                 stateMachineInitializerMode);
     }
 

@@ -4,17 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 
 import java.util.Map;
 
+@Getter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class JourneyStepResponse implements StepResponse {
-    private String journeyStepId;
-    @Getter private Boolean mitigationStart;
+    private IpvJourneyTypes journeyType;
+    private String initialState;
+    private Boolean mitigationStart;
 
     public Map<String, Object> value() {
-        return Map.of("journey", journeyStepId);
+        throw new IllegalStateException("Journey step responses should be processed internally");
     }
 }

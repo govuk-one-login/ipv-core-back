@@ -1,0 +1,9 @@
+INITIAL:
+  events:
+    next:
+      targetState: TECHNICAL_ERROR_PAGE
+
+TECHNICAL_ERROR_PAGE:
+  response:
+    type: page
+    pageId: technical-error-page
