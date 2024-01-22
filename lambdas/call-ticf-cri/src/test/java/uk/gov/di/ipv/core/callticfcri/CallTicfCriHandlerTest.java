@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -224,7 +225,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot("P0");
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
@@ -246,7 +247,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot("P0");
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
