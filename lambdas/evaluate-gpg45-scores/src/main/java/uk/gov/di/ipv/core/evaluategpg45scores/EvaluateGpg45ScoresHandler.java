@@ -184,7 +184,7 @@ public class EvaluateGpg45ScoresHandler
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            gpg45Scores, Vot.P2.getValidGpg45Profiles());
+                            gpg45Scores, Vot.P2.getSupportedGpg45Profiles());
 
             if (matchedProfile.isPresent()) {
                 auditService.sendAuditEvent(

@@ -364,7 +364,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildReuseResponse(Vot vot, AuditEventUser auditEventUser)
             throws SqsException {
-        if (vot.hasGpg45Profiles()) {
+        if (vot.isGpg45()) {
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
@@ -433,7 +433,7 @@ public class CheckExistingIdentityHandler
 
         for (var requestedVot : requestedVotsByStrength) {
             var attainedVotAndProfile =
-                    requestedVot.hasGpg45Profiles()
+                    requestedVot.isGpg45()
                             ? matchGpg45Profile(
                                     credentials, vcStoreItems, requestedVot, auditEventUser)
                             : matchOperationalProfile(credentials, requestedVot);
@@ -468,7 +468,7 @@ public class CheckExistingIdentityHandler
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, requestedVot.getValidGpg45Profiles())
+                                gpg45Scores, requestedVot.getSupportedGpg45Profiles())
                         : Optional.empty();
 
         // Successful match
@@ -486,7 +486,7 @@ public class CheckExistingIdentityHandler
         for (SignedJWT cred : credentials) {
             String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
             Optional<String> matchedOperationalProfile =
-                    requestedVot.getValidOperationalProfiles().stream()
+                    requestedVot.getSupportedOperationalProfiles().stream()
                             .map(OperationalProfile::name)
                             .filter(profileName -> profileName.equals(credentialVot))
                             .findFirst();

@@ -7,28 +7,30 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 public enum Vot {
-    P0(List.of(), List.of()),
-    P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), List.of()),
-    PCL250(List.of(), List.of(OperationalProfile.PCL250)),
-    PCL200(List.of(), List.of(OperationalProfile.PCL250, OperationalProfile.PCL200));
+    P0(List.of(), null),
+    P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), null),
+    PCL250(null, List.of(OperationalProfile.PCL250)),
+    PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200));
 
-    private final List<Gpg45Profile> validGpg45Profiles;
-    private final List<OperationalProfile> validOperationalProfiles;
+    private final List<Gpg45Profile> supportedGpg45Profiles;
+    private final List<OperationalProfile> supportedOperationalProfiles;
 
-    Vot(List<Gpg45Profile> validGpg45Profiles, List<OperationalProfile> validOperationalProfiles) {
-        this.validGpg45Profiles = validGpg45Profiles;
-        this.validOperationalProfiles = validOperationalProfiles;
+    Vot(
+            List<Gpg45Profile> supportedGpg45Profiles,
+            List<OperationalProfile> supportedOperationalProfiles) {
+        this.supportedGpg45Profiles = supportedGpg45Profiles;
+        this.supportedOperationalProfiles = supportedOperationalProfiles;
     }
 
-    public List<Gpg45Profile> getValidGpg45Profiles() {
-        return validGpg45Profiles;
+    public List<Gpg45Profile> getSupportedGpg45Profiles() {
+        return supportedGpg45Profiles;
     }
 
-    public List<OperationalProfile> getValidOperationalProfiles() {
-        return validOperationalProfiles;
+    public List<OperationalProfile> getSupportedOperationalProfiles() {
+        return supportedOperationalProfiles;
     }
 
-    public boolean hasGpg45Profiles() {
-        return validGpg45Profiles != null && !validGpg45Profiles.isEmpty();
+    public boolean isGpg45() {
+        return supportedGpg45Profiles != null;
     }
 }

@@ -344,7 +344,7 @@ public class BuildCriOauthRequestHandler
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        Vot.P2.getValidGpg45Profiles());
+                        Vot.P2.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()

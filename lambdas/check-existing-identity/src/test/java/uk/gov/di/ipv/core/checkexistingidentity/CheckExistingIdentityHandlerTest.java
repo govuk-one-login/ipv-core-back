@@ -220,7 +220,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(Vot.P2.getValidGpg45Profiles())))
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -260,7 +260,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(Vot.P2.getValidGpg45Profiles())))
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -414,7 +414,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(Vot.P2.getValidGpg45Profiles())))
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -454,7 +454,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(Vot.P2.getValidGpg45Profiles())))
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -900,7 +900,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(Vot.P2.getValidGpg45Profiles())))
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
