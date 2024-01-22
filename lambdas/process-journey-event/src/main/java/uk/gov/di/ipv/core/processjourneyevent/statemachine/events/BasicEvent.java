@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
@@ -18,6 +20,7 @@ public class BasicEvent implements Event {
     private static final Logger LOGGER = LogManager.getLogger();
     @JsonIgnore private ConfigService configService;
     private String name;
+    private String targetJourney;
     private String targetState;
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
@@ -61,7 +64,10 @@ public class BasicEvent implements Event {
     @Override
     public void initialize(String name, Map<String, State> states) {
         this.name = name;
-        if (targetState != null) {
+        if (targetJourney != null) {
+            this.targetStateObj =
+                    new JourneyChangeState(IpvJourneyTypes.valueOf(targetJourney), targetState);
+        } else if (targetState != null) {
             this.targetStateObj = states.get(targetState);
         }
         if (checkIfDisabled != null) {
