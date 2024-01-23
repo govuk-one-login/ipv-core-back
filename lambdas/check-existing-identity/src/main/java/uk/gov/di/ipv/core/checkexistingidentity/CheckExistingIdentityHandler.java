@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -60,6 +61,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -94,11 +96,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
-    private static final String TICF_CRI = "ticf";
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
-    public static final List<String> OPERATIONAL_PROFILE_NAMES =
-            List.of(Vot.PCL250.name(), Vot.PCL200.name());
     public static final String VOT_CLAIM = "vot";
 
     private final ConfigService configService;
@@ -254,7 +253,7 @@ public class CheckExistingIdentityHandler
             // No profile match
             return isF2FComplete
                     ? buildF2FNoMatchResponse(auditEventUser)
-                    : buildNoMatchResponse(credentials, auditEventUser);
+                    : buildNoMatchResponse(vcStoreItems, auditEventUser);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse().getMessage(), e));
@@ -343,9 +342,8 @@ public class CheckExistingIdentityHandler
     }
 
     private Map<String, Object> buildNoMatchResponse(
-            List<SignedJWT> credentials, AuditEventUser auditEventUser)
-            throws SqsException, ParseException {
-        if (!removeOperationalProfileVcs(credentials).isEmpty()) {
+            List<VcStoreItem> vcStoreItems, AuditEventUser auditEventUser) throws SqsException {
+        if (!VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
 
@@ -497,17 +495,5 @@ public class CheckExistingIdentityHandler
             }
         }
         return Optional.empty();
-    }
-
-    private List<SignedJWT> removeOperationalProfileVcs(List<SignedJWT> credentials)
-            throws ParseException {
-        var gpg45Vcs = new ArrayList<SignedJWT>();
-        for (var credential : credentials) {
-            var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
-            if (credVot == null || !OPERATIONAL_PROFILE_NAMES.contains(credVot)) {
-                gpg45Vcs.add(credential);
-            }
-        }
-        return gpg45Vcs;
     }
 }

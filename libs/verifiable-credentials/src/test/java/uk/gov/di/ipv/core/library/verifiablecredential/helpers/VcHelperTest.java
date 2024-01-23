@@ -10,14 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,11 +49,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 class VcHelperTest {
     @Mock private ConfigService configService;
 
-    public static Set<String> EXCLUDED_CREDENTIAL_ISSUERS =
-            Set.of("https://review-a.integration.account.gov.uk");
-
-    public static OauthCriConfig addressConfig = null;
-    public static OauthCriConfig claimedIdentityConfig = null;
+    private static OauthCriConfig addressConfig = null;
+    private static OauthCriConfig claimedIdentityConfig = null;
 
     static {
         try {
@@ -104,11 +100,12 @@ class VcHelperTest {
     void shouldFilterVCsBasedOnProfileType_GPG45() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now()),
-                        createVcStoreItem(FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(TICF_CRI, VC_TICF, Instant.now()),
-                        createVcStoreItem(HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem("userId", FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
+                        TestFixtures.createVcStoreItem(
+                                "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
         assertEquals(
                 3, VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).size());
     }
@@ -117,11 +114,12 @@ class VcHelperTest {
     void shouldFilterVCsBasedOnProfileType_operational() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now()),
-                        createVcStoreItem(FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(TICF_CRI, VC_TICF, Instant.now()),
-                        createVcStoreItem(HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem("userId", FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
+                        TestFixtures.createVcStoreItem(
+                                "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
         assertEquals(
                 2,
                 VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.OPERATIONAL_HMRC)
@@ -140,17 +138,6 @@ class VcHelperTest {
         when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
         when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(claimedIdentityConfig.getComponentId());
-    }
-
-    private VcStoreItem createVcStoreItem(
-            String credentialIssuer, String credential, Instant dateCreated) {
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId("userId");
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
     }
 
     private static OauthCriConfig createOauthCriConfig(String componentId)

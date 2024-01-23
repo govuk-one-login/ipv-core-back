@@ -10,7 +10,9 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -308,5 +310,22 @@ public interface TestFixtures {
         } catch (JOSEException e) {
             throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
         }
+    }
+
+    static VcStoreItem createVcStoreItem(
+            String userId, String credentialIssuer, String credential) {
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        Instant dateCreated = Instant.now();
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
+    }
+
+    static VcStoreItem createInvalidVcStoreItem(
+            String userId, String credentialIssuer, String credential) {
+        return createVcStoreItem(userId, credentialIssuer, credential);
     }
 }
