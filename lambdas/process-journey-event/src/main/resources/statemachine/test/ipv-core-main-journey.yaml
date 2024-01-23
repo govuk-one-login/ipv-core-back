@@ -105,9 +105,3 @@ NESTED_JOURNEY_INVOKE_STATE:
       targetState: JOURNEY_STATE
     exitEventFromDoublyNestedInvokeState:
       targetState: ERROR_STATE
-
-JOURNEY_STATE:
-  response:
-    type: journey
-    journeyType: TECHNICAL_ERROR
-    initialState: INITIAL

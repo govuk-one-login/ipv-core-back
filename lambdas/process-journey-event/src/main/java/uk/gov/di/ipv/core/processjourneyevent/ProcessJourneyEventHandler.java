@@ -154,6 +154,14 @@ public class ProcessJourneyEventHandler
             var newState = executeStateTransition(ipvSessionItem, journeyEvent);
 
             while (newState instanceof JourneyChangeState journeyChangeState) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Transitioned to new journey type")
+                                .with(
+                                        LOG_JOURNEY_TYPE.getFieldName(),
+                                        journeyChangeState.getJourneyType())
+                                .with(
+                                        LOG_USER_STATE.getFieldName(),
+                                        journeyChangeState.getInitialState()));
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
                 newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
@@ -209,7 +217,7 @@ public class ProcessJourneyEventHandler
                             "State machine not found for journey type: '%s'",
                             ipvSessionItem.getJourneyType()));
         }
-        LOGGER.info(
+        LOGGER.debug(
                 LogHelper.buildLogMessage(
                         String.format(
                                 "Found state machine for journey type: %s",
