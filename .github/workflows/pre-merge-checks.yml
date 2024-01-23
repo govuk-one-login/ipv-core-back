@@ -6,12 +6,27 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
 
 env:
   SAM_CLI_TELEMETRY: "0"
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11.2'
+    - uses: pre-commit/action@v3.0.0
+      with:
+        extra_args: "detect-secrets --all-files"
+
   test-node-delete-user-data:
     runs-on: ubuntu-latest
     timeout-minutes: 15
