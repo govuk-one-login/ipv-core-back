@@ -33,7 +33,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,7 +47,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 
 @ExtendWith(MockitoExtension.class)
 public class ResetIdentityHandlerTest {
@@ -167,8 +168,9 @@ public class ResetIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                 .thenReturn(new CriResponseItem());
         VcStoreItem vcStoreItem = new VcStoreItem();
-        when(verifiableCredentialService.getVcStoreItem(TEST_USER_ID, FRAUD_CRI))
-                .thenReturn(vcStoreItem);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        when(verifiableCredentialService.getVcStoreItems(TEST_USER_ID)).thenReturn(vcStoreItems);
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
@@ -181,7 +183,7 @@ public class ResetIdentityHandlerTest {
                                                 new NameParts("SecondNamePart1", "dummyType"),
                                                 new NameParts("SecondNamePart2", "dummyType")))),
                         Arrays.asList(new BirthDate()));
-        when(userIdentityService.findCriIdentityClaim(vcStoreItem))
+        when(userIdentityService.findIdentityClaim(vcStoreItems, false))
                 .thenReturn(Optional.of(underTest));
 
         ProcessRequest event =
@@ -220,9 +222,11 @@ public class ResetIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                 .thenReturn(new CriResponseItem());
         VcStoreItem vcStoreItem = new VcStoreItem();
-        when(verifiableCredentialService.getVcStoreItem(TEST_USER_ID, FRAUD_CRI))
-                .thenReturn(vcStoreItem);
-        when(userIdentityService.findCriIdentityClaim(vcStoreItem)).thenReturn(Optional.empty());
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        when(verifiableCredentialService.getVcStoreItems(TEST_USER_ID)).thenReturn(vcStoreItems);
+        when(userIdentityService.findIdentityClaim(vcStoreItems, false))
+                .thenReturn(Optional.empty());
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
