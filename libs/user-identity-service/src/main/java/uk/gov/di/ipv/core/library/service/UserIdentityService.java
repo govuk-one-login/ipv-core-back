@@ -243,8 +243,10 @@ public class UserIdentityService {
 
     public boolean areVCsCorrelated(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
-        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
+        List<VcStoreItem> successfulGPG45VCStoreItems =
+                getSuccessfulVCStoreItems(
+                        VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45));
+        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulGPG45VCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -257,7 +259,7 @@ public class UserIdentityService {
             return false;
         }
 
-        if (!checkBirthDateCorrelationInCredentials(successfulVCStoreItems)) {
+        if (!checkBirthDateCorrelationInCredentials(successfulGPG45VCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(

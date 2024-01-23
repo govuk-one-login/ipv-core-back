@@ -1837,6 +1837,38 @@ class UserIdentityServiceTest {
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
+    @Test
+    void areVCsCorrelatedReturnsTrueWhenVcAreCorrelatedJustForGPG45Profile() throws Exception {
+        // Arrange
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                ADDRESS_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01"),
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01"),
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                BAV_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01"),
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
+    }
+
     private VcStoreItem createVcStoreItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
         VcStoreItem vcStoreItem = new VcStoreItem();
