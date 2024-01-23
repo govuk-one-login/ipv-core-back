@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -344,7 +345,7 @@ public class BuildCriOauthRequestHandler
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        Gpg45ProfileEvaluator.CURRENT_ACCEPTED_GPG45_PROFILES);
+                        Vot.P2.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()

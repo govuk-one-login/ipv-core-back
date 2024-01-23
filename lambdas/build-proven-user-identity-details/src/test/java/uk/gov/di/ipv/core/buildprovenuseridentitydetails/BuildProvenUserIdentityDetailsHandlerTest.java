@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -44,8 +45,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.PCL250;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -102,7 +101,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         mockVerifiableCredentialService);
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockIpvSessionItem.getVot()).thenReturn(P2.toString());
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2.name());
     }
 
     @Test
@@ -518,7 +517,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getVot()).thenReturn(PCL250.name());
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250.name());
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(

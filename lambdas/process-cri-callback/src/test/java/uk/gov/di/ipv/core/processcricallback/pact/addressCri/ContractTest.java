@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.pact.passportCri;
+package uk.gov.di.ipv.core.processcricallback.pact.addressCri;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -63,7 +62,7 @@ import static org.mockito.Mockito.when;
 @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "PassportCriProvider")
+@PactTestFor(providerName = "AddressCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
     private static final String TEST_USER = "test-subject";
@@ -91,152 +90,129 @@ class ContractTest {
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_VC_BODY =
+    private static final String VALID_EXPERIAN_ADDRESS_VC_BODY =
             """
-            {
-              "iss": "dummyPassportComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "exp": 4070909400,
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "passport": [
-                    {
-                      "expiryDate": "2030-01-01",
-                      "documentNumber": "824159121"
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ],
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "verificationScore": "0",
-                    "ci": [
-                      "A02",
-                      "A03"
-                    ],
-                    "txn": "DSJJSEE29392",
-                    "type": "IdentityCheck"
-                  }
-                ]
-              }
-            }
+                {
+                  "iss": "dummyAddressComponentId",
+                  "sub": "test-subject",
+                  "nbf": 4070908800,
+                  "exp": 4070909400,
+                  "vc": {
+                     "type": [
+                       "VerifiableCredential",
+                       "IdentityCheckCredential"
+                     ],
+                     "credentialSubject": {
+                       "name": [
+                         {
+                           "nameParts": [
+                             {
+                               "type": "GivenName",
+                               "value": "Kenneth"
+                             },
+                             {
+                               "type": "FamilyName",
+                               "value": "Decerqueira"
+                             }
+                           ]
+                         }
+                       ],
+                       "birthDate": [
+                         {
+                           "value": "1965-07-08"
+                         }
+                       ],
+                       "address": [
+                         {
+                           "addressCountry": "GB",
+                           "buildingName": "",
+                           "streetName": "HADLEY ROAD",
+                           "postalCode": "BA2 5AA",
+                           "buildingNumber": "8",
+                           "addressLocality": "BATH",
+                           "validFrom": "2000-01-01"
+                         }
+                       ]
+                     }
+                   },
+                   "jti": "dummyJti"
+                 }
             """;
 
-    private static final String FAILED_VC_BODY =
+    private static final String VALID_ADDRESS_BODY =
             """
-                    {
-                      "iss": "dummyPassportComponentId",
-                      "sub": "test-subject",
-                      "nbf": 4070908800,
-                      "exp": 4070909400,
-                      "vc": {
-                        "@context": [
-                          "https://www.w3.org/2018/credentials/v1",
-                          "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                        ],
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "passport": [
-                            {
-                              "expiryDate": "2030-12-12",
-                              "documentNumber": "123456789"
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1932-02-25"
-                            }
-                          ],
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Mary"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Watson"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "evidence": [
-                            {
-                                "failedCheckDetails": [
-                                    {
-                                        "checkMethod": "data"
-                                    }
-                                ],
-                                "validityScore": 0,
-                                "strengthScore": 4,
-                                "ci": [
-                                    "D02"
-                                ],
-                                "txn": "c070fc08-cd26-41d8-8ef6-72bb270aa783",
-                                "type": "IdentityCheck"
-                            }
-                        ]
-                      }
-                    }
+                {
+                  "iss": "dummyAddressComponentId",
+                  "sub": "test-subject",
+                  "nbf": 4070908800,
+                  "exp": 4070909400,
+                  "vc": {
+                     "type": [
+                       "VerifiableCredential",
+                       "IdentityCheckCredential"
+                     ],
+                     "credentialSubject": {
+                       "name": [
+                         {
+                           "nameParts": [
+                             {
+                               "type": "GivenName",
+                               "value": "Mary"
+                             },
+                             {
+                               "type": "FamilyName",
+                               "value": "Watson"
+                             }
+                           ]
+                         }
+                       ],
+                       "birthDate": [
+                         {
+                           "value": "1932-02-25"
+                         }
+                       ],
+                       "address": [
+                         {
+                            "buildingName": "221B",
+                            "streetName": "BAKER STREET",
+                            "postalCode": "NW1 6XE",
+                            "addressLocality": "LONDON",
+                            "validFrom": "1887-01-01"
+                          }
+                       ]
+                     }
+                   },
+                   "jti": "dummyJti"
+                 }
                     """;
 
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String VALID_VC_SIGNATURE =
-            "lDEi47XWnjyZ20fU-vb02BV1MSan68AqLUEQxCZGM_r8i4bG06uzdpXOJZeg-Kdhsf-NtWbqb-xM0P36YGwIeg";
-
-    private static final String FAILED_VC_SIGNATURE =
-            "qiIFQEj_ohS_DxjtvDcW0s7sMH7wQdrMQpe3D3mWq0pLbz93Vz8PtJ27Kpc5_psuJOf9C29hZVotZ5iVTpxnpQ";
+    private static final String VALID_VC_EXPERIAN_SIGNATURE =
+            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
+    private static final String VALID_VC_ADDRESS_SIGNATURE =
+            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
+    public static final CriOAuthSessionItem CRI_O_AUTH_SESSION_ITEM =
+            new CriOAuthSessionItem(
+                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
         return builder.given("dummyAuthCode is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
-                .given("dummyPassportComponentId is the passport CRI component ID")
+                .given("dummyAddressComponentId is the address CRI component ID")
                 .given(
-                        "Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                        "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
                 .uponReceiving("Valid auth code")
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DukPassport&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlQYXNzcG9ydENvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -255,98 +231,9 @@ class ContractTest {
                 .toPact();
     }
 
-    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
-        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyPassportComponentId is the passport CRI component ID")
-                .given(
-                        "Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Invalid authorization code")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DukPassport&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlQYXNzcG9ydENvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(400)
-                .toPact();
-    }
-
-    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
-            throws Exception {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyPassportComponentId is a valid issuer")
-                .given("VC givenName is Mary")
-                .given("VC familyName is Watson")
-                .given("VC birthDate is 1932-02-25")
-                .given("VC passport documentNumber is 824159121")
-                .given("VC passport expiryDate is 2030-01-01")
-                .uponReceiving("Valid credential request for VC")
-                .path("/credential")
-                .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
-                .willRespondWith()
-                .status(200)
-                .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_BODY, VALID_VC_SIGNATURE))
-                .toPact();
-    }
-
-    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredentialWithCi(
-            PactDslWithProvider builder) throws Exception {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyPassportComponentId is a valid issuer")
-                .given("VC givenName is Mary")
-                .given("VC familyName is Watson")
-                .given("VC birthDate is 1932-02-25")
-                .given("VC passport documentNumber is 123456789")
-                .given("VC passport expiryDate is 2030-12-12")
-                .uponReceiving("Valid credential request for VC with CI")
-                .path("/credential")
-                .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
-                .willRespondWith()
-                .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_VC_BODY, FAILED_VC_SIGNATURE))
-                .status(200)
-                .toPact();
-    }
-
-    @Pact(provider = "PassportCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyInvalidAccessToken is an invalid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyPassportComponentId is a valid issuer")
-                .uponReceiving("Invalid credential request due to invalid access token")
-                .path("/credential")
-                .method("POST")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Authorization",
-                        "Bearer dummyInvalidAccessToken")
-                .willRespondWith()
-                .status(403)
-                .toPact();
-    }
-
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
-    void fetchAccessToken_whenCalledAgainstPassportCri_retrievesAValidAccessToken(
+    void fetchAccessToken_whenCalledAgainstAddressCri_retrievesAValidAccessToken(
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -376,19 +263,40 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
         assertThat(accessToken.getLifetime(), greaterThan(0L));
     }
 
-    @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
-    void fetchAccessToken_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, JOSEException {
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAuthCodeReturnsTokenError(PactDslWithProvider builder) {
+        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
+                .given("dummyApiKey is an invalid api key")
+                .given("dummyAddressComponentId is the address CRI component ID")
+                .given(
+                        "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Invalid auth code")
+                .path("/token")
+                .method("POST")
+                .body(
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
 
+    @Test
+    @PactTestFor(pactMethod = "invalidAuthCodeReturnsTokenError")
+    void fetchAccessToken_whenCalledAgainstAddressCri_throwsErrorWithInvalidAuthCode(
+            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -397,8 +305,7 @@ class ContractTest {
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
-        // Signature generated by jwt.io by debugging the test and getting the client assertion
-        // JWT
+        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
         // generated by the test as mocking out the AWSKMS class inside the real signer would be
         // painful.
         when(mockSigner.sign(any(), any()))
@@ -409,8 +316,7 @@ class ContractTest {
         when(mockSecureTokenHelper.generate())
                 .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
 
-        // We need to generate a fixed request, so we set the secure token and expiry to
-        // constant
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
         var underTest =
                 new CriApiService(
@@ -420,21 +326,50 @@ class ContractTest {
         CriApiException exception =
                 assertThrows(
                         CriApiException.class,
-                        () ->
-                                underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
-                                        getCriOAuthSessionItem()));
-
+                        () -> {
+                            underTest.fetchAccessToken(
+                                    getCriCallbackRequest(
+                                            "dummyInvalidAuthCode", credentialIssuerConfig),
+                                    CRI_O_AUTH_SESSION_ITEM);
+                        });
         // Assert
-        assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(400, exception.getHttpStatusCode());
+        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
+    }
+
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsExperianIssuedCredential(
+            PactDslWithProvider builder) throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyAddressComponentId is a valid issuer")
+                .given("VC givenName is Kenneth")
+                .given("VC familyName is Decerqueira")
+                .given("VC birthDate is 1965-07-08")
+                .given("addressCountry is GB")
+                .given("streetName is HADLEY ROAD")
+                .given("buildingNumber is 8")
+                .given("addressLocality is BATH")
+                .given("validFrom is 2000-01-01")
+                .uponReceiving("Valid credential request for Experian VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_EXPERIAN_ADDRESS_VC_BODY,
+                                VALID_VC_EXPERIAN_SIGNATURE))
+                .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
-    void fetchVerifiableCredential_whenCalledAgainstPassportCri_retrievesAValidVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+    @PactTestFor(pactMethod = "validRequestReturnsExperianIssuedCredential")
+    void testCallToDummyAddressIssueCredential(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -468,10 +403,9 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
 
-        // Assert
         verifiableCredentialResponse
                 .getVerifiableCredentials()
                 .forEach(
@@ -489,18 +423,22 @@ class ContractTest {
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode passportNode = credentialSubject.get("passport").get(0);
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("Mary", nameParts.get(0).get("value").asText());
-                                assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals("Kenneth", nameParts.get(0).get("value").asText());
+                                assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
 
-                                assertEquals("2030-01-01", passportNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "824159121", passportNode.get("documentNumber").asText());
+                                assertEquals("GB", addressNode.get("addressCountry").asText());
+                                assertEquals("", addressNode.get("buildingName").asText());
+                                assertEquals("HADLEY ROAD", addressNode.get("streetName").asText());
+                                assertEquals("BA2 5AA", addressNode.get("postalCode").asText());
+                                assertEquals("8", addressNode.get("buildingNumber").asText());
+                                assertEquals("BATH", addressNode.get("addressLocality").asText());
+                                assertEquals("2000-01-01", addressNode.get("validFrom").asText());
 
-                                assertEquals("1932-02-25", birthDateNode.get("value").asText());
+                                assertEquals("1965-07-08", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
@@ -509,24 +447,50 @@ class ContractTest {
                         });
     }
 
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsIssuedAddressCredential(
+            PactDslWithProvider builder) throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyAddressComponentId is a valid issuer")
+                .given("VC givenName is Mary")
+                .given("VC familyName is Watson")
+                .given("VC birthDate is 1932-02-25")
+                .given("buildingName is 221B")
+                .given("streetName is BAKER STREET")
+                .given("postalCode is NW1 6XE")
+                .given("addressLocality is LONDON")
+                .given("validFrom is 1887-01-01")
+                .uponReceiving("Valid credential request for VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_ADDRESS_BODY, VALID_VC_ADDRESS_SIGNATURE))
+                .toPact();
+    }
+
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithCi")
-    void fetchVerifiableCredential_whenCalledAgainstPassportCri_retrievesAValidVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+    @PactTestFor(pactMethod = "validRequestReturnsIssuedAddressCredential")
+    void testCallToDummyAddressIssuesCredential(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
+
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D02", ciConfig1);
+        ciConfigMap.put("A02", ciConfig1);
+        ciConfigMap.put("A03", ciConfig2);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
-        // it
-        Mockito.lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialJwtValidator(
@@ -547,8 +511,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_O_AUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -558,30 +522,28 @@ class ContractTest {
                                 verifiableCredentialJwtValidator.validate(
                                         credential, credentialIssuerConfig, TEST_USER);
 
-                                JsonNode vc =
+                                JsonNode credentialSubject =
                                         objectMapper
                                                 .readTree(credential.getJWTClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                                .get("vc")
+                                                .get("credentialSubject");
 
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode passportNode = credentialSubject.get("passport").get(0);
-                                JsonNode evidence = vc.get("evidence").get(0);
-                                JsonNode ciNode = evidence.get("ci");
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
 
-                                // Assert
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Mary", nameParts.get(0).get("value").asText());
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
-                                assertEquals("D02", ciNode.get(0).asText());
 
-                                assertEquals("2030-12-12", passportNode.get("expiryDate").asText());
+                                assertEquals("221B", addressNode.get("buildingName").asText());
                                 assertEquals(
-                                        "123456789", passportNode.get("documentNumber").asText());
+                                        "BAKER STREET", addressNode.get("streetName").asText());
+                                assertEquals("NW1 6XE", addressNode.get("postalCode").asText());
+                                assertEquals("LONDON", addressNode.get("addressLocality").asText());
+                                assertEquals("1887-01-01", addressNode.get("validFrom").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
@@ -592,14 +554,32 @@ class ContractTest {
                         });
     }
 
+    @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidCredentialsRequestThrowsError(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyInvalidAccessToken is a valid access token")
+                .uponReceiving("Invalid credential request")
+                .path("/credential")
+                .method("POST")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer dummyInvalidAccessToken")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
-    void
-            fetchVerifiableCredential_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+    @PactTestFor(pactMethod = "invalidCredentialsRequestThrowsError")
+    void testInvalidCredentialCallThrowsError(MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
+
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -611,54 +591,31 @@ class ContractTest {
         CriApiException exception =
                 assertThrows(
                         CriApiException.class,
-                        () ->
-                                underTest.fetchVerifiableCredential(
-                                        new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                                        getCriOAuthSessionItem()));
+                        () -> {
+                            underTest.fetchVerifiableCredential(
+                                    new BearerAccessToken("dummyInvalidAccessToken"),
+                                    getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                    CRI_O_AUTH_SESSION_ITEM);
+                        });
 
-        // Assert
-        assertThat(
-                exception.getErrorResponse(),
-                is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
-        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, exception.getErrorResponse());
     }
 
     @NotNull
-    private static CriOAuthSessionItem getCriOAuthSessionItem() {
-        return new CriOAuthSessionItem(
-                "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
-    }
-
-    @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCriCallbackRequest(
+            String dummyAuthCode, OauthCriConfig credentialIssuerConfig) {
         return new CriCallbackRequest(
-                authCode,
+                dummyAuthCode,
                 credentialIssuerConfig.getClientId(),
                 "dummySessionId",
-                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
+                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
                 "dummyState",
                 null,
                 null,
                 "dummyIpAddress",
                 "dummyFeatureSet");
-    }
-
-    private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
-        ciConfigMap.put("A03", ciConfig2);
-
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
-        // it
-        Mockito.lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
     }
 
     @NotNull
@@ -671,10 +628,10 @@ class ContractTest {
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
                 .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
-                .componentId("dummyPassportComponentId")
+                .componentId("dummyAddressComponentId")
                 .clientCallbackUrl(
                         URI.create(
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport"))
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address"))
                 .requiresApiKey(true)
                 .requiresAdditionalEvidence(false)
                 .build();

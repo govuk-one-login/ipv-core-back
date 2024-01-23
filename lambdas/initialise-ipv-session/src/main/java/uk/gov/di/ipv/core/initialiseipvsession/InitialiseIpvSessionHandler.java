@@ -33,6 +33,8 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdent
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -46,6 +48,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
@@ -70,10 +73,12 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
+    private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
+    private final UserIdentityService userIdentityService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final VerifiableCredentialService verifiableCredentialService;
 
@@ -86,6 +91,7 @@ public class InitialiseIpvSessionHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
+        this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
@@ -95,17 +101,19 @@ public class InitialiseIpvSessionHandler
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public InitialiseIpvSessionHandler(
+            ConfigService configService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
-            ConfigService configService,
+            UserIdentityService userIdentityService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             VerifiableCredentialService verifiableCredentialService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
             AuditService auditService) {
+        this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.configService = configService;
+        this.userIdentityService = userIdentityService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
@@ -236,6 +244,7 @@ public class InitialiseIpvSessionHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (ParseException e) {
+            // Doesn't match all the potential causes
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse the decrypted JWE.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
@@ -258,6 +267,11 @@ public class InitialiseIpvSessionHandler
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
+        } catch (CredentialParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to check if stronger vot vc present.", e));
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         }
     }
 
@@ -284,12 +298,15 @@ public class InitialiseIpvSessionHandler
             InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem)
-            throws RecoverableJarValidationException, ParseException {
+            throws RecoverableJarValidationException, ParseException, CredentialParseException {
         try {
             var signedInheritedIdentityJWT =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
-            storeHmrcInheritedIdentity(
-                    userId, claimsSet, ipvSessionItem, signedInheritedIdentityJWT);
+            if (!isHmrcInheritedIdentityWithStrongerVotPresent(
+                    signedInheritedIdentityJWT, userId)) {
+                storeHmrcInheritedIdentity(
+                        userId, claimsSet, ipvSessionItem, signedInheritedIdentityJWT);
+            }
         } catch (VerifiableCredentialException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
@@ -348,6 +365,38 @@ public class InitialiseIpvSessionHandler
                     OAuth2Error.SERVER_ERROR.setDescription(
                             "Failed to persist inherited identity JWT"),
                     claimsSet,
+                    e);
+        }
+    }
+
+    private boolean isHmrcInheritedIdentityWithStrongerVotPresent(
+            SignedJWT incomingInheritedIdentity, String userId) throws CredentialParseException {
+        try {
+            var vcStoreItem =
+                    verifiableCredentialService.getVcStoreItem(HMRC_MIGRATION_CRI, userId);
+            SignedJWT existingInheritedIdentity = SignedJWT.parse(vcStoreItem.getCredential());
+
+            var existingInheritedIdentityVot =
+                    userIdentityService.getVot(existingInheritedIdentity);
+            var incomingInheritedIdentityVot =
+                    userIdentityService.getVot(incomingInheritedIdentity);
+
+            var indexOfExistingVot =
+                    HMRC_PROFILES_BY_STRENGTH.indexOf(existingInheritedIdentityVot);
+            var indexOfIncomingVot =
+                    HMRC_PROFILES_BY_STRENGTH.indexOf(incomingInheritedIdentityVot);
+
+            if (indexOfExistingVot == -1 || indexOfIncomingVot == -1) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "At least one of the existing (%s) or incoming (%s) VoTs from hmrc aren't expected",
+                                existingInheritedIdentityVot, incomingInheritedIdentityVot));
+            }
+
+            return indexOfIncomingVot > indexOfExistingVot;
+        } catch (ParseException | IllegalArgumentException e) {
+            throw new CredentialParseException(
+                    "Encountered a parsing error while attempting to parse or compare credentials",
                     e);
         }
     }

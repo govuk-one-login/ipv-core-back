@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -21,7 +22,6 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
 
 public class IpvSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -103,7 +103,7 @@ public class IpvSessionService {
 
         ipvSessionItem.setUserState(generateStartingState(errorObject));
 
-        ipvSessionItem.setVot(P0.toString());
+        ipvSessionItem.setVot(Vot.P0.name());
 
         String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.valueOf(journeyType));

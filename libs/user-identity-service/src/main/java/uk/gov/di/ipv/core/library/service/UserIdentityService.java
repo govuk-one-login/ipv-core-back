@@ -25,9 +25,9 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -57,7 +57,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -81,6 +80,7 @@ public class UserIdentityService {
             List.of(ADDRESS_CRI, BAV_CRI, TICF_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String VOT_CLAIM_NAME = "vot";
     private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -127,7 +127,7 @@ public class UserIdentityService {
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        ProfileType profileType = VectorOfTrust.valueOf(vot).getProfileType();
+        ProfileType profileType = Vot.valueOf(vot).getProfileType();
         List<VcStoreItem> vcStoreItems =
                 VcHelper.filterVCBasedOnProfileType(dataStore.getItems(userId), profileType);
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
@@ -151,7 +151,7 @@ public class UserIdentityService {
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
         final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
-        if (!vot.equals(P2.toString()) && profileType.equals(ProfileType.GPG45)) {
+        if (!vot.equals(Vot.P2.name()) && profileType.equals(ProfileType.GPG45)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
         } else {
             Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
@@ -495,6 +495,10 @@ public class UserIdentityService {
                                 .constructCollectionType(List.class, BirthDate.class));
 
         return new IdentityClaim(names, birthDates);
+    }
+
+    public Vot getVot(SignedJWT credential) throws IllegalArgumentException, ParseException {
+        return Vot.valueOf(credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
     private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)

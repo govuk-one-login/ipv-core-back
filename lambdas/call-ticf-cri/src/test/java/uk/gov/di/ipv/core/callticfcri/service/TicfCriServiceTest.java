@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -49,7 +50,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -73,7 +73,7 @@ class TicfCriServiceTest {
     private static final TicfCriDto ticfCriResponse =
             new TicfCriDto(
                     List.of("vtr-value"),
-                    "P2",
+                    Vot.P2.name(),
                     TRUSTMARK,
                     "a-user-id",
                     "a-govuk-journey-id",
@@ -92,7 +92,7 @@ class TicfCriServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setVot(P2.name());
+        ipvSessionItem.setVot(Vot.P2.name());
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -208,7 +208,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutCreds =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        "P2",
+                        Vot.P2.name(),
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",
@@ -236,7 +236,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutMangledCred =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        "P2",
+                        Vot.P2.name(),
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",

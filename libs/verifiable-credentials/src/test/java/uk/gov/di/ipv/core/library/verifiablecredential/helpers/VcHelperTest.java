@@ -124,7 +124,8 @@ class VcHelperTest {
                         createVcStoreItem(HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION, Instant.now()));
         assertEquals(
                 2,
-                VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.OPERATIONAL).size());
+                VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.OPERATIONAL_HMRC)
+                        .size());
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {

@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -44,14 +45,12 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final Map<String, Object> JOURNEY_NEXT =
@@ -186,7 +185,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "CI score is breaching threshold - setting VOT to P0"));
-            ipvSessionItem.setVot(P0.name());
+            ipvSessionItem.setVot(Vot.P0.name());
 
             return ciMitUtilityService
                     .getCiMitigationJourneyStep(cis)

@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,9 +72,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P0;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.P2;
-import static uk.gov.di.ipv.core.library.domain.VectorOfTrust.PCL200;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -107,8 +106,6 @@ class UserIdentityServiceTest {
             new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     private static final String USER_ID_1 = "user-id-1";
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    public static final String VOT_P2 = P2.name();
-    public static final String VOT_P0 = P0.name();
     private static ECDSASigner jwtSigner;
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
@@ -155,6 +152,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnCredentialsFromDataStore()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -168,10 +166,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
         assertEquals(VC_FRAUD_SCORE_1, credentials.getVcs().get(1));
         assertEquals("test-sub", credentials.getSub());
@@ -179,6 +179,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -194,15 +195,18 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
-        assertEquals(VOT_P2, credentials.getVot());
+        // Assert
+        assertEquals(Vot.P2.name(), credentials.getVot());
     }
 
     @Test
     void areVCsCorrelatedReturnsTrueWhenVcAreCorrelated() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -226,11 +230,13 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedReturnFalseWhenNamesDiffer() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -254,11 +260,13 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedReturnFalseWhenNameDifferentForBavCRI() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -275,6 +283,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
@@ -282,6 +291,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingGivenName(String missingName)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -298,6 +308,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -316,6 +327,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingFamilyName(String missingName)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -332,6 +344,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -350,6 +363,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldReturnTrueWhenAddressVcHasMissingName(String missing)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -366,6 +380,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
@@ -373,6 +388,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldReturnFalseWhenMissingNameCredentialForBAVCRI(String missing)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -394,6 +410,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -410,6 +427,7 @@ class UserIdentityServiceTest {
 
     @Test
     void areVCsCorrelatedShouldReturnFalseIfExtraGivenNameInVc() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -432,11 +450,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedReturnsFalseWhenBirthDatesDiffer() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -459,6 +479,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
@@ -466,6 +487,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldThrowExceptionWhenMissingBirthDateProperty(String missing)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -487,6 +509,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -505,6 +528,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldReturnTrueWhenAddressHasMissingBirthDate(String missing)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -526,6 +550,7 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
@@ -533,6 +558,7 @@ class UserIdentityServiceTest {
     @NullAndEmptySource
     void areVCsCorrelatedShouldReturnTrueWhenBavHasMissingBirthDate(String missing)
             throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -554,11 +580,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedShouldReturnFalseIfBavHasDifferentBirthDate() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -581,11 +609,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedShouldNotIncludeVCsForNameNotDeemedSuccessful() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -608,11 +638,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedShouldNotIncludeVCsForDOBNotDeemedSuccessful() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -635,11 +667,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void areVCsCorrelatedReturnsFalseWhenExtraBirthDateInVc() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -662,11 +696,13 @@ class UserIdentityServiceTest {
                                 Instant.now()));
         mockCredentialIssuerConfig();
 
+        // Act & Assert
         assertFalse(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
     @Test
     void shouldSetIdentityClaimWhenVotIsP2() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -682,10 +718,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
@@ -696,6 +734,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetIdentityClaimWhenVotIsP2MissingName() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -713,10 +752,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
@@ -727,6 +768,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetIdentityClaimWhenVotIsP0() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -739,15 +781,49 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), emptyContraIndicators);
 
+        // Assert
         assertNull(credentials.getIdentityClaim());
     }
 
     @Test
+    void shouldGetCorrectVot() throws ParseException {
+        // Arrange
+        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("vot", Vot.PCL200.name()).build();
+        SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);
+
+        // Act
+        var vot = userIdentityService.getVot(signedJWT);
+
+        // Assert
+        assertEquals(Vot.PCL200, vot);
+    }
+
+    @Test
+    void shouldThrowForInvalidVot() {
+        // Arrange
+        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("vot", "not a vot value").build();
+        SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);
+
+        // Act
+        IllegalArgumentException thrownException =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> userIdentityService.getVot(signedJWT));
+
+        // Assert
+        assertEquals(
+                "No enum constant uk.gov.di.ipv.core.library.enums.Vot.not a vot value",
+                thrownException.getMessage());
+    }
+
+    @Test
     void shouldThrowExceptionWhenMissingNameProperty() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -759,12 +835,16 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        Vot.P2.name(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -777,6 +857,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldThrowExceptionWhenMissingBirthDateProperty() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -791,12 +872,16 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        Vot.P2.name(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -809,6 +894,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetPassportClaimWhenVotIsP2() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
 
@@ -825,10 +911,12 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode passportClaim = credentials.getPassportClaim();
 
         assertEquals("123456789", passportClaim.get(0).get("documentNumber").asText());
@@ -837,6 +925,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetPassportClaimWhenVotIsP0() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -849,15 +938,18 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), emptyContraIndicators);
 
+        // Assert
         assertNull(credentials.getPassportClaim());
     }
 
     @Test
     void shouldReturnEmptyWhenMissingPassportProperty() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -873,10 +965,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         assertNull(credentials.getPassportClaim());
     }
 
@@ -900,7 +994,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         // Assert
         JsonNode ninoClaim = credentials.getNinoClaim();
@@ -924,7 +1018,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -954,7 +1048,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -979,7 +1073,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1006,7 +1100,7 @@ class UserIdentityServiceTest {
         // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1014,28 +1108,35 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetSubClaimOnUserIdentity() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         assertEquals("test-sub", credentials.getSub());
     }
 
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
 
     @Test
     void generateUserIdentityShouldSetAddressClaimOnUserIdentity() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1051,10 +1152,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
         JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
@@ -1068,6 +1171,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowIfAddressVCIsMissingAddressProperty() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1087,12 +1191,16 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        Vot.P2.name(),
+                                        emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1105,6 +1213,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowIfAddressVCCanNotBeParsed() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1120,15 +1229,17 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act & Assert
         assertThrows(
                 CredentialParseException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators));
+                                USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators));
     }
 
     @Test
     void shouldNotSetAddressClaimWhenVotIsP0() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
@@ -1138,15 +1249,18 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), emptyContraIndicators);
 
+        // Assert
         assertNull(credentials.getAddressClaim());
     }
 
     @Test
     void shouldReturnListOfVcsForSharedAttributes() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1156,14 +1270,17 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
 
+        // Act
         List<String> vcList = userIdentityService.getIdentityCredentials(vcStoreItems);
 
+        // Assert
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcList.get(0));
         assertEquals(VC_FRAUD_SCORE_1, vcList.get(1));
     }
 
     @Test
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1175,10 +1292,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
@@ -1188,6 +1307,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1198,10 +1318,12 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
@@ -1209,6 +1331,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1224,10 +1347,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
@@ -1235,6 +1360,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCFailed() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1255,10 +1381,12 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
@@ -1266,6 +1394,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnEmptyWhenMissingDrivingPermitProperty() throws Exception {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1278,15 +1407,18 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
+        // Assert
         assertNull(credentials.getDrivingPermitClaim());
     }
 
     @Test
     void generateUserIdentityShouldThrowIfDcmawVCCanNotBeParsed() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -1303,12 +1435,16 @@ class UserIdentityServiceTest {
         mockCredentialIssuerConfig();
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
+        // Act & Assert
         CredentialParseException thrownException =
                 assertThrows(
                         CredentialParseException.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators));
+                                        USER_ID_1,
+                                        "test-sub",
+                                        Vot.P2.name(),
+                                        emptyContraIndicators));
         assertEquals(
                 "Encountered a parsing error while attempting to parse successful VC Store items.",
                 thrownException.getMessage());
@@ -1316,6 +1452,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP2);
         when(mockConfigService.getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("🦆,🐧");
         when(mockDataStore.getItems(anyString())).thenReturn(List.of());
@@ -1335,27 +1472,32 @@ class UserIdentityServiceTest {
                                         "Z03", ContraIndicator.builder().code("Z03").build()))
                         .build();
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, contraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), contraIndicators);
 
+        // Assert
         assertEquals(List.of(new ReturnCode("🦆")), userIdentity.getReturnCode());
     }
 
     @Test
     void generateUserIdentityShouldSetEmptyExitCodeWhenP2AndAlwaysRequiredCiNotPresent()
             throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         assertEquals(List.of(), userIdentity.getReturnCode());
     }
 
     @Test
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
+        // Arrange
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
@@ -1366,15 +1508,18 @@ class UserIdentityServiceTest {
                                 Map.of("wat", ContraIndicator.builder().code("wat").build()))
                         .build();
 
+        // Act & Assert
+        String vot = Vot.P2.name();
         assertThrows(
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", VOT_P2, contraIndicators));
+                                USER_ID_1, "test-sub", vot, contraIndicators));
     }
 
     @Test
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
@@ -1400,10 +1545,12 @@ class UserIdentityServiceTest {
                                         "Z03", ContraIndicator.builder().code("Z03").build()))
                         .build();
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), contraIndicators);
 
+        // Assert
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
                 userIdentity.getReturnCode());
@@ -1411,6 +1558,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
+        // Arrange
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
@@ -1420,16 +1568,17 @@ class UserIdentityServiceTest {
                         .contraIndicatorsMap(
                                 Map.of("wat", ContraIndicator.builder().code("wat").build()))
                         .build();
-
+        String vot = Vot.P0.name();
         assertThrows(
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                USER_ID_1, "test-sub", VOT_P0, contraIndicators));
+                                USER_ID_1, "test-sub", vot, contraIndicators));
     }
 
     @Test
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
+        // Arrange
         mockParamStoreCalls(paramsToMockForP0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
@@ -1449,10 +1598,12 @@ class UserIdentityServiceTest {
                                         "Z04", ContraIndicator.builder().code("Z04").build()))
                         .build();
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), contraIndicators);
 
+        // Assert
         assertEquals(
                 List.of(new ReturnCode("1"), new ReturnCode("2"), new ReturnCode("3")),
                 userIdentity.getReturnCode());
@@ -1461,6 +1612,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
+        // Arrange
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
         when(mockConfigService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
@@ -1474,10 +1626,12 @@ class UserIdentityServiceTest {
                                 Map.of("X01", ContraIndicator.builder().code("X01").build()))
                         .build();
 
+        // Act
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P0, contraIndicators);
+                        USER_ID_1, "test-sub", Vot.P0.name(), contraIndicators);
 
+        // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
         verify(mockConfigService, never()).getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED);
     }
@@ -1508,11 +1662,14 @@ class UserIdentityServiceTest {
 
     @Test
     void isVcSuccessfulShouldThrowIfNoStatusFoundForIssuer() {
+        // Arrange
         List<VcStatusDto> vcStatusDtos =
                 List.of(
                         new VcStatusDto("issuer1", true),
                         new VcStatusDto("issuer2", true),
                         new VcStatusDto("issuer3", true));
+
+        // Act & Assert
         assertThrows(
                 NoVcStatusForIssuerException.class,
                 () -> userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer"));
@@ -1520,47 +1677,58 @@ class UserIdentityServiceTest {
 
     @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
+        // Act & Assert
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
     void
             getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
+        // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
+
+        // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1, Instant.now()),
                         createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
+
+        // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
     @Test
     void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
+        // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
@@ -1570,6 +1738,7 @@ class UserIdentityServiceTest {
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
 
+        // Act & Assert
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
@@ -1593,7 +1762,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", VOT_P2, emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
 
         assertEquals(2, credentials.getVcs().size());
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
@@ -1625,7 +1794,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", PCL200.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.PCL200.name(), emptyContraIndicators);
 
         assertEquals(2, credentials.getVcs().size());
         assertEquals(VC_TICF, credentials.getVcs().get(0));
@@ -1656,7 +1825,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        USER_ID_1, "test-sub", PCL200.toString(), emptyContraIndicators);
+                        USER_ID_1, "test-sub", Vot.PCL200.name(), emptyContraIndicators);
 
         assertEquals(1, credentials.getVcs().size());
         assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(0));

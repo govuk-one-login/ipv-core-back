@@ -23,8 +23,8 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -107,8 +107,7 @@ public class BuildProvenUserIdentityDetailsHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            ProfileType profileType =
-                    VectorOfTrust.valueOf(ipvSessionItem.getVot()).getProfileType();
+            ProfileType profileType = Vot.valueOf(ipvSessionItem.getVot()).getProfileType();
             List<VcStoreItem> credentials =
                     VcHelper.filterVCBasedOnProfileType(
                             verifiableCredentialService.getVcStoreItems(
