@@ -58,24 +58,6 @@ public class VerifiableCredentialService {
         }
     }
 
-    private VcStoreItem createVcStoreItem(
-            SignedJWT credential, String credentialIssuerId, String userId)
-            throws java.text.ParseException {
-        VcStoreItem vcStoreItem =
-                VcStoreItem.builder()
-                        .userId(userId)
-                        .credentialIssuer(credentialIssuerId)
-                        .dateCreated(Instant.now())
-                        .credential(credential.serialize())
-                        .build();
-
-        Date expirationTime = credential.getJWTClaimsSet().getExpirationTime();
-        if (expirationTime != null) {
-            vcStoreItem.setExpirationTime(expirationTime.toInstant());
-        }
-        return vcStoreItem;
-    }
-
     public List<VcStoreItem> getVcStoreItems(String userId) {
         return dataStore.getItems(userId);
     }
@@ -107,5 +89,23 @@ public class VerifiableCredentialService {
 
     public void deleteVcStoreItem(String userId, String criId) {
         dataStore.delete(userId, criId);
+    }
+
+    private VcStoreItem createVcStoreItem(
+            SignedJWT credential, String credentialIssuerId, String userId)
+            throws java.text.ParseException {
+        VcStoreItem vcStoreItem =
+                VcStoreItem.builder()
+                        .userId(userId)
+                        .credentialIssuer(credentialIssuerId)
+                        .dateCreated(Instant.now())
+                        .credential(credential.serialize())
+                        .build();
+
+        Date expirationTime = credential.getJWTClaimsSet().getExpirationTime();
+        if (expirationTime != null) {
+            vcStoreItem.setExpirationTime(expirationTime.toInstant());
+        }
+        return vcStoreItem;
     }
 }

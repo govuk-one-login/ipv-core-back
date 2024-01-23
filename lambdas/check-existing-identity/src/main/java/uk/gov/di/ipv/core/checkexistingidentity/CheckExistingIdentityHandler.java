@@ -361,7 +361,7 @@ public class CheckExistingIdentityHandler
 
     private Map<String, Object> buildReuseResponse(Vot vot, AuditEventUser auditEventUser)
             throws SqsException {
-        if (vot.isGpg45()) {
+        if (vot.getProfileType().equals(ProfileType.GPG45)) {
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
@@ -430,7 +430,7 @@ public class CheckExistingIdentityHandler
 
         for (var requestedVot : requestedVotsByStrength) {
             var attainedVotAndProfile =
-                    requestedVot.isGpg45()
+                    requestedVot.getProfileType().equals(ProfileType.GPG45)
                             ? matchGpg45Profile(
                                     credentials, vcStoreItems, requestedVot, auditEventUser)
                             : matchOperationalProfile(credentials, requestedVot);

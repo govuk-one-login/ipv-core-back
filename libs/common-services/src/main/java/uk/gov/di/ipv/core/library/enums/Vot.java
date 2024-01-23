@@ -40,8 +40,4 @@ public enum Vot {
     public ProfileType getProfileType() {
         return this.profileType;
     }
-
-    public boolean isGpg45() {
-        return supportedGpg45Profiles != null;
-    }
 }

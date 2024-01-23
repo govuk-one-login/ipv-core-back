@@ -143,39 +143,6 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
-    private void buildUserIdentityBasedOnProfileType(
-            String vot,
-            ContraIndicators contraIndicators,
-            ProfileType profileType,
-            List<VcStoreItem> vcStoreItems,
-            UserIdentity.UserIdentityBuilder userIdentityBuilder)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
-        if (!vot.equals(Vot.P2.name()) && profileType.equals(ProfileType.GPG45)) {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
-        } else {
-            Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
-            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
-
-            if (profileType.equals(ProfileType.GPG45)) {
-                Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-                addressClaim.ifPresent(userIdentityBuilder::addressClaim);
-
-                Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
-                passportClaim.ifPresent(userIdentityBuilder::passportClaim);
-
-                Optional<JsonNode> drivingPermitClaim =
-                        generateDrivingPermitClaim(successfulVCStoreItems);
-                drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
-            }
-
-            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems, profileType);
-            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
-
-            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
-        }
-    }
-
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
@@ -278,6 +245,48 @@ public class UserIdentityService {
         return vcStoreItems.stream()
                 .filter(vcStoreItem -> !vcStoreItem.getCredentialIssuer().equals(TICF_CRI))
                 .toList();
+    }
+
+    private void buildUserIdentityBasedOnProfileType(
+            String vot,
+            ContraIndicators contraIndicators,
+            ProfileType profileType,
+            List<VcStoreItem> vcStoreItems,
+            UserIdentity.UserIdentityBuilder userIdentityBuilder)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
+        if (vot.equals(Vot.P0.name())) {
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+        } else {
+            addUserIdentityClaims(
+                    profileType, vcStoreItems, userIdentityBuilder, successfulVCStoreItems);
+            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+        }
+    }
+
+    private void addUserIdentityClaims(
+            ProfileType profileType,
+            List<VcStoreItem> vcStoreItems,
+            UserIdentity.UserIdentityBuilder userIdentityBuilder,
+            List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
+        identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+
+        if (profileType.equals(ProfileType.GPG45)) {
+            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
+            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+
+            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
+            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+
+            Optional<JsonNode> drivingPermitClaim =
+                    generateDrivingPermitClaim(successfulVCStoreItems);
+            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+        }
+
+        Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems, profileType);
+        ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(
