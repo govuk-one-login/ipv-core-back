@@ -1,3 +1,5 @@
+# Entry points
+
 ERROR:
   events:
     next:
@@ -10,6 +12,8 @@ ERROR_NO_TICF:
   events:
     next:
       targetState: ERROR_PAGE
+
+# Journey states
 
 CRI_TICF_BEFORE_ERROR:
   response:
@@ -31,7 +35,7 @@ PYI_NO_MATCH:
     pageId: pyi-no-match
   events:
     next:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 ERROR_PAGE:
   response:
@@ -40,9 +44,9 @@ ERROR_PAGE:
     statusCode: 500
   events:
     next:
-      targetState: END
+      targetState: RETURN_TO_RP
 
-END:
+RETURN_TO_RP:
   response:
     type: process
     lambda: build-client-oauth-response
