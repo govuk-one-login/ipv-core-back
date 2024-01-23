@@ -4,7 +4,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     UNUSED_PLACEHOLDER("unusedPlaceHolder"),
     RESET_IDENTITY("resetIdentity"),
     INHERITED_IDENTITY("inheritedIdentity"),
-    REPROVE_IDENTITY_AUDIT_ENABLED("reproveIdentityAuditEnabled");
+    REPROVE_IDENTITY_ENABLED("reproveIdentityEnabled");
 
     private final String name;
 
