@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 @ExcludeFromGeneratedCoverageReport
+@SuppressWarnings("unused") // Temporarily disable to pass sonarqube
 public class ArchiveVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
