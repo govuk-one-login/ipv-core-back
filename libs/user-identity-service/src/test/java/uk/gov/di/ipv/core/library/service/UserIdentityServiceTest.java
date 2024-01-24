@@ -1757,6 +1757,40 @@ class UserIdentityServiceTest {
         assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
     }
 
+    @Test
+    void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
+        assertTrue(result.isPresent());
+        assertEquals("Chris", result.get().getFullName());
+    }
+
+    @Test
+    void findIdentityDoesNotReturnsIdentityClaimWhenEvidenceCheckIsTrue()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, true);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITHOUT_NAME);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        assertThrows(
+                HttpResponseExceptionWithErrorBody.class,
+                () -> userIdentityService.findIdentityClaim(vcStoreItems, false));
+    }
+
     private void mockCredentialIssuerConfig() {
         NON_EVIDENCE_CRI_TYPES.forEach(
                 credentialIssuer ->
@@ -1837,39 +1871,5 @@ class UserIdentityServiceTest {
         signedJWT.sign(jwtSigner);
 
         return signedJWT.serialize();
-    }
-
-    @Test
-    void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        VcStoreItem vcStoreItem =
-                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
-        List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        vcStoreItems.add(vcStoreItem);
-        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
-        assertTrue(result.isPresent());
-        assertEquals("Chris", result.get().getFullName());
-    }
-
-    @Test
-    void findIdentityDoesNotReturnsIdentityClaimWhenEvidenceCheckIsTrue()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        VcStoreItem vcStoreItem =
-                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
-        List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        vcStoreItems.add(vcStoreItem);
-        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, true);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
-        VcStoreItem vcStoreItem =
-                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITHOUT_NAME);
-        List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        vcStoreItems.add(vcStoreItem);
-        assertThrows(
-                HttpResponseExceptionWithErrorBody.class,
-                () -> userIdentityService.findIdentityClaim(vcStoreItems, false));
     }
 }

@@ -557,7 +557,7 @@ public class UserIdentityService {
         var ninoStoreItem = findStoreItem(criToExtractFrom, successfulVCStoreItems);
 
         if (ninoStoreItem.isEmpty()) {
-            LOGGER.warn(
+            LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Failed to find appropriate CRI credential to extract "
                                     + NINO_PROPERTY_NAME));
