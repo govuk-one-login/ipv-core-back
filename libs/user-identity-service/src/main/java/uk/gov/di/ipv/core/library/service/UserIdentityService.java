@@ -143,12 +143,24 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
+    public Optional<IdentityClaim> findIdentityClaim(
+            List<VcStoreItem> vcStoreItems, boolean checkEvidence)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        return findIdentityClaimFromVcStoreItems(vcStoreItems, checkEvidence);
+    }
+
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        return findIdentityClaimFromVcStoreItems(vcStoreItems, true);
+    }
+
+    private Optional<IdentityClaim> findIdentityClaimFromVcStoreItems(
+            List<VcStoreItem> vcStoreItems, boolean checkEvidence)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if (isEvidenceVc(vcStoreItem)
+                if ((!checkEvidence || isEvidenceVc(vcStoreItem))
                         && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }

@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -89,6 +90,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_WITHOUT_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
@@ -1835,5 +1837,39 @@ class UserIdentityServiceTest {
         signedJWT.sign(jwtSigner);
 
         return signedJWT.serialize();
+    }
+
+    @Test
+    void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
+        assertTrue(result.isPresent());
+        assertEquals("Chris", result.get().getFullName());
+    }
+
+    @Test
+    void findIdentityDoesNotReturnsIdentityClaimWhenEvidenceCheckIsTrue()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, true);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITHOUT_NAME);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        assertThrows(
+                HttpResponseExceptionWithErrorBody.class,
+                () -> userIdentityService.findIdentityClaim(vcStoreItems, false));
     }
 }
