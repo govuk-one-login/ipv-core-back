@@ -177,13 +177,8 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if ((checkEvidence
-                                && isEvidenceVc(vcStoreItem)
-                                && VcHelper.isSuccessfulVc(
-                                        SignedJWT.parse(vcStoreItem.getCredential())))
-                        || (!checkEvidence
-                                && VcHelper.isSuccessfulVc(
-                                        SignedJWT.parse(vcStoreItem.getCredential())))) {
+                if ((!checkEvidence || isEvidenceVc(vcStoreItem))
+                        && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
             } catch (ParseException e) {

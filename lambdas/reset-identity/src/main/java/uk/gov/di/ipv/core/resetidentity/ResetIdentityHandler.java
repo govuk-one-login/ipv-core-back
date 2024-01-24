@@ -115,43 +115,30 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String userName = null;
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
 
-            if (isUserInitiated && f2fRequest != null) {
+            if (isUserInitiated) {
                 List<VcStoreItem> credentials =
                         verifiableCredentialService.getVcStoreItems(
                                 clientOAuthSessionItem.getUserId());
-                userName = getUserName(credentials, false);
-            }
-
-            if (isUserInitiated && f2fRequest == null) {
-                List<VcStoreItem> credentials =
-                        verifiableCredentialService.getVcStoreItems(
-                                clientOAuthSessionItem.getUserId());
-                userName = getUserName(credentials, true);
+                userName = getUnconfirmedUserName(credentials);
             }
 
             verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
-            if (isUserInitiated && f2fRequest == null) {
+            if (isUserInitiated) {
                 sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
 
                 // Create a new email service for each request so that we don't risk using stale
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
-                emailService.sendUserTriggeredIdentityResetConfirmation(
-                        ipvSessionItem.getEmailAddress(), userName);
+                if (f2fRequest == null) {
+                    emailService.sendUserTriggeredIdentityResetConfirmation(
+                            ipvSessionItem.getEmailAddress(), userName);
+                } else {
+                    emailService.sendUserTriggeredF2FIdentityResetConfirmation(
+                            ipvSessionItem.getEmailAddress(), userName);
+                }
             }
-
-            if (isUserInitiated && f2fRequest != null) {
-                sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
-
-                // Create a new email service for each request so that we don't risk using stale
-                // configuration.
-                final EmailService emailService = emailServiceFactory.getEmailService();
-                emailService.sendUserTriggeredF2FIdentityResetConfirmation(
-                        ipvSessionItem.getEmailAddress(), userName);
-            }
-
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("HTTP response exception", e));
@@ -186,10 +173,10 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
     // Try to get the user's name from their VCs. It's not the end of the world if this fails so
     // just return null in that case.
-    private String getUserName(List<VcStoreItem> credentials, boolean checkEvidence) {
+    private String getUnconfirmedUserName(List<VcStoreItem> credentials) {
         try {
             final Optional<IdentityClaim> identityClaim =
-                    userIdentityService.findIdentityClaim(credentials, checkEvidence);
+                    userIdentityService.findIdentityClaim(credentials, false);
 
             if (identityClaim.isEmpty()) {
                 LOGGER.warn(LogHelper.buildLogMessage("Failed to find identity claim"));
