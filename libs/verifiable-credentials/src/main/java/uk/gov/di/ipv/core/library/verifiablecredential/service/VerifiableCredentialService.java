@@ -49,7 +49,12 @@ public class VerifiableCredentialService {
             SignedJWT credential, String credentialIssuerId, String userId)
             throws VerifiableCredentialException {
         try {
+            LOGGER.error("WAHEEY");
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
+            LOGGER.error(vcStoreItem.toString());
+            LOGGER.error(vcStoreItem.getUserId());
+            LOGGER.error(vcStoreItem.getCredentialIssuer());
+            LOGGER.error(vcStoreItem.getCredential());
             dataStore.create(vcStoreItem);
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);

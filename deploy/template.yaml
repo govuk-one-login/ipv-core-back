@@ -685,6 +685,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
@@ -721,6 +722,14 @@ Resources:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/connections/*/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - Statement:
             - Sid: jarKmsEncryptionKeyPermission
               Effect: Allow

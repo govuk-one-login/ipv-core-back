@@ -174,7 +174,7 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+//            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
                 if (inheritedIdentityJwtClaim.isPresent()) {
                     validateAndStoreHMRCInheritedIdentity(
@@ -183,7 +183,7 @@ public class InitialiseIpvSessionHandler
                             claimsSet,
                             ipvSessionItem);
                 }
-            }
+//            }
 
             Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
 
@@ -338,6 +338,11 @@ public class InitialiseIpvSessionHandler
             SignedJWT signedInheritedIdentityJWT)
             throws RecoverableJarValidationException, ParseException {
         try {
+            LOGGER.info("Try to store");
+            LOGGER.info(signedInheritedIdentityJWT.toString());
+            LOGGER.info(signedInheritedIdentityJWT.serialize());
+            LOGGER.info(signedInheritedIdentityJWT.getJWTClaimsSet().toJSONObject().toString());
+            LOGGER.info(userId);
             verifiableCredentialService.persistUserCredentials(
                     signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
             ipvSessionItem.addVcReceivedThisSession(signedInheritedIdentityJWT.serialize());

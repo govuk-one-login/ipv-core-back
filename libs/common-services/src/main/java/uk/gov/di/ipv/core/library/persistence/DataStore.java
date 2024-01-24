@@ -69,6 +69,8 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public void create(T item) {
+        System.out.println("Creating item");
+        System.out.println(item.toString());
         table.putItem(item);
     }
 
