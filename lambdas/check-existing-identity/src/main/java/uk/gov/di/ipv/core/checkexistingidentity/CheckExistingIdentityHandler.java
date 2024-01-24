@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.checkexistingidentity.domain.VotProfilePair;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -66,7 +65,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
@@ -234,20 +232,19 @@ public class CheckExistingIdentityHandler
             }
 
             // Check for attained vot from vtr
-            var attainedVotAndProfile =
-                    getAttainedVotAndProfile(
+            var attainedVot =
+                    getAttainedVot(
                             clientOAuthSessionItem.getVtr(),
                             credentials,
                             vcStoreItems,
                             auditEventUser);
 
             // vot achieved
-            if (attainedVotAndProfile.isPresent()) {
-                Vot attainedVot = attainedVotAndProfile.get().attainedVot();
-                ipvSessionItem.setVot(attainedVot.name());
+            if (attainedVot.isPresent()) {
+                ipvSessionItem.setVot(attainedVot.get().name());
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                return buildReuseResponse(attainedVot, auditEventUser);
+                return buildReuseResponse(auditEventUser);
             }
 
             // No profile match
@@ -359,15 +356,13 @@ public class CheckExistingIdentityHandler
         return JOURNEY_NEXT;
     }
 
-    private Map<String, Object> buildReuseResponse(Vot vot, AuditEventUser auditEventUser)
+    private Map<String, Object> buildReuseResponse(AuditEventUser auditEventUser)
             throws SqsException {
-        if (vot.getProfileType().equals(ProfileType.GPG45)) {
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser));
-        }
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser));
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         return JOURNEY_REUSE;
@@ -416,7 +411,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<VotProfilePair> getAttainedVotAndProfile(
+    private Optional<Vot> getAttainedVot(
             List<String> vtr,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
@@ -429,35 +424,23 @@ public class CheckExistingIdentityHandler
                         .toList();
 
         for (var requestedVot : requestedVotsByStrength) {
-            var attainedVotAndProfile =
+            var requestedVotAttained =
                     requestedVot.getProfileType().equals(ProfileType.GPG45)
-                            ? matchGpg45Profile(
-                                    credentials, vcStoreItems, requestedVot, auditEventUser)
-                            : matchOperationalProfile(credentials, requestedVot);
+                            ? achievedWithGpg45Profile(
+                                    requestedVot, credentials, vcStoreItems, auditEventUser)
+                            : hasOperationalProfileVc(requestedVot, credentials);
 
-            if (attainedVotAndProfile.isPresent()) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Attained vot with profile")
-                                .with(
-                                        LOG_VOT.getFieldName(),
-                                        attainedVotAndProfile.get().attainedVot())
-                                .with(
-                                        LOG_PROFILE.getFieldName(),
-                                        attainedVotAndProfile.get().profileName()));
-
-                return attainedVotAndProfile;
+            if (requestedVotAttained) {
+                return Optional.of(requestedVot);
             }
         }
         return Optional.empty();
     }
 
-    private Optional<VotProfilePair> matchGpg45Profile(
+    private boolean achievedWithGpg45Profile(
+            Vot requestedVot,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
-            Vot requestedVot,
             AuditEventUser auditEventUser)
             throws UnknownEvidenceTypeException, ParseException, SqsException {
 
@@ -473,13 +456,13 @@ public class CheckExistingIdentityHandler
             sendProfileMatchedAuditEvent(
                     matchedGpg45Profile.get(), gpg45Scores, credentials, auditEventUser);
 
-            return Optional.of(new VotProfilePair(requestedVot, matchedGpg45Profile.get().label));
+            return true;
         }
-        return Optional.empty();
+        return false;
     }
 
-    private Optional<VotProfilePair> matchOperationalProfile(
-            List<SignedJWT> credentials, Vot requestedVot) throws ParseException {
+    private boolean hasOperationalProfileVc(Vot requestedVot, List<SignedJWT> credentials)
+            throws ParseException {
         for (SignedJWT cred : credentials) {
             String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
             Optional<String> matchedOperationalProfile =
@@ -490,10 +473,15 @@ public class CheckExistingIdentityHandler
 
             // Successful match
             if (matchedOperationalProfile.isPresent()) {
-                return Optional.of(
-                        new VotProfilePair(requestedVot, matchedOperationalProfile.get()));
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Operational profile matched")
+                                .with(LOG_VOT.getFieldName(), requestedVot));
+                return true;
             }
         }
-        return Optional.empty();
+        return false;
     }
 }

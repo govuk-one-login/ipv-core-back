@@ -86,8 +86,8 @@ class ContractTest {
     private static final String VALID_VC_HEADER =
             """
             {
-              "typ": "JWT",
-              "alg": "ES256"
+              "alg": "ES256",
+              "typ": "JWT"
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
@@ -136,12 +136,9 @@ class ContractTest {
                 },
                 "evidence": [
                   {
-                    "verificationScore": "0",
-                    "ci": [
-                      "A02",
-                      "A03"
-                    ],
-                    "txn": "DSJJSEE29392",
+                    "validityScore": 2,
+                    "strengthScore": 4,
+                    "txn": "c070fc08-cd26-41d8-8ef6-72bb270aa783",
                     "type": "IdentityCheck"
                   }
                 ]
@@ -151,75 +148,75 @@ class ContractTest {
 
     private static final String FAILED_VC_BODY =
             """
+            {
+              "iss": "dummyPassportComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "passport": [
                     {
-                      "iss": "dummyPassportComponentId",
-                      "sub": "test-subject",
-                      "nbf": 4070908800,
-                      "exp": 4070909400,
-                      "vc": {
-                        "@context": [
-                          "https://www.w3.org/2018/credentials/v1",
-                          "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                        ],
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "passport": [
-                            {
-                              "expiryDate": "2030-12-12",
-                              "documentNumber": "123456789"
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1932-02-25"
-                            }
-                          ],
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Mary"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Watson"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "evidence": [
-                            {
-                                "failedCheckDetails": [
-                                    {
-                                        "checkMethod": "data"
-                                    }
-                                ],
-                                "validityScore": 0,
-                                "strengthScore": 4,
-                                "ci": [
-                                    "D02"
-                                ],
-                                "txn": "c070fc08-cd26-41d8-8ef6-72bb270aa783",
-                                "type": "IdentityCheck"
-                            }
-                        ]
-                      }
+                      "expiryDate": "2030-12-12",
+                      "documentNumber": "123456789"
                     }
-                    """;
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "evidence": [
+                    {
+                        "failedCheckDetails": [
+                            {
+                                "checkMethod": "data"
+                            }
+                        ],
+                        "validityScore": 0,
+                        "strengthScore": 4,
+                        "ci": [
+                            "D02"
+                        ],
+                        "txn": "c070fc08-cd26-41d8-8ef6-72bb270aa783",
+                        "type": "IdentityCheck"
+                    }
+                ]
+              }
+            }
+            """;
 
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "lDEi47XWnjyZ20fU-vb02BV1MSan68AqLUEQxCZGM_r8i4bG06uzdpXOJZeg-Kdhsf-NtWbqb-xM0P36YGwIeg";
+            "3dfxSnG-X1KIyN7wpgzqMXoOTjRKRTZcNlpMtORUuuGYtwj5ap_UGAtXDYM2BgqllBA2YiQ-6QJFituZ0bBtzA";
 
     private static final String FAILED_VC_SIGNATURE =
-            "qiIFQEj_ohS_DxjtvDcW0s7sMH7wQdrMQpe3D3mWq0pLbz93Vz8PtJ27Kpc5_psuJOf9C29hZVotZ5iVTpxnpQ";
+            "cyuiTuMegkfjEp9Xl5r6_tVMFRvKLD_waHaaVZ_HuUS8utkwNIACnBfOpjyy3TJ-Sx_1x5-dr8T_70Pjc8t6sQ";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -437,26 +434,7 @@ class ContractTest {
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
-        ciConfigMap.put("A03", ciConfig2);
-
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
+        configureMockConfigService(credentialIssuerConfig);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -472,6 +450,7 @@ class ContractTest {
                         getCriOAuthSessionItem());
 
         // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
         verifiableCredentialResponse
                 .getVerifiableCredentials()
                 .forEach(
@@ -515,27 +494,7 @@ class ContractTest {
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D02", ciConfig1);
-
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
-        // it
-        Mockito.lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
-
-        var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
-                        mockConfigService,
-                        ((exactMatchClaims, requiredClaims) ->
-                                new FixedTimeJWTClaimsVerifier<>(
-                                        exactMatchClaims,
-                                        requiredClaims,
-                                        Date.from(CURRENT_TIME.instant()))));
+        configureMockConfigService(credentialIssuerConfig);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -550,6 +509,8 @@ class ContractTest {
                         getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
         verifiableCredentialResponse
                 .getVerifiableCredentials()
                 .forEach(
@@ -631,6 +592,17 @@ class ContractTest {
     }
 
     @NotNull
+    private VerifiableCredentialJwtValidator getVerifiableCredentialJwtValidator() {
+        return new VerifiableCredentialJwtValidator(
+                mockConfigService,
+                ((exactMatchClaims, requiredClaims) ->
+                        new FixedTimeJWTClaimsVerifier<>(
+                                exactMatchClaims,
+                                requiredClaims,
+                                Date.from(CURRENT_TIME.instant()))));
+    }
+
+    @NotNull
     private static CriCallbackRequest getCallbackRequest(
             String authCode, OauthCriConfig credentialIssuerConfig) {
         return new CriCallbackRequest(
@@ -647,10 +619,8 @@ class ContractTest {
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
-        ciConfigMap.put("A03", ciConfig2);
+        ciConfigMap.put("D02", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);

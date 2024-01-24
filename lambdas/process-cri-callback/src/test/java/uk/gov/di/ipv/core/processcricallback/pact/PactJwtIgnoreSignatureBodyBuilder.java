@@ -34,9 +34,10 @@ public class PactJwtIgnoreSignatureBodyBuilder implements BodyBuilder {
     public MatchingRuleCategory getMatchers() {
         var noSignatureRegex = new RegexMatcher(createJwtRegex());
         return new MatchingRuleCategory(
-                "full body matcher",
+                "body", // This category is for the body of the response
                 Collections.singletonMap(
-                        "ignore JWT signature", new MatchingRuleGroup(List.of(noSignatureRegex))));
+                        // $ means that this rule is for the root of the body
+                        "$", new MatchingRuleGroup(List.of(noSignatureRegex))));
     }
 
     @Override
