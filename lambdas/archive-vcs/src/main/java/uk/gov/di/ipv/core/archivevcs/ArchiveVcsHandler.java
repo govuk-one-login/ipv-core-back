@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.io.InputStream;
 import java.io.OutputStream;
 
+@ExcludeFromGeneratedCoverageReport
 public class ArchiveVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
@@ -27,7 +28,6 @@ public class ArchiveVcsHandler implements RequestStreamHandler {
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
-    @ExcludeFromGeneratedCoverageReport
     public ArchiveVcsHandler() {
         this.configService = new ConfigService();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
