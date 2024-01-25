@@ -11,7 +11,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MockitoExtension.class)
-class ReplayCimitVcsHandlerTest {
+class ArchiveVcsHandlerTest {
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private ArchiveVcsHandler archiveVcsHandler;
