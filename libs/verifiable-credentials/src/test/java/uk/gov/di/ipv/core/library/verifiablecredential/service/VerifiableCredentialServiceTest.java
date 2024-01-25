@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -178,11 +179,8 @@ class VerifiableCredentialServiceTest {
         String testCredentialIssuer = PASSPORT_CRI;
         List<VcStoreItem> credentialItem =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                testCredentialIssuer,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, testCredentialIssuer, VC_PASSPORT_NON_DCMAW_SUCCESSFUL));
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
@@ -199,8 +197,8 @@ class VerifiableCredentialServiceTest {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
         VcStoreItem credentialItem =
-                createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
+                TestFixtures.createVcStoreItem(
+                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
@@ -214,13 +212,10 @@ class VerifiableCredentialServiceTest {
     void shouldDeleteAllExistingVCs() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                "a-users-id",
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem("a-users-id", FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem("a-users-id", "sausages", VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem("a-users-id", FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem("a-users-id", "sausages", VC_KBV_SCORE_2));
 
         when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
@@ -237,16 +232,5 @@ class VerifiableCredentialServiceTest {
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
-    }
-
-    private VcStoreItem createVcStoreItem(
-            String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(userId);
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
     }
 }

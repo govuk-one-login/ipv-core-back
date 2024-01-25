@@ -377,6 +377,9 @@ public class InitialiseIpvSessionHandler
         try {
             var vcStoreItem =
                     verifiableCredentialService.getVcStoreItem(HMRC_MIGRATION_CRI, userId);
+            if (vcStoreItem == null) {
+                return false;
+            }
             SignedJWT existingInheritedIdentity = SignedJWT.parse(vcStoreItem.getCredential());
 
             var existingInheritedIdentityVot =

@@ -22,7 +22,9 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -105,8 +107,12 @@ public class BuildProvenUserIdentityDetailsHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            ProfileType profileType = Vot.valueOf(ipvSessionItem.getVot()).getProfileType();
             List<VcStoreItem> credentials =
-                    verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId());
+                    VcHelper.filterVCBasedOnProfileType(
+                            verifiableCredentialService.getVcStoreItems(
+                                    clientOAuthSessionItem.getUserId()),
+                            profileType);
 
             List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
 
@@ -115,8 +121,11 @@ public class BuildProvenUserIdentityDetailsHandler
             provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.getName());
             provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
-            List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
-            provenUserIdentityDetailsBuilder.addresses(addresses);
+            if (profileType.equals(ProfileType.GPG45)) {
+                List<Address> addresses =
+                        getProvenIdentityAddresses(credentials, currentVcStatuses);
+                provenUserIdentityDetailsBuilder.addresses(addresses);
+            }
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Successfully retrieved proven identity response."));

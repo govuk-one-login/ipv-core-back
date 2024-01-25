@@ -7,6 +7,7 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
@@ -16,6 +17,7 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45NinoValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45TicfValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
@@ -24,6 +26,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -36,12 +40,6 @@ public class VcHelper {
 
     public static void setConfigService(ConfigService configService) {
         VcHelper.configService = configService;
-    }
-
-    private static Set<String> getNonEvidenceCredentialIssuers() {
-        return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
-                .collect(Collectors.toSet());
     }
 
     public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
@@ -75,6 +73,28 @@ public class VcHelper {
             }
         }
         return true;
+    }
+
+    public static List<VcStoreItem> filterVCBasedOnProfileType(
+            List<VcStoreItem> vcStoreItems, ProfileType profileType) {
+        if (profileType.equals(ProfileType.GPG45)) {
+            return vcStoreItems.stream()
+                    .filter(vcItem -> !OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer()))
+                    .toList();
+        } else {
+            return vcStoreItems.stream()
+                    .filter(
+                            vcItem ->
+                                    (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
+                                            || vcItem.getCredentialIssuer().equals(TICF_CRI)))
+                    .toList();
+        }
+    }
+
+    private static Set<String> getNonEvidenceCredentialIssuers() {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
+                .collect(Collectors.toSet());
     }
 
     private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {

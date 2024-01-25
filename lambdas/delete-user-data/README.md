@@ -31,7 +31,7 @@ Build via AWS SAM CLI:
 Run `docker-compose up` to orchestrate:
 - a local DynamoDB instance (http://host.docker.internal:8000)
 - a local GUI for DynamoDB (http://localhost:8001/)
-- setting up a table using `local-dev/create-table.json` 
+- setting up a table using `local-dev/create-table.json`
 - adding data to the table using `local-dev/seed-table.json`
 
 Then invoke the function with the sample event `local-dev/sample-sqs-event.json`:

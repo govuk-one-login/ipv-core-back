@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -377,7 +378,10 @@ public class BuildCriOauthRequestHandler
     private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
         List<String> credentials =
                 userIdentityService.getIdentityCredentials(
-                        verifiableCredentialService.getVcStoreItems(userId));
+                        VcHelper.filterVCBasedOnProfileType(
+                                verifiableCredentialService.getVcStoreItems(userId),
+                                ProfileType.GPG45));
+
         List<SignedJWT> signedJWTs = new ArrayList<>();
 
         for (String credential : credentials) {
