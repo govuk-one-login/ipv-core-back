@@ -98,7 +98,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
@@ -137,7 +137,8 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
+            new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_PENDING =
@@ -449,8 +450,8 @@ class CheckExistingIdentityHandlerTest {
 
     @ParameterizedTest
     @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
-    void shouldReturnJourneyNextResponseIfNoProfileAttainsVot(Map<String, Object> votAndVtr)
-            throws Exception {
+    void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
+            Map<String, Object> votAndVtr) throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
@@ -473,7 +474,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_NEXT, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(ipvSessionItem, never()).setVot(any());
     }
@@ -546,7 +547,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals("/journey/next", journeyResponse.getJourney());
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);

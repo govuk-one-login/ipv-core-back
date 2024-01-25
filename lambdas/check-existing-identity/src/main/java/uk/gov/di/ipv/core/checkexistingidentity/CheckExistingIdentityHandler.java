@@ -73,7 +73,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
@@ -93,8 +93,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_NEXT =
-            new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
+    private static final Map<String, Object> JOURNEY_IPV_GPG45_MEDIUM =
+            new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
@@ -361,8 +361,8 @@ public class CheckExistingIdentityHandler
 
             return JOURNEY_RESET_IDENTITY;
         }
-        LOGGER.info(LogHelper.buildLogMessage("New IPV journey required, returning journey next"));
-        return JOURNEY_NEXT;
+        LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
+        return JOURNEY_IPV_GPG45_MEDIUM;
     }
 
     private Map<String, Object> buildReuseResponse(

@@ -105,6 +105,8 @@ CHECK_EXISTING_IDENTITY:
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
+    ipv-gpg45-medium:
+      targetState: IPV_IDENTITY_START_PAGE
     reset-identity:
       targetState: RESET_IDENTITY
     reuse:

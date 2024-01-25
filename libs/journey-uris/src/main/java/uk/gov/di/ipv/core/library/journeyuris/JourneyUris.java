@@ -12,6 +12,7 @@ public class JourneyUris {
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
     public static final String JOURNEY_IN_MIGRATION_REUSE_PATH = "/journey/in-migration-reuse";
+    public static final String JOURNEY_IPV_GPG45_MEDIUM_PATH = "/journey/ipv-gpg45-medium";
     public static final String JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH =
             "/journey/operational-profile-reuse";
     public static final String JOURNEY_MET_PATH = "/journey/met";
