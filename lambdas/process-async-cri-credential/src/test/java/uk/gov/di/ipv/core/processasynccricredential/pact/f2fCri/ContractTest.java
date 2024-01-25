@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processasynccricredential.pact.f2fCri;
 
 import au.com.dius.pact.consumer.MessagePactBuilder;
 import au.com.dius.pact.consumer.MockServer;
-import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -659,9 +658,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -683,8 +679,6 @@ public class ContractTest {
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-
-                                            actualPactDsl.close();
                                         })
                                 .build())
                 .toPact();
@@ -797,9 +791,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -821,8 +812,6 @@ public class ContractTest {
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-
-                                            actualPactDsl.close();
                                         })
                                 .build())
                 .toPact();
@@ -940,9 +929,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -964,8 +950,6 @@ public class ContractTest {
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-
-                                            actualPactDsl.close();
                                         })
                                 .build())
                 .toPact();
@@ -1074,9 +1058,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -1098,8 +1079,6 @@ public class ContractTest {
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-
-                                            actualPactDsl.close();
                                         })
                                 .build())
                 .toPact();
@@ -1200,9 +1179,6 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            final PactDslJsonBody actualPactDsl =
-                                                    new PactDslJsonBody();
-
                                             var jwtHelper =
                                                     new JwtTestHelper(
                                                             VALID_VC_HEADER,
@@ -1224,8 +1200,6 @@ public class ContractTest {
                                                                     .buildRegexMatcherIgnoringSignature(),
                                                             jwtHelper.buildJwt()),
                                                     1);
-
-                                            actualPactDsl.close();
                                         })
                                 .build())
                 .toPact();
