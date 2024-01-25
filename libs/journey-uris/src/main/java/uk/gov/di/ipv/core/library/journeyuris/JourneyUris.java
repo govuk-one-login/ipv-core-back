@@ -11,6 +11,9 @@ public class JourneyUris {
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
+    public static final String JOURNEY_IN_MIGRATION_REUSE_PATH = "/journey/in-migration-reuse";
+    public static final String JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH =
+            "/journey/operational-profile-reuse";
     public static final String JOURNEY_MET_PATH = "/journey/met";
     public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";

@@ -47,6 +47,15 @@ CRI_STATE:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH
 
+CRI_TICF_STATE:
+  events:
+    enhanced-verification:
+      targetState: PYI_NO_MATCH
+    fail-with-ci:
+      targetState: PYI_NO_MATCH
+    error:
+      targetState: ERROR
+
 # Shared states
 INITIAL_IPV_JOURNEY:
   events:
@@ -105,6 +114,16 @@ CHECK_EXISTING_IDENTITY:
           targetState: CRI_TICF_BEFORE_REUSE
         deleteDetailsEnabled:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
+    operational-profile-reuse:
+      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE
+    in-migration-reuse:
+      targetState: END
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_END
     pending:
       targetState: IPV_IDENTITY_PENDING_PAGE
       checkFeatureFlag:
@@ -139,9 +158,14 @@ IPV_IDENTITY_REUSE_PAGE:
   response:
     type: page
     pageId: page-ipv-reuse
-  events:
-    next:
-      targetState: END
+  parent: END_JOURNEY
+
+OPERATIONAL_PROFILE_REUSE_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-reuse
+    context: operational-profile
+  parent: END_JOURNEY
 
 # User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
 IPV_IDENTITY_PENDING_PAGE_TEST:
@@ -371,87 +395,81 @@ CRI_TICF_BEFORE_SUCCESS:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
-    enhanced-verification:
-      targetState: PYI_NO_MATCH
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
 
 CRI_TICF_BEFORE_REUSE:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: IPV_IDENTITY_REUSE_PAGE
       checkFeatureFlag:
         deleteDetailsEnabled:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
-    enhanced-verification:
-      targetState: PYI_NO_MATCH
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
+
+CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
+  events:
+    next:
+      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
+
+CRI_TICF_BEFORE_END:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
+  events:
+    next:
+      targetState: END
 
 CRI_TICF_BEFORE_F2F:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: CRI_F2F
     enhanced-verification:
       targetState: CRI_F2F
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
 
 CRI_TICF_BEFORE_NO_MATCH:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: PYI_NO_MATCH
-    enhanced-verification:
-      targetState: PYI_NO_MATCH
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
 
 CRI_TICF_BEFORE_ANOTHER_WAY:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: PYI_ANOTHER_WAY
     enhanced-verification:
       targetState: PYI_ANOTHER_WAY
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
-      targetState: ERROR
 
 CRI_TICF_BEFORE_ERROR:
   response:
     type: process
     lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
       targetState: ERROR
     enhanced-verification:
-      targetState: ERROR
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-    error:
       targetState: ERROR
 
 # Common pages

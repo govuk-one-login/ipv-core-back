@@ -61,6 +61,7 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -71,7 +72,9 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
@@ -84,6 +87,10 @@ public class CheckExistingIdentityHandler
 
     private static final Map<String, Object> JOURNEY_REUSE =
             new JourneyResponse(JOURNEY_REUSE_PATH).toObjectMap();
+    private static final Map<String, Object> JOURNEY_OPERATIONAL_PROFILE_REUSE =
+            new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH).toObjectMap();
+    private static final Map<String, Object> JOURNEY_IN_MIGRATION_REUSE =
+            new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_NEXT =
@@ -232,19 +239,21 @@ public class CheckExistingIdentityHandler
             }
 
             // Check for attained vot from vtr
-            var attainedVot =
-                    getAttainedVot(
+            var strongestAttainedVotFromVtr =
+                    getStrongestAttainedVotFromVtr(
                             clientOAuthSessionItem.getVtr(),
                             credentials,
                             vcStoreItems,
                             auditEventUser);
 
             // vot achieved
-            if (attainedVot.isPresent()) {
-                ipvSessionItem.setVot(attainedVot.get().name());
+            if (strongestAttainedVotFromVtr.isPresent()) {
+                Vot attainedVot = strongestAttainedVotFromVtr.get();
+                ipvSessionItem.setVot(attainedVot.name());
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                return buildReuseResponse(auditEventUser);
+                return buildReuseResponse(
+                        attainedVot, ipvSessionItem.getVcReceivedThisSession(), auditEventUser);
             }
 
             // No profile match
@@ -356,7 +365,8 @@ public class CheckExistingIdentityHandler
         return JOURNEY_NEXT;
     }
 
-    private Map<String, Object> buildReuseResponse(AuditEventUser auditEventUser)
+    private Map<String, Object> buildReuseResponse(
+            Vot attainedVot, List<String> vcReceivedThisSession, AuditEventUser auditEventUser)
             throws SqsException {
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -365,6 +375,15 @@ public class CheckExistingIdentityHandler
                         auditEventUser));
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
+
+        if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
+            // the only VC we should possibly have collected this session at this point is a
+            // migration VC
+            return vcReceivedThisSession == null || vcReceivedThisSession.isEmpty()
+                    ? JOURNEY_OPERATIONAL_PROFILE_REUSE
+                    : JOURNEY_IN_MIGRATION_REUSE;
+        }
+
         return JOURNEY_REUSE;
     }
 
@@ -411,7 +430,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<Vot> getAttainedVot(
+    private Optional<Vot> getStrongestAttainedVotFromVtr(
             List<String> vtr,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
