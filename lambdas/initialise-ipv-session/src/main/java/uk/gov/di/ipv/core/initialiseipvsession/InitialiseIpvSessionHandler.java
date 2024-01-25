@@ -376,7 +376,7 @@ public class InitialiseIpvSessionHandler
             SignedJWT incomingInheritedIdentity, String userId) throws CredentialParseException {
         try {
             var vcStoreItem =
-                    verifiableCredentialService.getVcStoreItem(HMRC_MIGRATION_CRI, userId);
+                    verifiableCredentialService.getVcStoreItem(userId, HMRC_MIGRATION_CRI);
             if (vcStoreItem == null) {
                 return false;
             }
