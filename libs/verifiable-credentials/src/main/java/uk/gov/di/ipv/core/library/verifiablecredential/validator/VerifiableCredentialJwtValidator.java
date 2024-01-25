@@ -18,7 +18,6 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -30,7 +29,6 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -163,9 +161,6 @@ public class VerifiableCredentialJwtValidator {
 
     private void validateCiCodes(SignedJWT verifiableCredential)
             throws VerifiableCredentialException {
-        Map<String, ContraIndicatorConfig> contraIndicatorConfigMap =
-                configService.getContraIndicatorConfigMap();
-
         try {
             JSONObject vcClaim =
                     (JSONObject) verifiableCredential.getJWTClaimsSet().getClaim(VC_CLAIM);
@@ -184,8 +179,9 @@ public class VerifiableCredentialJwtValidator {
                                 cis.stream()
                                         .anyMatch(
                                                 ciCode ->
-                                                        !contraIndicatorConfigMap.containsKey(
-                                                                ciCode));
+                                                        !configService
+                                                                .getContraIndicatorConfigMap()
+                                                                .containsKey(ciCode));
                         if (anyUnrecognisedCiCodes) {
                             break;
                         }
