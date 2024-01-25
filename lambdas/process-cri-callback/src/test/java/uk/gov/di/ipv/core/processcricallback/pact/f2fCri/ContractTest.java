@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "PassportCriProvider")
+@PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
