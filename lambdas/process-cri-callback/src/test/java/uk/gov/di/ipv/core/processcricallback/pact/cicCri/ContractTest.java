@@ -14,6 +14,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +26,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -206,6 +208,56 @@ class ContractTest {
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
         assertThat(accessToken.getLifetime(), greaterThan(0L));
+    }
+
+    @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAccessTokenReturns401(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyInvalidAccessToken is an invalid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyClaimedIdentityComponentId is a valid issuer")
+                .uponReceiving("Invalid credential request due to invalid access token")
+                .path("/credential")
+                .method("POST")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer dummyInvalidAccessToken")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
+    void fetchVerifiableCredential_whenCalledAgainstCicCriWithInvalidAuthCode_throwsAnException(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () ->
+                                underTest.fetchVerifiableCredential(
+                                        new BearerAccessToken("dummyInvalidAccessToken"),
+                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCriOAuthSessionItem()));
+
+        // Assert
+        assertThat(
+                exception.getErrorResponse(),
+                is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
     }
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
