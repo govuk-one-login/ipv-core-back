@@ -211,8 +211,13 @@ public class JourneyMapTest {
 
                 if (response instanceof PageStepResponse pageStepResponse) {
                     var pageId = (String) pageStepResponse.value().get("page");
-                    var pageEvents = basicState.getEvents().keySet();
-
+                    var pageEvents = new HashSet<>(basicState.getEvents().keySet());
+                    if (basicState.getParent() != null) {
+                        pageEvents.addAll(
+                                ((BasicState) stateMachine.get(basicState.getParent()))
+                                        .getEvents()
+                                        .keySet());
+                    }
                     pageMap.computeIfAbsent(pageId, k -> new ArrayList<>())
                             .add(new StateAndEvents(key, pageEvents));
                 }
