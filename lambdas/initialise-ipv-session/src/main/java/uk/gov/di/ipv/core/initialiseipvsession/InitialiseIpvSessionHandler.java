@@ -193,7 +193,10 @@ public class InitialiseIpvSessionHandler
                 }
             }
 
-            Boolean reproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
+            Boolean reproveIdentity =
+                    configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
+                            ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
+                            : null;
 
             AuditExtensionsReproveIdentity reproveAuditExtension =
                     reproveIdentity == null
@@ -373,7 +376,10 @@ public class InitialiseIpvSessionHandler
             SignedJWT incomingInheritedIdentity, String userId) throws CredentialParseException {
         try {
             var vcStoreItem =
-                    verifiableCredentialService.getVcStoreItem(HMRC_MIGRATION_CRI, userId);
+                    verifiableCredentialService.getVcStoreItem(userId, HMRC_MIGRATION_CRI);
+            if (vcStoreItem == null) {
+                return false;
+            }
             SignedJWT existingInheritedIdentity = SignedJWT.parse(vcStoreItem.getCredential());
 
             var existingInheritedIdentityVot =

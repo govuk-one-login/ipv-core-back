@@ -9,6 +9,12 @@ repos:
         args: [ --allow-missing-credentials ]
       - id: detect-private-key
 
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+
   - repo: https://github.com/awslabs/cfn-python-lint
     rev: v0.80.4 # The version of cfn-lint to use
     hooks:

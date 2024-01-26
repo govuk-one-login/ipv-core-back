@@ -8,17 +8,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -26,11 +29,11 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,6 +41,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
@@ -47,6 +51,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
 
@@ -93,6 +98,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionDetailsService,
                         mockVerifiableCredentialService);
+
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2.name());
     }
 
     @Test
@@ -100,14 +108,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -135,15 +146,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
-                                createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -171,14 +186,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
-                                createVcStoreItem(ADDRESS_CRI, M1A_MULTI_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_MULTI_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -211,15 +229,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
-                                createVcStoreItem(
-                                        ADDRESS_CRI, M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID,
+                                        ADDRESS_CRI,
+                                        M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -249,13 +271,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getComponentId(ADDRESS_CRI))
                 .thenReturn(ISSUER_CONFIG_ADDRESS.getComponentId());
 
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -278,13 +302,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenAddressVcIsMissing() throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -311,14 +337,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive500ResponseCodeWhenEvidenceVcIsNotSuccessful() throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_FAILED_PASSPORT_VC),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_FAILED_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -345,14 +374,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive500ResponseCodeWhenMissingNameInVcs() throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -379,14 +411,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive500ResponseCodeWhenMissingDoBInVcs() throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -410,6 +445,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
+    @MockitoSettings(strictness = Strictness.LENIENT)
     void shouldReceive400ResponseCodeIfMissingSessionId() {
         JourneyRequest input =
                 JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
@@ -424,16 +460,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive500ResponseCodeWhenFailedToParseVc() {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, "invalid-credential"),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, "invalid-credential"),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         JourneyRequest input = createRequestEvent();
         JourneyErrorResponse errorResponse =
@@ -454,14 +493,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockUserIdentityService.isVcSuccessful(any(), any()))
                 .thenThrow(new NoVcStatusForIssuerException("Bad"));
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
-                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
-                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
-                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -479,19 +521,87 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 errorResponse.getMessage());
     }
 
-    private JourneyRequest createRequestEvent() {
-        return JourneyRequest.builder().ipvSessionId(SESSION_ID).ipAddress("10.10.10.1").build();
+    @Test
+    void shouldReceive200ResponseCodeProvenUserIdentityDetailsForGPGProfile() throws Exception {
+        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
+        when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
+
+        when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
+        when(mockConfigService.getComponentId(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS.getComponentId());
+
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input = createRequestEvent();
+
+        ProvenUserIdentityDetails provenUserIdentityDetails =
+                toResponseClass(
+                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
+
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
+        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    private VcStoreItem createVcStoreItem(String credentialIssuer, String credential) {
-        Instant dateCreated = Instant.now();
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId("user-id-1");
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
+    @Test
+    void shouldReceive200ResponseCodeProvenUserIdentityDetailsForOperationalProfile()
+            throws Exception {
+        when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250.name());
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                                TestFixtures.createVcStoreItem(
+                                        TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
+
+        when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
+        when(mockConfigService.getComponentId(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS.getComponentId());
+
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input = createRequestEvent();
+
+        ProvenUserIdentityDetails provenUserIdentityDetails =
+                toResponseClass(
+                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
+
+        assertEquals("Kenneth Decerqueira", provenUserIdentityDetails.getName());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
+        assertNull(provenUserIdentityDetails.getAddresses());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    private JourneyRequest createRequestEvent() {
+        return JourneyRequest.builder().ipvSessionId(SESSION_ID).ipAddress("10.10.10.1").build();
     }
 
     private static OauthCriConfig createCredentialIssuerConfig(String componentId) {

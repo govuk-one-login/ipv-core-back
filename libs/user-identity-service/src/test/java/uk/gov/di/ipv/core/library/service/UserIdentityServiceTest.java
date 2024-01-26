@@ -36,16 +36,17 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -66,6 +67,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
@@ -88,6 +90,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_WITHOUT_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
@@ -153,12 +157,9 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -180,14 +181,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -207,25 +205,22 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -237,25 +232,22 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Corky", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Corky", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF, Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -267,18 +259,17 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 DCMAW_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimmy", "Jones", ""), // BAV cri doesn't provide birthdate
-                                Instant.now()));
+                                        "Jimmy", "Jones",
+                                        ""))); // BAV cri doesn't provide birthdate
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -292,18 +283,16 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        missingName, "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        missingName, "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -328,18 +317,16 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", missingName, "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", missingName, "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -364,18 +351,16 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        missing, missing, "1000-01-01"),
-                                Instant.now()));
+                                        missing, missing, "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -389,23 +374,20 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 DCMAW_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
-                                createCredentialWithNameAndBirthDate(missing, "Jones", missing),
-                                Instant.now()));
+                                createCredentialWithNameAndBirthDate(missing, "Jones", missing)));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -428,24 +410,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jimmy", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jimmy", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -457,24 +436,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 DCMAW_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "2000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "2000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -488,23 +464,20 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
-                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing),
-                                Instant.now()),
-                        createVcStoreItem(
+                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -529,23 +502,20 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
-                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing),
-                                Instant.now()),
-                        createVcStoreItem(
+                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -559,23 +529,20 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
-                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing),
-                                Instant.now()),
-                        createVcStoreItem(
+                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -587,24 +554,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "2000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "2000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -616,24 +580,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Corky", "Jones", "1000-01-01", false),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Corky", "Jones", "1000-01-01", false)),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -645,24 +606,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 ADDRESS_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "2000-01-01", false),
-                                Instant.now()));
+                                        "Jimbo", "Jones", "2000-01-01", false)));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -674,24 +632,21 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 PASSPORT_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 DCMAW_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01"),
-                                Instant.now()),
-                        createVcStoreItem(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01")),
-                                Instant.now()));
+                                        "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01"))));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -703,14 +658,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -735,16 +687,13 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME, Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1,
-                                DCMAW_CRI,
-                                VC_PASSPORT_MISSING_BIRTH_DATE,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -769,12 +718,9 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
@@ -824,10 +770,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2));
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -858,13 +804,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_MISSING_BIRTH_DATE,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2));
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -898,14 +841,11 @@ class UserIdentityServiceTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -926,12 +866,9 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
@@ -950,14 +887,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_MISSING_PASSPORT,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_MISSING_PASSPORT),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -980,12 +914,12 @@ class UserIdentityServiceTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()),
-                        createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS),
+                        TestFixtures.createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
@@ -1005,10 +939,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_SUCCESSFUL));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
@@ -1028,16 +962,13 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1,
-                                NINO_CRI,
-                                VC_NINO_MISSING_SOCIAL_SECURITY_RECORD,
-                                Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, NINO_CRI, VC_NINO_MISSING_SOCIAL_SECURITY_RECORD));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1058,11 +989,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1083,13 +1014,12 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1, NINO_CRI, VC_NINO_UNSUCCESSFUL, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS),
+                        TestFixtures.createVcStoreItem(USER_ID_1, NINO_CRI, VC_NINO_UNSUCCESSFUL));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1137,14 +1067,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1172,18 +1099,12 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1,
-                                ADDRESS_CRI,
-                                VC_ADDRESS_MISSING_ADDRESS_PROPERTY,
-                                Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, ADDRESS_CRI, VC_ADDRESS_MISSING_ADDRESS_PROPERTY));
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -1214,14 +1135,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, "GARBAGE", Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, "GARBAGE"));
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -1240,9 +1158,9 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
@@ -1261,12 +1179,9 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1));
 
         // Act
         List<String> vcList = userIdentityService.getIdentityCredentials(vcStoreItems);
@@ -1281,10 +1196,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1308,10 +1223,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW, Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
@@ -1332,14 +1247,11 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1361,19 +1273,13 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                DCMAW_CRI,
-                                VC_DRIVING_PERMIT_DCMAW_FAILED,
-                                Instant.now()),
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, DCMAW_CRI, VC_DRIVING_PERMIT_DCMAW_FAILED),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1395,11 +1301,10 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
+                        TestFixtures.createVcStoreItem(
                                 USER_ID_1,
                                 DCMAW_CRI,
-                                VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY,
-                                Instant.now()));
+                                VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY));
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1419,15 +1324,12 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(
-                                USER_ID_1,
-                                PASSPORT_CRI,
-                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
-                                Instant.now()),
-                        createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2, Instant.now()),
-                        createVcStoreItem(USER_ID_1, DCMAW_CRI, "GARBAGE", Instant.now()));
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, KBV_CRI, VC_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, ADDRESS_CRI, VC_ADDRESS_2),
+                        TestFixtures.createVcStoreItem(USER_ID_1, DCMAW_CRI, "GARBAGE"));
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -1677,7 +1579,7 @@ class UserIdentityServiceTest {
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
-                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
+                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC));
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1691,7 +1593,7 @@ class UserIdentityServiceTest {
             getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
-                List.of(createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()));
+                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC));
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1705,8 +1607,8 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC, Instant.now()));
+                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(USER_ID_1, F2F_CRI, M1A_F2F_VC));
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
@@ -1717,8 +1619,8 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1, Instant.now()),
-                        createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2));
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
@@ -1729,8 +1631,8 @@ class UserIdentityServiceTest {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC, Instant.now()),
-                        createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2, Instant.now()));
+                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(USER_ID_1, F2F_CRI, VC_KBV_SCORE_2));
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
@@ -1740,15 +1642,153 @@ class UserIdentityServiceTest {
         assertTrue(userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems));
     }
 
-    private VcStoreItem createVcStoreItem(
-            String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(userId);
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
+    @Test
+    void shouldReturnCredentialsFromDataStoreForGPGProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", Vot.P2.name(), emptyContraIndicators);
+
+        assertEquals(2, credentials.getVcs().size());
+        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, credentials.getVcs().get(0));
+        assertEquals(VC_FRAUD_SCORE_1, credentials.getVcs().get(1));
+        assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
+    void shouldReturnCredentialsWithTicfFromDataStoreForOperationalProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", Vot.PCL200.name(), emptyContraIndicators);
+
+        assertEquals(2, credentials.getVcs().size());
+        assertEquals(VC_TICF, credentials.getVcs().get(0));
+        assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(1));
+        assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
+    void shouldReturnCredentialsFromDataStoreForOperationalProfile()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        USER_ID_1, "test-sub", Vot.PCL200.name(), emptyContraIndicators);
+
+        assertEquals(1, credentials.getVcs().size());
+        assertEquals(VC_HMRC_MIGRATION, credentials.getVcs().get(0));
+        assertEquals("test-sub", credentials.getSub());
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
+    void areVCsCorrelatedReturnsTrueWhenVcAreCorrelatedJustForGPG45Profile() throws Exception {
+        // Arrange
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1,
+                                ADDRESS_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1,
+                                PASSPORT_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1,
+                                BAV_CRI,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        TestFixtures.createVcStoreItem(USER_ID_1, TICF_CRI, VC_TICF),
+                        TestFixtures.createVcStoreItem(
+                                USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        assertTrue(userIdentityService.areVCsCorrelated(vcStoreItems));
+    }
+
+    @Test
+    void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
+        assertTrue(result.isPresent());
+        assertEquals("Kenneth Decerqueira", result.get().getFullName());
+    }
+
+    @Test
+    void findIdentityDoesNotReturnsIdentityClaimWhenEvidenceCheckIsTrue()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_SCORE_1);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, true);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, FRAUD_CRI, VC_FRAUD_WITHOUT_NAME);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        assertThrows(
+                HttpResponseExceptionWithErrorBody.class,
+                () -> userIdentityService.findIdentityClaim(vcStoreItems, false));
     }
 
     private void mockCredentialIssuerConfig() {

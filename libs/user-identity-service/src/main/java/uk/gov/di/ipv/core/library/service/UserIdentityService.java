@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -52,6 +53,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -125,8 +127,9 @@ public class UserIdentityService {
             String userId, String sub, String vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
-
+        ProfileType profileType = Vot.valueOf(vot).getProfileType();
+        List<VcStoreItem> vcStoreItems =
+                VcHelper.filterVCBasedOnProfileType(dataStore.getItems(userId), profileType);
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
         String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
@@ -134,39 +137,30 @@ public class UserIdentityService {
         UserIdentity.UserIdentityBuilder userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
-        if (Vot.P2.name().equals(vot)) {
-            final List<VcStoreItem> successfulVCStoreItems =
-                    getSuccessfulVCStoreItems(vcStoreItems);
-            Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
-            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
-
-            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
-
-            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
-            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
-
-            Optional<JsonNode> drivingPermitClaim =
-                    generateDrivingPermitClaim(successfulVCStoreItems);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
-
-            Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems);
-            ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
-
-            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
-        } else {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
-        }
+        buildUserIdentityBasedOnProfileType(
+                vot, contraIndicators, profileType, vcStoreItems, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }
 
+    public Optional<IdentityClaim> findIdentityClaim(
+            List<VcStoreItem> vcStoreItems, boolean checkEvidence)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        return findIdentityClaimFromVcStoreItems(vcStoreItems, checkEvidence);
+    }
+
     public Optional<IdentityClaim> findIdentityClaim(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        return findIdentityClaimFromVcStoreItems(vcStoreItems, true);
+    }
+
+    private Optional<IdentityClaim> findIdentityClaimFromVcStoreItems(
+            List<VcStoreItem> vcStoreItems, boolean checkEvidence)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if (isEvidenceVc(vcStoreItem)
+                if ((!checkEvidence || isEvidenceVc(vcStoreItem))
                         && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
@@ -228,8 +222,10 @@ public class UserIdentityService {
 
     public boolean areVCsCorrelated(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
-        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVCStoreItems)) {
+        List<VcStoreItem> successfulGPG45VCStoreItems =
+                getSuccessfulVCStoreItems(
+                        VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45));
+        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulGPG45VCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -242,7 +238,7 @@ public class UserIdentityService {
             return false;
         }
 
-        if (!checkBirthDateCorrelationInCredentials(successfulVCStoreItems)) {
+        if (!checkBirthDateCorrelationInCredentials(successfulGPG45VCStoreItems)) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -261,6 +257,48 @@ public class UserIdentityService {
         return vcStoreItems.stream()
                 .filter(vcStoreItem -> !vcStoreItem.getCredentialIssuer().equals(TICF_CRI))
                 .toList();
+    }
+
+    private void buildUserIdentityBasedOnProfileType(
+            String vot,
+            ContraIndicators contraIndicators,
+            ProfileType profileType,
+            List<VcStoreItem> vcStoreItems,
+            UserIdentity.UserIdentityBuilder userIdentityBuilder)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
+        if (vot.equals(Vot.P0.name())) {
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+        } else {
+            addUserIdentityClaims(
+                    profileType, vcStoreItems, userIdentityBuilder, successfulVCStoreItems);
+            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+        }
+    }
+
+    private void addUserIdentityClaims(
+            ProfileType profileType,
+            List<VcStoreItem> vcStoreItems,
+            UserIdentity.UserIdentityBuilder userIdentityBuilder,
+            List<VcStoreItem> successfulVCStoreItems)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVCStoreItems);
+        identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+
+        if (profileType.equals(ProfileType.GPG45)) {
+            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
+            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+
+            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
+            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+
+            Optional<JsonNode> drivingPermitClaim =
+                    generateDrivingPermitClaim(successfulVCStoreItems);
+            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+        }
+
+        Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVCStoreItems, profileType);
+        ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(
@@ -511,12 +549,18 @@ public class UserIdentityService {
         return Optional.of(addressNode);
     }
 
-    private Optional<JsonNode> generateNinoClaim(List<VcStoreItem> successfulVCStoreItems)
+    private Optional<JsonNode> generateNinoClaim(
+            List<VcStoreItem> successfulVCStoreItems, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
-        var ninoStoreItem = findStoreItem(NINO_CRI, successfulVCStoreItems);
+        String criToExtractFrom =
+                profileType.equals(ProfileType.GPG45) ? NINO_CRI : HMRC_MIGRATION_CRI;
+        var ninoStoreItem = findStoreItem(criToExtractFrom, successfulVCStoreItems);
 
         if (ninoStoreItem.isEmpty()) {
-            LOGGER.warn(LogHelper.buildLogMessage("Failed to find Nino CRI credential"));
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Failed to find appropriate CRI credential to extract "
+                                    + NINO_PROPERTY_NAME));
             return Optional.empty();
         }
 

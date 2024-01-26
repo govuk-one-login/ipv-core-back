@@ -18,7 +18,7 @@ STATE_NAME_1:
             type: page
             pageId: hub
             targetState: TARGET_STATE_NAME_$
-            
+
 
 # Switch State
 STATE_NAME_2:
@@ -97,7 +97,7 @@ STATE_NAME_4:
             type: cri-enabled
             foo:
                 condition:
-                    AND: 
+                    AND:
                         - f2f
                 targetState: TARGET_STATE_NAME_1
                 type: page
@@ -109,7 +109,7 @@ STATE_NAME_4:
                 targetState: TARGET_STATE_NAME_2
                 type: cri
                 criId: cri-id
-                
+
 STATE_NAME_5:
     events:
         event-name-1:
@@ -141,13 +141,3 @@ STATE_NAME_6:
             targetState: TARGET_STATE_NAME_2
             type: cri
             criId: cri-id
-
-
-
-
-
-
-
-
-
-

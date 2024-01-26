@@ -10,14 +10,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,7 +47,8 @@ class ReplayCimitVcsHandlerTest {
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                .thenReturn(createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC));
+                .thenReturn(
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
@@ -87,7 +87,9 @@ class ReplayCimitVcsHandlerTest {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(createInvalidVcStoreItem());
+                    .thenReturn(
+                            TestFixtures.createInvalidVcStoreItem(
+                                    TEST_USER_ID, ADDRESS_CRI, "invalid-credential"));
             assertThrows(
                     FailedVcReplayException.class,
                     () -> this.replayCimitVcsHandler.handleRequest(inputStream, null, null));
@@ -99,7 +101,9 @@ class ReplayCimitVcsHandlerTest {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC));
+                    .thenReturn(
+                            TestFixtures.createVcStoreItem(
+                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
             doThrow(new CiPutException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitVC(any(), eq(null), eq(null));
@@ -116,7 +120,9 @@ class ReplayCimitVcsHandlerTest {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC));
+                    .thenReturn(
+                            TestFixtures.createVcStoreItem(
+                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
             doThrow(new CiPostMitigationsException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitMitigatingVcList(anyList(), eq(null), eq(null));
@@ -125,26 +131,5 @@ class ReplayCimitVcsHandlerTest {
                     FailedVcReplayException.class,
                     () -> this.replayCimitVcsHandler.handleRequest(inputStream, null, null));
         }
-    }
-
-    private VcStoreItem createVcStoreItem(String credentialIssuer, String credential) {
-        Instant dateCreated = Instant.now();
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(TEST_USER_ID);
-        vcStoreItem.setCredentialIssuer(credentialIssuer);
-        vcStoreItem.setCredential(credential);
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
-    }
-
-    private VcStoreItem createInvalidVcStoreItem() {
-        Instant dateCreated = Instant.now();
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(TEST_USER_ID);
-        vcStoreItem.setCredential("invalid-credential");
-        vcStoreItem.setDateCreated(dateCreated);
-        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return vcStoreItem;
     }
 }
