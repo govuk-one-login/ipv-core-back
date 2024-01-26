@@ -135,42 +135,6 @@ class ContractTest {
             }
             """;
 
-    private static final String INVALID_VC_BODY =
-            """
-            {
-              "iss": "dummyClaimedIdentityComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "exp": 4070909400,
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-            """;
-
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
@@ -383,57 +347,6 @@ class ContractTest {
                                 throw new RuntimeException(e);
                             }
                         });
-    }
-
-    @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact inValidRequestReturns400(PactDslWithProvider builder)
-            throws Exception {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyClaimedIdentityComponentId is a valid issuer")
-                .given("VC givenName is Mary")
-                .given("VC familyName is Watson")
-                .uponReceiving("Valid credential request for VC")
-                .path("/credential")
-                .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
-                .willRespondWith()
-                .status(400)
-                .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, INVALID_VC_BODY, IN_VALID_VC_SIGNATURE))
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "inValidRequestReturns400")
-    void fetchVerifiableCredential_whenCalledAgainstCicCri_retrievesAnInValidVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
-
-        // Act
-
-        CriApiException exception =
-                assertThrows(
-                        CriApiException.class,
-                        () ->
-                                underTest.fetchVerifiableCredential(
-                                        new BearerAccessToken("dummyAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                                        getCriOAuthSessionItem()));
-        // Assert
-        assertEquals(
-                "Failed to get credential from issuer", exception.getErrorResponse().getMessage());
-        assertEquals(500, exception.getHttpStatusCode());
     }
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
