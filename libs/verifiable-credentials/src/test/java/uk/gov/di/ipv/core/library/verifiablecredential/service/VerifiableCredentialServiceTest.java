@@ -74,7 +74,7 @@ class VerifiableCredentialServiceTest {
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(Instant.parse("2022-05-20T12:50:54Z"), vcStoreItem.getExpirationTime());
+        assertEquals(Instant.parse("2024-01-24T02:04:14Z"), vcStoreItem.getExpirationTime());
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
     }
 

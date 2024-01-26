@@ -124,7 +124,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
@@ -159,8 +159,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 toResponseClass(
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
-        assertEquals("Paul", provenUserIdentityDetails.getName());
-        assertEquals("2020-02-03", provenUserIdentityDetails.getDateOfBirth());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
@@ -196,7 +196,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         List<Address> addresses = provenUserIdentityDetails.getAddresses();
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals(3, addresses.size());
         assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
         assertEquals("TE5 7ER", addresses.get(1).getPostalCode());
@@ -235,8 +235,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
+        assertEquals("S5 6UN", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
