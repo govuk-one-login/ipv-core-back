@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
+import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -95,6 +96,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private AuditService auditService;
     @Mock private CiMitService ciMitService;
     @Mock private CriResponseService criResponseService;
+    @Mock private JwtParser jwtParser;
 
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
 

@@ -274,7 +274,7 @@ class ContractTest {
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAuthCodeReturnsTokenError(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is an invalid api key")
+                .given("dummyApiKey is a valid api key")
                 .given("dummyAddressComponentId is the address CRI component ID")
                 .given(
                         "Address CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -289,7 +289,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
