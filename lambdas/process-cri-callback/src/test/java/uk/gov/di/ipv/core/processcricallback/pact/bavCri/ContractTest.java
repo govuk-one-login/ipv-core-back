@@ -296,7 +296,7 @@ class ContractTest {
     }
 
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyBavComponentId is the BAV CRI component ID")
@@ -317,12 +317,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturns401")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstBavCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
@@ -547,7 +547,7 @@ class ContractTest {
     }
 
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -561,12 +561,12 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(404)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void fetchVerifiableCredential_whenCalledAgainstBavCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException {
         // Arrange

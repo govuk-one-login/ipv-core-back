@@ -272,7 +272,7 @@ class ContractTest {
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturnsTokenError(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyAddressComponentId is the address CRI component ID")
@@ -294,7 +294,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturnsTokenError")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstAddressCri_throwsErrorWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
@@ -555,10 +555,10 @@ class ContractTest {
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidCredentialsRequestThrowsError(PactDslWithProvider builder)
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyInvalidAccessToken is a valid access token")
+                .given("dummyInvalidAccessToken is an invalid access token")
                 .uponReceiving("Invalid credential request")
                 .path("/credential")
                 .method("POST")
@@ -568,13 +568,15 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(401)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidCredentialsRequestThrowsError")
-    void testInvalidCredentialCallThrowsError(MockServer mockServer) throws URISyntaxException {
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    void
+            fetchVerifiableCredential_whenCalledAgainstAddressCriWithInvalidAccessToken_throwsAnException(
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 

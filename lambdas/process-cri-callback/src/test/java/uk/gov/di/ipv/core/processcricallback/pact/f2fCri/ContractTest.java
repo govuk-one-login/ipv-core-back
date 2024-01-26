@@ -112,8 +112,7 @@ class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCode_F2FRequestReturnsBadRequest(
-            PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("grant_type is invalid (auth_code)")
@@ -135,7 +134,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
@@ -262,7 +261,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCode_F2FRequestReturnsBadRequest")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstF2FCri_receivesUnauthorizedWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
