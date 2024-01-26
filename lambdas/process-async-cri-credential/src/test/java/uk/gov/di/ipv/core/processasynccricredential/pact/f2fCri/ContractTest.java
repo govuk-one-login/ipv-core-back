@@ -53,6 +53,7 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriRespo
 @PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 public class ContractTest {
+    public static final String FULL_ADDRESS = "fullAddress";
     private final JwtParser jwtParser = new JwtParser();
     private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_ISSUER = "dummyF2fComponentId";
@@ -319,7 +320,8 @@ public class ContractTest {
                               "expiryDate": "2032-02-02",
                               "issuedBy": "DVLA",
                               "personalNumber": "PARKE710112PBFGA",
-                              "issueDate": "2005-02-02"
+                              "issueDate": "2005-02-02",
+                              "fullAddress": "dummyTestAddress"
                             }
                           ]
                         },
@@ -337,7 +339,78 @@ public class ContractTest {
                             ],
                             "validityScore": 2,
                             "verificationScore": 3,
-                            "strengthScore": 4,
+                            "strengthScore": 3,
+                            "type": "IdentityCheck",
+                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
+                          }
+                        ]
+                      },
+                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
+                    }
+                    """;
+    private static final String VALID_F2F_VC_WITH_EU_DL_BODY =
+            """
+                    {
+                      "sub": "test-subject",
+                      "aud": "dummyF2fComponentId",
+                      "nbf": 4070908800,
+                      "iss": "dummyF2fComponentId",
+                      "vc": {
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Alice"
+                                },
+                                {
+                                  "type": "GivenName",
+                                  "value": "Jane"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Parker"
+                                }
+                              ]
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1970-01-01"
+                            }
+                          ],
+                          "socialSecurityRecord": [],
+                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                          "drivingPermit": [
+                             {
+                               "personalNumber": "DOE99751010AL9OD",
+                               "expiryDate": "2022-02-02",
+                               "issueDate": "2012-02-02",
+                               "issuingCountry": "DE",
+                               "issuedBy": "Landratsamt"
+                             }
+                           ]
+                        },
+                        "evidence": [
+                          {
+                            "checkDetails": [
+                              {
+                                "identityCheckPolicy": "published",
+                                "checkMethod": "vcrypt"
+                              },
+                              {
+                                "biometricVerificationProcessLevel": 3,
+                                "checkMethod": "bvr"
+                              }
+                            ],
+                            "validityScore": 2,
+                            "verificationScore": 3,
+                            "strengthScore": 3,
                             "type": "IdentityCheck",
                             "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
                           }
@@ -491,7 +564,9 @@ public class ContractTest {
     private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
             "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
     private static final String VALID_F2F_VC_DL_SIGNATURE =
-            "X5Zh-XeLVwu6RTeRWuqWW-_wNCEct2UMCrcyDbM5XBgYO02gGZGGW0zg03GTLtJCDNfK7EfduLgQo5MyjHX_TA";
+            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg";
+    private static final String VALID_F2F_VC_EU_DL_SIGNATURE =
+            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w";
     private static final String VALID_F2F_VC_EEA_SIGNATURE =
             "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw";
     private static final String VALID_F2F_VC_BRP_SIGNATURE =
@@ -919,9 +994,10 @@ public class ContractTest {
                 .given("VC driving license expiryDate is 2032-02-02")
                 .given("VC driving license issueDate is 2005-02-02")
                 .given("VC driving license issuedBy is DVLA")
+                .given("VC driving license fullAddress is dummyTestAddress")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence verificationScore is 3")
-                .given("VC evidence strengthScore is 4")
+                .given("VC evidence strengthScore is 3")
                 .given("VC evidence type is IdentityCheck")
                 .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
                 .given("VC jti is test-jti")
@@ -1013,9 +1089,144 @@ public class ContractTest {
                                         "2032-02-02", drivingLicenseNode.get(EXPIRY_DATE).asText());
                                 assertEquals(
                                         "2005-02-02", drivingLicenseNode.get(ISSUE_DATE).asText());
+                                assertEquals(
+                                        "dummyTestAddress",
+                                        drivingLicenseNode.get(FULL_ADDRESS).asText());
                                 assertEquals("DVLA", drivingLicenseNode.get(ISSUED_BY).asText());
                                 assertEquals(
                                         "PARKE710112PBFGA",
+                                        drivingLicenseNode.get(PERSONAL_NUMBER).asText());
+
+                                assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
+
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (JsonProcessingException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public MessagePact f2fMessageContainsValidEuDrivingLicenseCredential(MessagePactBuilder builder)
+            throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyF2fComponentId is a valid issuer")
+                .given("dummyF2fComponentId is a valid audience")
+                .given("VC emailAddress is dev-platform-testing@digital.cabinet-office.gov.uk")
+                .given("VC givenName is Alice")
+                .given("VC middle name is Jane")
+                .given("VC familyName is Parker")
+                .given("VC birthDate is 1970-01-01")
+                .given("VC driving license personalNumber is DOE99751010AL9OD")
+                .given("VC driving license expiryDate is 2022-02-02")
+                .given("VC driving license issueDate is 2012-02-02")
+                .given("VC driving license issuingCountry is DE")
+                .given("VC driving license issuedBy is Landratsamt")
+                .given("VC evidence validityScore is 2")
+                .given("VC evidence verificationScore is 3")
+                .given("VC evidence strengthScore is 3")
+                .given("VC evidence type is IdentityCheck")
+                .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
+                .given("VC jti is test-jti")
+                .expectsToReceive("A valid F2F CRI with Driving License")
+                .withContent(
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtHelper =
+                                                    new JwtTestHelper(
+                                                            VALID_VC_HEADER,
+                                                            VALID_F2F_VC_WITH_EU_DL_BODY,
+                                                            VALID_F2F_VC_EU_DL_SIGNATURE);
+
+                                            body.nullValue("error");
+                                            body.stringValue("iss", "f2f");
+                                            body.stringValue("sub", "test-subject");
+                                            body.stringType(
+                                                    "state",
+                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.nullValue("error_description");
+                                            body.minArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtHelper
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtHelper.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(
+            pactMethod = "f2fMessageContainsValidEuDrivingLicenseCredential",
+            providerType = ProviderType.ASYNCH)
+    void testF2fMessageReturnsIssuedEuDrivingLicenseCredential(
+            List<Message> messageList, MockServer mockServer) throws URISyntaxException {
+        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
+        var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
+
+        for (Message message : messageList) {
+            try {
+                SuccessAsyncCriResponse asyncCriResponse =
+                        ((SuccessAsyncCriResponse)
+                                getAsyncResponseMessage(message.contentsAsString()));
+
+                List<SignedJWT> parsedJwts =
+                        jwtParser.parseVerifiableCredentialJWTs(
+                                asyncCriResponse.getVerifiableCredentialJWTs());
+
+                parsedJwts.forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get(VC)
+                                                .get(CREDENTIAL_SUBJECT);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
+                                JsonNode drivingLicenseNode =
+                                        credentialSubject.get(DRIVING_PERMIT).get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
+                                assertEquals("GivenName", nameParts.get(1).get(NAME_TYPE).asText());
+                                assertEquals(
+                                        "FamilyName", nameParts.get(2).get(NAME_TYPE).asText());
+
+                                assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
+                                assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
+                                assertEquals("Parker", nameParts.get(2).get(VALUE).asText());
+
+                                assertEquals(
+                                        "2022-02-02", drivingLicenseNode.get(EXPIRY_DATE).asText());
+                                assertEquals(
+                                        "2012-02-02", drivingLicenseNode.get(ISSUE_DATE).asText());
+                                assertEquals(
+                                        "Landratsamt", drivingLicenseNode.get(ISSUED_BY).asText());
+                                assertEquals(
+                                        "DOE99751010AL9OD",
                                         drivingLicenseNode.get(PERSONAL_NUMBER).asText());
 
                                 assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
