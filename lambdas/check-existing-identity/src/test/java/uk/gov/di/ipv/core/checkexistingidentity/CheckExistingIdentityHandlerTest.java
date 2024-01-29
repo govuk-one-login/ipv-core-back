@@ -211,9 +211,6 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyResetIdentityIfResetIdentityFeatureFlagIsEnabled() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
@@ -255,7 +252,6 @@ class CheckExistingIdentityHandlerTest {
         @BeforeEach
         public void reuseSetup() throws Exception {
             when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-            when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
         }
@@ -265,6 +261,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
+            when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -298,6 +295,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1B));
+            when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -419,6 +417,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1B));
+            when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
 
             clientOAuthSessionItem.setVtr(
                     List.of(Vot.PCL250.name(), Vot.PCL200.name(), Vot.P2.name()));
@@ -446,6 +445,84 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
         }
+    }
+
+    @Test
+    void shouldMatchStrongestVotRegardlessOfVtrOrderButF2FCompleteAndVCsDoNotCorrelate()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(false);
+
+        clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), Vot.PCL200.name(), Vot.P2.name()));
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldMatchStrongestVotRegardlessOfVtrOrderButVCsDoNotCorrelate() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(false);
+
+        clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), Vot.PCL200.name(), Vot.P2.name()));
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
     }
 
     @ParameterizedTest
@@ -714,7 +791,6 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -747,7 +823,6 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -953,7 +1028,6 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                         any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
@@ -961,6 +1035,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
@@ -973,6 +1048,45 @@ class CheckExistingIdentityHandlerTest {
         verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+    }
+
+    @Test
+    void
+            shouldReturnJourneyResetResponseIfCheckRequiresAdditionalEvidenceResponseFalseAndIfVCsDoNotCorrelate()
+                    throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(false);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 

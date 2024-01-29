@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -182,8 +183,11 @@ public class CheckExistingIdentityHandler
             verifiableCredentialService.deleteVcStoreItem(userId, TICF_CRI);
 
             // Reset identity if reprove is true.
+            // or
+            // Force reset
             Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (reproveIdentity != null && reproveIdentity) {
+            if ((reproveIdentity != null && reproveIdentity)
+                    || configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse();
             }
 
@@ -193,15 +197,13 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-
             List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
             var hasF2fVc =
                     vcStoreItems.stream()
                             .anyMatch(
                                     vcStoreItem ->
                                             vcStoreItem.getCredentialIssuer().equals(F2F_CRI));
-
+            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
@@ -210,50 +212,22 @@ public class CheckExistingIdentityHandler
                 return buildF2FIncompleteResponse(f2fRequest);
             }
 
-            var contraIndicators =
-                    ciMitService.getContraIndicatorsVC(
-                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
-
-            // CI scoring failure
-            if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
-                return ciMitUtilityService
-                        .getCiMitigationJourneyStep(contraIndicators)
-                        .orElse(JOURNEY_FAIL_WITH_CI)
-                        .toObjectMap();
+            Map<String, Object> response =
+                    checkForCIScoringFailure(
+                            ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
+            if (!response.isEmpty()) {
+                return response;
             }
 
-            List<SignedJWT> credentials =
-                    gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getIdentityCredentials(vcStoreItems));
-
-            // Credential correlation failure
-            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
-                return isF2FComplete
-                        ? buildF2FNotCorrelatedResponse(auditEventUser)
-                        : buildNotCorrelatedResponse(auditEventUser);
-            }
-
-            // Force reset
-            if (configService.enabled(RESET_IDENTITY.getName())) {
-                return buildForceResetResponse();
-            }
-
-            // Check for attained vot from vtr
-            var strongestAttainedVotFromVtr =
-                    getStrongestAttainedVotFromVtr(
-                            clientOAuthSessionItem.getVtr(),
-                            credentials,
+            response =
+                    checkForProfileMatchAndVCsCheck(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            auditEventUser,
                             vcStoreItems,
-                            auditEventUser);
-
-            // vot achieved
-            if (strongestAttainedVotFromVtr.isPresent()) {
-                Vot attainedVot = strongestAttainedVotFromVtr.get();
-                ipvSessionItem.setVot(attainedVot.name());
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return buildReuseResponse(
-                        attainedVot, ipvSessionItem.getVcReceivedThisSession(), auditEventUser);
+                            isF2FComplete);
+            if (!response.isEmpty()) {
+                return response;
             }
 
             // No profile match
@@ -281,6 +255,70 @@ public class CheckExistingIdentityHandler
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         }
+    }
+
+    @Tracing
+    private Map<String, Object> checkForCIScoringFailure(
+            String ipAddress,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String govukSigninJourneyId)
+            throws CiRetrievalException, ConfigException {
+        var contraIndicators =
+                ciMitService.getContraIndicatorsVC(
+                        clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+
+        // CI scoring failure
+        if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
+            return ciMitUtilityService
+                    .getCiMitigationJourneyStep(contraIndicators)
+                    .orElse(JOURNEY_FAIL_WITH_CI)
+                    .toObjectMap();
+        }
+        return new HashMap<>();
+    }
+
+    @Tracing
+    private Map<String, Object> checkForProfileMatchAndVCsCheck(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            AuditEventUser auditEventUser,
+            List<VcStoreItem> vcStoreItems,
+            boolean isF2FComplete)
+            throws ParseException, UnknownEvidenceTypeException, SqsException,
+                    HttpResponseExceptionWithErrorBody, CredentialParseException {
+        List<SignedJWT> credentials =
+                gpg45ProfileEvaluator.parseCredentials(
+                        userIdentityService.getIdentityCredentials(vcStoreItems));
+
+        // Check for attained vot from vtr
+        var strongestAttainedVotFromVtr =
+                getStrongestAttainedVotForVtr(
+                        clientOAuthSessionItem.getVtr(), credentials, vcStoreItems, auditEventUser);
+
+        // vot achieved for vtr
+        if (strongestAttainedVotFromVtr.isPresent()) {
+            // Profile matched
+            Vot attainedVot = strongestAttainedVotFromVtr.get();
+            ipvSessionItem.setVot(attainedVot.name());
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+            if (attainedVot.getProfileType().equals(ProfileType.GPG45)
+                    && (!userIdentityService.areVCsCorrelated(vcStoreItems))) {
+                // Matched - Credential correlation failure
+                return isF2FComplete
+                        ? buildF2FNotCorrelatedResponse(auditEventUser)
+                        : buildNotCorrelatedResponse(auditEventUser);
+            }
+            return buildReuseResponse(
+                    attainedVot, ipvSessionItem.getVcReceivedThisSession(), auditEventUser);
+        }
+
+        // No Match - Credential correlation failure
+        if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
+            return isF2FComplete
+                    ? buildF2FNotCorrelatedResponse(auditEventUser)
+                    : buildNotCorrelatedResponse(auditEventUser);
+        }
+        return new HashMap<>();
     }
 
     @Tracing
@@ -430,7 +468,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<Vot> getStrongestAttainedVotFromVtr(
+    private Optional<Vot> getStrongestAttainedVotForVtr(
             List<String> vtr,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
