@@ -49,7 +49,8 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JO
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class ProcessJourneyEventHandlerTest {
-    private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
+    private static final String PYI_TIMEOUT_ERROR_PAGE = "pyi-timeout";
+    private static final String PYI_UNRECOVERABLE_CONTEXT = "unrecoverable";
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
@@ -185,7 +186,8 @@ class ProcessJourneyEventHandlerTest {
                 OAuth2Error.ACCESS_DENIED.getDescription(),
                 capturedIpvSessionItem.getErrorDescription());
 
-        assertEquals(PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE, output.get("page"));
+        assertEquals(PYI_TIMEOUT_ERROR_PAGE, output.get("page"));
+        assertEquals(PYI_UNRECOVERABLE_CONTEXT, output.get("context"));
     }
 
     @Test

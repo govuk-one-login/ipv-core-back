@@ -63,7 +63,7 @@ public class ProcessCriCallbackHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
-    private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
+    private static final String PYI_TIMEOUT_PAGE_ID = "pyi-timeout";
     private static final JourneyResponse JOURNEY_NOT_FOUND =
             new JourneyResponse(JOURNEY_NOT_FOUND_PATH);
     private final ConfigService configService;
@@ -164,7 +164,7 @@ public class ProcessCriCallbackHandler
                         StepFunctionHelpers.generatePageOutputMap(
                                 "error",
                                 HttpStatus.SC_UNAUTHORIZED,
-                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
+                                PYI_TIMEOUT_PAGE_ID);
                 var criOAuthSessionItem =
                         criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
                 if (criOAuthSessionItem != null) {

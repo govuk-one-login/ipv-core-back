@@ -54,7 +54,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STA
 public class ProcessJourneyEventHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
+    private static final String PYI_TIMEOUT_ID = "pyi-timeout";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -142,7 +142,7 @@ public class ProcessJourneyEventHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", null);
+            return new PageStepResponse(PYI_TIMEOUT_ID, "unrecoverable", null);
         }
 
         try {

@@ -358,7 +358,8 @@ ERROR:
 CORE_SESSION_TIMEOUT:
   response:
     type: page
-    pageId: pyi-timeout-unrecoverable
+    pageId: pyi-timeout
+    context: unrecoverable
   parent: END_JOURNEY
 
 EVALUATE_GPG45_SCORES:
