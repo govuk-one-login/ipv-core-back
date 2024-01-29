@@ -53,7 +53,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -212,22 +211,22 @@ public class CheckExistingIdentityHandler
                 return buildF2FIncompleteResponse(f2fRequest);
             }
 
-            Map<String, Object> response =
+            var ciScoringCheckResponse =
                     checkForCIScoringFailure(
                             ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
-            if (!response.isEmpty()) {
-                return response;
+            if (ciScoringCheckResponse.isPresent()) {
+                return ciScoringCheckResponse.get();
             }
 
-            response =
-                    checkForProfileMatchAndVCsCheck(
+            var profileMatchResponse =
+                    checkForProfileMatch(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             auditEventUser,
                             vcStoreItems,
                             isF2FComplete);
-            if (!response.isEmpty()) {
-                return response;
+            if (profileMatchResponse.isPresent()) {
+                return profileMatchResponse.get();
             }
 
             // No profile match
@@ -285,7 +284,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Map<String, Object> checkForCIScoringFailure(
+    private Optional<Map<String, Object>> checkForCIScoringFailure(
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String govukSigninJourneyId)
@@ -296,16 +295,17 @@ public class CheckExistingIdentityHandler
 
         // CI scoring failure
         if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
-            return ciMitUtilityService
-                    .getCiMitigationJourneyStep(contraIndicators)
-                    .orElse(JOURNEY_FAIL_WITH_CI)
-                    .toObjectMap();
+            return Optional.of(
+                    ciMitUtilityService
+                            .getCiMitigationJourneyStep(contraIndicators)
+                            .orElse(JOURNEY_FAIL_WITH_CI)
+                            .toObjectMap());
         }
-        return new HashMap<>();
+        return Optional.empty();
     }
 
     @Tracing
-    private Map<String, Object> checkForProfileMatchAndVCsCheck(
+    private Optional<Map<String, Object>> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
@@ -332,11 +332,14 @@ public class CheckExistingIdentityHandler
             Vot attainedVot = strongestAttainedVotFromVtr.get();
             ipvSessionItem.setVot(attainedVot.name());
             ipvSessionService.updateIpvSession(ipvSessionItem);
-            return buildReuseResponse(
-                    attainedVot, ipvSessionItem.getVcReceivedThisSession(), auditEventUser);
+            return Optional.of(
+                    buildReuseResponse(
+                            attainedVot,
+                            ipvSessionItem.getVcReceivedThisSession(),
+                            auditEventUser));
         }
 
-        return new HashMap<>();
+        return Optional.empty();
     }
 
     private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
