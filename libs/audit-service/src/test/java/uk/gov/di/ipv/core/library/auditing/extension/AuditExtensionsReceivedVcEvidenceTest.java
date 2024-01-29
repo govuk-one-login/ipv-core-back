@@ -5,12 +5,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class AuditExtensionsVcEvidenceTest {
+class AuditExtensionsReceivedVcEvidenceTest {
 
     @Test
     void shouldInitWithNullEvidence() throws JsonProcessingException {
         var auditExtensions =
-                new AuditExtensionsVcEvidence("http://issuer.example.com", null, false);
+                new AuditExtensionsReceivedVcEvidence("http://issuer.example.com", null, false);
         assertNull(auditExtensions.getEvidence());
     }
 }

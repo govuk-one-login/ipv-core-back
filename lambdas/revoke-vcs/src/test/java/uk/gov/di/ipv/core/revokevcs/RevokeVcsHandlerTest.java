@@ -2,11 +2,18 @@ package uk.gov.di.ipv.core.revokevcs;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -14,7 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,16 +35,22 @@ class RevokeVcsHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private AuditService mockAuditService;
     @InjectMocks private RevokeVcsHandler revokeVcsHandler;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
 
     @Test
-    void shouldRevokeVc() throws IOException {
+    void shouldRevokeVc() throws IOException, SqsException {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
         VcStoreItem testKbvVc =
                 new VcStoreItem(
-                        TEST_USER_ID, "kbv", "test-credential", Instant.now(), Instant.now());
+                        TEST_USER_ID,
+                        "kbv",
+                        TestFixtures.M1A_PASSPORT_VC,
+                        Instant.now(),
+                        Instant.now());
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
                 .thenReturn(testKbvVc);
 
@@ -43,10 +59,15 @@ class RevokeVcsHandlerTest {
 
         // Assert
         verify(mockDataStore).create(testKbvVc);
+        verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+
+        var auditEvent = auditEventArgumentCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_VC_REVOKED, auditEvent.getEventName());
+        assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
     }
 
     @Test
-    void shouldNotRevokeVcIfDoesNotExist() throws IOException {
+    void shouldNotRevokeVcIfDoesNotExist() throws IOException, SqsException {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
@@ -57,5 +78,61 @@ class RevokeVcsHandlerTest {
 
         // Assert
         verify(mockDataStore, times(0)).create(any());
+        verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+
+        var auditEvent = auditEventArgumentCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_VC_REVOKED_FAILURE, auditEvent.getEventName());
+        assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
+    }
+
+    @Test
+    void shouldHandleError() throws IOException, SqsException {
+        // Arrange
+        InputStream inputStream =
+                RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
+        VcStoreItem testKbvVc =
+                new VcStoreItem(
+                        TEST_USER_ID,
+                        "kbv",
+                        TestFixtures.M1A_PASSPORT_VC,
+                        Instant.now(),
+                        Instant.now());
+        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
+                .thenReturn(testKbvVc);
+        doThrow(new RuntimeException("Some error")).when(mockDataStore).create(any());
+
+        // Act
+        revokeVcsHandler.handleRequest(inputStream, null, null);
+
+        // Assert
+        verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+
+        var auditEvent = auditEventArgumentCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_VC_REVOKED_FAILURE, auditEvent.getEventName());
+        assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
+    }
+
+    @Test
+    void shouldRethrowSendAuditEventError() throws SqsException {
+        // Arrange
+        InputStream inputStream =
+                RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
+        VcStoreItem testKbvVc =
+                new VcStoreItem(
+                        TEST_USER_ID,
+                        "kbv",
+                        TestFixtures.M1A_PASSPORT_VC,
+                        Instant.now(),
+                        Instant.now());
+        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
+                .thenReturn(testKbvVc);
+        doThrow(new SqsException("Some error"))
+                .when(mockAuditService)
+                .sendAuditEvent((AuditEvent) any());
+
+        // Act & Assert
+        assertThrows(
+                RuntimeException.class,
+                () -> revokeVcsHandler.handleRequest(inputStream, null, null));
     }
 }

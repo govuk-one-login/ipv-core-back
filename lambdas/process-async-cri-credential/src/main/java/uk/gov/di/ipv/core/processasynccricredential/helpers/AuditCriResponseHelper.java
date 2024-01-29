@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReceivedVcEvidence;
 import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVc;
 
 import java.text.ParseException;
@@ -24,13 +24,14 @@ public class AuditCriResponseHelper {
 
     private AuditCriResponseHelper() {}
 
-    public static AuditExtensionsVcEvidence getExtensionsForAudit(
+    public static AuditExtensionsReceivedVcEvidence getExtensionsForAudit(
             SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
+        return new AuditExtensionsReceivedVcEvidence(
+                jwtClaimsSet.getIssuer(), evidence, isSuccessful);
     }
 
     public static AuditRestrictedVc getRestrictedDataForAuditEvent(SignedJWT verifiableCredential)
