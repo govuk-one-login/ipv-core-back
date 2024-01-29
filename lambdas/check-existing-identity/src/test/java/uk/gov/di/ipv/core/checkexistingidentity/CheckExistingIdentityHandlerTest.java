@@ -250,7 +250,7 @@ class CheckExistingIdentityHandlerTest {
     @DisplayName("reuse journeys")
     class ReuseJourneys {
         @BeforeEach
-        public void reuseSetup() throws Exception {
+        public void reuseSetup() {
             when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
@@ -742,7 +742,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws Exception {
+    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
