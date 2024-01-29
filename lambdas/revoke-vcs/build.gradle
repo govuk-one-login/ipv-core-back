@@ -13,6 +13,7 @@ dependencies {
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":libs:common-services"),
 			project(":libs:journey-uris"),
@@ -31,6 +32,9 @@ dependencies {
 			"org.mockito:mockito-junit-jupiter:5.9.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 }
 
 java {
