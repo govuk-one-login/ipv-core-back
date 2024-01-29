@@ -339,20 +339,6 @@ public class CheckExistingIdentityHandler
         return new HashMap<>();
     }
 
-    private Map<String, Object> buildF2FNotCorrelatedResponse(AuditEventUser auditEventUser)
-            throws SqsException {
-        LOGGER.warn(LogHelper.buildLogMessage("F2F return - failed to correlate VC data."));
-        sendAuditEvent(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEventUser);
-        return JOURNEY_F2F_FAIL;
-    }
-
-    private Map<String, Object> buildNotCorrelatedResponse(AuditEventUser auditEventUser)
-            throws SqsException {
-        LOGGER.info(LogHelper.buildLogMessage("VC data does not correlate so resetting identity."));
-        sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-        return JOURNEY_RESET_IDENTITY;
-    }
-
     private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
             throws SqsException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
