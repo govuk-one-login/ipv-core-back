@@ -7,14 +7,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class AuditExtensionErrorMessage implements AuditExtensions {
+public class AuditExtensionCriId implements AuditExtensions {
 
-    @JsonProperty("error_message")
-    private final String errorMessage;
+    @JsonProperty("cri")
+    private final String criId;
 
     @JsonCreator
-    public AuditExtensionErrorMessage(
-            @JsonProperty(value = "error_message", required = true) String errorMessage) {
-        this.errorMessage = errorMessage;
+    public AuditExtensionCriId(@JsonProperty(value = "cri", required = true) String criId) {
+        this.criId = criId;
     }
 }

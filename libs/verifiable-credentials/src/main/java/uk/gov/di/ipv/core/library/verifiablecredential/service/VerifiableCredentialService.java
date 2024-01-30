@@ -5,9 +5,11 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -51,6 +53,21 @@ public class VerifiableCredentialService {
         try {
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
             dataStore.create(vcStoreItem);
+        } catch (Exception e) {
+            LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+        }
+    }
+
+    public void persistUserCredentialsIfEmpty(
+            SignedJWT credential, String credentialIssuerId, String userId)
+            throws VerifiableCredentialException, OverwriteAvoidedException {
+        try {
+            VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
+            dataStore.createIfEmpty(vcStoreItem);
+        } catch (ConditionalCheckFailedException e) {
+            throw new OverwriteAvoidedException();
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(

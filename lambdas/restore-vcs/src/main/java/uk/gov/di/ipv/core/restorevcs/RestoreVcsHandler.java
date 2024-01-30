@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.revokevcs;
+package uk.gov.di.ipv.core.restorevcs;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
@@ -14,11 +14,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCriId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
+import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -26,8 +26,8 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.revokevcs.domain.RevokeRequest;
-import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
+import uk.gov.di.ipv.core.restorevcs.domain.RestoreRequest;
+import uk.gov.di.ipv.core.restorevcs.exceptions.RestoreVcException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +37,7 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 @SuppressWarnings("unused") // Temporarily disable to pass sonarqube
-public class RevokeVcsHandler implements RequestStreamHandler {
+public class RestoreVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -45,7 +45,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     private final AuditService auditService;
 
     @SuppressWarnings("unused") // Used by AWS
-    public RevokeVcsHandler(
+    public RestoreVcsHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
             DataStore<VcStoreItem> archivedVcDataStore,
@@ -57,7 +57,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
-    public RevokeVcsHandler() {
+    public RestoreVcsHandler() {
         this.configService = new ConfigService();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         boolean isRunningLocally = this.configService.isRunningLocally();
@@ -80,27 +80,27 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         LogHelper.attachComponentIdToLogs(configService);
         var userIdCriIdPairs =
                 new ObjectMapper()
-                        .readValue(inputStream, RevokeRequest.class)
+                        .readValue(inputStream, RestoreRequest.class)
                         .getUserIdCriIdPairs();
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        String.format("Revoking %s VCs.", userIdCriIdPairs.size())));
+                        String.format("Restoring %s VCs.", userIdCriIdPairs.size())));
 
         try {
-            revoke(userIdCriIdPairs);
+            restore(userIdCriIdPairs);
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             String.format(
-                                    "Finished attempt to revoke %s VCs.",
+                                    "Finished attempt to restore %s VCs.",
                                     userIdCriIdPairs.size())));
         } catch (SqsException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
-                            "Stopped revoking VCs because of failure to send audit event.", e));
+                            "Stopped restoring VCs because of failure to send audit event", e));
         }
     }
 
-    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
+    private void restore(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
         var numberOfVcs = userIdCriIdPairs.size();
 
         // Iterate over each VC
@@ -108,48 +108,54 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             var userIdCriIdPair = userIdCriIdPairs.get(i);
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            String.format("Revoking VC (%s / %s)", i + 1, numberOfVcs)));
+                            String.format("Restoring VC (%s / %s)", i + 1, numberOfVcs)));
 
             try {
-                revoke(userIdCriIdPair, i, numberOfVcs);
+                restore(userIdCriIdPair, i, numberOfVcs);
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 String.format(
-                                        "Successfully revoked VC (%s / %s)", i + 1, numberOfVcs)));
+                                        "Successfully restored VC (%s / %s)", i + 1, numberOfVcs)));
+            } catch (OverwriteAvoidedException e) {
+                LOGGER.info(
+                        LogHelper.buildErrorMessage(
+                                String.format(
+                                        "Skipped overwrite of existing VC (%s / %s)",
+                                        i + 1, numberOfVcs),
+                                e));
             } catch (Exception e) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
                                 String.format(
                                         "Unexpected error occurred (%s / %s)", i + 1, numberOfVcs),
                                 e));
-                sendRevokedFailureAuditEvent(
-                        userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId(), i, numberOfVcs);
             }
         }
     }
 
-    private void revoke(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
+    private void restore(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
         // Read VC with userId and CriId
-        var vcStoreItem =
-                verifiableCredentialService.getVcStoreItem(
+        var archivedVc =
+                archivedVcDataStore.getItem(
                         userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
 
-        if (vcStoreItem != null) {
-            // Archive VC
-            archivedVcDataStore.create(vcStoreItem);
+        if (archivedVc != null) {
+            // Restore VC if empty
+            var signedArchivedVc = SignedJWT.parse(archivedVc.getCredential());
+            verifiableCredentialService.persistUserCredentialsIfEmpty(
+                    signedArchivedVc, userIdCriIdPair.getCriId(), userIdCriIdPair.getUserId());
 
             // Send audit event
-            sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem, i, numberOfVcs);
+            sendVcRestoredAuditEvent(userIdCriIdPair.getUserId(), archivedVc, i, numberOfVcs);
 
-            // Delete VC from the main table
-            verifiableCredentialService.deleteVcStoreItem(
-                    userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
+            // Delete VC from the archive table
+            archivedVcDataStore.delete(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
         } else {
-            throw new RevokeVcException("VC cannot be found");
+            throw new RestoreVcException("VC cannot be found");
         }
     }
 
-    private void sendVcRevokedAuditEvent(
+    private void sendVcRestoredAuditEvent(
             String userId, VcStoreItem vcStoreItem, int i, int numberOfVcs)
             throws ParseException, SqsException, JsonProcessingException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
@@ -163,31 +169,10 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                 new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, null);
         var auditEvent =
                 new AuditEvent(
-                        AuditEventTypes.IPV_VC_REVOKED,
+                        AuditEventTypes.IPV_VC_RESTORED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         auditExtensions);
         auditService.sendAuditEvent(auditEvent);
-    }
-
-    private void sendRevokedFailureAuditEvent(String userId, String criId, int i, int numberOfVcs)
-            throws SqsException {
-        var auditEventUser = new AuditEventUser(userId, null, null, null);
-
-        var auditExtensions = new AuditExtensionCriId(criId);
-        var auditEvent =
-                new AuditEvent(
-                        AuditEventTypes.IPV_VC_REVOKED_FAILURE,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        auditExtensions);
-        try {
-            auditService.sendAuditEvent(auditEvent);
-        } catch (SqsException e) {
-            throw new SqsException(
-                    String.format(
-                            "Failed to send audit event IPV_VC_REVOKED_FAILURE (%s / %s): %s",
-                            i + 1, numberOfVcs, e.getMessage()));
-        }
     }
 }

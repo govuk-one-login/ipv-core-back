@@ -12,7 +12,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrieved;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReceivedVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -153,13 +153,12 @@ public class CriStoringService {
                         new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType)));
     }
 
-    private AuditExtensionsReceivedVcEvidence getAuditExtensions(
+    private AuditExtensionsVcEvidence getAuditExtensions(
             SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsReceivedVcEvidence(
-                jwtClaimsSet.getIssuer(), evidence, isSuccessful);
+        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
     }
 }
