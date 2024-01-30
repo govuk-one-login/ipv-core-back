@@ -74,13 +74,14 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) {
         for (int i = 0; i < userIdCriIdPairs.size(); i++) {
             var userIdCriIdPair = userIdCriIdPairs.get(i);
-            LOGGER.info("Processing VC {} / {}", i, userIdCriIdPairs.size());
+            LOGGER.info("Revoking VC {} / {}", i + 1, userIdCriIdPairs.size());
 
             try {
                 revoke(userIdCriIdPair);
-                LOGGER.info("Successfully revoked VC.");
+                LOGGER.info("Successfully revoked VC {} / {}", i + 1, userIdCriIdPairs.size());
             } catch (Exception e) {
-                LOGGER.error("Failed to revoke VC.");
+                LOGGER.error(
+                        "Unexpected error occurred VC {} / {}", i + 1, userIdCriIdPairs.size());
             }
         }
     }
@@ -102,7 +103,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             // ...
 
         } else {
-            LOGGER.error("VC cannot be found");
+            LOGGER.error("Cannot be found");
         }
     }
 }
