@@ -78,7 +78,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
         LogHelper.attachComponentIdToLogs(configService);
-        List<UserIdCriIdPair> userIdCriIdPairs =
+        var userIdCriIdPairs =
                 new ObjectMapper()
                         .readValue(inputStream, RevokeRequest.class)
                         .getUserIdCriIdPairs();
@@ -130,8 +130,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
 
     private void revoke(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
         // Read KBV VC for the ID
-        VcStoreItem vcStoreItem =
-                this.verifiableCredentialService.getVcStoreItem(
+        var vcStoreItem =
+                verifiableCredentialService.getVcStoreItem(
                         userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
 
         if (vcStoreItem != null) {
@@ -142,8 +142,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem, i, numberOfVcs);
 
             // Delete VC from the main table
-            // ...
-
+            verifiableCredentialService.deleteVcStoreItem(
+                    userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
         } else {
             throw new RevokeVcException("VC cannot be found");
         }

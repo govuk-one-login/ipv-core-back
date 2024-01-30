@@ -63,6 +63,8 @@ class RevokeVcsHandlerTest {
         var auditEvent = auditEventArgumentCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_VC_REVOKED, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
+
+        verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, "kbv");
     }
 
     @Test
