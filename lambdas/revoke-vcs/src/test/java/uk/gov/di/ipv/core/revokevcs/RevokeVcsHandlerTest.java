@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -110,29 +109,5 @@ class RevokeVcsHandlerTest {
         var auditEvent = auditEventArgumentCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_VC_REVOKED_FAILURE, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
-    }
-
-    @Test
-    void shouldRethrowSendAuditEventError() throws SqsException {
-        // Arrange
-        InputStream inputStream =
-                RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
-        VcStoreItem testKbvVc =
-                new VcStoreItem(
-                        TEST_USER_ID,
-                        "kbv",
-                        TestFixtures.M1A_PASSPORT_VC,
-                        Instant.now(),
-                        Instant.now());
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
-                .thenReturn(testKbvVc);
-        doThrow(new SqsException("Some error"))
-                .when(mockAuditService)
-                .sendAuditEvent((AuditEvent) any());
-
-        // Act & Assert
-        assertThrows(
-                RuntimeException.class,
-                () -> revokeVcsHandler.handleRequest(inputStream, null, null));
     }
 }

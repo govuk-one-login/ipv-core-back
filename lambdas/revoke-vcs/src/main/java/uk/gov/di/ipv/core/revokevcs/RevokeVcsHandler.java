@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.revokevcs.domain.RevokeRequest;
 import uk.gov.di.ipv.core.revokevcs.domain.UserIdCriIdPair;
+import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,18 +41,18 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
-    private final DataStore<VcStoreItem> dataStore;
+    private final DataStore<VcStoreItem> archivedVcDataStore;
     private final AuditService auditService;
 
     @SuppressWarnings("unused") // Used by AWS
     public RevokeVcsHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
-            DataStore<VcStoreItem> dataStore,
+            DataStore<VcStoreItem> archivedVcDataStore,
             AuditService auditService) {
         this.configService = configService;
         this.verifiableCredentialService = verifiableCredentialService;
-        this.dataStore = dataStore;
+        this.archivedVcDataStore = archivedVcDataStore;
         this.auditService = auditService;
     }
 
@@ -60,7 +61,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         this.configService = new ConfigService();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         boolean isRunningLocally = this.configService.isRunningLocally();
-        this.dataStore =
+        this.archivedVcDataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME),
@@ -81,30 +82,53 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                 new ObjectMapper()
                         .readValue(inputStream, RevokeRequest.class)
                         .getUserIdCriIdPairs();
-        LOGGER.info("Revoking {} VCs", userIdCriIdPairs.size());
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format("Revoking %s VCs.", userIdCriIdPairs.size())));
 
-        revoke(userIdCriIdPairs);
-        LOGGER.info("Finished attempt to revoke {} VCs", userIdCriIdPairs.size());
+        try {
+            revoke(userIdCriIdPairs);
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Finished attempt to revoke %s VCs.",
+                                    userIdCriIdPairs.size())));
+        } catch (SqsException e) {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Stopped revoking VCs because of failure to send audit event: %s",
+                                    e.getMessage())));
+        }
     }
 
-    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) {
-        for (int i = 0; i < userIdCriIdPairs.size(); i++) {
+    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
+        var numberOfVcs = userIdCriIdPairs.size();
+        for (int i = 0; i < numberOfVcs; i++) {
             var userIdCriIdPair = userIdCriIdPairs.get(i);
-            LOGGER.info("Revoking VC {} / {}", i + 1, userIdCriIdPairs.size());
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format("Revoking VC (%s / %s)", i + 1, numberOfVcs)));
 
             try {
-                revoke(userIdCriIdPair);
-                LOGGER.info("Successfully revoked VC {} / {}", i + 1, userIdCriIdPairs.size());
+                revoke(userIdCriIdPair, i, numberOfVcs);
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Successfully revoked VC (%s / %s)", i + 1, numberOfVcs)));
             } catch (Exception e) {
                 LOGGER.error(
-                        "Unexpected error occurred VC {} / {}", i + 1, userIdCriIdPairs.size());
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Unexpected error occurred (%s / %s): %s",
+                                        i + 1, numberOfVcs, e.getMessage())));
                 sendRevokedFailureAuditEvent(
-                        userIdCriIdPair.getUserId(), e.getMessage(), i, userIdCriIdPairs.size());
+                        userIdCriIdPair.getUserId(), e.getMessage(), i, numberOfVcs);
             }
         }
     }
 
-    private void revoke(UserIdCriIdPair userIdCriIdPair) throws Exception {
+    private void revoke(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
         // Read KBV VC for the ID
         VcStoreItem vcStoreItem =
                 this.verifiableCredentialService.getVcStoreItem(
@@ -112,21 +136,21 @@ public class RevokeVcsHandler implements RequestStreamHandler {
 
         if (vcStoreItem != null) {
             // Archive VC
-            dataStore.create(vcStoreItem);
+            archivedVcDataStore.create(vcStoreItem);
 
             // Submit audit event
-            sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem);
+            sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem, i, numberOfVcs);
 
             // Delete VC from the main table
             // ...
 
         } else {
-            LOGGER.error("Cannot be found");
-            throw new Exception("VcStoreItem cannot be found");
+            throw new RevokeVcException("VC cannot be found");
         }
     }
 
-    private void sendVcRevokedAuditEvent(String userId, VcStoreItem vcStoreItem)
+    private void sendVcRevokedAuditEvent(
+            String userId, VcStoreItem vcStoreItem, int i, int numberOfVcs)
             throws ParseException, SqsException, JsonProcessingException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
@@ -136,41 +160,44 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         var evidence = vc.getAsString("evidence");
 
         var auditExtensions = new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
-
-        auditService.sendAuditEvent(
+        var auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_REVOKED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        auditExtensions));
+                        auditExtensions);
+        LOGGER.debug(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Sending audit event IPV_VC_REVOKED (%s / %s)",
+                                i + 1, numberOfVcs)));
+        auditService.sendAuditEvent(auditEvent);
     }
 
     private void sendRevokedFailureAuditEvent(
-            String userId, String errorMessage, int i, int userIdsSize) {
+            String userId, String errorMessage, int i, int numberOfVcs) throws SqsException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
-        var extensionErrorParams = new AuditExtensionErrorMessage(errorMessage);
-
+        var auditExtensions = new AuditExtensionErrorMessage(errorMessage);
         var auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_REVOKED_FAILURE,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        extensionErrorParams);
-        LOGGER.info(
+                        auditExtensions);
+        LOGGER.debug(
                 LogHelper.buildLogMessage(
                         String.format(
-                                "Sending audit event IPV_VC_REVOKED_FAILURE message at index %s / %s.",
-                                i, userIdsSize)));
+                                "Sending audit event IPV_VC_REVOKED_FAILURE (%s / %s)",
+                                i + 1, numberOfVcs)));
         try {
             auditService.sendAuditEvent(auditEvent);
-        } catch (SqsException sqsException) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Failed to send audit event at index %s / %s.",
-                                    i, userIdsSize)));
-            throw new RuntimeException();
+        } catch (SqsException e) {
+            throw new SqsException(
+                    String.format(
+                            "Failed to send audit event IPV_VC_REVOKED_FAILURE (%s / %s)",
+                            i + 1, numberOfVcs),
+                    e);
         }
     }
 }
