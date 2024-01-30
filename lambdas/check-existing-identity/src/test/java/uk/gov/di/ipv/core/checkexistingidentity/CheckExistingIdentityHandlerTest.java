@@ -485,7 +485,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldMatchStrongestVotRegardlessOfVtrOrderButVCsDoNotCorrelate() throws Exception {
+    void shouldNoMatchStrongestVotAndAlsoVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -505,7 +505,7 @@ class CheckExistingIdentityHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());

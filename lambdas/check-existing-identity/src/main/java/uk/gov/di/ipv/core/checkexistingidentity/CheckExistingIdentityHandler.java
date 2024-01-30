@@ -317,6 +317,9 @@ public class CheckExistingIdentityHandler
                 gpg45ProfileEvaluator.parseCredentials(
                         userIdentityService.getIdentityCredentials(vcStoreItems));
 
+        // Check for credentials correlation failure
+        var areGpg45VcsCorrelated = userIdentityService.areVCsCorrelated(vcStoreItems);
+
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -324,7 +327,7 @@ public class CheckExistingIdentityHandler
                         credentials,
                         vcStoreItems,
                         auditEventUser,
-                        isF2FComplete);
+                        areGpg45VcsCorrelated);
 
         // vot achieved for vtr
         if (strongestAttainedVotFromVtr.isPresent()) {
@@ -339,6 +342,9 @@ public class CheckExistingIdentityHandler
                             auditEventUser));
         }
 
+        if (!areGpg45VcsCorrelated && isF2FComplete) {
+            sendAuditEvent(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEventUser);
+        }
         return Optional.empty();
     }
 
@@ -400,9 +406,8 @@ public class CheckExistingIdentityHandler
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
             AuditEventUser auditEventUser,
-            boolean isF2FComplete)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    HttpResponseExceptionWithErrorBody, CredentialParseException {
+            boolean areGpg45VcsCorrelated)
+            throws UnknownEvidenceTypeException, ParseException, SqsException {
 
         var requestedVotsByStrength =
                 SUPPORTED_VOTS_BY_STRENGTH.stream()
@@ -410,15 +415,16 @@ public class CheckExistingIdentityHandler
                         .toList();
 
         for (var requestedVot : requestedVotsByStrength) {
-            var requestedVotAttained =
-                    requestedVot.getProfileType().equals(ProfileType.GPG45)
-                            ? achievedWithGpg45Profile(
-                                    requestedVot,
-                                    credentials,
-                                    vcStoreItems,
-                                    auditEventUser,
-                                    isF2FComplete)
-                            : hasOperationalProfileVc(requestedVot, credentials);
+            boolean requestedVotAttained = false;
+            if (requestedVot.getProfileType().equals(ProfileType.GPG45)) {
+                if (areGpg45VcsCorrelated) {
+                    requestedVotAttained =
+                            achievedWithGpg45Profile(
+                                    requestedVot, credentials, vcStoreItems, auditEventUser);
+                }
+            } else {
+                requestedVotAttained = hasOperationalProfileVc(requestedVot, credentials);
+            }
 
             if (requestedVotAttained) {
                 return Optional.of(requestedVot);
@@ -431,19 +437,9 @@ public class CheckExistingIdentityHandler
             Vot requestedVot,
             List<SignedJWT> credentials,
             List<VcStoreItem> vcStoreItems,
-            AuditEventUser auditEventUser,
-            boolean isF2FComplete)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    HttpResponseExceptionWithErrorBody, CredentialParseException {
-        // Check for credential correlation failure
-        if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
-            if (isF2FComplete) {
-                sendAuditEvent(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEventUser);
-            } else {
-                sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-            }
-            return false;
-        }
+            AuditEventUser auditEventUser)
+            throws UnknownEvidenceTypeException, ParseException, SqsException {
+
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)
