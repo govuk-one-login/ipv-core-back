@@ -104,6 +104,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
 
     private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
         var numberOfVcs = userIdCriIdPairs.size();
+
+        // Iterate over each VC
         for (int i = 0; i < numberOfVcs; i++) {
             var userIdCriIdPair = userIdCriIdPairs.get(i);
             LOGGER.info(
@@ -129,7 +131,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void revoke(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
-        // Read KBV VC for the ID
+        // Read VC with userId and CriId
         var vcStoreItem =
                 verifiableCredentialService.getVcStoreItem(
                         userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
@@ -195,9 +197,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         } catch (SqsException e) {
             throw new SqsException(
                     String.format(
-                            "Failed to send audit event IPV_VC_REVOKED_FAILURE (%s / %s)",
-                            i + 1, numberOfVcs),
-                    e);
+                            "Failed to send audit event IPV_VC_REVOKED_FAILURE (%s / %s): %s",
+                            i + 1, numberOfVcs, e.getMessage()));
         }
     }
 }
