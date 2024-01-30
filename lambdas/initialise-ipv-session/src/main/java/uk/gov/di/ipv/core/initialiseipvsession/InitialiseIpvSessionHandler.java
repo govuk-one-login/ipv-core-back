@@ -185,6 +185,13 @@ public class InitialiseIpvSessionHandler
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
                 if (inheritedIdentityJwtClaim.isPresent()) {
+                    auditService.sendAuditEvent(
+                            new AuditEvent(
+                                    AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
+                                    configService.getSsmParameter(
+                                            ConfigurationVariable.COMPONENT_ID),
+                                    auditEventUser,
+                                    null));
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
                             inheritedIdentityJwtClaim.get(),
