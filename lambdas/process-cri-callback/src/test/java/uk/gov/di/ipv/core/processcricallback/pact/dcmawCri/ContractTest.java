@@ -198,6 +198,95 @@ class ContractTest {
     private static final String VALID_DVLA_VC_SIGNATURE =
             "B_TEOE2VXwz8YXcbMKFOwQ2tsM8yjZ1r7tU4RCZkvKe1cPg2vIOmCsULuroOZrBHxCby4EDZYRe-JUqEUGnlvQ";
 
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_DVLA_VC_NO_GIVEN_NAME_BODY =
+            """
+            {
+              "sub": "test-subject",
+              "iss": "dummyDcmawComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "value": "Doe",
+                          "type": "FamilyName"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1985-02-08"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": null,
+                      "organisationName": null,
+                      "subBuildingName": null,
+                      "buildingNumber ": null,
+                      "buildingName": null,
+                      "dependentStreetName": null,
+                      "streetName": null,
+                      "doubleDependentAddressLocality": null,
+                      "dependentAddressLocality": null,
+                      "addressLocality": null,
+                      "postalCode": "EH1 9GP",
+                      "addressCountry": null
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOE99802085J99KV",
+                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP",
+                      "issueNumber": "16",
+                      "issuedBy": "DVLA",
+                      "issueDate": "2019-01-23",
+                      "expiryDate": "2022-09-02"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "activityHistoryScore": 1,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "vri",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "2019-01-01"
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
+            "k7Ec4bRnS56tuXy52a28i4YVe5jZ1XS9ixOeiUwIrdpxnTsoJ6762IBZ_T5o6wM35DA2BXV7wcTuB0341Gzrmg";
+
     private static final String FAILED_DVLA_VC_FRAUD_BODY =
             """
             {
@@ -1062,6 +1151,109 @@ class ContractTest {
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsDvlaCredentialWithNoGivenName(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyDcmawComponentId is a valid issuer")
+                .given("the current time is 2099-01-01 00:00:00")
+                .given("VC is for a DVLA driving licence")
+                .given("VC is for Doe")
+                .given("VC birthDate is 1985-02-08")
+                .given("VC address is EH1 9GP")
+                .given("VC driving licence personalNumber is DOE99802085J99FG")
+                .given("VC driving licence fullAddress is 122 BURNS CRESCENT EDINBURGH EH1 9GP")
+                .given("VC driving licence expiryDate is 2022-09-02")
+                .given("VC driving licence issueNumber is 16")
+                .given("VC driving licence issuedBy is DVLA")
+                .given("VC driving licence issuedDate is 2019-01-23")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .uponReceiving("Valid credential request for DVLA VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_DVLA_VC_NO_GIVEN_NAME_BODY, VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsDvlaCredentialWithNoGivenName")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidDvlaVcWithNoGivenName(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode drivingPermitNode =
+                                        credentialSubject.get("drivingPermit").get(0);
+
+                                assertEquals("EH1 9GP", addressNode.get("postalCode").asText());
+
+                                assertEquals(1, nameParts.size());
+                                assertEquals("FamilyName", nameParts.get(0).get("type").asText());
+                                assertEquals("Doe", nameParts.get(0).get("value").asText());
+
+                                assertEquals(
+                                        "2022-09-02", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "DOE99802085J99KV",
+                                        drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
+
+                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+
+                                assertEquals(3, evidence.get("strengthScore").asInt());
+                                assertEquals(2, evidence.get("validityScore").asInt());
+                                assertEquals(1, evidence.get("activityHistoryScore").asInt());
+                            } catch (VerifiableCredentialException
+                                     | ParseException
+                                     | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
