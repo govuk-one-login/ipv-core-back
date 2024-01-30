@@ -304,7 +304,7 @@ public class InitialiseIpvSessionHandler
             throws RecoverableJarValidationException, ParseException, CredentialParseException {
         try {
             var signedInheritedIdentityJWT =
-                    validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
+                    validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
             if (!isHmrcInheritedIdentityWithStrongerVotPresent(
                     signedInheritedIdentityJWT, userId)) {
                 storeHmrcInheritedIdentity(
@@ -322,7 +322,7 @@ public class InitialiseIpvSessionHandler
     }
 
     private SignedJWT validateHmrcInheritedIdentity(
-            String userId, InheritedIdentityJwtClaim inheritedIdentityJwtClaim)
+            InheritedIdentityJwtClaim inheritedIdentityJwtClaim)
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
@@ -344,8 +344,12 @@ public class InitialiseIpvSessionHandler
         var signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJwtList.get(0));
         var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
+        // The HMRC inherited identity VC will contain an HMRC-specific pairwise identifier
+        // rather than our internal user id, so we cannot validate it against the OAuth user id.
+        // Instead, SPOT will validate this when generating an identity bundle.
+        var inheritedUserId = signedInheritedIdentityJWT.getJWTClaimsSet().getSubject();
         verifiableCredentialJwtValidator.validate(
-                signedInheritedIdentityJWT, inheritedIdentityCriConfig, userId);
+                signedInheritedIdentityJWT, inheritedIdentityCriConfig, inheritedUserId);
         LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));
 
         return signedInheritedIdentityJWT;
