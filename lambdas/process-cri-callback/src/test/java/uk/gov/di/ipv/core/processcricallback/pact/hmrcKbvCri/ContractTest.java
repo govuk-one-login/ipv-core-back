@@ -65,7 +65,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "HmrcKbvCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
-public class ContractTest {
+class ContractTest {
     private static final String TEST_USER = "test-subject";
     private static final String TEST_ISSUER = "dummyHmrcKbvComponentId";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
