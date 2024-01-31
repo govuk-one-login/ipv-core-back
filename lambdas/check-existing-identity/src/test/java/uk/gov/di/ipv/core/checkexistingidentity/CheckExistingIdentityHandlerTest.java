@@ -470,13 +470,10 @@ class CheckExistingIdentityHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-        assertEquals(
-                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -726,13 +723,10 @@ class CheckExistingIdentityHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-        assertEquals(
-                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -1024,8 +1018,11 @@ class CheckExistingIdentityHandlerTest {
                 ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
+                AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+        assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                auditEventArgumentCaptor.getValue().getEventName());
+                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
