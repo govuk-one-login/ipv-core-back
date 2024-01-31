@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +50,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,9 +59,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -82,7 +76,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_P
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, Object> JOURNEY_REUSE =
@@ -218,20 +211,23 @@ public class CheckExistingIdentityHandler
                 return ciScoringCheckResponse.get();
             }
 
+            // Check for credentials correlation failure
+            var areGpg45VcsCorrelated = userIdentityService.areVCsCorrelated(vcStoreItems);
+
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             auditEventUser,
                             vcStoreItems,
-                            isF2FComplete);
+                            areGpg45VcsCorrelated);
             if (profileMatchResponse.isPresent()) {
                 return profileMatchResponse.get();
             }
 
             // No profile match
             return isF2FComplete
-                    ? buildF2FNoMatchResponse(auditEventUser)
+                    ? buildF2FNoMatchResponse(areGpg45VcsCorrelated, auditEventUser)
                     : buildNoMatchResponse(vcStoreItems, auditEventUser);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -310,15 +306,11 @@ public class CheckExistingIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
             List<VcStoreItem> vcStoreItems,
-            boolean isF2FComplete)
-            throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    HttpResponseExceptionWithErrorBody, CredentialParseException {
+            boolean areGpg45VcsCorrelated)
+            throws ParseException, UnknownEvidenceTypeException, SqsException {
         List<SignedJWT> credentials =
                 gpg45ProfileEvaluator.parseCredentials(
                         userIdentityService.getIdentityCredentials(vcStoreItems));
-
-        // Check for credentials correlation failure
-        var areGpg45VcsCorrelated = userIdentityService.areVCsCorrelated(vcStoreItems);
 
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
@@ -342,16 +334,17 @@ public class CheckExistingIdentityHandler
                             auditEventUser));
         }
 
-        if (!areGpg45VcsCorrelated && isF2FComplete) {
-            sendAuditEvent(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEventUser);
-        }
         return Optional.empty();
     }
 
-    private Map<String, Object> buildF2FNoMatchResponse(AuditEventUser auditEventUser)
-            throws SqsException {
+    private Map<String, Object> buildF2FNoMatchResponse(
+            boolean areGpg45VcsCorrelated, AuditEventUser auditEventUser) throws SqsException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
-        sendAuditEvent(AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL, auditEventUser);
+        sendAuditEvent(
+                !areGpg45VcsCorrelated
+                        ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
+                        : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                auditEventUser);
         return JOURNEY_F2F_FAIL;
     }
 
@@ -496,23 +489,7 @@ public class CheckExistingIdentityHandler
                         new AuditExtensionGpg45ProfileMatched(
                                 gpg45Profile,
                                 gpg45Scores,
-                                extractTxnIdsFromCredentials(credentials)));
+                                VcHelper.extractTxnIdsFromCredentials(credentials)));
         auditService.sendAuditEvent(auditEvent);
-    }
-
-    @Tracing
-    private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
-            throws ParseException {
-        List<String> txnIds = new ArrayList<>();
-        for (SignedJWT credential : credentials) {
-            var jwtClaimsSet = credential.getJWTClaimsSet();
-            var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-            var evidences = (JSONArray) vc.get(VC_EVIDENCE);
-            if (evidences != null) { // not all VCs have an evidence block
-                var evidence = (JSONObject) evidences.get(ONLY);
-                txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
-            }
-        }
-        return txnIds;
     }
 }

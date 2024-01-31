@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -124,6 +125,14 @@ class VcHelperTest {
                 2,
                 VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.OPERATIONAL_HMRC)
                         .size());
+    }
+
+    @Test
+    void shouldExtractTxIdFromCredentials() throws ParseException {
+        List<String> txns =
+                VcHelper.extractTxnIdsFromCredentials(List.of(SignedJWT.parse(VC_NINO_SUCCESSFUL)));
+        assertEquals(1, txns.size());
+        assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {
