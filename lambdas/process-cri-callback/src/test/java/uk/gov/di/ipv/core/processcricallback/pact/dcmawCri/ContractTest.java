@@ -738,7 +738,6 @@ class ContractTest {
                   ],
                   "passport": [
                     {
-                      "documentType": "P",
                       "icaoIssuerCode": "GBR",
                       "documentNumber": "123456789",
                       "expiryDate": "2100-02-02"
@@ -771,7 +770,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "WyNkFhF_kw5BJb52x047DtrZabVuX9SKTbbPVpLyCHs-OES86mzOwWMhDhkLad5F3X4kISgn9XyoHb4Bx8j1gA";
+            "dktj03MwQwFe3jvWoMLwSbFm3azRMJbFLMVI4Dhx_4yXFFVOJhxnHrQzknvgjVEZTe3aAv4ENuUdan4yc-U4SQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3146-AC1
@@ -900,7 +899,6 @@ class ContractTest {
                   ],
                   "passport": [
                     {
-                      "documentType": "P",
                       "icaoIssuerCode": "GBR",
                       "documentNumber": "123456789",
                       "expiryDate": "2100-02-02"
@@ -937,7 +935,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_SIGNATURE =
-            "jExewNNlRQP_gVThLOKnERUwgvuCpmzqAkXzfrQGxHkJkHrS50ENG6z90dkWXICe88qLiFfk0wVIRvvPSoManA";
+            "MRXBC1N-sq53HGve8MW9vmFgIXpAPD0ZMKvaGOh3XOGS5Mtjoc3-9rfpOv5gr9ol03Hr1HeWubNqT3QapiDRQw";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_BRP_VC_BODY =
@@ -2087,7 +2085,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", passport.get("expiryDate").asText());
                                 assertEquals("123456789", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
-                                assertEquals("P", passport.get("documentType").asText());
+                                assertNull(passport.get("documentType"));
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
@@ -2279,7 +2277,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", passport.get("expiryDate").asText());
                                 assertEquals("123456789", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
-                                assertEquals("P", passport.get("documentType").asText());
+                                assertNull(passport.get("documentType"));
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
