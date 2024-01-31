@@ -14,11 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -95,6 +91,27 @@ class DataStoreTest {
         assertEquals(
                 Instant.now().plusSeconds(ttl).getEpochSecond(),
                 authorizationCodeItemArgumentCaptor.getValue().getTtl());
+    }
+
+    @Test
+    void shouldPutItemIntoDynamoDbTableIfEmpty() {
+        dataStore.createIfEmpty(authorizationCodeItem);
+
+        ArgumentCaptor<PutItemEnhancedRequest<AuthorizationCodeItem>>
+                authorizationCodeItemArgumentCaptor =
+                        ArgumentCaptor.forClass(PutItemEnhancedRequest.class);
+
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbTable).putItem(authorizationCodeItemArgumentCaptor.capture());
+        assertEquals(
+                authorizationCodeItem.getAuthCode(),
+                authorizationCodeItemArgumentCaptor.getValue().item().getAuthCode());
+        assertEquals(
+                authorizationCodeItem.getIpvSessionId(),
+                authorizationCodeItemArgumentCaptor.getValue().item().getIpvSessionId());
     }
 
     @Test

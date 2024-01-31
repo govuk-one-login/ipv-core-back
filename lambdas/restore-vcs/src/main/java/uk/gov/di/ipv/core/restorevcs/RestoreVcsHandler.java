@@ -18,15 +18,16 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
+import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.restorevcs.domain.RestoreRequest;
 import uk.gov.di.ipv.core.restorevcs.exceptions.RestoreVcException;
 
 import java.io.IOException;
@@ -59,7 +60,6 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     @SuppressWarnings("unused") // Used through dependency injection
     public RestoreVcsHandler() {
         this.configService = new ConfigService();
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         boolean isRunningLocally = this.configService.isRunningLocally();
         this.archivedVcDataStore =
                 new DataStore<>(
@@ -69,18 +69,19 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
+    @Tracing
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
         LogHelper.attachComponentIdToLogs(configService);
         var userIdCriIdPairs =
                 new ObjectMapper()
-                        .readValue(inputStream, RestoreRequest.class)
+                        .readValue(inputStream, VcsActionRequest.class)
                         .getUserIdCriIdPairs();
         LOGGER.info(
                 LogHelper.buildLogMessage(
@@ -111,11 +112,16 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                             String.format("Restoring VC (%s / %s)", i + 1, numberOfVcs)));
 
             try {
-                restore(userIdCriIdPair, i, numberOfVcs);
+                restore(userIdCriIdPair);
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 String.format(
                                         "Successfully restored VC (%s / %s)", i + 1, numberOfVcs)));
+            } catch (SqsException e) {
+                throw new SqsException(
+                        String.format(
+                                "Failed to send audit event IPV_VC_RESTORED (%s / %s): %s",
+                                i + 1, numberOfVcs, e.getMessage()));
             } catch (OverwriteAvoidedException e) {
                 LOGGER.info(
                         LogHelper.buildErrorMessage(
@@ -133,7 +139,9 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void restore(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
+    private void restore(UserIdCriIdPair userIdCriIdPair)
+            throws ParseException, VerifiableCredentialException, OverwriteAvoidedException,
+                    SqsException, JsonProcessingException, RestoreVcException {
         // Read VC with userId and CriId
         var archivedVc =
                 archivedVcDataStore.getItem(
@@ -146,7 +154,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                     signedArchivedVc, userIdCriIdPair.getCriId(), userIdCriIdPair.getUserId());
 
             // Send audit event
-            sendVcRestoredAuditEvent(userIdCriIdPair.getUserId(), archivedVc, i, numberOfVcs);
+            sendVcRestoredAuditEvent(userIdCriIdPair.getUserId(), archivedVc);
 
             // Delete VC from the archive table
             archivedVcDataStore.delete(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
@@ -155,8 +163,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void sendVcRestoredAuditEvent(
-            String userId, VcStoreItem vcStoreItem, int i, int numberOfVcs)
+    private void sendVcRestoredAuditEvent(String userId, VcStoreItem vcStoreItem)
             throws ParseException, SqsException, JsonProcessingException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 

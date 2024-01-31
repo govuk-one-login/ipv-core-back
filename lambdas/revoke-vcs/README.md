@@ -5,7 +5,7 @@ What this lambda is for and does: https://govukverify.atlassian.net/browse/PYIC-
 To run this lambda, create an appropriate payload including userIds with vcs in the the appropriate environment.
 
 ```bash
-aws-vault exec <profile> -- aws lambda invoke --function-name revoke-vcs-<env> --invocation-type RequestResponse --payload fileb://revokeVcsLambdaPayload.json
+aws-vault exec <profile> -- aws lambda invoke --function-name revoke-vcs-<env> --invocation-type RequestResponse --payload fileb://revokeVcsLambdaPayload.json response.json
 ```
 
 This lambda iterates the `userId` and `criId` pairs and for each:

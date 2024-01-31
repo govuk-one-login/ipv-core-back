@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
+import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -26,7 +27,6 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.revokevcs.domain.RevokeRequest;
 import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
 
 import java.io.IOException;
@@ -80,7 +80,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         LogHelper.attachComponentIdToLogs(configService);
         var userIdCriIdPairs =
                 new ObjectMapper()
-                        .readValue(inputStream, RevokeRequest.class)
+                        .readValue(inputStream, VcsActionRequest.class)
                         .getUserIdCriIdPairs();
         LOGGER.info(
                 LogHelper.buildLogMessage(
@@ -111,7 +111,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                             String.format("Revoking VC (%s / %s)", i + 1, numberOfVcs)));
 
             try {
-                revoke(userIdCriIdPair, i, numberOfVcs);
+                revoke(userIdCriIdPair);
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 String.format(
@@ -128,7 +128,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void revoke(UserIdCriIdPair userIdCriIdPair, int i, int numberOfVcs) throws Exception {
+    private void revoke(UserIdCriIdPair userIdCriIdPair)
+            throws SqsException, ParseException, JsonProcessingException, RevokeVcException {
         // Read VC with userId and CriId
         var vcStoreItem =
                 verifiableCredentialService.getVcStoreItem(
@@ -139,7 +140,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             archivedVcDataStore.create(vcStoreItem);
 
             // Send audit event
-            sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem, i, numberOfVcs);
+            sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem);
 
             // Delete VC from the main table
             verifiableCredentialService.deleteVcStoreItem(
@@ -149,8 +150,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void sendVcRevokedAuditEvent(
-            String userId, VcStoreItem vcStoreItem, int i, int numberOfVcs)
+    private void sendVcRevokedAuditEvent(String userId, VcStoreItem vcStoreItem)
             throws ParseException, SqsException, JsonProcessingException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
