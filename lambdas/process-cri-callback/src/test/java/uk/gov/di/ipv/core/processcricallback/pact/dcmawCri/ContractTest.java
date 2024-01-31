@@ -294,6 +294,7 @@ class ContractTest {
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
             "k7Ec4bRnS56tuXy52a28i4YVe5jZ1XS9ixOeiUwIrdpxnTsoJ6762IBZ_T5o6wM35DA2BXV7wcTuB0341Gzrmg";
 
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
     private static final String FAILED_DVLA_VC_WITH_CI_BODY =
             """
@@ -395,7 +396,9 @@ class ContractTest {
     private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
             "hURplyqcvd87w2tm76hDRlGxuBgGmmKC6o-h8IA0fz3uuTHCLLyhhpH6DvuHRtOUleTmNJ19tabUXZwT9vIFjQ";
 
-    private static final String FAILED_DVLA_VC_NON_FRAUD_BODY =
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-1045-AC1
+    private static final String FAILED_DVA_VC_NO_CI_BODY =
             """
             {
               "sub": "test-subject",
@@ -416,16 +419,15 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
+                          "value": "SARAH",
                           "type": "GivenName"
                         },
                         {
-
-                          "value": "Laura",
+                          "value": "MEREDYTH",
                           "type": "GivenName"
                         },
                         {
-                          "value": "Doe",
+                          "value": "MORGAN",
                           "type": "FamilyName"
                         }
                       ]
@@ -433,7 +435,12 @@ class ContractTest {
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1976-03-11"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
                     }
                   ],
                   "address": [
@@ -441,7 +448,7 @@ class ContractTest {
                       "uprn": null,
                       "organisationName": null,
                       "subBuildingName": null,
-                      "buildingNumber ": null,
+                      "buildingNumber": null,
                       "buildingName": null,
                       "dependentStreetName": null,
                       "streetName": null,
@@ -454,28 +461,28 @@ class ContractTest {
                   ],
                   "drivingPermit": [
                     {
-                      "personalNumber": "DOE99802085J99KV",
-                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP",
-                      "issueNumber": "16",
-                      "issuedBy": "DVLA",
-                      "issueDate": "2019-01-23",
-                      "expiryDate": "2022-09-02"
+                      "personalNumber": "MORGA753116SM9IJ",
+                      "issueNumber": null,
+                      "issuedBy": "DVA",
+                      "issueDate": null,
+                      "expiryDate": "2023-01-18",
+                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP"
                     }
                   ]
                 },
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "bcd2346",
                     "strengthScore": 3,
                     "validityScore": 0,
-                    "activityHistoryScore": 0,
                     "ci": [],
+                    "activityHistoryScore": 0,
                     "failedCheckDetails": [
                       {
                         "checkMethod": "vri",
                         "identityCheckPolicy": "published",
-                        "activityFrom": ""
+                        "activityFrom": null
                       },
                       {
                         "checkMethod": "bvr",
@@ -490,10 +497,11 @@ class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String FAILED_DVLA_VC_NON_FRAUD_SIGNATURE =
-            "pHRh55Qiz4jWypWcT9BczAOXgEFp1n3ONNOl3j41pgA4PDz9GOe4sdz4Ep24YASfK4S6pdcbkm3A2HtT8D_ctw";
+    private static final String FAILED_DVA_VC_NO_CI_SIGNATURE =
+            "Vfn6YWxKlwwdUeau-o_2Qx67ni2KMp6JPseqShrP9lcQskNaoBMpxFeae-Q5VAWlVcZlry9D9cU7tsrr6r2WYA";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-1559-AC2
     private static final String VALID_DVA_VC_BODY =
             """
             {
@@ -515,16 +523,15 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
+                          "value": "OLGA",
                           "type": "GivenName"
                         },
                         {
-
-                          "value": "Laura",
+                          "value": "A",
                           "type": "GivenName"
                         },
                         {
-                          "value": "Doe",
+                          "value": "KULYK",
                           "type": "FamilyName"
                         }
                       ]
@@ -532,7 +539,12 @@ class ContractTest {
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1980-09-27"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
                     }
                   ],
                   "address": [
@@ -540,32 +552,32 @@ class ContractTest {
                       "uprn": null,
                       "organisationName": null,
                       "subBuildingName": null,
-                      "buildingNumber ": null,
+                      "buildingNumber": null,
                       "buildingName": null,
                       "dependentStreetName": null,
                       "streetName": null,
                       "doubleDependentAddressLocality": null,
                       "dependentAddressLocality": null,
                       "addressLocality": null,
-                      "postalCode": "EH1 9GP",
+                      "postalCode": null,
                       "addressCountry": null
                     }
                   ],
                   "drivingPermit": [
                     {
-                      "personalNumber": "99999999",
-                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP",
-                      "expiryDate": "2022-09-02",
+                      "expiryDate": "2028-02-20",
+                      "issueDate": "2022-05-29",
                       "issueNumber": null,
                       "issuedBy": "DVA",
-                      "issueDate": "2019-01-23"
+                      "personalNumber": "5823131861",
+                      "fullAddress": null
                     }
                   ]
                 },
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "1f9d73167e2166b707c6",
                     "strengthScore": 3,
                     "validityScore": 2,
                     "activityHistoryScore": 1,
@@ -573,7 +585,7 @@ class ContractTest {
                       {
                         "checkMethod": "vri",
                         "identityCheckPolicy": "published",
-                        "activityFrom": "2019-01-01"
+                        "activityFrom": "2022-05-29"
                       },
                       {
                         "checkMethod": "bvr",
@@ -589,7 +601,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "Rl071wqrsJIXeu0Czg8HFB99lj_1yCfcGuZmAaD33ctDKGjH2pAZSYrSnpTjZ-vy5xMCCTnqzczESt7msp-Q7A";
+            "KLX-9APfnyzb9BOxHW4Brrdgw3ovGA6DotcwXjGweCJeBUzczzE3FsBwN6HKueM9wabsSWQql7mOxRjHwRqf0A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-4733-AC1
@@ -695,6 +707,7 @@ class ContractTest {
             "TIe5PXJag0Mn9Oh_3Q6XuOWhwVfeiO-dvSabw9AZs3C2Md26cnX8eR_wu0MaMyD3w5MO_CzzBpYqxY-W6FmVhA";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-3079-AC1
     private static final String VALID_UK_PASSPORT_VC_BODY =
             """
             {
@@ -707,54 +720,58 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "credentialSubject": {
                   "name": [
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "ANNA"
                         },
                         {
-
-                          "value": "Laura",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "NICHOLA"
                         },
                         {
-                          "value": "Doe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "OTHER FORTYFOUR"
                         }
                       ]
                     }
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1960-01-01"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
                     }
                   ],
                   "passport": [
                     {
                       "icaoIssuerCode": "GBR",
-                      "documentNumber": "123456789",
-                      "expiryDate": "2100-02-02"
+                      "documentNumber": "549364783",
+                      "expiryDate": "2027-08-01"
                     }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "biometricId",
                     "strengthScore": 4,
                     "validityScore": 3,
                     "checkDetails": [
                       {
                         "checkMethod": "vcrypt",
                         "identityCheckPolicy": "published",
-                        "activityFrom": "2019-01-01"
+                        "activityFrom": null
                       },
                       {
                         "checkMethod": "bvr",
@@ -770,7 +787,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "dktj03MwQwFe3jvWoMLwSbFm3azRMJbFLMVI4Dhx_4yXFFVOJhxnHrQzknvgjVEZTe3aAv4ENuUdan4yc-U4SQ";
+            "dnXc3avCGKj6XdKpGnNTgjH3lpRZotBSyzx4ttFksnaheiHExklxqGHc8ZNRdIJu0cpFyP-Dw6Bl5xO46nZCVA";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3146-AC1
@@ -856,6 +873,7 @@ class ContractTest {
             "HaA5_LWPnyzxb4zfBYDq9FR9rJGt4_YAfSJ7wzyF90SpCxRh2QoMscmkmBSz60rPZMXMoXXv5sWx96fbJyzd0g";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-3171-AC2
     private static final String FAILED_PASSPORT_VC_BODY =
             """
             {
@@ -868,52 +886,55 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "credentialSubject": {
                   "name": [
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "ANNA"
                         },
                         {
-
-                          "value": "Laura",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "NICHOLA"
                         },
                         {
-                          "value": "Doe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "OTHER FORTYFOUR"
                         }
                       ]
                     }
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1960-01-01"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
                     }
                   ],
                   "passport": [
                     {
                       "icaoIssuerCode": "GBR",
-                      "documentNumber": "123456789",
-                      "expiryDate": "2100-02-02"
+                      "documentNumber": "549364783",
+                      "expiryDate": "2027-08-01"
                     }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "biometricId",
                     "strengthScore": 4,
                     "validityScore": 0,
                     "ci": [
-                      "A00",
-                      "A01"
+                      "V01"
                     ],
                     "failedCheckDetails": [
                       {
@@ -935,9 +956,10 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_SIGNATURE =
-            "MRXBC1N-sq53HGve8MW9vmFgIXpAPD0ZMKvaGOh3XOGS5Mtjoc3-9rfpOv5gr9ol03Hr1HeWubNqT3QapiDRQw";
+            "FZRxr03o7njVxKgUafUwSqbvbZtWNhmObEP7rHVoGcoWglBryD-Ghkn5gZ9AwqNVN8J4VpRIu2olij6TIiVq2A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-5176-AC1
     private static final String VALID_BRP_VC_BODY =
             """
             {
@@ -950,55 +972,55 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "credentialSubject": {
                   "name": [
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "LATEFAMFOUR"
                         },
                         {
-
-                          "value": "Laura",
-                          "type": "GivenName"
-                        },
-                        {
-                          "value": "Doe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "LATEFAMLASTFOUR"
                         }
                       ]
                     }
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1980-01-01"
                     }
                   ],
                   "residencePermit": [
                     {
-                      "documentType": "IR",
                       "icaoIssuerCode": "GBR",
                       "documentNumber": "ZR8016200",
-                      "expiryDate": "2100-02-02"
+                      "expiryDate": "2024-02-25",
+                      "documentType": "IR"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "bcd2346",
                     "strengthScore": 4,
                     "validityScore": 3,
                     "checkDetails": [
                       {
                         "checkMethod": "vcrypt",
                         "identityCheckPolicy": "published",
-                        "activityFrom": "2019-01-01"
+                        "activityFrom": null
                       },
                       {
                         "checkMethod": "bvr",
@@ -1014,9 +1036,10 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "pOvFCOkf3zwbwwXK3kjB6lU_XlIcFwgnWrgSlKu8Zx6U-UCePtQTUOg7b8a8MHv1WDPB79owQzPEj_wksghapg";
+            "9CWqNbNL9ypAU0nD9mtNnu3uYInfyBxFybk0Cymj38axQfN-UPDpepwgNHkR9ebEGGoIy4dW3SPzjzENddAt2w";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-5175-AC1
     private static final String FAILED_BRP_VC_BODY =
             """
             {
@@ -1029,53 +1052,52 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "credentialSubject": {
                   "name": [
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "LATEFAMFOUR"
                         },
                         {
-
-                          "value": "Laura",
-                          "type": "GivenName"
-                        },
-                        {
-                          "value": "Doe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "LATEFAMLASTFOUR"
                         }
                       ]
                     }
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1980-01-01"
                     }
                   ],
                   "residencePermit": [
                     {
-                      "documentType": "IR",
                       "icaoIssuerCode": "GBR",
                       "documentNumber": "ZR8016200",
-                      "expiryDate": "2100-02-02"
+                      "expiryDate": "2024-02-25",
+                      "documentType": "IR"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "bcd2346",
                     "strengthScore": 4,
                     "validityScore": 0,
                     "ci": [
-                      "A00",
-                      "A01"
+                      "V01"
                     ],
                     "failedCheckDetails": [
                       {
@@ -1097,7 +1119,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRP_VC_SIGNATURE =
-            "glzLVzR6Vz5bW4YxuNbfW5WopOGJvpe-xfcNZuZDz_V_i7v0QvOYEhfb96eu1Eep9IBSfaWceCiLsKXWEglKxg";
+            "hF24S4veyQQONjKl9brU5fkJb-uQro7khveIt20NtqYavO6_inquM5YkOI-jTtGkC-vej2kous5pLRFoXGDm1g";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5176-AC1
@@ -1698,20 +1720,15 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsDvlaResponseFailedNonFraud(
+    public RequestResponsePact validRequestReturnsDvaResponseFailedNoCis(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a DVLA driving licence")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC address is EH1 9GP")
-                .given("VC failed due to bad likeness")
-                .given("VC evidence txn is dummyTxn")
-                .uponReceiving("Valid credential request for DVLA VC with CI")
+                .given("VC is from DCMAW-1045-AC1")
+                .uponReceiving("Valid credential request for DVA failed VC with no CIs")
                 .path("/credential")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1720,14 +1737,14 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                FAILED_DVLA_VC_NON_FRAUD_BODY,
-                                FAILED_DVLA_VC_NON_FRAUD_SIGNATURE))
+                                FAILED_DVA_VC_NO_CI_BODY,
+                                FAILED_DVA_VC_NO_CI_SIGNATURE))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsDvlaResponseFailedNonFraud")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAFailedDvlaVcForNonFraud(
+    @PactTestFor(pactMethod = "validRequestReturnsDvaResponseFailedNoCis")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAFailedDvaVcWithNoCis(
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -1779,18 +1796,18 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("SARAH", nameParts.get(0).get("value").asText());
+                                assertEquals("MEREDYTH", nameParts.get(1).get("value").asText());
+                                assertEquals("MORGAN", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2022-09-02", drivingPermitNode.get("expiryDate").asText());
+                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "DOE99802085J99KV",
+                                        "MORGA753116SM9IJ",
                                         drivingPermitNode.get("personalNumber").asText());
-                                assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
+                                assertEquals("DVA", drivingPermitNode.get("issuedBy").asText());
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1976-03-11", birthDateNode.get("value").asText());
 
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
@@ -1810,17 +1827,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a DVA driving licence")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC address is EH1 9GP")
-                .given("VC driving licence personalNumber is 99999999")
-                .given("VC driving licence fullAddress is 122 BURNS CRESCENT EDINBURGH EH1 9GP")
-                .given("VC driving licence expiryDate is 2022-09-02")
-                .given("VC driving licence issuedBy is DVA")
-                .given("VC driving licence issuedDate is 2019-01-23")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .given("VC is from DCMAW-1559-AC2")
                 .uponReceiving("Valid credential request for DVA VC")
                 .path("/credential")
                 .method("POST")
@@ -1879,23 +1886,25 @@ class ContractTest {
                                 JsonNode drivingPermitNode =
                                         credentialSubject.get("drivingPermit").get(0);
 
-                                assertEquals("EH1 9GP", addressNode.get("postalCode").asText());
+                                assertEquals(JsonNodeType.NULL, addressNode.get("postalCode").getNodeType());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("OLGA", nameParts.get(0).get("value").asText());
+                                assertEquals("A", nameParts.get(1).get("value").asText());
+                                assertEquals("KULYK", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2022-09-02", drivingPermitNode.get("expiryDate").asText());
+                                        "2028-02-20", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "99999999",
+                                        "2022-05-29", drivingPermitNode.get("issueDate").asText());
+                                assertEquals(
+                                        "5823131861",
                                         drivingPermitNode.get("personalNumber").asText());
                                 assertEquals("DVA", drivingPermitNode.get("issuedBy").asText());
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1980-09-27", birthDateNode.get("value").asText());
 
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(2, evidence.get("validityScore").asInt());
@@ -2010,13 +2019,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a passport")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC passport document number is 123456789")
-                .given("VC passport expiryDate is 2100-02-02")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .given("VC is from DCMAW-3079-AC1")
                 .uponReceiving("Valid credential request for passport VC")
                 .path("/credential")
                 .method("POST")
@@ -2078,16 +2081,16 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("ANNA", nameParts.get(0).get("value").asText());
+                                assertEquals("NICHOLA", nameParts.get(1).get("value").asText());
+                                assertEquals("OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
 
-                                assertEquals("2100-02-02", passport.get("expiryDate").asText());
-                                assertEquals("123456789", passport.get("documentNumber").asText());
+                                assertEquals("2027-08-01", passport.get("expiryDate").asText());
+                                assertEquals("549364783", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
                                 assertNull(passport.get("documentType"));
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1960-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
@@ -2197,14 +2200,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a failed passport")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC passport document number is 123456789")
-                .given("VC passport expiryDate is 2100-02-02")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC has CI A00")
-                .given("VC has CI A01")
+                .given("VC is from DCMAW-3171-AC2")
                 .uponReceiving("Valid credential request for failed passport VC")
                 .path("/credential")
                 .method("POST")
@@ -2264,22 +2260,21 @@ class ContractTest {
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode passport = credentialSubject.get("passport").get(0);
 
-                                assertEquals("A00", ciNode.get(0).asText());
-                                assertEquals("A01", ciNode.get(1).asText());
+                                assertEquals("V01", ciNode.get(0).asText());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("ANNA", nameParts.get(0).get("value").asText());
+                                assertEquals("NICHOLA", nameParts.get(1).get("value").asText());
+                                assertEquals("OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
 
-                                assertEquals("2100-02-02", passport.get("expiryDate").asText());
-                                assertEquals("123456789", passport.get("documentNumber").asText());
+                                assertEquals("2027-08-01", passport.get("expiryDate").asText());
+                                assertEquals("549364783", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
                                 assertNull(passport.get("documentType"));
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1960-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
@@ -2298,13 +2293,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a BRP")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC BRP document number is ZR8016200")
-                .given("VC BRP expiryDate is 2100-02-02")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .given("VC is from DCMAW-5176-AC1")
                 .uponReceiving("Valid credential request for passport VC")
                 .path("/credential")
                 .method("POST")
@@ -2362,18 +2351,16 @@ class ContractTest {
                                 JsonNode brp = credentialSubject.get("residencePermit").get(0);
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
-                                assertEquals("2100-02-02", brp.get("expiryDate").asText());
+                                assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
                                 assertEquals("IR", brp.get("documentType").asText());
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
@@ -2392,14 +2379,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a failed BRP")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC BRP document number is ZR8016200")
-                .given("VC BRP expiryDate is 2100-02-02")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC has CI A00")
-                .given("VC has CI A01")
+                .given("VC is from DCMAW-5175-AC1")
                 .uponReceiving("Valid credential request for failed BRP VC")
                 .path("/credential")
                 .method("POST")
@@ -2457,22 +2437,19 @@ class ContractTest {
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode brp = credentialSubject.get("residencePermit").get(0);
 
-                                assertEquals("A00", ciNode.get(0).asText());
-                                assertEquals("A01", ciNode.get(1).asText());
+                                assertEquals("V01", ciNode.get(0).asText());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
-                                assertEquals("2100-02-02", brp.get("expiryDate").asText());
+                                assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
                                 assertEquals("IR", brp.get("documentType").asText());
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
@@ -2757,12 +2734,8 @@ class ContractTest {
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig3 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A00", ciConfig1);
-        ciConfigMap.put("A01", ciConfig2);
-        ciConfigMap.put("V01", ciConfig3);
+        ciConfigMap.put("V01", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
