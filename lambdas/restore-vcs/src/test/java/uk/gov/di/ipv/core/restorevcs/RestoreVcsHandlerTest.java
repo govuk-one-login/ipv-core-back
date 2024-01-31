@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -42,7 +42,7 @@ class RestoreVcsHandlerTest {
     @Test
     void shouldRestoreVc()
             throws IOException, SqsException, VerifiableCredentialException,
-                    OverwriteAvoidedException {
+                    CredentialAlreadyExistsException {
         // Arrange
         InputStream inputStream =
                 RestoreVcsHandlerTest.class.getResourceAsStream("/testRestoreVcsRequest.json");
@@ -60,7 +60,7 @@ class RestoreVcsHandlerTest {
 
         // Assert
         verify(mockVerifiableCredentialService)
-                .persistUserCredentialsIfEmpty(any(), eq("kbv"), eq(TEST_USER_ID));
+                .persistUserCredentialsIfNotExists(any(), eq("kbv"), eq(TEST_USER_ID));
         verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         var auditEvent = auditEventArgumentCaptor.getValue();

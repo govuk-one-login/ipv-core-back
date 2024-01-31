@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedExce
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -60,14 +60,14 @@ public class VerifiableCredentialService {
         }
     }
 
-    public void persistUserCredentialsIfEmpty(
+    public void persistUserCredentialsIfNotExists(
             SignedJWT credential, String credentialIssuerId, String userId)
-            throws VerifiableCredentialException, OverwriteAvoidedException {
+            throws VerifiableCredentialException, CredentialAlreadyExistsException {
         try {
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
-            dataStore.createIfEmpty(vcStoreItem);
+            dataStore.createIfNotExists(vcStoreItem);
         } catch (ConditionalCheckFailedException e) {
-            throw new OverwriteAvoidedException();
+            throw new CredentialAlreadyExistsException();
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(

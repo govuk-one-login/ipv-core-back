@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
-import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -122,7 +122,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         String.format(
                                 "Failed to send audit event IPV_VC_RESTORED (%s / %s): %s",
                                 i + 1, numberOfVcs, e.getMessage()));
-            } catch (OverwriteAvoidedException e) {
+            } catch (CredentialAlreadyExistsException e) {
                 LOGGER.info(
                         LogHelper.buildErrorMessage(
                                 String.format(
@@ -140,7 +140,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void restore(UserIdCriIdPair userIdCriIdPair)
-            throws ParseException, VerifiableCredentialException, OverwriteAvoidedException,
+            throws ParseException, VerifiableCredentialException, CredentialAlreadyExistsException,
                     SqsException, JsonProcessingException, RestoreVcException {
         // Read VC with userId and CriId
         var archivedVc =
@@ -150,7 +150,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         if (archivedVc != null) {
             // Restore VC if empty
             var signedArchivedVc = SignedJWT.parse(archivedVc.getCredential());
-            verifiableCredentialService.persistUserCredentialsIfEmpty(
+            verifiableCredentialService.persistUserCredentialsIfNotExists(
                     signedArchivedVc, userIdCriIdPair.getCriId(), userIdCriIdPair.getUserId());
 
             // Send audit event

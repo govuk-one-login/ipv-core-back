@@ -94,8 +94,8 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldPutItemIntoDynamoDbTableIfEmpty() {
-        dataStore.createIfEmpty(authorizationCodeItem);
+    void shouldPutItemIntoDynamoDbTableIfNotExists() {
+        dataStore.createIfNotExists(authorizationCodeItem);
 
         ArgumentCaptor<PutItemEnhancedRequest<AuthorizationCodeItem>>
                 authorizationCodeItemArgumentCaptor =

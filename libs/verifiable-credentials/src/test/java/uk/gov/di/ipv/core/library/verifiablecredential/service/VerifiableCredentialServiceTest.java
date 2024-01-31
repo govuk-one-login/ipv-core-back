@@ -16,7 +16,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.OverwriteAvoidedException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -176,7 +176,7 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void expectedSuccessWhenSaveCredentialsWhenEmpty() throws Exception {
+    void expectedSuccessWhenSaveCredentialsIfNotExists() throws Exception {
         // Arrange
         ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(VcStoreItem.class);
@@ -185,11 +185,11 @@ class VerifiableCredentialServiceTest {
         String userId = "user-id-1";
 
         // Act
-        verifiableCredentialService.persistUserCredentialsIfEmpty(
+        verifiableCredentialService.persistUserCredentialsIfNotExists(
                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), credentialIssuerId, userId);
 
         // Assert
-        verify(mockDataStore).createIfEmpty(userIssuedCredentialsItemCaptor.capture());
+        verify(mockDataStore).createIfNotExists(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
@@ -198,19 +198,19 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void expectedOverwriteAvoidedExceptionWhenSaveCredentialsWhenNotEmpty() {
+    void expectedCredentialAlreadyExistsExceptionWhenSaveCredentialsIfExists() {
         // Arrange
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
         doThrow(ConditionalCheckFailedException.builder().build())
                 .when(mockDataStore)
-                .createIfEmpty(any());
+                .createIfNotExists(any());
 
         // Act & Assert
         assertThrows(
-                OverwriteAvoidedException.class,
+                CredentialAlreadyExistsException.class,
                 () ->
-                        verifiableCredentialService.persistUserCredentialsIfEmpty(
+                        verifiableCredentialService.persistUserCredentialsIfNotExists(
                                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                                 credentialIssuerId,
                                 userId));
@@ -230,7 +230,7 @@ class VerifiableCredentialServiceTest {
                 assertThrows(
                         VerifiableCredentialException.class,
                         () ->
-                                verifiableCredentialService.persistUserCredentialsIfEmpty(
+                                verifiableCredentialService.persistUserCredentialsIfNotExists(
                                         signedJwt, credentialIssuerId, userId));
 
         assertNotNull(thrown);

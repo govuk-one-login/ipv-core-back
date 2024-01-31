@@ -73,7 +73,7 @@ public class DataStore<T extends DynamodbItem> {
         table.putItem(item);
     }
 
-    public void createIfEmpty(T item) {
+    public void createIfNotExists(T item) {
         PutItemEnhancedRequest<T> enhancedRequest =
                 PutItemEnhancedRequest.builder(typeParameterClass)
                         .item(item)
