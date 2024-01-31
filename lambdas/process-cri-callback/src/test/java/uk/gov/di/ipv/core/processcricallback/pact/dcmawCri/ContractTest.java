@@ -103,6 +103,7 @@ class ContractTest {
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-410-AC1
     private static final String VALID_DVLA_VC_BODY =
             """
             {
@@ -124,16 +125,15 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
+                          "value": "Joe",
                           "type": "GivenName"
                         },
                         {
-
-                          "value": "Laura",
+                          "value": "Shmoe",
                           "type": "GivenName"
                         },
                         {
-                          "value": "Doe",
+                          "value": "Doe The Ball",
                           "type": "FamilyName"
                         }
                       ]
@@ -144,37 +144,42 @@ class ContractTest {
                       "value": "1985-02-08"
                     }
                   ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
                   "address": [
                     {
                       "uprn": null,
                       "organisationName": null,
                       "subBuildingName": null,
-                      "buildingNumber ": null,
+                      "buildingNumber": null,
                       "buildingName": null,
                       "dependentStreetName": null,
                       "streetName": null,
                       "doubleDependentAddressLocality": null,
                       "dependentAddressLocality": null,
                       "addressLocality": null,
-                      "postalCode": "EH1 9GP",
+                      "postalCode": "CH1 1AQ",
                       "addressCountry": null
                     }
                   ],
                   "drivingPermit": [
                     {
-                      "personalNumber": "DOE99802085J99KV",
-                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP",
-                      "issueNumber": "16",
+                      "personalNumber": "DOE99802085J99FG",
+                      "expiryDate": "2023-01-18",
+                      "issueNumber": null,
                       "issuedBy": "DVLA",
-                      "issueDate": "2019-01-23",
-                      "expiryDate": "2022-09-02"
+                      "issueDate": "2022-05-29",
+                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
                     }
                   ]
                 },
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
                     "strengthScore": 3,
                     "validityScore": 2,
                     "activityHistoryScore": 1,
@@ -182,7 +187,7 @@ class ContractTest {
                       {
                         "checkMethod": "vri",
                         "identityCheckPolicy": "published",
-                        "activityFrom": "2019-01-01"
+                        "activityFrom": "2022-05-29"
                       },
                       {
                         "checkMethod": "bvr",
@@ -198,7 +203,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "B_TEOE2VXwz8YXcbMKFOwQ2tsM8yjZ1r7tU4RCZkvKe1cPg2vIOmCsULuroOZrBHxCby4EDZYRe-JUqEUGnlvQ";
+            "MPwaYUsf5HBJ7Gp5oq5TJ71l1B2zfUXOrDeIXpotsnJpWsHonGV11yralObDqFM5UXCCrqemyCLQPWZ6z6seFg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_BODY =
@@ -289,7 +294,8 @@ class ContractTest {
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
             "k7Ec4bRnS56tuXy52a28i4YVe5jZ1XS9ixOeiUwIrdpxnTsoJ6762IBZ_T5o6wM35DA2BXV7wcTuB0341Gzrmg";
 
-    private static final String FAILED_DVLA_VC_FRAUD_BODY =
+    // From DCMAW-5477-AC1
+    private static final String FAILED_DVLA_VC_WITH_CI_BODY =
             """
             {
               "sub": "test-subject",
@@ -314,11 +320,6 @@ class ContractTest {
                           "type": "GivenName"
                         },
                         {
-
-                          "value": "Laura",
-                          "type": "GivenName"
-                        },
-                        {
                           "value": "Doe",
                           "type": "FamilyName"
                         }
@@ -327,7 +328,12 @@ class ContractTest {
                   ],
                   "birthDate": [
                     {
-                      "value": "1985-02-08"
+                      "value": "1981-11-28"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
                     }
                   ],
                   "address": [
@@ -335,44 +341,43 @@ class ContractTest {
                       "uprn": null,
                       "organisationName": null,
                       "subBuildingName": null,
-                      "buildingNumber ": null,
+                      "buildingNumber": null,
                       "buildingName": null,
                       "dependentStreetName": null,
                       "streetName": null,
                       "doubleDependentAddressLocality": null,
                       "dependentAddressLocality": null,
                       "addressLocality": null,
-                      "postalCode": "EH1 9GP",
+                      "postalCode": "CH62 6AQ",
                       "addressCountry": null
                     }
                   ],
                   "drivingPermit": [
                     {
-                      "personalNumber": null,
-                      "fullAddress": null,
+                      "personalNumber": "DOEDO861281JF9DH",
                       "issueNumber": null,
-                      "issuedBy": null,
+                      "issuedBy": "DVLA",
                       "issueDate": null,
-                      "expiryDate": null
+                      "expiryDate": "2028-08-07",
+                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
                     }
                   ]
                 },
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "bcd2346",
                     "strengthScore": 3,
                     "validityScore": 0,
-                    "activityHistoryScore": 0,
                     "ci": [
-                      "A00",
-                      "A01"
+                      "V01"
                     ],
+                    "activityHistoryScore": 0,
                     "failedCheckDetails": [
                       {
                         "checkMethod": "vri",
                         "identityCheckPolicy": "published",
-                        "activityFrom": ""
+                        "activityFrom": null
                       },
                       {
                         "checkMethod": "bvr",
@@ -381,14 +386,14 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              } 
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String FAILED_DVLA_VC_FRAUD_SIGNATURE =
-            "iqKYf-5Yg6-NYwtUjQ4hTN2hRfqhUToseO5N1-Y2uYwKOgg7MCmopSCtiLdRFEwAu3ZBj301CevrtyDmvZquaA";
+    private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
+            "hURplyqcvd87w2tm76hDRlGxuBgGmmKC6o-h8IA0fz3uuTHCLLyhhpH6DvuHRtOUleTmNJ19tabUXZwT9vIFjQ";
 
     private static final String FAILED_DVLA_VC_NON_FRAUD_BODY =
             """
@@ -1406,18 +1411,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a DVLA driving licence")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC address is EH1 9GP")
-                .given("VC driving licence personalNumber is DOE99802085J99FG")
-                .given("VC driving licence fullAddress is 122 BURNS CRESCENT EDINBURGH EH1 9GP")
-                .given("VC driving licence expiryDate is 2022-09-02")
-                .given("VC driving licence issueNumber is 16")
-                .given("VC driving licence issuedBy is DVLA")
-                .given("VC driving licence issuedDate is 2019-01-23")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .given("VC is from DCMAW-410-AC1")
                 .uponReceiving("Valid credential request for DVLA VC")
                 .path("/credential")
                 .method("POST")
@@ -1476,19 +1470,19 @@ class ContractTest {
                                 JsonNode drivingPermitNode =
                                         credentialSubject.get("drivingPermit").get(0);
 
-                                assertEquals("EH1 9GP", addressNode.get("postalCode").asText());
+                                assertEquals("CH1 1AQ", addressNode.get("postalCode").asText());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("Joe", nameParts.get(0).get("value").asText());
+                                assertEquals("Shmoe", nameParts.get(1).get("value").asText());
+                                assertEquals("Doe The Ball", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2022-09-02", drivingPermitNode.get("expiryDate").asText());
+                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "DOE99802085J99KV",
+                                        "DOE99802085J99FG",
                                         drivingPermitNode.get("personalNumber").asText());
                                 assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
 
@@ -1609,21 +1603,14 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsDvlaResponseFailedFraud(
+    public RequestResponsePact validRequestReturnsDvlaResponseFailedWithCi(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a DVLA driving licence")
-                .given("VC is for Jane Laura Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC address is EH1 9GP")
-                .given("VC driving licence details are blank due to bad image")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC has CI A00")
-                .given("VC has CI A01")
+                .given("VC is from DCMAW-5477-AC1")
                 .uponReceiving("Valid credential request for DVLA VC with CI")
                 .path("/credential")
                 .method("POST")
@@ -1633,14 +1620,14 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                FAILED_DVLA_VC_FRAUD_BODY,
-                                FAILED_DVLA_VC_FRAUD_SIGNATURE))
+                                FAILED_DVLA_VC_WITH_CI_BODY,
+                                FAILED_DVLA_VC_WITH_CI_SIGNATURE))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsDvlaResponseFailedFraud")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAFailedDvlaVcForFraud(
+    @PactTestFor(pactMethod = "validRequestReturnsDvlaResponseFailedWithCi")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAFailedDvlaVcWithACi(
             MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -1685,24 +1672,21 @@ class ContractTest {
                                 JsonNode drivingPermitNode =
                                         credentialSubject.get("drivingPermit").get(0);
 
-                                assertEquals("A00", ciNode.get(0).asText());
-                                assertEquals("A01", ciNode.get(1).asText());
+                                assertEquals("V01", ciNode.get(0).asText());
 
-                                assertEquals("EH1 9GP", addressNode.get("postalCode").asText());
+                                assertEquals("CH62 6AQ", addressNode.get("postalCode").asText());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Laura", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe", nameParts.get(2).get("value").asText());
+                                assertEquals("Doe", nameParts.get(1).get("value").asText());
 
-                                assertEquals("null", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals("2028-08-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "null", drivingPermitNode.get("personalNumber").asText());
-                                assertEquals("null", drivingPermitNode.get("issuedBy").asText());
+                                        "DOEDO861281JF9DH", drivingPermitNode.get("personalNumber").asText());
+                                assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
 
-                                assertEquals("1985-02-08", birthDateNode.get("value").asText());
+                                assertEquals("1981-11-28", birthDateNode.get("value").asText());
 
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
@@ -2776,9 +2760,11 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
+        ContraIndicatorConfig ciConfig3 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("A00", ciConfig1);
         ciConfigMap.put("A01", ciConfig2);
+        ciConfigMap.put("V01", ciConfig3);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
