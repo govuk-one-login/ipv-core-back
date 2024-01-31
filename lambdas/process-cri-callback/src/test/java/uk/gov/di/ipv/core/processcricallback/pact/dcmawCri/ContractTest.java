@@ -1820,6 +1820,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", passport.get("expiryDate").asText());
                                 assertEquals("123456789", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
+                                assertEquals("P", passport.get("documentType").asText());
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
@@ -1921,6 +1922,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", passport.get("expiryDate").asText());
                                 assertEquals("123456789", passport.get("documentNumber").asText());
                                 assertEquals("GBR", passport.get("icaoIssuerCode").asText());
+                                assertEquals("P", passport.get("documentType").asText());
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
@@ -2014,6 +2016,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
+                                assertEquals("IR", brp.get("documentType").asText());
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
@@ -2112,6 +2115,7 @@ class ContractTest {
                                 assertEquals("2100-02-02", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
+                                assertEquals("IR", brp.get("documentType").asText());
 
                                 assertEquals("1985-02-08", birthDateNode.get("value").asText());
 
