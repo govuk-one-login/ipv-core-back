@@ -185,7 +185,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "CI score is breaching threshold - setting VOT to P0"));
-            ipvSessionItem.setVot(Vot.P0.name());
+            ipvSessionItem.setVot(Vot.P0);
 
             return ciMitUtilityService
                     .getCiMitigationJourneyStep(cis)

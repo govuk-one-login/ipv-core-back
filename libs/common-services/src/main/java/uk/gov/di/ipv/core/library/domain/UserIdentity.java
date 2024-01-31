@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class UserIdentity {
 
     @JsonProperty private String sub;
 
-    @JsonProperty private String vot;
+    @JsonProperty private Vot vot;
 
     @JsonProperty private String vtm;
 
@@ -61,7 +62,7 @@ public class UserIdentity {
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
             @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
-            @JsonProperty(value = "vot", required = true) String vot,
+            @JsonProperty(value = "vot", required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
             @JsonProperty(value = RETURN_CODE_NAME) List<ReturnCode> returnCode) {
         this.vcs = new ArrayList<>(vcs);

@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.util.List;
@@ -149,7 +150,7 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithoutExitCode()
             throws JsonProcessingException, SqsException {
         AuditExtensionsUserIdentity extensions =
-                new AuditExtensionsUserIdentity("levelOFConfidence", false, false, null);
+                new AuditExtensionsUserIdentity(Vot.P2, false, false, null);
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
@@ -180,8 +181,7 @@ class AuditServiceTest {
                                         "https://review-f.account.gov.uk")),
                         new AuditEventReturnCode("V", List.of("https://review-k.account.gov.uk")));
         AuditExtensionsUserIdentity extensions =
-                new AuditExtensionsUserIdentity(
-                        "levelOFConfidence", false, false, auditEventReturnCodes);
+                new AuditExtensionsUserIdentity(Vot.P2, false, false, auditEventReturnCodes);
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =

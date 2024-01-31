@@ -225,7 +225,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
@@ -247,7 +247,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
