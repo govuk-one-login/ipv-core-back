@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
@@ -584,6 +585,109 @@ class ContractTest {
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
             "Rl071wqrsJIXeu0Czg8HFB99lj_1yCfcGuZmAaD33ctDKGjH2pAZSYrSnpTjZ-vy5xMCCTnqzczESt7msp-Q7A";
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-4733-AC1
+    private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY =
+            """
+            {
+              "sub": "test-subject",
+              "iss": "dummyDcmawComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "value": "Jane",
+                          "type": "GivenName"
+                        },
+                        {
+                          "value": "Julian",
+                          "type": "GivenName"
+                        },
+                        {
+                          "value": "Boe",
+                          "type": "FamilyName"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "2011-11-28"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": null,
+                      "organisationName": null,
+                      "subBuildingName": null,
+                      "buildingNumber": null,
+                      "buildingName": null,
+                      "dependentStreetName": null,
+                      "streetName": null,
+                      "doubleDependentAddressLocality": null,
+                      "dependentAddressLocality": null,
+                      "addressLocality": null,
+                      "postalCode": "CH62 2AQ",
+                      "addressCountry": null
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "BOEJJ861281TP9DH",
+                      "expiryDate": "2028-08-07",
+                      "issueNumber": null,
+                      "issuedBy": null,
+                      "issueDate": "2022-05-29",
+                      "fullAddress": "102 ROVER ROAD, WIRRAL, CH62 2AQ"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "activityHistoryScore": 1,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "vri",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "2022-05-29"
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
+            "TIe5PXJag0Mn9Oh_3Q6XuOWhwVfeiO-dvSabw9AZs3C2Md26cnX8eR_wu0MaMyD3w5MO_CzzBpYqxY-W6FmVhA";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_UK_PASSPORT_VC_BODY =
@@ -1815,8 +1919,103 @@ class ContractTest {
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
                             } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                                     | ParseException
+                                     | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsDrivingLicenceCredential(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyDcmawComponentId is a valid issuer")
+                .given("the current time is 2099-01-01 00:00:00")
+                .given("VC is from DCMAW-4733-AC1")
+                .uponReceiving("Valid credential request for DVA VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY, VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsDrivingLicenceCredential")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidDvaVcWithNoIssuer(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode drivingPermitNode =
+                                        credentialSubject.get("drivingPermit").get(0);
+
+                                assertEquals("CH62 2AQ", addressNode.get("postalCode").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
+                                assertEquals("Jane", nameParts.get(0).get("value").asText());
+                                assertEquals("Julian", nameParts.get(1).get("value").asText());
+                                assertEquals("Boe", nameParts.get(2).get("value").asText());
+
+                                assertEquals(
+                                        "2028-08-07", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "BOEJJ861281TP9DH",
+                                        drivingPermitNode.get("personalNumber").asText());
+                                assertEquals(JsonNodeType.NULL, drivingPermitNode.get("issuedBy").getNodeType());
+
+                                assertEquals("2011-11-28", birthDateNode.get("value").asText());
+
+                                assertEquals(3, evidence.get("strengthScore").asInt());
+                                assertEquals(2, evidence.get("validityScore").asInt());
+                                assertEquals(1, evidence.get("activityHistoryScore").asInt());
+                            } catch (VerifiableCredentialException
+                                     | ParseException
+                                     | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
