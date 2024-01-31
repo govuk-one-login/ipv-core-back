@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,11 +31,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static ConfigService configService;
+    private static final int ONLY = 0;
 
     private VcHelper() {}
 
@@ -89,6 +92,21 @@ public class VcHelper {
                                             || vcItem.getCredentialIssuer().equals(TICF_CRI)))
                     .toList();
         }
+    }
+
+    public static List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
+            throws ParseException {
+        List<String> txnIds = new ArrayList<>();
+        for (SignedJWT credential : credentials) {
+            var jwtClaimsSet = credential.getJWTClaimsSet();
+            var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+            var evidences = (JSONArray) vc.get(VC_EVIDENCE);
+            if (evidences != null) { // not all VCs have an evidence block
+                var evidence = (JSONObject) evidences.get(ONLY);
+                txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
+            }
+        }
+        return txnIds;
     }
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
