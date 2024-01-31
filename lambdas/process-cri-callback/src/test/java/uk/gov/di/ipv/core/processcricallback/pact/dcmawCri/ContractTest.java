@@ -57,6 +57,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -585,7 +586,7 @@ class ContractTest {
             "Rl071wqrsJIXeu0Czg8HFB99lj_1yCfcGuZmAaD33ctDKGjH2pAZSYrSnpTjZ-vy5xMCCTnqzczESt7msp-Q7A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_PASSPORT_VC_BODY =
+    private static final String VALID_UK_PASSPORT_VC_BODY =
             """
             {
               "sub": "test-subject",
@@ -660,8 +661,91 @@ class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String VALID_PASSPORT_VC_SIGNATURE =
+    private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
             "WyNkFhF_kw5BJb52x047DtrZabVuX9SKTbbPVpLyCHs-OES86mzOwWMhDhkLad5F3X4kISgn9XyoHb4Bx8j1gA";
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-3146-AC1
+    private static final String VALID_NLD_PASSPORT_VC_BODY =
+            """
+            {
+              "sub": "test-subject",
+              "iss": "dummyDcmawComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "OLGA"
+                        },
+                        {
+                          "type": "GivenName",
+                          "value": "ANATOLIYIVNA"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "KULYK"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1980-09-27"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "78b34ead-6ef6-4af3-8cc6-dcaa8e95ad71"
+                    }
+                  ],
+                  "passport": [
+                    {
+                      "icaoIssuerCode": "NLD",
+                      "documentNumber": "NXC65LP76",
+                      "expiryDate": "2026-04-01"
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "biometricId",
+                    "strengthScore": 4,
+                    "validityScore": 3,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "vcrypt",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": null
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_NLD_PASSPORT_VC_SIGNATURE =
+            "HaA5_LWPnyzxb4zfBYDq9FR9rJGt4_YAfSJ7wzyF90SpCxRh2QoMscmkmBSz60rPZMXMoXXv5sWx96fbJyzd0g";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String FAILED_PASSPORT_VC_BODY =
@@ -1761,8 +1845,8 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                VALID_PASSPORT_VC_BODY,
-                                VALID_PASSPORT_VC_SIGNATURE))
+                                VALID_UK_PASSPORT_VC_BODY,
+                                VALID_UK_PASSPORT_VC_SIGNATURE))
                 .toPact();
     }
 
@@ -1829,6 +1913,96 @@ class ContractTest {
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsNldPassportCredential(PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")//qqqqqqqqqqq
+                .given("test-subject is a valid subject")
+                .given("dummyDcmawComponentId is a valid issuer")
+                .given("the current time is 2099-01-01 00:00:00")
+                .given("Returned VC is from DCMAW-5176-AC1")
+                .uponReceiving("Valid credential request for passport VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_NLD_PASSPORT_VC_BODY,
+                                VALID_NLD_PASSPORT_VC_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsNldPassportCredential")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidNldPassportVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode passport = credentialSubject.get("passport").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
+                                assertEquals("OLGA", nameParts.get(0).get("value").asText());
+                                assertEquals("ANATOLIYIVNA", nameParts.get(1).get("value").asText());
+                                assertEquals("KULYK", nameParts.get(2).get("value").asText());
+
+                                assertEquals("2026-04-01", passport.get("expiryDate").asText());
+                                assertEquals("NXC65LP76", passport.get("documentNumber").asText());
+                                assertEquals("NLD", passport.get("icaoIssuerCode").asText());
+                                assertNull(passport.get("documentType"));
+
+                                assertEquals("1980-09-27", birthDateNode.get("value").asText());
+
+                                assertEquals(4, evidence.get("strengthScore").asInt());
+                                assertEquals(3, evidence.get("validityScore").asInt());
+                            } catch (VerifiableCredentialException
+                                     | ParseException
+                                     | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -2128,7 +2302,7 @@ class ContractTest {
                             }
                         });
     }
-    
+
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidBrcResponse(
             PactDslWithProvider builder) {
