@@ -124,10 +124,10 @@ public class UserIdentityService {
     }
 
     public UserIdentity generateUserIdentity(
-            String userId, String sub, String vot, ContraIndicators contraIndicators)
+            String userId, String sub, Vot vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        ProfileType profileType = Vot.valueOf(vot).getProfileType();
+        ProfileType profileType = vot.getProfileType();
         List<VcStoreItem> vcStoreItems =
                 VcHelper.filterVCBasedOnProfileType(dataStore.getItems(userId), profileType);
         List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
@@ -260,14 +260,14 @@ public class UserIdentityService {
     }
 
     private void buildUserIdentityBasedOnProfileType(
-            String vot,
+            Vot vot,
             ContraIndicators contraIndicators,
             ProfileType profileType,
             List<VcStoreItem> vcStoreItems,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
         final List<VcStoreItem> successfulVCStoreItems = getSuccessfulVCStoreItems(vcStoreItems);
-        if (vot.equals(Vot.P0.name())) {
+        if (Vot.P0.equals(vot)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
         } else {
             addUserIdentityClaims(

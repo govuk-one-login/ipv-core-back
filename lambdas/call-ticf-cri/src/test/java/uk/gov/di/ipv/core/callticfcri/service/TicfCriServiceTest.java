@@ -73,7 +73,7 @@ class TicfCriServiceTest {
     private static final TicfCriDto ticfCriResponse =
             new TicfCriDto(
                     List.of("vtr-value"),
-                    Vot.P2.name(),
+                    Vot.P2,
                     TRUSTMARK,
                     "a-user-id",
                     "a-govuk-journey-id",
@@ -92,7 +92,7 @@ class TicfCriServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setVot(Vot.P2.name());
+        ipvSessionItem.setVot(Vot.P2);
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -208,7 +208,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutCreds =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        Vot.P2.name(),
+                        Vot.P2,
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",
@@ -236,7 +236,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutMangledCred =
                 new TicfCriDto(
                         List.of("vtr-value"),
-                        Vot.P2.name(),
+                        Vot.P2,
                         TRUSTMARK,
                         "a-user-id",
                         "a-govuk-journey-id",

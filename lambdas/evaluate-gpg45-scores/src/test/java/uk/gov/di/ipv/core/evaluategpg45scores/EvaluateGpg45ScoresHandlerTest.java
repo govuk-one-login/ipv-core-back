@@ -191,10 +191,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -220,10 +220,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -389,10 +389,10 @@ class EvaluateGpg45ScoresHandlerTest {
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -494,10 +494,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
         verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
     }
 
