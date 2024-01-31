@@ -387,7 +387,7 @@ class ContractTest {
                     ]
                   }
                 ]
-              } 
+              }
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
@@ -1497,7 +1497,8 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
                                 assertEquals("Joe", nameParts.get(0).get("value").asText());
                                 assertEquals("Shmoe", nameParts.get(1).get("value").asText());
-                                assertEquals("Doe The Ball", nameParts.get(2).get("value").asText());
+                                assertEquals(
+                                        "Doe The Ball", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
                                         "2023-01-18", drivingPermitNode.get("expiryDate").asText());
@@ -1520,7 +1521,8 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsDvlaCredentialWithNoGivenName(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsDvlaCredentialWithNoGivenName(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -1546,7 +1548,9 @@ class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DVLA_VC_NO_GIVEN_NAME_BODY, VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE))
+                                VALID_VC_HEADER,
+                                VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
+                                VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE))
                 .toPact();
     }
 
@@ -1615,8 +1619,8 @@ class ContractTest {
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1701,9 +1705,11 @@ class ContractTest {
                                 assertEquals("Jane", nameParts.get(0).get("value").asText());
                                 assertEquals("Doe", nameParts.get(1).get("value").asText());
 
-                                assertEquals("2028-08-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "DOEDO861281JF9DH", drivingPermitNode.get("personalNumber").asText());
+                                        "2028-08-07", drivingPermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "DOEDO861281JF9DH",
+                                        drivingPermitNode.get("personalNumber").asText());
                                 assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
 
                                 assertEquals("1981-11-28", birthDateNode.get("value").asText());
@@ -1886,7 +1892,9 @@ class ContractTest {
                                 JsonNode drivingPermitNode =
                                         credentialSubject.get("drivingPermit").get(0);
 
-                                assertEquals(JsonNodeType.NULL, addressNode.get("postalCode").getNodeType());
+                                assertEquals(
+                                        JsonNodeType.NULL,
+                                        addressNode.get("postalCode").getNodeType());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
@@ -1910,15 +1918,16 @@ class ContractTest {
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsDrivingLicenceCredential(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsDrivingLicenceCredential(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -1933,7 +1942,9 @@ class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY, VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE))
+                                VALID_VC_HEADER,
+                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
+                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE))
                 .toPact();
     }
 
@@ -1997,7 +2008,9 @@ class ContractTest {
                                 assertEquals(
                                         "BOEJJ861281TP9DH",
                                         drivingPermitNode.get("personalNumber").asText());
-                                assertEquals(JsonNodeType.NULL, drivingPermitNode.get("issuedBy").getNodeType());
+                                assertEquals(
+                                        JsonNodeType.NULL,
+                                        drivingPermitNode.get("issuedBy").getNodeType());
 
                                 assertEquals("2011-11-28", birthDateNode.get("value").asText());
 
@@ -2005,8 +2018,8 @@ class ContractTest {
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -2083,7 +2096,8 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
                                 assertEquals("ANNA", nameParts.get(0).get("value").asText());
                                 assertEquals("NICHOLA", nameParts.get(1).get("value").asText());
-                                assertEquals("OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
+                                assertEquals(
+                                        "OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
 
                                 assertEquals("2027-08-01", passport.get("expiryDate").asText());
                                 assertEquals("549364783", passport.get("documentNumber").asText());
@@ -2103,9 +2117,10 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsNldPassportCredential(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsNldPassportCredential(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")//qqqqqqqqqqq
+                .given("dummyAccessToken is a valid access token") // qqqqqqqqqqq
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2172,7 +2187,8 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(1).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
                                 assertEquals("OLGA", nameParts.get(0).get("value").asText());
-                                assertEquals("ANATOLIYIVNA", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "ANATOLIYIVNA", nameParts.get(1).get("value").asText());
                                 assertEquals("KULYK", nameParts.get(2).get("value").asText());
 
                                 assertEquals("2026-04-01", passport.get("expiryDate").asText());
@@ -2185,8 +2201,8 @@ class ContractTest {
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -2267,7 +2283,8 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(2).get("type").asText());
                                 assertEquals("ANNA", nameParts.get(0).get("value").asText());
                                 assertEquals("NICHOLA", nameParts.get(1).get("value").asText());
-                                assertEquals("OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
+                                assertEquals(
+                                        "OTHER FORTYFOUR", nameParts.get(2).get("value").asText());
 
                                 assertEquals("2027-08-01", passport.get("expiryDate").asText());
                                 assertEquals("549364783", passport.get("documentNumber").asText());
@@ -2353,7 +2370,8 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
                                 assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
@@ -2442,7 +2460,8 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
                                 assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
@@ -2462,8 +2481,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsValidBrcResponse(
-            PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsValidBrcResponse(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -2478,9 +2496,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_BRC_VC_BODY,
-                                VALID_BRC_VC_SIGNATURE))
+                                VALID_VC_HEADER, VALID_BRC_VC_BODY, VALID_BRC_VC_SIGNATURE))
                 .toPact();
     }
 
@@ -2532,31 +2548,34 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
                                 assertEquals(
-                                        "2024-02-25", residencePermitNode.get("expiryDate").asText());
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "ZR8016200",
                                         residencePermitNode.get("documentNumber").asText());
-                                assertEquals("GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals("CR", residencePermitNode.get("documentType").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
 
                                 assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsFailedBrcResponse(
-            PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsFailedBrcResponse(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -2571,9 +2590,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_BRC_VC_BODY,
-                                FAILED_BRC_VC_SIGNATURE))
+                                VALID_VC_HEADER, FAILED_BRC_VC_BODY, FAILED_BRC_VC_SIGNATURE))
                 .toPact();
     }
 
@@ -2628,23 +2645,27 @@ class ContractTest {
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals("LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
 
                                 assertEquals(
-                                        "2024-02-25", residencePermitNode.get("expiryDate").asText());
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "ZR8016200",
                                         residencePermitNode.get("documentNumber").asText());
-                                assertEquals("GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals("CR", residencePermitNode.get("documentType").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
 
                                 assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
