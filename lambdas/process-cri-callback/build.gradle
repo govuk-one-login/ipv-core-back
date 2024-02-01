@@ -40,7 +40,7 @@ dependencies {
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.10.0",
-			"au.com.dius.pact.consumer:junit5:4.6.3",
+			"au.com.dius.pact.consumer:junit5:4.6.5",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
