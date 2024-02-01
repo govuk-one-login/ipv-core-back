@@ -1807,7 +1807,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void findIdentityDoesNotReturnsIdentityClaimForOperationalVcWithNoEvidence()
+    void findIdentityReturnsIdentityClaimForOperationalVcWithNoEvidence()
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         VcStoreItem vcStoreItem =
                 TestFixtures.createVcStoreItem(
