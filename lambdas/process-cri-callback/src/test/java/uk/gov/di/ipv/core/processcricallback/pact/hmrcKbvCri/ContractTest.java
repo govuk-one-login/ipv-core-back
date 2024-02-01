@@ -18,7 +18,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -60,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@Disabled("PACT tests should not be run in build pipelines at this time")
+// @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "HmrcKbvCriProvider")
@@ -82,6 +81,12 @@ class ContractTest {
             """;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    private static final String CLIENT_ASSERTION_BODY =
+            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ";
+    // Signature generated using JWT.io
+    private static final String CLIENT_ASSERTION_SIGNATURE =
+            "Qm36kQ8RhRM4iu4PVvRqXFqrBJ6qo65NMjxwTgaMBaFNTGb_u8OX_Cbcn6Vn88Wl_6l0jCUCcxh8U5o8Ns7fEw";
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
     private static final String VALID_VC_HEADER =
@@ -109,6 +114,11 @@ class ContractTest {
                   "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                       "personalNumber": "AA000003D"
+                    }
+                  ],
                   "name": [
                     {
                       "nameParts": [
@@ -126,15 +136,6 @@ class ContractTest {
                   "birthDate": [
                     {
                       "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "buildingName": "221B",
-                      "streetName": "BAKER STREET",
-                      "postalCode": "NW1 6XE",
-                      "addressLocality": "LONDON",
-                      "validFrom": "1887-01-01"
                     }
                   ]
                 },
@@ -180,6 +181,11 @@ class ContractTest {
                   "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                       "personalNumber": "AA000003D"
+                    }
+                  ],
                   "name": [
                     {
                       "nameParts": [
@@ -197,15 +203,6 @@ class ContractTest {
                   "birthDate": [
                     {
                       "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "buildingName": "221B",
-                      "streetName": "BAKER STREET",
-                      "postalCode": "NW1 6XE",
-                      "addressLocality": "LONDON",
-                      "validFrom": "1887-01-01"
                     }
                   ]
                 },
@@ -238,10 +235,10 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "qacZ2f3Bm5UDZ8qlkL75RqHfhgMYn12bEKKPVAmu4fJC-9Fg9fuJKRDO-4Akh7TCS0AVDh25i4pY1JFXzQ3aKw";
+            "gB4HRXB7wkcyMXTHtMG2o6FBEMaRudWY0tVOcFXstfebZNLWcTMn48ESZ-Q90Rf1vDXEEh252yTbG7JAXLfRZQ";
 
     private static final String FAILED_VC_SIGNATURE =
-            "l7Ye7bOJJrY10OIBbG5lMZhaZVl2m5-JSAU_YBMkGUIkYaVX_HKr3RMSpkMjsqjgG0OEzKq-UCDFnXFS7fwqFA";
+            "3AmYwmVchxoKmX2pDQlTVnYTMv7nNJzZ8dM1MMIGxG4dY3hlozMiG1OJKs6fMDisu-hXFqQCVYwmx-YcpxVE2w";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -258,7 +255,12 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -292,10 +294,7 @@ class ContractTest {
         // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
         // generated by the test as mocking out the AWSKMS class inside the real signer would be
         // painful.
-        when(mockSigner.sign(any(), any()))
-                .thenReturn(
-                        new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
                 .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
@@ -328,7 +327,12 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -356,10 +360,7 @@ class ContractTest {
         // JWT
         // generated by the test as mocking out the AWSKMS class inside the real signer would be
         // painful.
-        when(mockSigner.sign(any(), any()))
-                .thenReturn(
-                        new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
                 .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
@@ -396,6 +397,8 @@ class ContractTest {
                 .given("VC givenName is Mary")
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
+                .given("VC contains a socialSecurityRecord")
+                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -447,10 +450,15 @@ class ContractTest {
 
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode socialSecurityRecordNode =
+                                        credentialSubject.get("socialSecurityRecord").get(0);
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Mary", nameParts.get(0).get("value").asText());
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "AA000003D",
+                                        socialSecurityRecordNode.get("personalNumber").asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
@@ -519,6 +527,8 @@ class ContractTest {
                 .given("VC givenName is Mary")
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
+                .given("VC contains a socialSecurityRecord")
+                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
@@ -572,6 +582,8 @@ class ContractTest {
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode socialSecurityRecordNode =
+                                        credentialSubject.get("socialSecurityRecord").get(0);
                                 JsonNode ciNode = evidence.get("ci");
 
                                 // Assert
@@ -579,6 +591,9 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Mary", nameParts.get(0).get("value").asText());
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "AA000003D",
+                                        socialSecurityRecordNode.get("personalNumber").asText());
                                 assertEquals("V03", ciNode.get(0).asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
