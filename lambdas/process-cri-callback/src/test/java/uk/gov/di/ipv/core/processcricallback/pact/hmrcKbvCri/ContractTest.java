@@ -18,6 +18,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -59,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-// @Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "HmrcKbvCriProvider")
@@ -157,7 +158,7 @@ class ContractTest {
                     }
                     ],
                     "verificationScore": 2,
-                    "txn": "8KJTLGN7QX",
+                    "txn": "dummyTxn",
                     "type": "IdentityCheck"
                 }]
               }
@@ -224,7 +225,7 @@ class ContractTest {
                     }],
                     "ci": ["V03"],
                     "verificationScore": 0,
-                    "txn": "8KJTLGN7QX",
+                    "txn": "dummyTxn",
                     "type": "IdentityCheck"
                 }]
               }
@@ -235,10 +236,10 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "gB4HRXB7wkcyMXTHtMG2o6FBEMaRudWY0tVOcFXstfebZNLWcTMn48ESZ-Q90Rf1vDXEEh252yTbG7JAXLfRZQ";
+            "QAcjZYTRXwQFy6FaM4fYBmi7Qru19zJngHWjr9SAnSk42Ldy1emZxQ6xRAQzKo7QTzsGL7vEh1Uzxa4CsQhEmg";
 
     private static final String FAILED_VC_SIGNATURE =
-            "3AmYwmVchxoKmX2pDQlTVnYTMv7nNJzZ8dM1MMIGxG4dY3hlozMiG1OJKs6fMDisu-hXFqQCVYwmx-YcpxVE2w";
+            "Wwzvv1YHHUPinO2L32EiV4v3Q38WCx9dmoz0Wo7ePZm28BAFP0IdkKJpHNbVIx5CmbT0-WPmGTUp42AFs0OsFA";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -397,6 +398,8 @@ class ContractTest {
                 .given("VC givenName is Mary")
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
+                .given("VC evidence verificationScore is 2")
+                .given("VC evidence txn is dummyTxn")
                 .given("VC contains a socialSecurityRecord")
                 .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC")
@@ -527,6 +530,8 @@ class ContractTest {
                 .given("VC givenName is Mary")
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
+                .given("VC evidence verificationScore is 0")
+                .given("VC evidence txn is dummyTxn")
                 .given("VC contains a socialSecurityRecord")
                 .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC with CI")
