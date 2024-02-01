@@ -113,11 +113,8 @@ public class VcHelper {
 
     public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
         var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-        if (credVot != null
-                && Vot.valueOf(credVot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC)) {
-            return true;
-        }
-        return false;
+        return credVot != null
+                && Vot.valueOf(credVot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC);
     }
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
