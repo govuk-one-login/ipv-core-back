@@ -18,4 +18,5 @@ public class VocabConstants {
     public static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
     public static final String RETURN_CODE_NAME = "https://vocab.account.gov.uk/v1/returnCode";
     public static final String VCS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/credentialJWT";
+    public static final String VOT_CLAIM_NAME = "vot";
 }

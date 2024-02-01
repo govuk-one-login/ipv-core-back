@@ -135,6 +135,12 @@ class VcHelperTest {
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
     }
 
+    @Test
+    void shouldCheckIsItOperationalVC() throws ParseException {
+        assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(VC_HMRC_MIGRATION)));
+        assertFalse(VcHelper.isOperationalProfileVc(SignedJWT.parse(M1A_PASSPORT_VC)));
+    }
+
     private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("VC missing evidence", M1_PASSPORT_VC_MISSING_EVIDENCE),

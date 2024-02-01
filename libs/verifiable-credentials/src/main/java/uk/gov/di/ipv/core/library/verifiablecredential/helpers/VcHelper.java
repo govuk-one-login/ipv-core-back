@@ -8,6 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
@@ -32,6 +33,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -107,6 +109,15 @@ public class VcHelper {
             }
         }
         return txnIds;
+    }
+
+    public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
+        var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
+        if (credVot != null
+                && Vot.valueOf(credVot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC)) {
+            return true;
+        }
+        return false;
     }
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
