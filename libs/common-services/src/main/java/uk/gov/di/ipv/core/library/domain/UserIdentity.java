@@ -19,6 +19,7 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.NINO_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.RETURN_CODE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VCS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 @Getter
 @Setter
