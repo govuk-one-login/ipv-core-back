@@ -19,7 +19,7 @@ dependencies {
 	api project(":libs:cri-response-service")
 
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0',
-			"org.mockito:mockito-junit-jupiter:5.9.0",
+			"org.mockito:mockito-junit-jupiter:5.10.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
