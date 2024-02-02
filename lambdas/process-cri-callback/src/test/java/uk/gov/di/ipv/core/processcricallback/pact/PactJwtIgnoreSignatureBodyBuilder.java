@@ -47,7 +47,7 @@ public class PactJwtIgnoreSignatureBodyBuilder implements BodyBuilder {
 
     @Override
     public ContentType getContentType() {
-        return new ContentType("application/jwt; charset=UTF-8");
+        return new ContentType("application/jwt");
     }
 
     @Override
