@@ -88,8 +88,8 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -119,7 +119,8 @@ class CheckExistingIdentityHandlerTest {
             List.of(
                     TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_FRAUD_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                     TestFixtures.createVcStoreItem(
                             TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
@@ -129,7 +130,7 @@ class CheckExistingIdentityHandlerTest {
             List.of(
                     M1A_PASSPORT_VC,
                     M1A_ADDRESS_VC,
-                    M1A_FRAUD_VC,
+                    M1A_EXPERIAN_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static final String TICF_CRI = "ticf";
