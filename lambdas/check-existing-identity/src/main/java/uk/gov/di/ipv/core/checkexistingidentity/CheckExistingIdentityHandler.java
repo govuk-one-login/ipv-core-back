@@ -59,6 +59,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -96,7 +97,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
-    public static final String VOT_CLAIM = "vot";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -453,7 +453,7 @@ public class CheckExistingIdentityHandler
     private boolean hasOperationalProfileVc(Vot requestedVot, List<SignedJWT> credentials)
             throws ParseException {
         for (SignedJWT cred : credentials) {
-            String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
+            String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
             Optional<String> matchedOperationalProfile =
                     requestedVot.getSupportedOperationalProfiles().stream()
                             .map(OperationalProfile::name)

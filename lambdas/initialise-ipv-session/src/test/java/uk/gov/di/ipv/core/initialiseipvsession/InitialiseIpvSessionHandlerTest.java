@@ -84,6 +84,7 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAM
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.INHERITED_IDENTITY_JWT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
@@ -1059,7 +1060,7 @@ class InitialiseIpvSessionHandlerTest {
                                 .subject("test-user-id")
                                 .issuer("<https://oidc.hmrc.gov.uk/migration/v1>")
                                 .notBeforeTime(new Date(1694430000L * 1000))
-                                .claim("vot", vot.toString())
+                                .claim(VOT_CLAIM_NAME, vot.toString())
                                 .claim("vtm", "<https://hmrc.gov.uk/trustmark>")
                                 .claim(
                                         "vc",
