@@ -80,6 +80,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -92,6 +93,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_SCORE_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_FRAUD_WITHOUT_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
@@ -737,7 +739,8 @@ class UserIdentityServiceTest {
     @Test
     void shouldGetCorrectVot() throws ParseException {
         // Arrange
-        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("vot", Vot.PCL200.name()).build();
+        JWTClaimsSet claims =
+                new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, Vot.PCL200.name()).build();
         SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);
 
         // Act
@@ -750,7 +753,8 @@ class UserIdentityServiceTest {
     @Test
     void shouldThrowForInvalidVot() {
         // Arrange
-        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("vot", "not a vot value").build();
+        JWTClaimsSet claims =
+                new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, "not a vot value").build();
         SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);
 
         // Act
@@ -1776,6 +1780,29 @@ class UserIdentityServiceTest {
         assertThrows(
                 HttpResponseExceptionWithErrorBody.class,
                 () -> userIdentityService.findIdentityClaim(vcStoreItems, false));
+    }
+
+    @Test
+    void findIdentityReturnsIdentityClaimForOperationalVC()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems);
+        assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void findIdentityReturnsIdentityClaimForOperationalVcWithNoEvidence()
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        VcStoreItem vcStoreItem =
+                TestFixtures.createVcStoreItem(
+                        USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION_WITH_NO_EVIDENCE);
+        List<VcStoreItem> vcStoreItems = new ArrayList<>();
+        vcStoreItems.add(vcStoreItem);
+        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems);
+        assertFalse(result.isEmpty());
     }
 
     private void mockCredentialIssuerConfig() {

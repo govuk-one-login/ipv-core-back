@@ -62,6 +62,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
@@ -80,7 +81,6 @@ public class UserIdentityService {
             List.of(ADDRESS_CRI, BAV_CRI, TICF_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String VOT_CLAIM_NAME = "vot";
     private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -160,8 +160,10 @@ public class UserIdentityService {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             try {
-                if ((!checkEvidence || isEvidenceVc(vcStoreItem))
-                        && VcHelper.isSuccessfulVc(SignedJWT.parse(vcStoreItem.getCredential()))) {
+                SignedJWT signedJWT = SignedJWT.parse(vcStoreItem.getCredential());
+                if (VcHelper.isOperationalProfileVc(signedJWT)
+                        || ((!checkEvidence || isEvidenceVc(vcStoreItem))
+                                && VcHelper.isSuccessfulVc(signedJWT))) {
                     identityClaims.add(getIdentityClaim(vcStoreItem.getCredential()));
                 }
             } catch (ParseException e) {

@@ -85,6 +85,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
@@ -1113,7 +1114,7 @@ class CheckExistingIdentityHandlerTest {
         var jwt =
                 new SignedJWT(
                         new JWSHeader(JWSAlgorithm.ES256),
-                        new JWTClaimsSet.Builder().claim("vot", vot.name()).build());
+                        new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, vot.name()).build());
         jwt.sign(jwtSigner);
         return jwt;
     }
