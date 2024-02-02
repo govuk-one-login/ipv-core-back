@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.revokevcs.domain.RevokeVcsResult;
 import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ import java.util.List;
 @SuppressWarnings("unused") // Temporarily disable to pass sonarqube
 public class RevokeVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final RevokeVcsResult result = new RevokeVcsResult();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final DataStore<VcStoreItem> archivedVcDataStore;
@@ -97,6 +101,9 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped revoking VCs because of failure to send audit event.", e));
+        } finally {
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            objectMapper.writeValue(outputStream, result);
         }
     }
 
@@ -116,12 +123,14 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         LogHelper.buildLogMessage(
                                 String.format(
                                         "Successfully revoked VC (%s / %s)", i + 1, numberOfVcs)));
+                result.addSuccess(userIdCriIdPair);
             } catch (Exception e) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
                                 String.format(
                                         "Unexpected error occurred (%s / %s)", i + 1, numberOfVcs),
                                 e));
+                result.addFailure(userIdCriIdPair, e);
                 sendRevokedFailureAuditEvent(
                         userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId(), i, numberOfVcs);
             }

@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RevokeVcsHandlerTest {
     private final String TEST_USER_ID = "urn:uuid:0369ce52-b72d-42f5-83d4-ab561fa01fd7";
+    @Mock private OutputStream outputStream;
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
@@ -54,7 +56,7 @@ class RevokeVcsHandlerTest {
                 .thenReturn(testKbvVc);
 
         // Act
-        revokeVcsHandler.handleRequest(inputStream, null, null);
+        revokeVcsHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
         verify(mockDataStore).create(testKbvVc);
@@ -75,7 +77,7 @@ class RevokeVcsHandlerTest {
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv")).thenReturn(null);
 
         // Act
-        revokeVcsHandler.handleRequest(inputStream, null, null);
+        revokeVcsHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
         verify(mockDataStore, times(0)).create(any());
@@ -103,7 +105,7 @@ class RevokeVcsHandlerTest {
         doThrow(new RuntimeException("Some error")).when(mockDataStore).create(any());
 
         // Act
-        revokeVcsHandler.handleRequest(inputStream, null, null);
+        revokeVcsHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
         verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
