@@ -325,7 +325,7 @@ public class CheckExistingIdentityHandler
         if (strongestAttainedVotFromVtr.isPresent()) {
             // Profile matched
             Vot attainedVot = strongestAttainedVotFromVtr.get();
-            ipvSessionItem.setVot(attainedVot.name());
+            ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
                     buildReuseResponse(

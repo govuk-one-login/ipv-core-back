@@ -285,10 +285,10 @@ class CheckExistingIdentityHandlerTest {
             verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
 
         @Test
@@ -316,10 +316,10 @@ class CheckExistingIdentityHandlerTest {
             verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
 
         @Test // User returning after migration
@@ -339,10 +339,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL200.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getVot());
         }
 
         @Test // User returning after migration
@@ -362,10 +362,10 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL250.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getVot());
         }
 
         @Test // User in process of migration
@@ -385,10 +385,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL200.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getVot());
         }
 
         @Test // User in process of migration
@@ -407,10 +407,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL250.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getVot());
         }
 
         @Test
@@ -441,10 +441,10 @@ class CheckExistingIdentityHandlerTest {
             verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
     }
 
@@ -1029,10 +1029,10 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test

@@ -100,7 +100,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         mockVerifiableCredentialService);
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2.name());
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
     }
 
     @Test
@@ -565,7 +565,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250.name());
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
