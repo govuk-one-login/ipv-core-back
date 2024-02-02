@@ -44,7 +44,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_SCORE_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_KBV_SCORE_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
 @WireMockTest
@@ -216,7 +216,8 @@ class VerifiableCredentialServiceTest {
                                 "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                         TestFixtures.createVcStoreItem(
                                 "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
-                        TestFixtures.createVcStoreItem("a-users-id", "sausages", VC_KBV_SCORE_2));
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2));
 
         when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
