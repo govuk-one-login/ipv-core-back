@@ -83,7 +83,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -120,7 +120,7 @@ class CheckExistingIdentityHandlerTest {
                     TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                    TestFixtures.createVcStoreItem(TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
                     TestFixtures.createVcStoreItem(
                             TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));

@@ -42,7 +42,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
@@ -118,7 +118,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -158,7 +158,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -196,7 +196,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -241,7 +241,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -279,7 +279,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -310,7 +310,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -347,7 +347,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -384,7 +384,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -421,7 +421,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -472,7 +472,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         JourneyRequest input = createRequestEvent();
         JourneyErrorResponse errorResponse =
@@ -503,7 +503,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -536,7 +536,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
 
@@ -576,7 +576,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
 
