@@ -31,7 +31,7 @@ class AuditCriResponseHelperTest {
             throws ParseException, JsonProcessingException {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
-        assertFalse(auditExtensions.isSuccessful());
+        assertFalse(auditExtensions.getSuccessful());
         assertEquals("test-issuer", auditExtensions.getIss());
         assertEquals(
                 "[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}]",
