@@ -62,7 +62,7 @@ public class UserIdentity {
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
             @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
-            @JsonProperty(value = "vot", required = true) Vot vot,
+            @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
             @JsonProperty(value = RETURN_CODE_NAME) List<ReturnCode> returnCode) {
         this.vcs = new ArrayList<>(vcs);
