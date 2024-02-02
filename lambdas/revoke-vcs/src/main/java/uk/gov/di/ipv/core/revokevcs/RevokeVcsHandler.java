@@ -42,7 +42,6 @@ import java.util.List;
 public class RevokeVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private final RevokeVcsResult result = new RevokeVcsResult();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final DataStore<VcStoreItem> archivedVcDataStore;
@@ -86,12 +85,13 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                 new ObjectMapper()
                         .readValue(inputStream, VcsActionRequest.class)
                         .getUserIdCriIdPairs();
+        var result = new RevokeVcsResult();
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         String.format("Revoking %s VCs.", userIdCriIdPairs.size())));
 
         try {
-            revoke(userIdCriIdPairs);
+            revoke(userIdCriIdPairs, result);
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             String.format(
@@ -107,7 +107,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
+    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs, RevokeVcsResult result)
+            throws SqsException {
         var numberOfVcs = userIdCriIdPairs.size();
 
         // Iterate over each VC
