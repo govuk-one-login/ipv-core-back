@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -103,7 +103,8 @@ class VcHelperTest {
                 List.of(
                         TestFixtures.createVcStoreItem(
                                 "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
-                        TestFixtures.createVcStoreItem("userId", FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                "userId", EXPERIAN_FRAUD_CRI, VC_FRAUD_SCORE_1),
                         TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
                         TestFixtures.createVcStoreItem(
                                 "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
@@ -117,7 +118,8 @@ class VcHelperTest {
                 List.of(
                         TestFixtures.createVcStoreItem(
                                 "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
-                        TestFixtures.createVcStoreItem("userId", FRAUD_CRI, VC_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                "userId", EXPERIAN_FRAUD_CRI, VC_FRAUD_SCORE_1),
                         TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
                         TestFixtures.createVcStoreItem(
                                 "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));

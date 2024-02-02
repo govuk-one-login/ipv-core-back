@@ -13,7 +13,7 @@ public class CriConstants {
 
     public static final String PASSPORT_CRI = "ukPassport";
     public static final String DRIVING_LICENCE_CRI = "drivingLicence";
-    public static final String FRAUD_CRI = "fraud";
+    public static final String EXPERIAN_FRAUD_CRI = "fraud";
     public static final String EXPERIAN_KBV_CRI = "kbv";
     public static final String ADDRESS_CRI = "address";
     public static final String DCMAW_CRI = "dcmaw";
