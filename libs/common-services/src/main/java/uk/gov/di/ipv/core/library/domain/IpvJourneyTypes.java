@@ -6,16 +6,18 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum IpvJourneyTypes {
-    // Main entry point into the journey
+    // Main entry point
     IPV_CORE_MAIN_JOURNEY("ipv-core-main-journey"),
 
     // Successful journeys
     REUSE_EXISTING_IDENTITY("reuse-existing-identity"),
+    NEW_P2_IDENTITY("new-p2-identity"),
 
     // Unsuccessful journeys
     INELIGIBLE("ineligible"),
     FAILED("failed"),
     TECHNICAL_ERROR("technical-error"),
+    SESSION_TIMEOUT("session-timeout"),
 
     // F2F return journeys
     F2F_PENDING("f2f-pending"),

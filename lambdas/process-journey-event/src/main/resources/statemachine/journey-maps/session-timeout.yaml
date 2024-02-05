@@ -1,0 +1,21 @@
+# Entry points
+
+CORE_SESSION_TIMEOUT:
+  events:
+    next:
+      targetState: TIMEOUT_UNRECOVERABLE_PAGE
+
+# Journey states
+
+TIMEOUT_UNRECOVERABLE_PAGE:
+  response:
+    type: page
+    pageId: pyi-timeout-unrecoverable
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response

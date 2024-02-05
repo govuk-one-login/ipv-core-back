@@ -33,7 +33,8 @@ REUSE_PAGE:
     pageId: page-ipv-reuse
     context: operational-profile
   events:
-    next: RETURN_TO_RP
+    next:
+      targetState: RETURN_TO_RP
 
 RETURN_TO_RP:
   response:
