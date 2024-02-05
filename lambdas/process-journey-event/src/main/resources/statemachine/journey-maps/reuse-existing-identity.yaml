@@ -1,0 +1,84 @@
+# Entry points
+
+START:
+  events:
+    next:
+      targetState: IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_REUSE
+        deleteDetailsEnabled:
+          targetState: IDENTITY_REUSE_PAGE_TEST
+
+# Journey states
+
+CRI_TICF_BEFORE_REUSE:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
+  events:
+    next:
+      targetState: IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IDENTITY_REUSE_PAGE_TEST
+
+IDENTITY_REUSE_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-reuse
+  events:
+    next: RETURN_TO_RP
+
+IDENTITY_REUSE_PAGE_TEST:
+  response:
+    type: page
+    pageId: page-ipv-reuse
+  events:
+    next:
+      targetState: NEW_DETAILS_PAGE
+
+NEW_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-new-details
+  events:
+    next:
+      targetState: CONFIRM_DELETE_DETAILS_PAGE
+    end:
+      targetState: IDENTITY_REUSE_PAGE
+
+CONFIRM_DELETE_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-confirm-delete-details
+  events:
+    next:
+      targetState: RESET_IDENTITY
+    end:
+      targetState: IDENTITY_REUSE_PAGE
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: true
+  events:
+    next:
+      targetState: DETAILS_DELETED_PAGE
+
+DETAILS_DELETED_PAGE:
+  response:
+    type: page
+    pageId: pyi-details-deleted
+  events:
+    next:
+      targetJourney: IPV_CORE_MAIN_JOURNEY
+      targetState: IPV_IDENTITY_START_PAGE
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response
