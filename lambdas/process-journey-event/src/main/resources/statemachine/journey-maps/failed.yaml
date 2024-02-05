@@ -1,40 +1,39 @@
 # Entry points
 
-ERROR:
+FAILED:
   events:
     next:
-      targetState: ERROR_PAGE
+      targetState: PYI_NO_MATCH
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_ERROR
+          targetState: CALL_TICF_BEFORE_NO_MATCH
 
-ERROR_NO_TICF:
+FAILED_NO_TICF:
   events:
     next:
-      targetState: ERROR_PAGE
+      targetState: PYI_NO_MATCH
 
 # Journey states
 
-CRI_TICF_BEFORE_ERROR:
+CRI_TICF_BEFORE_NO_MATCH:
   response:
     type: process
     lambda: call-ticf-cri
   events:
     next:
-      targetState: ERROR_PAGE
+      targetState: PYI_NO_MATCH
     enhanced-verification:
-      targetState: ERROR_PAGE
+      targetState: PYI_NO_MATCH
     fail-with-ci:
-      targetJourney: FAILED
-      targetState: FAILED_NO_TICF
+      targetState: PYI_NO_MATCH
     error:
-      targetState: ERROR_PAGE
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
 
-ERROR_PAGE:
+PYI_NO_MATCH:
   response:
-    type: error
-    pageId: pyi-technical
-    statusCode: 500
+    type: page
+    pageId: pyi-no-match
   events:
     next:
       targetState: RETURN_TO_RP
