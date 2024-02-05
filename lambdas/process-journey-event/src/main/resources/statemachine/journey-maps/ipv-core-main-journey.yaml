@@ -106,25 +106,20 @@ CHECK_EXISTING_IDENTITY:
         deleteDetailsEnabled:
           targetState: IPV_IDENTITY_REUSE_PAGE_TEST
     operational-profile-reuse:
-      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE
+      targetJourney: OPERATIONAL_PROFILE_REUSE
+      targetState: START
     in-migration-reuse:
-      targetState: END
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_END
+      targetJourney: OPERATIONAL_PROFILE_MIGRATION
+      targetState: START
     pending:
-      targetState: IPV_IDENTITY_PENDING_PAGE
-      checkFeatureFlag:
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
+      targetJourney: F2F_PENDING
+      targetState: PENDING
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED
     f2f-fail:
-      targetState: PYI_F2F_TECHNICAL
+      targetJourney: F2F_FAILED
+      targetState: FAILED
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
@@ -158,23 +153,6 @@ IPV_IDENTITY_REUSE_PAGE:
     type: page
     pageId: page-ipv-reuse
   parent: END_JOURNEY
-
-OPERATIONAL_PROFILE_REUSE_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-    context: operational-profile
-  parent: END_JOURNEY
-
-# User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
-IPV_IDENTITY_PENDING_PAGE_TEST:
-  response:
-    type: page
-    context: f2f-delete-details
-    pageId: page-ipv-pending
-  events:
-    next:
-      targetState: PYI_F2F_DELETE_PAGE
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
@@ -294,16 +272,6 @@ MULTIPLE_DOC_F2F_CHECK_PAGE:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
       targetState: F2F_PYI_POST_OFFICE
-
-PYI_F2F_TECHNICAL:
-  response:
-    type: page
-    pageId: pyi-f2f-technical
-  events:
-    next:
-      targetState: RESET_IDENTITY
-    end:
-      targetState: END
 
 PYI_ESCAPE:
   response:
@@ -460,32 +428,6 @@ IPV_IDENTITY_REUSE_PAGE_TEST:
     next:
       targetState:
         PYI_NEW_DETAILS_PAGE
-
-PYI_F2F_DELETE_PAGE:
-  response:
-    type: page
-    pageId: pyi-f2f-delete-details
-  parent: END_JOURNEY
-  events:
-    next:
-      targetState:
-        PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
-    end:
-      targetState:
-        IPV_IDENTITY_PENDING_PAGE_TEST
-
-PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
-  response:
-    type: page
-    context: f2f
-    pageId: pyi-confirm-delete-details
-  events:
-    next:
-      targetState:
-        RESET_IDENTITY_USER_INITIATED_F2F
-    end:
-      targetState:
-        IPV_IDENTITY_PENDING_PAGE_TEST
 
 PYI_NEW_DETAILS_PAGE:
   response:

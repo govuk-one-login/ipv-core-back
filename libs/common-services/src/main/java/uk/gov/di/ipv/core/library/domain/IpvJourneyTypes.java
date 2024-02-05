@@ -7,7 +7,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 public enum IpvJourneyTypes {
     IPV_CORE_MAIN_JOURNEY("ipv-core-main-journey"),
-    TECHNICAL_ERROR("technical-error");
+    INELIGIBLE("ineligible"),
+    FAILED("failed"),
+    TECHNICAL_ERROR("technical-error"),
+    F2F_PENDING("f2f-pending"),
+    F2F_FAILED("f2f-failed"),
+    OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),
+    OPERATIONAL_PROFILE_REUSE("operational-profile-reuse");
 
     private final String path;
 

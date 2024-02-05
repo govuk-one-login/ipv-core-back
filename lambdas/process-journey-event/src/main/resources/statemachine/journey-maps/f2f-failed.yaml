@@ -1,0 +1,34 @@
+# Entry points
+
+FAILED:
+  events:
+    next:
+      targetState: F2F_FAILED_PAGE
+
+# Journey states
+
+F2F_FAILED_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-technical
+  events:
+    next:
+      targetState: RESET_IDENTITY
+    end:
+      targetState: RETURN_TO_RP
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+  events:
+    next:
+      targetJourney: IPV_CORE_MAIN_JOURNEY
+      targetState: IPV_IDENTITY_START_PAGE
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response
