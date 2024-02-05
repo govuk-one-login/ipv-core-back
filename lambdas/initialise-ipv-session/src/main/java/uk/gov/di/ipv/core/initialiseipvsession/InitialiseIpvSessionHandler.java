@@ -30,8 +30,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpv;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -60,7 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
+import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -214,17 +214,14 @@ public class InitialiseIpvSessionHandler
                             ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
                             : null;
 
-            AuditExtensionsReproveIdentity reproveAuditExtension =
-                    reproveIdentity == null
-                            ? null
-                            : new AuditExtensionsReproveIdentity(reproveIdentity);
+            AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart = new AuditExtensionsIpvJourneyStart(reproveIdentity, vtr);
 
             AuditEvent auditEvent =
                     new AuditEvent(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            reproveAuditExtension);
+                            extensionsIpvJourneyStart);
 
             auditService.sendAuditEvent(auditEvent);
 
@@ -435,9 +432,11 @@ public class InitialiseIpvSessionHandler
                     ParseException, JarValidationException {
         var vc = (JSONObject) claimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        SignedJWT signedInheritedIdentityJWT = validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
+        SignedJWT signedInheritedIdentityJWT =
+                validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
         Vot vot = userIdentityService.getVot(signedInheritedIdentityJWT);
-        AuditExtensionsIpv auditExtensions = new AuditExtensionsIpv(claimsSet.getIssuer(), evidence, vot, null);
+        AuditExtensionsVcEvidence auditExtensions =
+                new AuditExtensionsVcEvidence(claimsSet.getIssuer(), evidence, null, vot);
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,

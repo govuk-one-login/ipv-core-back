@@ -516,6 +516,12 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(
                 ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
                 List.of(serialisedInheritedIdentityJWT));
+
+        //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+        // ArgumentCaptor.forClass(AuditEvent.class);
+        //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        //        assertEquals(AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
+        // auditEventCaptor.getAllValues().get(1).getEventName());
     }
 
     @Test
