@@ -99,12 +99,8 @@ CHECK_EXISTING_IDENTITY:
     reset-gpg45-identity:
       targetState: RESET_GPG45_IDENTITY
     reuse:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_REUSE
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
+      targetJourney: REUSE_EXISTING_IDENTITY
+      targetState: START
     operational-profile-reuse:
       targetJourney: OPERATIONAL_PROFILE_REUSE
       targetState: START
@@ -147,12 +143,6 @@ RESET_GPG45_IDENTITY:
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
-
-IPV_IDENTITY_REUSE_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-  parent: END_JOURNEY
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
@@ -349,18 +339,6 @@ CRI_TICF_BEFORE_SUCCESS:
     next:
       targetState: IPV_SUCCESS_PAGE
 
-CRI_TICF_BEFORE_REUSE:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
-
 CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE:
   response:
     type: process
@@ -491,7 +469,6 @@ PYI_DETAILS_DELETED_PAGE_F2F:
     next:
       targetState:
         IPV_IDENTITY_START_PAGE
-
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:

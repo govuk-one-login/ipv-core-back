@@ -1,56 +1,63 @@
 # Entry points
 
-PENDING:
+START:
   events:
     next:
-      targetState: PENDING_PAGE
+      targetState: IDENTITY_REUSE_PAGE
       checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_REUSE
         deleteDetailsEnabled:
-          targetState: PENDING_PAGE_TEST
+          targetState: IDENTITY_REUSE_PAGE_TEST
 
 # Journey states
 
-PENDING_PAGE:
+CRI_TICF_BEFORE_REUSE:
   response:
-    type: page
-    pageId: page-ipv-pending
+    type: process
+    lambda: call-ticf-cri
+  parent: CRI_TICF_STATE
   events:
     next:
-      targetState: RETURN_TO_RP
+      targetState: IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IDENTITY_REUSE_PAGE_TEST
 
-PENDING_PAGE_TEST:
+IDENTITY_REUSE_PAGE:
   response:
     type: page
-    context: f2f-delete-details
-    pageId: page-ipv-pending
+    pageId: page-ipv-reuse
   events:
-    next:
-      targetState: F2F_DELETE_PAGE
+    next: RETURN_TO_RP
 
-F2F_DELETE_PAGE:
+IDENTITY_REUSE_PAGE_TEST:
   response:
     type: page
-    pageId: pyi-f2f-delete-details
+    pageId: page-ipv-reuse
   events:
     next:
-      targetState:
-        CONFIRM_DELETE_DETAILS_PAGE
+      targetState: NEW_DETAILS_PAGE
+
+NEW_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: pyi-new-details
+  events:
+    next:
+      targetState: CONFIRM_DELETE_DETAILS_PAGE
     end:
-      targetState:
-        PENDING_PAGE_TEST
+      targetState: IDENTITY_REUSE_PAGE
 
 CONFIRM_DELETE_DETAILS_PAGE:
   response:
     type: page
-    context: f2f
     pageId: pyi-confirm-delete-details
   events:
     next:
-      targetState:
-        RESET_IDENTITY
+      targetState: RESET_IDENTITY
     end:
-      targetState:
-        PENDING_PAGE_TEST
+      targetState: IDENTITY_REUSE_PAGE
 
 RESET_IDENTITY:
   response:
@@ -66,7 +73,6 @@ RESET_IDENTITY:
 DETAILS_DELETED_PAGE:
   response:
     type: page
-    context: f2f
     pageId: pyi-details-deleted
   events:
     next:

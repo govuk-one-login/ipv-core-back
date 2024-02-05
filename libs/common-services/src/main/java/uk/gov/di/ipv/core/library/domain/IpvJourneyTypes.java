@@ -6,12 +6,22 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum IpvJourneyTypes {
+    // Main entry point into the journey
     IPV_CORE_MAIN_JOURNEY("ipv-core-main-journey"),
+
+    // Successful journeys
+    REUSE_EXISTING_IDENTITY("reuse-existing-identity"),
+
+    // Unsuccessful journeys
     INELIGIBLE("ineligible"),
     FAILED("failed"),
     TECHNICAL_ERROR("technical-error"),
+
+    // F2F return journeys
     F2F_PENDING("f2f-pending"),
     F2F_FAILED("f2f-failed"),
+
+    // Operational profile journeys
     OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),
     OPERATIONAL_PROFILE_REUSE("operational-profile-reuse");
 
