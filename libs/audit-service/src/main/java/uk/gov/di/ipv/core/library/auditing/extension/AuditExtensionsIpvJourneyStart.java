@@ -22,7 +22,7 @@ public class AuditExtensionsIpvJourneyStart implements AuditExtensions {
     private final Boolean reproveIdentity;
 
     public AuditExtensionsIpvJourneyStart(
-            @JsonProperty(value = "reproveIdentity", required = false) Boolean reproveIdentity,
+            @JsonProperty(value = "reprove_identity", required = false) Boolean reproveIdentity,
             @JsonProperty(value = "vtr", required = false) List<String> vtr) {
         this.reproveIdentity = reproveIdentity;
         this.vtr = vtr;
