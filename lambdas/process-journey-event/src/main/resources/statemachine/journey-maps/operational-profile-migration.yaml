@@ -1,43 +1,31 @@
 # Entry points
 
-INELIGIBLE:
+START:
   events:
     next:
-      targetState: ANOTHER_WAY_PAGE
+      targetState: RETURN_TO_RP
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_ANOTHER_WAY
-
-INELIGIBLE_NO_TICF:
-  events:
-    next:
-      targetState: ANOTHER_WAY_PAGE
+          targetState: CALL_TICF_BEFORE_RETURN_TO_RP
 
 # Journey states
 
-CRI_TICF_BEFORE_ANOTHER_WAY:
+CRI_TICF_BEFORE_RETURN_TO_RP:
   response:
     type: process
     lambda: call-ticf-cri
   events:
     next:
-      targetState: ANOTHER_WAY_PAGE
+      targetState: RETURN_TO_RP
     enhanced-verification:
-      targetState: ANOTHER_WAY_PAGE
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR_NO_TICF
-
-ANOTHER_WAY_PAGE:
-  response:
-    type: page
-    pageId: pyi-another-way
-  events:
-    next:
-      targetState: RETURN_TO_RP
 
 RETURN_TO_RP:
   response:
