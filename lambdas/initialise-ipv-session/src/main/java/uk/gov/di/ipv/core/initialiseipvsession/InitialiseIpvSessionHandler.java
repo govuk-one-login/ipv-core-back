@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -29,6 +30,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpv;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
@@ -61,6 +63,7 @@ import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CL
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class InitialiseIpvSessionHandler
@@ -74,7 +77,7 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
-
+    private static final String EVIDENCE = "evidence";
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
@@ -185,13 +188,19 @@ public class InitialiseIpvSessionHandler
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
                 if (inheritedIdentityJwtClaim.isPresent()) {
-                    auditService.sendAuditEvent(
-                            new AuditEvent(
-                                    AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
-                                    configService.getSsmParameter(
-                                            ConfigurationVariable.COMPONENT_ID),
-                                    auditEventUser,
-                                    null));
+
+                    try {
+                        sendInheritedIdentityReceivedAuditEvent(
+                                claimsSet, inheritedIdentityJwtClaim.get(), auditEventUser);
+                    } catch (Exception e) {
+                        LOGGER.error(
+                                LogHelper.buildErrorMessage(
+                                        String.format(
+                                                "Failed to send inherited identity received audit event: %s",
+                                                e.getMessage()),
+                                        e));
+                    }
+
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
                             inheritedIdentityJwtClaim.get(),
@@ -416,6 +425,25 @@ public class InitialiseIpvSessionHandler
                     "Encountered a parsing error while attempting to parse or compare credentials",
                     e);
         }
+    }
+
+    private void sendInheritedIdentityReceivedAuditEvent(
+            JWTClaimsSet claimsSet,
+            InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
+            AuditEventUser auditEventUser)
+            throws JsonProcessingException, SqsException, VerifiableCredentialException,
+                    ParseException, JarValidationException {
+        var vc = (JSONObject) claimsSet.getClaim(VC_CLAIM);
+        var evidence = vc.getAsString(EVIDENCE);
+        SignedJWT signedInheritedIdentityJWT = validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
+        Vot vot = userIdentityService.getVot(signedInheritedIdentityJWT);
+        AuditExtensionsIpv auditExtensions = new AuditExtensionsIpv(claimsSet.getIssuer(), evidence, vot, null);
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        auditExtensions));
     }
 
     @Tracing
