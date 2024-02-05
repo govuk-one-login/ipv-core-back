@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
@@ -47,8 +46,6 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -57,7 +54,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STA
 public class ProcessJourneyEventHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
     private final IpvSessionService ipvSessionService;
@@ -89,8 +85,7 @@ public class ProcessJourneyEventHandler
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
                 loadStateMachines(
-                        List.of(IPV_CORE_MAIN_JOURNEY, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.STANDARD);
+                        List.of(IpvJourneyTypes.values()), StateMachineInitializerMode.STANDARD);
     }
 
     @Override
@@ -144,10 +139,9 @@ public class ProcessJourneyEventHandler
     @Tracing
     private StepResponse executeJourneyEvent(String journeyEvent, IpvSessionItem ipvSessionItem)
             throws JourneyEngineException {
-        String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
-            updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", null);
+            updateUserSessionForTimeout(ipvSessionItem.getUserState(), ipvSessionItem);
+            journeyEvent = NEXT_EVENT;
         }
 
         try {
@@ -253,20 +247,13 @@ public class ProcessJourneyEventHandler
     private void updateUserSessionForTimeout(String oldState, IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-        var message =
-                new StringMapMessage()
-                        .with("journeyEngine", "State transition")
-                        .with("event", "timeout")
-                        .with("from", oldState)
-                        .with("to", CORE_SESSION_TIMEOUT_STATE);
-        LOGGER.info(message);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.SESSION_TIMEOUT);
+        updateUserState(oldState, CORE_SESSION_TIMEOUT_STATE, "timeout", ipvSessionItem);
     }
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!CORE_SESSION_TIMEOUT_STATE.equals(ipvSessionItem.getUserState()))
+        return (!IpvJourneyTypes.SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()

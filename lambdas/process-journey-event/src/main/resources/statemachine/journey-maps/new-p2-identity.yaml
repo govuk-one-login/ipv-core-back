@@ -1,45 +1,62 @@
-INITIAL_IPV_JOURNEY:
+# Entry points
+
+START:
   events:
     next:
-      targetState: CHECK_EXISTING_IDENTITY
+      targetState: IDENTITY_START_PAGE
 
-CHECK_EXISTING_IDENTITY:
-  response:
-    type: process
-    lambda: check-existing-identity
+START_WITH_RESET:
   events:
-    ipv-gpg45-medium:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-    reset-identity:
+    next:
       targetState: RESET_IDENTITY
-    reset-gpg45-identity:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START_WITH_RESET
-    reuse:
-      targetJourney: REUSE_EXISTING_IDENTITY
-      targetState: START
-    operational-profile-reuse:
-      targetJourney: OPERATIONAL_PROFILE_REUSE
-      targetState: START
-    in-migration-reuse:
-      targetJourney: OPERATIONAL_PROFILE_MIGRATION
-      targetState: START
-    pending:
-      targetJourney: F2F_PENDING
-      targetState: PENDING
-    fail-with-ci:
+
+ENHANCED_VERIFICATION:
+  events:
+    next:
+      targetState: MITIGATION_01
+
+# Parent states
+
+CRI_STATE:
+  events:
+    not-found:
       targetJourney: FAILED
       targetState: FAILED
-    f2f-fail:
-      targetJourney: F2F_FAILED
+    fail-with-no-ci:
+      targetJourney: FAILED
       targetState: FAILED
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
+    access-denied:
+      targetJourney: FAILED
+      targetState: FAILED
     enhanced-verification:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: ENHANCED_VERIFICATION
+      targetJourney: FAILED
+      targetState: FAILED
+    temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED
+    vcs-not-correlated:
+      targetJourney: FAILED
+      targetState: FAILED
+
+CRI_TICF_STATE:
+  events:
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
+# Journey states
 
 RESET_IDENTITY:
   response:
@@ -47,21 +64,12 @@ RESET_IDENTITY:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: false
-      deleteOnlyGPG45VCs: false
+      deleteOnlyGPG45VCs: true
   events:
     next:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
+      targetState: IPV_IDENTITY_START_PAGE
 
-IPV_IDENTITY_PENDING_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-pending
-  events:
-    next:
-      targetState: END
-
-IPV_IDENTITY_START_PAGE:
+IDENTITY_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-document-start
@@ -80,6 +88,42 @@ IPV_IDENTITY_START_PAGE:
         f2f:
           targetJourney: INELIGIBLE
           targetState: INELIGIBLE
+
+F2F_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-identity-postoffice-start
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: BANK_ACCOUNT_START_PAGE
+      checkIfDisabled:
+        bav:
+          targetState: PYI_ESCAPE
+
+F2F_PYI_POST_OFFICE:
+  response:
+    type: page
+    pageId: pyi-post-office
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: BANK_ACCOUNT_START_PAGE
+      checkIfDisabled:
+        bav:
+          targetState: PYI_ESCAPE
+
+BANK_ACCOUNT_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-bank-account-start
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_M2B
+    end:
+      targetState: PYI_ESCAPE
 
 CRI_F2F:
   response:
@@ -205,12 +249,6 @@ PYI_CRI_ESCAPE_NO_F2F:
     end:
       targetState: END
 
-CORE_SESSION_TIMEOUT:
-  response:
-    type: page
-    pageId: pyi-timeout-unrecoverable
-  parent: END_JOURNEY
-
 EVALUATE_GPG45_SCORES:
   response:
     type: process
@@ -232,7 +270,9 @@ IPV_SUCCESS_PAGE:
   response:
     type: page
     pageId: page-ipv-success
-  parent: END_JOURNEY
+  events:
+    next:
+      targetState: RETURN_TO_RP
 
 END:
   response:
@@ -247,24 +287,6 @@ CRI_TICF_BEFORE_SUCCESS:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
-
-CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
-
-CRI_TICF_BEFORE_END:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: END
 
 CRI_TICF_BEFORE_F2F:
   response:
@@ -281,7 +303,7 @@ CRI_TICF_BEFORE_F2F:
 PRE_EXPERIAN_KBV_TRANSITION_PAGE:
   response:
     type: page
-    pageId: page-pre-experian-kbv-transition
+    pageId: page-pre-kbv-transition
   events:
     next:
       targetState: CRI_EXPERIAN_KBV
@@ -304,80 +326,6 @@ CRI_EXPERIAN_KBV:
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
-
-# User initiated details delete
-IPV_IDENTITY_REUSE_PAGE_TEST:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-  parent: END_JOURNEY
-  events:
-    next:
-      targetState:
-        PYI_NEW_DETAILS_PAGE
-
-PYI_NEW_DETAILS_PAGE:
-  response:
-    type: page
-    pageId: pyi-new-details
-  events:
-    next:
-      targetState:
-        PYI_CONFIRM_DELETE_DETAILS_PAGE
-    end:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-
-PYI_CONFIRM_DELETE_DETAILS_PAGE:
-  response:
-    type: page
-    pageId: pyi-confirm-delete-details
-  events:
-    next:
-      targetState:
-        RESET_IDENTITY_USER_INITIATED
-    end:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-
-RESET_IDENTITY_USER_INITIATED:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: PYI_DETAILS_DELETED_PAGE
-
-PYI_DETAILS_DELETED_PAGE:
-  response:
-    type: page
-    pageId: pyi-details-deleted
-  events:
-    next:
-      targetState:
-        IPV_IDENTITY_START_PAGE
-
-RESET_IDENTITY_USER_INITIATED_F2F:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: PYI_DETAILS_DELETED_PAGE_F2F
-
-PYI_DETAILS_DELETED_PAGE_F2F:
-  response:
-    type: page
-    context: f2f
-    pageId: pyi-details-deleted
-  events:
-    next:
-      targetState:
-        IPV_IDENTITY_START_PAGE
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
@@ -557,8 +505,6 @@ CRI_BANK_ACCOUNT_M2B:
   events:
     next:
       targetState: CRI_NINO_WITH_SCOPE_M2B
-    fail-with-ci:
-      targetState: PYI_NO_MATCH_BAV_M2B
 
 CRI_NINO_WITH_SCOPE_M2B:
   response:
@@ -587,7 +533,7 @@ ADDRESS_AND_FRAUD_M2B:
 PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B:
   response:
     type: page
-    pageId: page-pre-experian-kbv-transition
+    pageId: page-pre-kbv-transition
   events:
     next:
       targetState: CRI_EXPERIAN_KBV_M2B
@@ -599,62 +545,17 @@ CRI_EXPERIAN_KBV_M2B:
   parent: CRI_STATE
   events:
     fail-with-no-ci:
-      targetState: PYI_KBV_DROPOUT_M2B
+      targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
-      targetState: MITIGATION_KBV_FAIL_M2B
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
-
-PYI_NO_MATCH_BAV_M2B:
-  response:
-    type: page
-    context: bankAccount
-    pageId: pyi-no-match
-  parent: END_JOURNEY
-
-MITIGATION_KBV_FAIL_M2B:
-  response:
-    mitigationStart: true
-    type: page
-    pageId: pyi-kbv-escape-m2b
-  events:
-    f2f:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
-      targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
-
-PYI_KBV_DROPOUT_M2B:
-  response:
-    type: page
-    pageId: pyi-kbv-escape-m2b
-    context: dropout
-  events:
-    f2f:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
-      targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 # Mitigation journey (01)
 MITIGATION_01:

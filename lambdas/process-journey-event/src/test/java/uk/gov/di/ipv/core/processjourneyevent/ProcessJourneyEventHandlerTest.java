@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -45,11 +46,13 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class ProcessJourneyEventHandlerTest {
+    private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
     private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
@@ -178,9 +181,8 @@ class ProcessJourneyEventHandlerTest {
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
 
         IpvSessionItem capturedIpvSessionItem = sessionArgumentCaptor.getValue();
-        assertEquals(
-                ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE,
-                sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(SESSION_TIMEOUT, sessionArgumentCaptor.getValue().getJourneyType());
+        assertEquals(TIMEOUT_UNRECOVERABLE_STATE, sessionArgumentCaptor.getValue().getUserState());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), capturedIpvSessionItem.getErrorCode());
         assertEquals(
                 OAuth2Error.ACCESS_DENIED.getDescription(),
@@ -197,9 +199,9 @@ class ProcessJourneyEventHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
+        ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
+        ipvSessionItem.setUserState(TIMEOUT_UNRECOVERABLE_STATE);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -207,13 +209,6 @@ class ProcessJourneyEventHandlerTest {
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                ProcessJourneyStepStates.END_STATE,
-                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/build-client-oauth-response", output.get("journey"));
     }
@@ -336,12 +331,17 @@ class ProcessJourneyEventHandlerTest {
 
     private ProcessJourneyEventHandler getProcessJourneyStepHandler(
             StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
+        var journeyTypes =
+                stateMachineInitializerMode.equals(StateMachineInitializerMode.TEST)
+                        ? List.of(IPV_CORE_MAIN_JOURNEY, TECHNICAL_ERROR)
+                        : List.of(IpvJourneyTypes.values());
+
         return new ProcessJourneyEventHandler(
                 mockAuditService,
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
-                List.of(IPV_CORE_MAIN_JOURNEY, TECHNICAL_ERROR),
+                journeyTypes,
                 stateMachineInitializerMode);
     }
 

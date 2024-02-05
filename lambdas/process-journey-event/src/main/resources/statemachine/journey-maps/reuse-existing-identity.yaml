@@ -16,20 +16,29 @@ CRI_TICF_BEFORE_REUSE:
   response:
     type: process
     lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
   events:
     next:
       targetState: IDENTITY_REUSE_PAGE
       checkFeatureFlag:
         deleteDetailsEnabled:
           targetState: IDENTITY_REUSE_PAGE_TEST
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
 
 IDENTITY_REUSE_PAGE:
   response:
     type: page
     pageId: page-ipv-reuse
   events:
-    next: RETURN_TO_RP
+    next:
+      targetState: RETURN_TO_RP
 
 IDENTITY_REUSE_PAGE_TEST:
   response:
