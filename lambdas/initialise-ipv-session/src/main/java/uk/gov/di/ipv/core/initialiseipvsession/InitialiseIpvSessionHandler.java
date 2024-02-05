@@ -214,7 +214,8 @@ public class InitialiseIpvSessionHandler
                             ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
                             : null;
 
-            AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart = new AuditExtensionsIpvJourneyStart(reproveIdentity, vtr);
+            AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
+                    new AuditExtensionsIpvJourneyStart(reproveIdentity, vtr);
 
             AuditEvent auditEvent =
                     new AuditEvent(
