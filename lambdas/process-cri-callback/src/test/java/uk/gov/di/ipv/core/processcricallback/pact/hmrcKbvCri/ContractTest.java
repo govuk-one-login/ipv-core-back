@@ -104,12 +104,7 @@ class ContractTest {
               "iss": "dummyHmrcKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                ],
                 "type": [
                   "VerifiableCredential",
                   "IdentityCheckCredential"
@@ -171,12 +166,7 @@ class ContractTest {
               "iss": "dummyHmrcKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                ],
                 "type": [
                   "VerifiableCredential",
                   "IdentityCheckCredential"
@@ -236,10 +226,10 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "QAcjZYTRXwQFy6FaM4fYBmi7Qru19zJngHWjr9SAnSk42Ldy1emZxQ6xRAQzKo7QTzsGL7vEh1Uzxa4CsQhEmg";
+            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg";
 
     private static final String FAILED_VC_SIGNATURE =
-            "Wwzvv1YHHUPinO2L32EiV4v3Q38WCx9dmoz0Wo7ePZm28BAFP0IdkKJpHNbVIx5CmbT0-WPmGTUp42AFs0OsFA";
+            "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -400,8 +390,6 @@ class ContractTest {
                 .given("VC birthDate is 1932-02-25")
                 .given("VC evidence verificationScore is 2")
                 .given("VC evidence txn is dummyTxn")
-                .given("VC contains a socialSecurityRecord")
-                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -532,8 +520,6 @@ class ContractTest {
                 .given("VC birthDate is 1932-02-25")
                 .given("VC evidence verificationScore is 0")
                 .given("VC evidence txn is dummyTxn")
-                .given("VC contains a socialSecurityRecord")
-                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
