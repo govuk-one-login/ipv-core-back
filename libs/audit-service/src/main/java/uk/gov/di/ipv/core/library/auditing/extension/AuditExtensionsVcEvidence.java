@@ -23,13 +23,25 @@ public class AuditExtensionsVcEvidence implements AuditExtensions {
     @JsonInclude(NON_NULL)
     private final Boolean successful;
 
+    @JsonProperty("isUkIssued")
+    @JsonInclude(NON_NULL)
+    private final Boolean isUkIssued;
+
+    @JsonProperty("age")
+    @JsonInclude(NON_NULL)
+    private final Integer age;
+
     public AuditExtensionsVcEvidence(
             @JsonProperty(value = "iss", required = false) String iss,
             @JsonProperty(value = "evidence", required = false) String evidence,
-            @JsonProperty(value = "successful", required = false) Boolean successful)
+            @JsonProperty(value = "successful", required = false) Boolean successful,
+            @JsonProperty(value = "isUkIssued", required = false) Boolean isUkIssued,
+            @JsonProperty(value = "age", required = false) Integer age)
             throws JsonProcessingException {
         this.iss = iss;
         this.evidence = evidence == null ? null : new ObjectMapper().readTree(evidence);
         this.successful = successful;
+        this.isUkIssued = isUkIssued;
+        this.age = age;
     }
 }

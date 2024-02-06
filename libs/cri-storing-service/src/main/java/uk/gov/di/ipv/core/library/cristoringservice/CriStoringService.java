@@ -115,7 +115,7 @@ public class CriStoringService {
                             AuditEventTypes.IPV_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            getAuditExtensions(vc, VcHelper.isSuccessfulVc(vc))));
+                            getAuditExtensions(criId, vc, VcHelper.isSuccessfulVc(vc))));
 
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(
@@ -154,11 +154,16 @@ public class CriStoringService {
     }
 
     private AuditExtensionsVcEvidence getAuditExtensions(
-            SignedJWT verifiableCredential, boolean isSuccessful)
+            String credentialIssuerId, SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
+        return new AuditExtensionsVcEvidence(
+                jwtClaimsSet.getIssuer(),
+                evidence,
+                isSuccessful,
+                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential, credentialIssuerId),
+                VcHelper.extractAgeFromCredential(verifiableCredential));
     }
 }

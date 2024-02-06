@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.revokevcs.domain.RevokeVcsResult;
 import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
@@ -170,7 +171,13 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         var evidence = vc.getAsString("evidence");
 
         var auditExtensions =
-                new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, null);
+                new AuditExtensionsVcEvidence(
+                        jwtClaimsSet.getIssuer(),
+                        evidence,
+                        null,
+                        VcHelper.checkIfDocUKIssuedForCredential(
+                                signedCredential, vcStoreItem.getCredentialIssuer()),
+                        VcHelper.extractAgeFromCredential(signedCredential));
         var auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_REVOKED,

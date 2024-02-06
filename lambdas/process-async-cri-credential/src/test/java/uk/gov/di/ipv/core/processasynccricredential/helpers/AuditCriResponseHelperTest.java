@@ -11,13 +11,17 @@ import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getRestrictedDataForAuditEvent;
 
@@ -30,12 +34,30 @@ class AuditCriResponseHelperTest {
     void shouldGetVerifiableCredentialExtensionsForAudit()
             throws ParseException, JsonProcessingException {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
-        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
+        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false, PASSPORT_CRI);
         assertFalse(auditExtensions.getSuccessful());
         assertEquals("test-issuer", auditExtensions.getIss());
         assertEquals(
                 "[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}]",
                 auditExtensions.getEvidence().toString());
+        assertEquals(
+                "{\"iss\":\"test-issuer\",\"evidence\":[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}],\"successful\":false,\"age\":4}",
+                OBJECT_MAPPER.writeValueAsString(auditExtensions));
+        assertNotNull(auditExtensions.getAge());
+        assertNull(auditExtensions.getIsUkIssued());
+    }
+
+    @Test
+    void shouldGetVerifiableCredentialExtensionsForAuditWithICAOCode()
+            throws ParseException, JsonProcessingException {
+        SignedJWT testVerifiableCredential =
+                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE);
+        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false, PASSPORT_CRI);
+        assertEquals(
+                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
+                OBJECT_MAPPER.writeValueAsString(auditExtensions));
+        assertNotNull(auditExtensions.getAge());
+        assertTrue(auditExtensions.getIsUkIssued());
     }
 
     @Test

@@ -22,22 +22,36 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT_ICAO_CODE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
+    public static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
+    public static final String UK_PASSPORT_ICAO_CODE = "GBR";
     private static ConfigService configService;
     private static final int ONLY = 0;
 
@@ -111,6 +125,65 @@ public class VcHelper {
         return txnIds;
     }
 
+    public static Integer extractAgeFromCredential(SignedJWT credential) throws ParseException {
+        Integer age = null;
+        var jwtClaimsSet = credential.getJWTClaimsSet();
+        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+        if (credentialSubject != null) {
+            var birthDateArr = (JSONArray) credentialSubject.get(VC_BIRTH_DATE);
+            if (birthDateArr != null) {
+                var dobObj = (JSONObject) birthDateArr.get(ONLY);
+                age = getAge(dobObj.getAsString(VC_ATTR_VALUE_NAME));
+            }
+        }
+        return age;
+    }
+
+    public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential, String criIssuerID)
+            throws ParseException {
+        Boolean isUKIssued = null;
+        String docFieldName = VC_PASSPORT;
+        String docFieldAttrName = VC_PASSPORT_ICAO_CODE;
+        boolean checkingForDL = false;
+        if (criIssuerID.equals(DRIVING_LICENCE_CRI)) {
+            docFieldName = VC_DRIVING_LICENCE;
+            docFieldAttrName = VC_DRIVING_LICENCE_ISSUED_BY;
+            checkingForDL = true;
+        }
+        var jwtClaimsSet = credential.getJWTClaimsSet();
+        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+        if (credentialSubject != null) {
+            var docFieldArr = (JSONArray) credentialSubject.get(docFieldName);
+            if (docFieldArr == null && criIssuerID.equals(DCMAW_CRI)) {
+                // For DCMAW passport not exist then try DL now
+                docFieldName = VC_DRIVING_LICENCE;
+                docFieldAttrName = VC_DRIVING_LICENCE_ISSUED_BY;
+                checkingForDL = true;
+                docFieldArr = (JSONArray) credentialSubject.get(docFieldName);
+            }
+            if (docFieldArr != null) {
+                var docField = (JSONObject) docFieldArr.get(ONLY);
+                var docFieldAttr = docField.getAsString(docFieldAttrName);
+                if (docFieldAttr != null) {
+                    if (checkingForDL) {
+                        isUKIssued =
+                                DL_UK_ISSUER_LIST.contains(docFieldAttr)
+                                        ? Boolean.TRUE
+                                        : Boolean.FALSE;
+                    } else {
+                        isUKIssued =
+                                docFieldAttr.equals(UK_PASSPORT_ICAO_CODE)
+                                        ? Boolean.TRUE
+                                        : Boolean.FALSE;
+                    }
+                }
+            }
+        }
+        return isUKIssued;
+    }
+
     public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
         var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
         return credVot != null
@@ -155,5 +228,17 @@ public class VcHelper {
         } catch (UnknownEvidenceTypeException e) {
             return false;
         }
+    }
+
+    private static Integer getAge(String dobValue) {
+        Integer age = null;
+        try {
+            LocalDate dob = LocalDate.parse(dobValue);
+            LocalDate curDate = LocalDate.now();
+            age = Period.between(dob, curDate).getYears();
+        } catch (Exception ex) {
+            LOGGER.info("Failed to parse dob value for the vc.");
+        }
+        return age;
     }
 }

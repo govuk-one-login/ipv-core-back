@@ -5,6 +5,7 @@ import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVc;
 
 import java.text.ParseException;
@@ -25,12 +26,17 @@ public class AuditCriResponseHelper {
     private AuditCriResponseHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            SignedJWT verifiableCredential, boolean isSuccessful)
+            SignedJWT verifiableCredential, boolean isSuccessful, String criIssuerId)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
+        return new AuditExtensionsVcEvidence(
+                jwtClaimsSet.getIssuer(),
+                evidence,
+                isSuccessful,
+                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential, criIssuerId),
+                VcHelper.extractAgeFromCredential(verifiableCredential));
     }
 
     public static AuditRestrictedVc getRestrictedDataForAuditEvent(SignedJWT verifiableCredential)
