@@ -576,6 +576,8 @@ class ContractTest {
                                 JsonNode socialSecurityRecordNode =
                                         credentialSubject.get("socialSecurityRecord").get(0);
                                 JsonNode ciNode = evidence.get("ci");
+                                JsonNode failedCheckDetailsNode =
+                                        evidence.get("failedCheckDetails");
 
                                 // Assert
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
@@ -586,6 +588,17 @@ class ContractTest {
                                         "AA000003D",
                                         socialSecurityRecordNode.get("personalNumber").asText());
                                 assertEquals("V03", ciNode.get(0).asText());
+                                assertEquals(
+                                        "free_text",
+                                        failedCheckDetailsNode
+                                                .get(0)
+                                                .get("kbvResponseMode")
+                                                .asText());
+                                assertEquals(
+                                        3, failedCheckDetailsNode.get(0).get("kbvQuality").asInt());
+                                assertEquals(
+                                        "kbv",
+                                        failedCheckDetailsNode.get(0).get("checkMethod").asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
