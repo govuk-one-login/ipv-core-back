@@ -1,14 +1,40 @@
 # RestoreVcsHandler
 
-What this lambda is for and does: https://govukverify.atlassian.net/browse/PYIC-4602
+---
 
-To run this lambda, create an appropriate payload including userIds with vcs to be restored in the appropriate environment.
+## Description
+
+This lambda mirrors the functionality of [RevokeVcsHandler](lambdas/revoke-vcs/README.md), except for some differences:
+1. The direction of change of VC ownership is opposite
+2. The lambda does not send a failing audit event
+
+---
+
+## Running the lambda
+
+> This lambda should only be called with explicit permission from stakeholders
+
+### Payload
+
+- The payload is the same as for the revoke lambda.
+
+### Command
 
 ```bash
-aws-vault exec <profile> -- aws lambda invoke --function-name restore-vcs-<env> --invocation-type RequestResponse --payload fileb://restoreVcsLambdaPayload.json response.json
+aws-vault exec PROFILE -- \
+  aws lambda invoke \
+    --function-name restore-vcs-ENVIRONMENT \
+    --invocation-type RequestResponse \
+    --payload fileb://PAYLOAD_PATH \
+    OUTPUT_PATH \
+    --cli-read-timeout 600
 ```
 
-This lambda iterates the `userId` and `criId` pairs and for each:
-1. Restores the vc, entering it into the `user-issued-credentials-{env}` table
-2. Sends `IPV_VC_RESTORED` audit event
-3. Deletes the vc in the `user-credentials-v2-{env}` table
+NB: the only difference is the function name
+
+### Output
+
+- Logging is the same as in the revoke lambda.
+- Audit events: `IPV_VC_RESTORED` which has the userId associated.
+  - There is no audit event associated to failure.
+- The lambda does not output a file with a summary like the revoke lambda
