@@ -175,8 +175,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         jwtClaimsSet.getIssuer(),
                         evidence,
                         null,
-                        VcHelper.checkIfDocUKIssuedForCredential(
-                                signedCredential, vcStoreItem.getCredentialIssuer()),
+                        VcHelper.checkIfDocUKIssuedForCredential(signedCredential),
                         VcHelper.extractAgeFromCredential(signedCredential));
         var auditEvent =
                 new AuditEvent(

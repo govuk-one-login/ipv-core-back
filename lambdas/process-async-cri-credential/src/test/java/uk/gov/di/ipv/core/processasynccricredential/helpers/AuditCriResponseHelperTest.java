@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
@@ -34,7 +33,7 @@ class AuditCriResponseHelperTest {
     void shouldGetVerifiableCredentialExtensionsForAudit()
             throws ParseException, JsonProcessingException {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
-        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false, PASSPORT_CRI);
+        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.getSuccessful());
         assertEquals("test-issuer", auditExtensions.getIss());
         assertEquals(
@@ -52,7 +51,7 @@ class AuditCriResponseHelperTest {
             throws ParseException, JsonProcessingException {
         SignedJWT testVerifiableCredential =
                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE);
-        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false, PASSPORT_CRI);
+        var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertEquals(
                 "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
                 OBJECT_MAPPER.writeValueAsString(auditExtensions));

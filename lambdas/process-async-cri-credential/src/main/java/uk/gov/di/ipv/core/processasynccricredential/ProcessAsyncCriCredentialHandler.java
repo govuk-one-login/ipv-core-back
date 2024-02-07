@@ -42,7 +42,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -229,7 +228,7 @@ public class ProcessAsyncCriCredentialHandler
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        getExtensionsForAudit(verifiableCredential, isSuccessful, F2F_CRI));
+                        getExtensionsForAudit(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
     }
 

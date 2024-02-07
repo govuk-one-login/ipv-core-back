@@ -26,7 +26,7 @@ public class AuditCriResponseHelper {
     private AuditCriResponseHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            SignedJWT verifiableCredential, boolean isSuccessful, String criIssuerId)
+            SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
@@ -35,7 +35,7 @@ public class AuditCriResponseHelper {
                 jwtClaimsSet.getIssuer(),
                 evidence,
                 isSuccessful,
-                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential, criIssuerId),
+                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential),
                 VcHelper.extractAgeFromCredential(verifiableCredential));
     }
 

@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -50,7 +48,7 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
-    public static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
+    private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     public static final String UK_PASSPORT_ICAO_CODE = "GBR";
     private static ConfigService configService;
     private static final int ONLY = 0;
@@ -140,48 +138,34 @@ public class VcHelper {
         return age;
     }
 
-    public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential, String criIssuerID)
+    public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential)
             throws ParseException {
-        Boolean isUKIssued = null;
-        String docFieldName = VC_PASSPORT;
-        String docFieldAttrName = VC_PASSPORT_ICAO_CODE;
         boolean checkingForDL = false;
-        if (criIssuerID.equals(DRIVING_LICENCE_CRI)) {
-            docFieldName = VC_DRIVING_LICENCE;
-            docFieldAttrName = VC_DRIVING_LICENCE_ISSUED_BY;
-            checkingForDL = true;
-        }
         var jwtClaimsSet = credential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
         if (credentialSubject != null) {
-            var docFieldArr = (JSONArray) credentialSubject.get(docFieldName);
-            if (docFieldArr == null && criIssuerID.equals(DCMAW_CRI)) {
-                // For DCMAW passport not exist then try DL now
-                docFieldName = VC_DRIVING_LICENCE;
+            String docFieldAttrName = VC_PASSPORT_ICAO_CODE;
+            var docFieldArr = (JSONArray) credentialSubject.get(VC_PASSPORT);
+            if (docFieldArr == null) {
+                // If Passport not exist then try for DL now
+                docFieldArr = (JSONArray) credentialSubject.get(VC_DRIVING_LICENCE);
                 docFieldAttrName = VC_DRIVING_LICENCE_ISSUED_BY;
                 checkingForDL = true;
-                docFieldArr = (JSONArray) credentialSubject.get(docFieldName);
             }
             if (docFieldArr != null) {
                 var docField = (JSONObject) docFieldArr.get(ONLY);
                 var docFieldAttr = docField.getAsString(docFieldAttrName);
                 if (docFieldAttr != null) {
                     if (checkingForDL) {
-                        isUKIssued =
-                                DL_UK_ISSUER_LIST.contains(docFieldAttr)
-                                        ? Boolean.TRUE
-                                        : Boolean.FALSE;
+                        return DL_UK_ISSUER_LIST.contains(docFieldAttr);
                     } else {
-                        isUKIssued =
-                                docFieldAttr.equals(UK_PASSPORT_ICAO_CODE)
-                                        ? Boolean.TRUE
-                                        : Boolean.FALSE;
+                        return docFieldAttr.equals(UK_PASSPORT_ICAO_CODE);
                     }
                 }
             }
         }
-        return isUKIssued;
+        return null;
     }
 
     public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
@@ -231,14 +215,13 @@ public class VcHelper {
     }
 
     private static Integer getAge(String dobValue) {
-        Integer age = null;
         try {
             LocalDate dob = LocalDate.parse(dobValue);
             LocalDate curDate = LocalDate.now();
-            age = Period.between(dob, curDate).getYears();
+            return Period.between(dob, curDate).getYears();
         } catch (Exception ex) {
             LOGGER.info("Failed to parse dob value for the vc.");
+            return null;
         }
-        return age;
     }
 }

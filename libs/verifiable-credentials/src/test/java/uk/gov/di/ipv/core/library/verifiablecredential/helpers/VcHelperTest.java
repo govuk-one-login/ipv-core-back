@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
@@ -168,29 +166,26 @@ class VcHelperTest {
     void shouldChkIfDocUKIssuedForCredential() throws ParseException {
         assertTrue(
                 VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE),
-                        PASSPORT_CRI));
+                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE)));
     }
 
     @Test
-    void shouldChkIfDocUKIssuedForCredentialWithMissingICAOCode() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredentialWithMissingICAOCode() throws ParseException {
         assertNull(
                 VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), PASSPORT_CRI));
+                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
     }
 
     @Test
-    void shouldChkIfDocUKIssuedForCredentialForDL() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredentialForDL() throws ParseException {
         assertTrue(
-                VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW), DRIVING_LICENCE_CRI));
+                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW)));
     }
 
     @Test
-    void shouldChkIfDocUKIssuedForCredentialForDCMAW() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredentialForDCMAW() throws ParseException {
         assertTrue(
-                VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW), DCMAW_CRI));
+                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW)));
     }
 
     @Test
