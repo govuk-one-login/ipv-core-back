@@ -52,7 +52,7 @@ import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HE
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
 
@@ -67,7 +67,7 @@ class TicfCriServiceTest {
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     private static final List<String> credentials =
-            List.of(M1B_DCMAW_VC, M1A_FRAUD_VC, M1A_ADDRESS_VC);
+            List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
     // the VC in this response is unimportant as we're mocking the
     // validator - we just need something that can be parsed
     private static final TicfCriDto ticfCriResponse =
