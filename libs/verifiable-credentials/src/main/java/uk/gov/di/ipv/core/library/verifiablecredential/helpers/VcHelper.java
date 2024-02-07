@@ -140,6 +140,7 @@ public class VcHelper {
 
     public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential)
             throws ParseException {
+        Boolean isUKIssued = null;
         boolean checkingForDL = false;
         var jwtClaimsSet = credential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
@@ -158,14 +159,14 @@ public class VcHelper {
                 var docFieldAttr = docField.getAsString(docFieldAttrName);
                 if (docFieldAttr != null) {
                     if (checkingForDL) {
-                        return DL_UK_ISSUER_LIST.contains(docFieldAttr);
+                        isUKIssued = DL_UK_ISSUER_LIST.contains(docFieldAttr);
                     } else {
-                        return docFieldAttr.equals(UK_PASSPORT_ICAO_CODE);
+                        isUKIssued = docFieldAttr.equals(UK_PASSPORT_ICAO_CODE);
                     }
                 }
             }
         }
-        return null;
+        return isUKIssued;
     }
 
     public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
