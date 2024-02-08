@@ -32,7 +32,7 @@
 
 ## Running the lambda
 
-> This lambda should not be run by anyone without the explicit sign-off of stakeholders.
+> This lambda should not be invoked in production without explicit sign-off from stakeholders
 
 ### Payload
 
