@@ -140,33 +140,31 @@ public class VcHelper {
 
     public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential)
             throws ParseException {
-        Boolean isUKIssued = null;
-        boolean checkingForDL = false;
         var jwtClaimsSet = credential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
         if (credentialSubject != null) {
-            String docFieldAttrName = VC_PASSPORT_ICAO_CODE;
-            var docFieldArr = (JSONArray) credentialSubject.get(VC_PASSPORT);
-            if (docFieldArr == null) {
-                // If Passport not exist then try for DL now
-                docFieldArr = (JSONArray) credentialSubject.get(VC_DRIVING_LICENCE);
-                docFieldAttrName = VC_DRIVING_LICENCE_ISSUED_BY;
-                checkingForDL = true;
+            var passportField = credentialSubject.get(VC_PASSPORT);
+            if (passportField instanceof JSONArray passportFieldArr) {
+                var icaoCode =
+                        ((JSONObject) passportFieldArr.get(ONLY))
+                                .getAsString(VC_PASSPORT_ICAO_CODE);
+                if (icaoCode != null) {
+                    return UK_PASSPORT_ICAO_CODE.equals(icaoCode);
+                }
             }
-            if (docFieldArr != null) {
-                var docField = (JSONObject) docFieldArr.get(ONLY);
-                var docFieldAttr = docField.getAsString(docFieldAttrName);
-                if (docFieldAttr != null) {
-                    if (checkingForDL) {
-                        isUKIssued = DL_UK_ISSUER_LIST.contains(docFieldAttr);
-                    } else {
-                        isUKIssued = docFieldAttr.equals(UK_PASSPORT_ICAO_CODE);
-                    }
+            // If Passport not exist then try for DL now
+            var dlField = credentialSubject.get(VC_DRIVING_LICENCE);
+            if (dlField instanceof JSONArray dlFieldArr) {
+                var issuer =
+                        ((JSONObject) dlFieldArr.get(ONLY))
+                                .getAsString(VC_DRIVING_LICENCE_ISSUED_BY);
+                if (issuer != null) {
+                    return DL_UK_ISSUER_LIST.contains(issuer);
                 }
             }
         }
-        return isUKIssued;
+        return null; // NOSONAR
     }
 
     public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
