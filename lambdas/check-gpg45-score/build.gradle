@@ -31,7 +31,7 @@ dependencies {
 
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.9.0",
+			"org.mockito:mockito-junit-jupiter:5.10.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

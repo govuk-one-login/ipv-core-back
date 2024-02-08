@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
@@ -70,6 +71,19 @@ public class DataStore<T extends DynamodbItem> {
 
     public void create(T item) {
         table.putItem(item);
+    }
+
+    public void createIfNotExists(T item) {
+        PutItemEnhancedRequest<T> enhancedRequest =
+                PutItemEnhancedRequest.builder(typeParameterClass)
+                        .item(item)
+                        .conditionExpression(
+                                Expression.builder()
+                                        .expression("attribute_not_exists(userId)")
+                                        .build())
+                        .build();
+
+        table.putItem(enhancedRequest);
     }
 
     public T getItem(String partitionValue, String sortValue) {

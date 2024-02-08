@@ -50,7 +50,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +62,7 @@ class CallTicfCriHandlerTest {
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     public static final List<String> VC_IN_STORE =
-            List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC);
+            List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
@@ -196,7 +196,7 @@ class CallTicfCriHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockUserIdentityService.getIdentityCredentials(any()))
-                .thenReturn(List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC));
+                .thenReturn(List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC));
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, List.of()))
                 .thenReturn(List.of());
 
@@ -225,7 +225,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
@@ -247,7 +247,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0.name());
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
         inOrder.verifyNoMoreInteractions();
 

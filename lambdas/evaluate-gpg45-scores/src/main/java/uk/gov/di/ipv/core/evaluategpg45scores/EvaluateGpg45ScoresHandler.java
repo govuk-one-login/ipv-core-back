@@ -188,7 +188,7 @@ public class EvaluateGpg45ScoresHandler
                                 gpg45Scores,
                                 credentials,
                                 ipAddress));
-                ipvSessionItem.setVot(Vot.P2.name());
+                ipvSessionItem.setVot(Vot.P2);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);

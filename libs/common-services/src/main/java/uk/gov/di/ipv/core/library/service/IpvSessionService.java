@@ -103,7 +103,7 @@ public class IpvSessionService {
 
         ipvSessionItem.setUserState(generateStartingState(errorObject));
 
-        ipvSessionItem.setVot(Vot.P0.name());
+        ipvSessionItem.setVot(Vot.P0);
 
         String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.valueOf(journeyType));

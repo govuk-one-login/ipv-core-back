@@ -58,7 +58,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -76,7 +76,7 @@ class EvaluateGpg45ScoresHandlerTest {
             List.of(
                     M1A_PASSPORT_VC,
                     M1A_ADDRESS_VC,
-                    M1A_FRAUD_VC,
+                    M1A_EXPERIAN_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
@@ -191,10 +191,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -220,10 +220,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -355,7 +355,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 List.of(
                         SignedJWT.parse(M1A_PASSPORT_VC),
                         SignedJWT.parse(M1A_ADDRESS_VC),
-                        SignedJWT.parse(M1A_FRAUD_VC),
+                        SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -389,10 +389,10 @@ class EvaluateGpg45ScoresHandlerTest {
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -494,10 +494,10 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
         verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
     }
 

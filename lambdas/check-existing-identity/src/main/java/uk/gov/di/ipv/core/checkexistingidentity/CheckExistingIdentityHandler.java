@@ -59,6 +59,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -78,25 +79,23 @@ public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, Object> JOURNEY_REUSE =
-            new JourneyResponse(JOURNEY_REUSE_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_OPERATIONAL_PROFILE_REUSE =
-            new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_IN_MIGRATION_REUSE =
-            new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_PENDING =
-            new JourneyResponse(JOURNEY_PENDING_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_IPV_GPG45_MEDIUM =
-            new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_F2F_FAIL =
-            new JourneyResponse(JOURNEY_F2F_FAIL_PATH).toObjectMap();
-    private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
+    private static final JourneyResponse JOURNEY_OPERATIONAL_PROFILE_REUSE =
+            new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
+    private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
+            new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
+    private static final JourneyResponse JOURNEY_PENDING =
+            new JourneyResponse(JOURNEY_PENDING_PATH);
+    private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
+            new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL =
+            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
+            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
-    public static final String VOT_CLAIM = "vot";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -153,7 +152,6 @@ public class CheckExistingIdentityHandler
         VcHelper.setConfigService(this.configService);
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -165,11 +163,33 @@ public class CheckExistingIdentityHandler
             String ipAddress = getIpAddress(event);
             String featureSet = RequestHelper.getFeatureSet(event);
             configService.setFeatureSet(featureSet);
+
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
-            String userId = clientOAuthSessionItem.getUserId();
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
+
+            return getJourneyResponse(ipvSessionItem, clientOAuthSessionItem, ipAddress)
+                    .toObjectMap();
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
+        }
+    }
+
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
+    @Tracing
+    private JourneyResponse getJourneyResponse(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String ipAddress) {
+        try {
+            var ipvSessionId = ipvSessionItem.getIpvSessionId();
+            var userId = clientOAuthSessionItem.getUserId();
+            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
             // Clear TICF VCs
             verifiableCredentialService.deleteVcStoreItem(userId, TICF_CRI);
@@ -182,9 +202,6 @@ public class CheckExistingIdentityHandler
                     || configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse();
             }
-
-            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -231,10 +248,7 @@ public class CheckExistingIdentityHandler
                     : buildNoMatchResponse(vcStoreItems, auditEventUser);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse().getMessage(), e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
-                    .toObjectMap();
+            return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (ParseException e) {
@@ -253,14 +267,14 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Map<String, Object> buildForceResetResponse() {
+    private JourneyResponse buildForceResetResponse() {
         LOGGER.info(
                 LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
         return JOURNEY_RESET_IDENTITY;
     }
 
     @Tracing
-    private Map<String, Object> buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
+    private JourneyResponse buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
         switch (faceToFaceRequest.getStatus()) {
             case CriResponseService.STATUS_PENDING -> {
                 LOGGER.info(LogHelper.buildLogMessage("F2F cri pending verification."));
@@ -280,7 +294,7 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<Map<String, Object>> checkForCIScoringFailure(
+    private Optional<JourneyResponse> checkForCIScoringFailure(
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String govukSigninJourneyId)
@@ -294,14 +308,13 @@ public class CheckExistingIdentityHandler
             return Optional.of(
                     ciMitUtilityService
                             .getCiMitigationJourneyStep(contraIndicators)
-                            .orElse(JOURNEY_FAIL_WITH_CI)
-                            .toObjectMap());
+                            .orElse(JOURNEY_FAIL_WITH_CI));
         }
         return Optional.empty();
     }
 
     @Tracing
-    private Optional<Map<String, Object>> checkForProfileMatch(
+    private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
@@ -325,7 +338,7 @@ public class CheckExistingIdentityHandler
         if (strongestAttainedVotFromVtr.isPresent()) {
             // Profile matched
             Vot attainedVot = strongestAttainedVotFromVtr.get();
-            ipvSessionItem.setVot(attainedVot.name());
+            ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
                     buildReuseResponse(
@@ -337,7 +350,7 @@ public class CheckExistingIdentityHandler
         return Optional.empty();
     }
 
-    private Map<String, Object> buildF2FNoMatchResponse(
+    private JourneyResponse buildF2FNoMatchResponse(
             boolean areGpg45VcsCorrelated, AuditEventUser auditEventUser) throws SqsException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
@@ -348,7 +361,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private Map<String, Object> buildNoMatchResponse(
+    private JourneyResponse buildNoMatchResponse(
             List<VcStoreItem> vcStoreItems, AuditEventUser auditEventUser) throws SqsException {
         if (!VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).isEmpty()) {
             LOGGER.info(
@@ -360,7 +373,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_IPV_GPG45_MEDIUM;
     }
 
-    private Map<String, Object> buildReuseResponse(
+    private JourneyResponse buildReuseResponse(
             Vot attainedVot, List<String> vcReceivedThisSession, AuditEventUser auditEventUser)
             throws SqsException {
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
@@ -386,11 +399,10 @@ public class CheckExistingIdentityHandler
                         auditEventUser));
     }
 
-    private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
+    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
         LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
-                .toObjectMap();
+                JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
     }
 
     @Tracing
@@ -453,7 +465,7 @@ public class CheckExistingIdentityHandler
     private boolean hasOperationalProfileVc(Vot requestedVot, List<SignedJWT> credentials)
             throws ParseException {
         for (SignedJWT cred : credentials) {
-            String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM);
+            String credentialVot = cred.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
             Optional<String> matchedOperationalProfile =
                     requestedVot.getSupportedOperationalProfiles().stream()
                             .map(OperationalProfile::name)

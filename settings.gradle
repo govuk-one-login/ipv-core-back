@@ -1,7 +1,8 @@
 rootProject.name = 'di-ipv-core-back'
 include "integration-test",
 		"lambdas",
-		"lambdas:archive-vcs",
+		"lambdas:revoke-vcs",
+		"lambdas:restore-vcs",
 		"lambdas:build-client-oauth-response",
 		"lambdas:build-cri-oauth-request",
 		"lambdas:build-proven-user-identity-details",

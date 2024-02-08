@@ -10,7 +10,7 @@ class AuditExtensionsVcEvidenceTest {
     @Test
     void shouldInitWithNullEvidence() throws JsonProcessingException {
         var auditExtensions =
-                new AuditExtensionsVcEvidence("http://issuer.example.com", null, false);
+                new AuditExtensionsVcEvidence("http://issuer.example.com", null, false, null, null);
         assertNull(auditExtensions.getEvidence());
     }
 }

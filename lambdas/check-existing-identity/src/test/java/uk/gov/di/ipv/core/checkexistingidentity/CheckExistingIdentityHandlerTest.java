@@ -80,15 +80,16 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
@@ -118,8 +119,10 @@ class CheckExistingIdentityHandlerTest {
             List.of(
                     TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, FRAUD_CRI, M1A_FRAUD_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, KBV_CRI, M1A_VERIFICATION_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
                     TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
                     TestFixtures.createVcStoreItem(
                             TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
@@ -127,7 +130,7 @@ class CheckExistingIdentityHandlerTest {
             List.of(
                     M1A_PASSPORT_VC,
                     M1A_ADDRESS_VC,
-                    M1A_FRAUD_VC,
+                    M1A_EXPERIAN_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static final String TICF_CRI = "ticf";
@@ -284,10 +287,10 @@ class CheckExistingIdentityHandlerTest {
             verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
 
         @Test
@@ -315,10 +318,10 @@ class CheckExistingIdentityHandlerTest {
             verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
 
         @Test // User returning after migration
@@ -338,10 +341,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL200.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getVot());
         }
 
         @Test // User returning after migration
@@ -361,10 +364,10 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL250.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getVot());
         }
 
         @Test // User in process of migration
@@ -384,10 +387,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL200.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getVot());
         }
 
         @Test // User in process of migration
@@ -406,10 +409,10 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.PCL250.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getVot());
         }
 
         @Test
@@ -440,10 +443,10 @@ class CheckExistingIdentityHandlerTest {
             verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+            inOrder.verify(ipvSessionItem).setVot(Vot.P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+            assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
     }
 
@@ -1028,10 +1031,10 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2.name());
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2.name(), ipvSessionItem.getVot());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 
     @Test
@@ -1113,7 +1116,7 @@ class CheckExistingIdentityHandlerTest {
         var jwt =
                 new SignedJWT(
                         new JWSHeader(JWSAlgorithm.ES256),
-                        new JWTClaimsSet.Builder().claim("vot", vot.name()).build());
+                        new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, vot.name()).build());
         jwt.sign(jwtSigner);
         return jwt;
     }
