@@ -206,6 +206,7 @@ class ContractTest {
             "MPwaYUsf5HBJ7Gp5oq5TJ71l1B2zfUXOrDeIXpotsnJpWsHonGV11yralObDqFM5UXCCrqemyCLQPWZ6z6seFg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // Based on DCMAW-410-AC1 with given names removed
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_BODY =
             """
             {
@@ -227,7 +228,7 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Doe",
+                          "value": "Doe The Ball",
                           "type": "FamilyName"
                         }
                       ]
@@ -238,37 +239,42 @@ class ContractTest {
                       "value": "1985-02-08"
                     }
                   ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
                   "address": [
                     {
                       "uprn": null,
                       "organisationName": null,
                       "subBuildingName": null,
-                      "buildingNumber ": null,
+                      "buildingNumber": null,
                       "buildingName": null,
                       "dependentStreetName": null,
                       "streetName": null,
                       "doubleDependentAddressLocality": null,
                       "dependentAddressLocality": null,
                       "addressLocality": null,
-                      "postalCode": "EH1 9GP",
+                      "postalCode": "CH1 1AQ",
                       "addressCountry": null
                     }
                   ],
                   "drivingPermit": [
                     {
-                      "personalNumber": "DOE99802085J99KV",
-                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP",
-                      "issueNumber": "16",
+                      "personalNumber": "DOE99802085J99FG",
+                      "expiryDate": "2023-01-18",
+                      "issueNumber": null,
                       "issuedBy": "DVLA",
-                      "issueDate": "2019-01-23",
-                      "expiryDate": "2022-09-02"
+                      "issueDate": "2022-05-29",
+                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
                     }
                   ]
                 },
                 "evidence": [
                   {
                     "type": "IdentityCheck",
-                    "txn": "dummyTxn",
+                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
                     "strengthScore": 3,
                     "validityScore": 2,
                     "activityHistoryScore": 1,
@@ -276,7 +282,7 @@ class ContractTest {
                       {
                         "checkMethod": "vri",
                         "identityCheckPolicy": "published",
-                        "activityFrom": "2019-01-01"
+                        "activityFrom": "2022-05-29"
                       },
                       {
                         "checkMethod": "bvr",
@@ -292,7 +298,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
-            "k7Ec4bRnS56tuXy52a28i4YVe5jZ1XS9ixOeiUwIrdpxnTsoJ6762IBZ_T5o6wM35DA2BXV7wcTuB0341Gzrmg";
+            "iHsylWKOSdUv2bbCkKeU5yyQKNsuXiXSM7vcK3t7HFUnWKX--bAOwsw8_vOK84QeVhzOBy8u7RFR95kNF76OoQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -1528,18 +1534,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is for a DVLA driving licence")
-                .given("VC is for Doe")
-                .given("VC birthDate is 1985-02-08")
-                .given("VC address is EH1 9GP")
-                .given("VC driving licence personalNumber is DOE99802085J99FG")
-                .given("VC driving licence fullAddress is 122 BURNS CRESCENT EDINBURGH EH1 9GP")
-                .given("VC driving licence expiryDate is 2022-09-02")
-                .given("VC driving licence issueNumber is 16")
-                .given("VC driving licence issuedBy is DVLA")
-                .given("VC driving licence issuedDate is 2019-01-23")
-                .given("VC evidence txn is dummyTxn")
-                .given("VC evidence checkDetails activityFrom is 2019-01-01")
+                .given("VC is from DCMAW-410-AC1 with given names removed")
                 .uponReceiving("Valid credential request for DVLA VC")
                 .path("/credential")
                 .method("POST")
@@ -1600,16 +1595,16 @@ class ContractTest {
                                 JsonNode drivingPermitNode =
                                         credentialSubject.get("drivingPermit").get(0);
 
-                                assertEquals("EH1 9GP", addressNode.get("postalCode").asText());
+                                assertEquals("CH1 1AQ", addressNode.get("postalCode").asText());
 
                                 assertEquals(1, nameParts.size());
                                 assertEquals("FamilyName", nameParts.get(0).get("type").asText());
-                                assertEquals("Doe", nameParts.get(0).get("value").asText());
+                                assertEquals("Doe The Ball", nameParts.get(0).get("value").asText());
 
                                 assertEquals(
-                                        "2022-09-02", drivingPermitNode.get("expiryDate").asText());
+                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
-                                        "DOE99802085J99KV",
+                                        "DOE99802085J99FG",
                                         drivingPermitNode.get("personalNumber").asText());
                                 assertEquals("DVLA", drivingPermitNode.get("issuedBy").asText());
 
