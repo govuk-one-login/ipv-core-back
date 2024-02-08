@@ -159,6 +159,11 @@ public class CriStoringService {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
+        return new AuditExtensionsVcEvidence(
+                jwtClaimsSet.getIssuer(),
+                evidence,
+                isSuccessful,
+                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential),
+                VcHelper.extractAgeFromCredential(verifiableCredential));
     }
 }
