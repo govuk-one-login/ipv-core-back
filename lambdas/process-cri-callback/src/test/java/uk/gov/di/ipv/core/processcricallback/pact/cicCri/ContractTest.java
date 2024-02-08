@@ -217,7 +217,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyClaimedIdentityComponentId is a valid issuer")
                 .uponReceiving("Invalid credential request due to invalid access token")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers(
                         "x-api-key",
@@ -339,7 +339,7 @@ class ContractTest {
                 .given("VC familyName is Watson")
                 .given("VC birthDate is 1932-02-25")
                 .uponReceiving("Valid credential request for VC")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -452,7 +452,7 @@ class ContractTest {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/userinfo"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
