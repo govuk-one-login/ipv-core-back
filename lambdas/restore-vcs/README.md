@@ -12,7 +12,7 @@ This lambda mirrors the functionality of [RevokeVcsHandler](lambdas/revoke-vcs/R
 
 ## Running the lambda
 
-> This lambda should only be called with explicit permission from stakeholders
+> This lambda should not be invoked in production without explicit sign-off from stakeholders
 
 ### Payload
 
