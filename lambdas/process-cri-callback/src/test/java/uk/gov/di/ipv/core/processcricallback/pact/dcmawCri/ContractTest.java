@@ -1599,7 +1599,8 @@ class ContractTest {
 
                                 assertEquals(1, nameParts.size());
                                 assertEquals("FamilyName", nameParts.get(0).get("type").asText());
-                                assertEquals("Doe The Ball", nameParts.get(0).get("value").asText());
+                                assertEquals(
+                                        "Doe The Ball", nameParts.get(0).get("value").asText());
 
                                 assertEquals(
                                         "2023-01-18", drivingPermitNode.get("expiryDate").asText());
