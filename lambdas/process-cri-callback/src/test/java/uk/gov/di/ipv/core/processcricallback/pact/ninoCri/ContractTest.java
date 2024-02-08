@@ -423,7 +423,7 @@ class ContractTest {
     }
 
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyNinoComponentId is the NINO CRI component ID")
@@ -445,12 +445,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturns401")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
@@ -876,7 +876,7 @@ class ContractTest {
     }
 
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -890,13 +890,13 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(404)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
-    void fetchVerifiableCredential_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    void fetchVerifiableCredential_whenCalledAgainstNinoCriWithInvalidAccessToken_throwsAnException(
             MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
