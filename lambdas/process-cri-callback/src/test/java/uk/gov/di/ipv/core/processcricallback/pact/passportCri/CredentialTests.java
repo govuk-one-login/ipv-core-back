@@ -385,8 +385,8 @@ class CredentialTests {
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -501,7 +501,9 @@ class CredentialTests {
                 .willRespondWith()
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_VC_SCENARIO_2_BODY, FAILED_VC_SCENARIO_2_SIGNATURE))
+                                VALID_VC_HEADER,
+                                FAILED_VC_SCENARIO_2_BODY,
+                                FAILED_VC_SCENARIO_2_SIGNATURE))
                 .status(200)
                 .toPact();
     }
@@ -564,8 +566,8 @@ class CredentialTests {
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -589,12 +591,14 @@ class CredentialTests {
                 .status(403)
                 .body(
                         newJsonBody(
-                                (body) -> {
-                                    body.object("oauth_error", (error) -> {
-                                        error.stringType("error");
-                                        error.stringType("error_description");
-                                    });
-                                })
+                                        (body) -> {
+                                            body.object(
+                                                    "oauth_error",
+                                                    (error) -> {
+                                                        error.stringType("error");
+                                                        error.stringType("error_description");
+                                                    });
+                                        })
                                 .build())
                 .toPact();
     }
@@ -684,7 +688,8 @@ class CredentialTests {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/issue/credential"))
+                .credentialUrl(
+                        new URI("http://localhost:" + mockServer.getPort() + "/issue/credential"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
