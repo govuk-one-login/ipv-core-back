@@ -874,7 +874,7 @@ class ContractTest {
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3171-AC2
-    private static final String FAILED_PASSPORT_VC_BODY =
+    private static final String FAILED_PASSPORT_VC_WITH_CI_BODY =
             """
             {
               "sub": "test-subject",
@@ -955,7 +955,7 @@ class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
-    private static final String FAILED_PASSPORT_VC_SIGNATURE =
+    private static final String FAILED_PASSPORT_VC_WITH_CI_SIGNATURE =
             "FZRxr03o7njVxKgUafUwSqbvbZtWNhmObEP7rHVoGcoWglBryD-Ghkn5gZ9AwqNVN8J4VpRIu2olij6TIiVq2A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
@@ -2226,8 +2226,8 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                FAILED_PASSPORT_VC_BODY,
-                                FAILED_PASSPORT_VC_SIGNATURE))
+                                FAILED_PASSPORT_VC_WITH_CI_BODY,
+                                FAILED_PASSPORT_VC_WITH_CI_SIGNATURE))
                 .toPact();
     }
 
