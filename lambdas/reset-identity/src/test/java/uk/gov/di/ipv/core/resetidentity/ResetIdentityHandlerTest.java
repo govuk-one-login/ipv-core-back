@@ -98,8 +98,7 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext()
-            throws SqsException {
+    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext() {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -120,7 +119,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, false);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verifyNoInteractions(mockAuditService);
         verifyNoInteractions(emailService);
@@ -150,7 +149,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -203,7 +202,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -245,7 +244,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))

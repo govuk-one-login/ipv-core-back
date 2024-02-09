@@ -115,14 +115,12 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String userName = null;
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
 
-            if (isUserInitiated) {
-                List<VcStoreItem> credentials =
-                        verifiableCredentialService.getVcStoreItems(
-                                clientOAuthSessionItem.getUserId());
-                userName = getUnconfirmedUserName(credentials);
-            }
+            List<VcStoreItem> credentials =
+                    verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId());
 
-            verifiableCredentialService.deleteVcStoreItems(userId, isUserInitiated);
+            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+
+            verifiableCredentialService.deleteVcStoreItems(credentials, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             if (isUserInitiated) {
@@ -131,6 +129,8 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                 // Create a new email service for each request so that we don't risk using stale
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
+
+                userName = getUnconfirmedUserName(credentials);
                 if (f2fRequest == null) {
                     emailService.sendUserTriggeredIdentityResetConfirmation(
                             ipvSessionItem.getEmailAddress(), userName);

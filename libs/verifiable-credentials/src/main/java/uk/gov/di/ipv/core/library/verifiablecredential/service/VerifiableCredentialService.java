@@ -83,8 +83,7 @@ public class VerifiableCredentialService {
         return dataStore.getItem(userId, criId);
     }
 
-    public void deleteVcStoreItems(String userId, Boolean isUserInitiated) {
-        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+    public void deleteVcStoreItems(List<VcStoreItem> vcStoreItems, Boolean isUserInitiated) {
         if (!vcStoreItems.isEmpty()) {
             var message =
                     new StringMapMessage()
