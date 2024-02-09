@@ -858,38 +858,38 @@ PYI_KBV_FAIL_M2B:
   response:
     type: page
     pageId: pyi-kbv-fail
-    events:
-      f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
-      dcmaw:
-        targetState: CRI_DCMAW_PYI_ESCAPE
-      end:
-        targetState: PYI_ANOTHER_WAY
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+  events:
+    f2f:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F
+    dcmaw:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+    end:
+      targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 PYI_KBV_DROPOUT_M2B:
   response:
     type: page
     pageId: pyi-kbv-fail
     context: dropout
-    events:
-      f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
-      dcmaw:
-        targetState: CRI_DCMAW_PYI_ESCAPE
-      end:
-        targetState: PYI_ANOTHER_WAY
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+  events:
+    f2f:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F
+    dcmaw:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+    end:
+      targetState: PYI_ANOTHER_WAY
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 # Mitigation journey (01)
 MITIGATION_01:
