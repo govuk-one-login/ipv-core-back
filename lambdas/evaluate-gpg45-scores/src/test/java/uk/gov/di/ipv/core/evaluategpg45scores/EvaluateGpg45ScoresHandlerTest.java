@@ -385,7 +385,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(M1A, extension.getGpg45Profile());
         assertEquals(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2), extension.getGpg45Scores());
         assertEquals(
-                List.of("6e61e5db-a175-4e16-af83-1ddfc5668e2b", "RB000180729610", "abc1234"),
+                List.of("6e61e5db-a175-4e16-af83-1ddfc5668e2b", "RB000103490087", "abc1234"),
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
