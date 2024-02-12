@@ -40,10 +40,10 @@ class AuditCriResponseHelperTest {
                 "[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}]",
                 auditExtensions.getEvidence().toString());
         assertEquals(
-                "{\"iss\":\"test-issuer\",\"evidence\":[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}],\"successful\":false,\"age\":4}",
+                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
                 OBJECT_MAPPER.writeValueAsString(auditExtensions));
         assertNotNull(auditExtensions.getAge());
-        assertNull(auditExtensions.getIsUkIssued());
+        assertTrue(auditExtensions.getIsUkIssued());
     }
 
     @Test
