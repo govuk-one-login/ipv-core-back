@@ -799,6 +799,8 @@ CRI_BANK_ACCOUNT_M2B:
   events:
     next:
       targetState: CRI_NINO_WITH_SCOPE_M2B
+    fail-with-ci:
+      targetState: PYI_NO_MATCH_BAV_M2B
 
 CRI_NINO_WITH_SCOPE_M2B:
   response:
@@ -853,6 +855,13 @@ CRI_EXPERIAN_KBV_M2B:
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
+
+PYI_NO_MATCH_BAV_M2B:
+  response:
+    type: page
+    context: bankAccount
+    pageId: pyi-no-match
+  parent: END_JOURNEY
 
 # Mitigation journey (01)
 MITIGATION_01:
