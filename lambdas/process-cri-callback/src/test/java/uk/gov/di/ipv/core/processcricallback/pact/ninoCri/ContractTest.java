@@ -423,7 +423,7 @@ class ContractTest {
     }
 
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyNinoComponentId is the NINO CRI component ID")
@@ -445,12 +445,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturns401")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
@@ -506,7 +506,7 @@ class ContractTest {
                 .given("VC jti is dummyJti")
                 .given("VC birthDate is 1965-07-08")
                 .uponReceiving("Valid credential request for identity check VC")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -608,7 +608,7 @@ class ContractTest {
                 .given("VC jti is dummyJti")
                 .given("VC birthDate is 1965-07-08")
                 .uponReceiving("Valid credential request for identity check VC with CI")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -708,7 +708,7 @@ class ContractTest {
                 .given("VC jti is dummyJti")
                 .given("VC birthDate is 1965-07-08")
                 .uponReceiving("Valid credential request for VC")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -797,7 +797,7 @@ class ContractTest {
                 .given("VC jti is dummyJti")
                 .given("VC birthDate is 1965-07-08")
                 .uponReceiving("Valid credential request for VC with CI")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -876,13 +876,13 @@ class ContractTest {
     }
 
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
                 .uponReceiving("Invalid POST request due to invalid access token")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers(
                         "x-api-key",
@@ -890,13 +890,13 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(404)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
-    void fetchVerifiableCredential_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    void fetchVerifiableCredential_whenCalledAgainstNinoCriWithInvalidAccessToken_throwsAnException(
             MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -976,7 +976,8 @@ class ContractTest {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(
+                        new URI("http://localhost:" + mockServer.getPort() + "/credential/issue"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)

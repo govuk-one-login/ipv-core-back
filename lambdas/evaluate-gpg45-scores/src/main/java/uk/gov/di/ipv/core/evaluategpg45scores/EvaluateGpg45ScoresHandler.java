@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -44,14 +42,10 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -66,7 +60,6 @@ public class EvaluateGpg45ScoresHandler
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
@@ -195,7 +188,7 @@ public class EvaluateGpg45ScoresHandler
                                 gpg45Scores,
                                 credentials,
                                 ipAddress));
-                ipvSessionItem.setVot(Vot.P2.name());
+                ipvSessionItem.setVot(Vot.P2);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
@@ -234,22 +227,8 @@ public class EvaluateGpg45ScoresHandler
                 configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,
                 new AuditExtensionGpg45ProfileMatched(
-                        gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
-    }
-
-    @Tracing
-    private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
-            throws ParseException {
-        List<String> txnIds = new ArrayList<>();
-        for (SignedJWT credential : credentials) {
-            var jwtClaimsSet = credential.getJWTClaimsSet();
-            var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-            var evidences = (JSONArray) vc.get(VC_EVIDENCE);
-            if (evidences != null) { // not all VCs have an evidence block
-                var evidence = (JSONObject) evidences.get(ONLY);
-                txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
-            }
-        }
-        return txnIds;
+                        gpg45Profile,
+                        gpg45Scores,
+                        VcHelper.extractTxnIdsFromCredentials(credentials)));
     }
 }

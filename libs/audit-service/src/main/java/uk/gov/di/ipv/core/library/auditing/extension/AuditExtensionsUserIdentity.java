@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
+import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuditExtensionsUserIdentity implements AuditExtensions {
-    @JsonProperty String levelOfConfidence;
+    @JsonProperty Vot levelOfConfidence;
     @JsonProperty boolean ciFail;
     @JsonProperty boolean hasMitigations;
 

@@ -30,7 +30,7 @@ dependencies {
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.9.0",
+			"org.mockito:mockito-junit-jupiter:5.10.0",
 			"uk.org.webcompere:system-stubs-jupiter:2.1.3"
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
