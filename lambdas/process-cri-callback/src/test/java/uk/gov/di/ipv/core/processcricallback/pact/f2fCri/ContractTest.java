@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "PassportCriProvider")
+@PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
@@ -79,7 +79,7 @@ class ContractTest {
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validF2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given("0328ba66-a1b5-4314-acf8-f4673f1f05a2 is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyF2fComponentId is the F2F CRI component ID")
                 .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -87,7 +87,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=0328ba66-a1b5-4314-acf8-f4673f1f05a2&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -112,8 +112,7 @@ class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCode_F2FRequestReturnsBadRequest(
-            PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("grant_type is invalid (auth_code)")
@@ -135,7 +134,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
@@ -147,7 +146,7 @@ class ContractTest {
                 .given("dummyAccessToken is a valid Authorization header")
                 .given("credentialStatus is pending")
                 .uponReceiving("Valid credential request")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -185,7 +184,7 @@ class ContractTest {
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
                         new CriCallbackRequest(
-                                "dummyAuthCode",
+                                "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
                                 credentialIssuerConfig.getClientId(),
                                 "dummySessionId",
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
@@ -240,7 +239,7 @@ class ContractTest {
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
                         new CriCallbackRequest(
-                                "dummyAuthCode",
+                                "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
                                 credentialIssuerConfig.getClientId(),
                                 "dummySessionId",
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
@@ -262,7 +261,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCode_F2FRequestReturnsBadRequest")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstF2FCri_receivesUnauthorizedWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
@@ -323,7 +322,7 @@ class ContractTest {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/userinfo"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)

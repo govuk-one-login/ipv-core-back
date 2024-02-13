@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,13 +11,14 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrieved;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -34,13 +34,12 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.text.ParseException;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class CriStoringService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String EVIDENCE = "evidence";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final CriResponseService criResponseService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -100,8 +99,9 @@ public class CriStoringService {
             List<SignedJWT> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws SqsException, ParseException, JsonProcessingException, CiPutException,
-                    CiPostMitigationsException, VerifiableCredentialException {
+            throws SqsException, ParseException, CiPutException, CiPostMitigationsException,
+                    VerifiableCredentialException, AuditExtensionException,
+                    UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
@@ -115,7 +115,7 @@ public class CriStoringService {
                             AuditEventTypes.IPV_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            getAuditExtensions(vc, VcHelper.isSuccessfulVc(vc))));
+                            getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc))));
 
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(
@@ -151,15 +151,5 @@ public class CriStoringService {
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType)));
-    }
-
-    private AuditExtensionsVcEvidence getAuditExtensions(
-            SignedJWT verifiableCredential, boolean isSuccessful)
-            throws ParseException, JsonProcessingException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(
-                jwtClaimsSet.getIssuer(), evidence, isSuccessful, null);
     }
 }

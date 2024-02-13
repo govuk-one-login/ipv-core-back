@@ -483,7 +483,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyDrivingLicenceComponentId is the driving licence CRI component ID")
@@ -505,12 +505,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeReturns401")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
@@ -569,7 +569,7 @@ class ContractTest {
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid credential request for DVLA VC")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -668,7 +668,7 @@ class ContractTest {
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid credential request for DVLA VC with CI")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -772,7 +772,7 @@ class ContractTest {
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid credential request for DVA VC")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -871,7 +871,7 @@ class ContractTest {
                 .given("VC driving licence issuedDate is 1982-05-23")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid credential request for DVA VC with CI")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -958,13 +958,13 @@ class ContractTest {
     }
 
     @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDrivingLicenceComponentId is a valid issuer")
                 .uponReceiving("Invalid credential request due to invalid access token")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers(
                         "x-api-key",
@@ -972,12 +972,12 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(404)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns404")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
                     MockServer mockServer) throws URISyntaxException, CriApiException {
@@ -1059,7 +1059,8 @@ class ContractTest {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(
+                        new URI("http://localhost:" + mockServer.getPort() + "/credential/issue"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
