@@ -160,6 +160,67 @@ class ContractTest {
             }
             """;
 
+    private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
+            """
+            {
+              "iss": "dummyHmrcKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ]
+                },
+                "evidence": [{
+                    "checkDetails": [{
+                        "kbvResponseMode": "free_text",
+                        "kbvQuality": 3,
+                        "checkMethod": "kbv"
+                    },
+                    {
+                        "kbvResponseMode": "multiple_choice",
+                        "kbvQuality": 3,
+                        "checkMethod": "kbv"
+                    }],
+                    "failedCheckDetails": [{
+                        "kbvResponseMode": "multiple_choice",
+                        "kbvQuality": 2,
+                        "checkMethod": "kbv"
+                    }],
+                    "verificationScore": 2,
+                    "txn": "dummyTxn",
+                    "type": "IdentityCheck"
+                }]
+              }
+            }
+            """;
+
     private static final String FAILED_VC_BODY =
             """
             {
@@ -227,6 +288,9 @@ class ContractTest {
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
             "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg";
+
+    private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
+            "ORLdGC-6s6FraVBMkVLXwa-SpQQ6_ULcj0WgxefFU72LlIzrfYjjbSuO4DONj9MVw8TD6wkVRNb7jW9tWbtWFQ";
 
     private static final String FAILED_VC_SIGNATURE =
             "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw";
@@ -390,6 +454,7 @@ class ContractTest {
                 .given("VC birthDate is 1932-02-25")
                 .given("VC evidence verificationScore is 2")
                 .given("VC evidence txn is dummyTxn")
+                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -447,6 +512,108 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Mary", nameParts.get(0).get("value").asText());
                                 assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "AA000003D",
+                                        socialSecurityRecordNode.get("personalNumber").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "HmrcKbvCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsIssuedCredentialWithFailedAnswer(
+            PactDslWithProvider builder) throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyHmrcKbvComponentId is a valid issuer")
+                .given("VC givenName is Mary")
+                .given("VC familyName is Watson")
+                .given("VC birthDate is 1932-02-25")
+                .given("VC evidence verificationScore is 2")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC personalNumber is AA000003D")
+                .uponReceiving("Valid credential request for VC")
+                .path("/credential")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_VC_BODY_WITH_WRONG_ANSWER,
+                                VALID_VC_WRONG_ANSWER_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithFailedAnswer")
+    void fetchVerifiableCredential_whenCalledAgainstHmrcKbvCri_retrievesAValidVcWithFailedAnswer(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode socialSecurityRecordNode =
+                                        credentialSubject.get("socialSecurityRecord").get(0);
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+                                JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode failedCheckDetailsNode =
+                                        evidence.get("failedCheckDetails");
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Mary", nameParts.get(0).get("value").asText());
+                                assertEquals("Watson", nameParts.get(1).get("value").asText());
+                                assertEquals(
+                                        "multiple_choice",
+                                        failedCheckDetailsNode
+                                                .get(0)
+                                                .get("kbvResponseMode")
+                                                .asText());
+                                assertEquals(
+                                        2, failedCheckDetailsNode.get(0).get("kbvQuality").asInt());
+                                assertEquals(
+                                        "kbv",
+                                        failedCheckDetailsNode.get(0).get("checkMethod").asText());
                                 assertEquals(
                                         "AA000003D",
                                         socialSecurityRecordNode.get("personalNumber").asText());
@@ -520,6 +687,7 @@ class ContractTest {
                 .given("VC birthDate is 1932-02-25")
                 .given("VC evidence verificationScore is 0")
                 .given("VC evidence txn is dummyTxn")
+                .given("VC personalNumber is AA000003D")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
