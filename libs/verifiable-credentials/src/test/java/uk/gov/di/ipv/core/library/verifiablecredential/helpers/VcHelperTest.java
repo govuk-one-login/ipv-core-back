@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -192,6 +193,11 @@ class VcHelperTest {
     void shouldCheckIsItOperationalVC() throws ParseException {
         assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(VC_HMRC_MIGRATION)));
         assertFalse(VcHelper.isOperationalProfileVc(SignedJWT.parse(M1A_PASSPORT_VC)));
+    }
+
+    @Test
+    void shouldGetVcVot() throws Exception {
+        assertEquals(Vot.PCL250, VcHelper.getVcVot(SignedJWT.parse(VC_HMRC_MIGRATION)));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {
