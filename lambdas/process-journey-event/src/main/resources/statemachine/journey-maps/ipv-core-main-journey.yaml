@@ -838,8 +838,9 @@ CRI_EXPERIAN_KBV_M2B:
         f2f:
           targetState: MITIGATION_02_OPTIONS
 
-PYI_KBV_FAIL_M2B:
+MITIGATION_KBV_FAIL_M2B:
   response:
+    mitigationStart: true
     type: page
     pageId: pyi-kbv-escape-m2b
   events:
