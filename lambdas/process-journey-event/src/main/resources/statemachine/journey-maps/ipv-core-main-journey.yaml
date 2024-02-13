@@ -841,7 +841,7 @@ CRI_EXPERIAN_KBV_M2B:
 PYI_KBV_FAIL_M2B:
   response:
     type: page
-    pageId: pyi-kbv-exit
+    pageId: pyi-kbv-escape-m2b
   events:
     f2f:
       targetState: CRI_F2F
@@ -859,7 +859,7 @@ PYI_KBV_FAIL_M2B:
 PYI_KBV_DROPOUT_M2B:
   response:
     type: page
-    pageId: pyi-kbv-exit
+    pageId: pyi-kbv-escape-m2b
     context: dropout
   events:
     f2f:
