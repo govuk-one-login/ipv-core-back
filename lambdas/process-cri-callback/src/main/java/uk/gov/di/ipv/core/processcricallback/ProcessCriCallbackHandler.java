@@ -22,11 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.exceptions.*;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -184,12 +180,12 @@ public class ProcessCriCallbackHandler
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (HttpResponseExceptionWithErrorBody e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
-        } catch (JsonProcessingException | SqsException e) {
+        } catch (JsonProcessingException | SqsException | AuditExtensionException e) {
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
-        } catch (ParseException e) {
+        } catch (ParseException | UnrecognisedVotException e) {
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -243,7 +239,8 @@ public class ProcessCriCallbackHandler
             throws SqsException, ParseException, JsonProcessingException,
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
                     CriApiException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, CredentialParseException, InvalidCriCallbackRequestException {
+                    CiPutException, CredentialParseException, InvalidCriCallbackRequestException,
+                    AuditExtensionException, UnrecognisedVotException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

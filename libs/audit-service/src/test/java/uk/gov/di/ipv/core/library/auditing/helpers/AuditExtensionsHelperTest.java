@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processasynccricredential.helpers;
+package uk.gov.di.ipv.core.library.auditing.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
@@ -21,17 +23,14 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getRestrictedDataForAuditEvent;
 
 @ExtendWith(MockitoExtension.class)
-class AuditCriResponseHelperTest {
+class AuditExtensionsHelperTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
-    void shouldGetVerifiableCredentialExtensionsForAudit()
-            throws ParseException, JsonProcessingException {
+    void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.getSuccessful());
@@ -47,8 +46,7 @@ class AuditCriResponseHelperTest {
     }
 
     @Test
-    void shouldGetVerifiableCredentialExtensionsForAuditWithICAOCode()
-            throws ParseException, JsonProcessingException {
+    void shouldGetVerifiableCredentialExtensionsForAuditWithICAOCode() throws Exception {
         SignedJWT testVerifiableCredential =
                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
