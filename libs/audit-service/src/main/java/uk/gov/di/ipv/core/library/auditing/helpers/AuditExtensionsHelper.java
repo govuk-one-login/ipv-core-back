@@ -1,18 +1,19 @@
-package uk.gov.di.ipv.core.processasynccricredential.helpers;
+package uk.gov.di.ipv.core.library.auditing.helpers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
+import uk.gov.di.ipv.core.library.auditing.AuditRestrictedVc;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVc;
 
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
-public class AuditCriResponseHelper {
+public class AuditExtensionsHelper {
 
     private static final String EVIDENCE = "evidence";
     private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
@@ -23,11 +24,11 @@ public class AuditCriResponseHelper {
     private static final String VC_BRP = "residencePermit";
     private static final String VC_NATIONAL_ID = "idCard";
 
-    private AuditCriResponseHelper() {}
+    private AuditExtensionsHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            SignedJWT verifiableCredential, boolean isSuccessful)
-            throws ParseException, JsonProcessingException {
+            SignedJWT verifiableCredential, Boolean isSuccessful)
+            throws ParseException, AuditExtensionException, UnrecognisedVotException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
@@ -35,6 +36,7 @@ public class AuditCriResponseHelper {
                 jwtClaimsSet.getIssuer(),
                 evidence,
                 isSuccessful,
+                VcHelper.getVcVot(verifiableCredential),
                 VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential),
                 VcHelper.extractAgeFromCredential(verifiableCredential));
     }

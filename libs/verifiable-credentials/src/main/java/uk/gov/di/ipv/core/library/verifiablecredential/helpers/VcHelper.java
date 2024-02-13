@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
@@ -221,6 +222,15 @@ public class VcHelper {
         } catch (Exception ex) {
             LOGGER.info("Failed to parse dob value for the vc.");
             return null;
+        }
+    }
+
+    public static Vot getVcVot(SignedJWT vc) throws UnrecognisedVotException {
+        try {
+            String vot = vc.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
+            return vot == null ? null : Vot.valueOf(vot);
+        } catch (ParseException | IllegalArgumentException e) {
+            throw new UnrecognisedVotException("Invalid VOT found for this VC");
         }
     }
 }
