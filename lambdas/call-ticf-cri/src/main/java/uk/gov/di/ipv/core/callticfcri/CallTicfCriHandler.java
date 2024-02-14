@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -21,9 +20,11 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -134,7 +135,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | ParseException
                 | CiRetrievalException
                 | ConfigException
-                | JsonProcessingException e) {
+                | UnrecognisedVotException
+                | AuditExtensionException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -152,7 +154,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws ParseException, TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    JsonProcessingException, ConfigException {
+                    ConfigException, AuditExtensionException, UnrecognisedVotException {
         String featureSet = RequestHelper.getFeatureSet(request);
         configService.setFeatureSet(featureSet);
         ClientOAuthSessionItem clientOAuthSessionItem =

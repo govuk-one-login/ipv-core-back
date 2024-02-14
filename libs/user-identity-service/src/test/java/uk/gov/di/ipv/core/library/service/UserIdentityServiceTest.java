@@ -684,9 +684,9 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
-        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
     @Test
@@ -717,9 +717,9 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
-        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
     @Test
@@ -869,8 +869,8 @@ class UserIdentityServiceTest {
         // Assert
         JsonNode passportClaim = credentials.getPassportClaim();
 
-        assertEquals("123456789", passportClaim.get(0).get("documentNumber").asText());
-        assertEquals("2020-01-01", passportClaim.get(0).get("expiryDate").asText());
+        assertEquals("321654987", passportClaim.get(0).get("documentNumber").asText());
+        assertEquals("2030-01-01", passportClaim.get(0).get("expiryDate").asText());
     }
 
     @Test
@@ -1114,10 +1114,10 @@ class UserIdentityServiceTest {
         JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
 
         assertEquals("221B", address.get("buildingName").asText());
-        assertEquals("BAKER STREET", address.get("streetName").asText());
-        assertEquals("LONDON", address.get("addressLocality").asText());
-        assertEquals("NW1 6XE", address.get("postalCode").asText());
-        assertEquals("1887-01-01", address.get("validFrom").asText());
+        assertEquals("MILTON ROAD", address.get("streetName").asText());
+        assertEquals("Milton Keynes", address.get("addressLocality").asText());
+        assertEquals("MK15 5BX", address.get("postalCode").asText());
+        assertEquals("2024-01-01", address.get("validFrom").asText());
     }
 
     @Test
@@ -1246,7 +1246,7 @@ class UserIdentityServiceTest {
 
         assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
         assertEquals("123456", drivingPermitClaim.get(0).get("issueNumber").asText());
-        assertEquals("2023-01-18", drivingPermitClaim.get(0).get("expiryDate").asText());
+        assertEquals("2042-10-01", drivingPermitClaim.get(0).get("expiryDate").asText());
     }
 
     @Test
@@ -1706,8 +1706,8 @@ class UserIdentityServiceTest {
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
-        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
     @Test
@@ -1807,7 +1807,7 @@ class UserIdentityServiceTest {
         vcStoreItems.add(vcStoreItem);
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
         assertTrue(result.isPresent());
-        assertEquals("Chris", result.get().getFullName());
+        assertEquals("Kenneth Decerqueira", result.get().getFullName());
     }
 
     @Test

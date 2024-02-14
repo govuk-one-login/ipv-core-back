@@ -21,7 +21,9 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -42,6 +44,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -49,8 +53,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.isSuccessAsyncCriResponse;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getRestrictedDataForAuditEvent;
 
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
@@ -114,9 +116,15 @@ public class ProcessAsyncCriCredentialHandler
                     | SqsException
                     | CiPutException
                     | AsyncVerifiableCredentialException
+                    | UnrecognisedVotException
                     | CiPostMitigationsException e) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage("Failed to process VC response message.", e));
+                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+            } catch (AuditExtensionException e) {
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Failed to process/send audit event.", e.getMessage()));
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             } catch (VerifiableCredentialException e) {
                 LOGGER.error(
@@ -164,7 +172,8 @@ public class ProcessAsyncCriCredentialHandler
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     AsyncVerifiableCredentialException, CiPostMitigationsException,
-                    VerifiableCredentialException {
+                    VerifiableCredentialException, AuditExtensionException,
+                    UnrecognisedVotException {
 
         validateOAuthState(successAsyncCriResponse);
 
@@ -222,7 +231,7 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     private void sendIpvVcReceivedAuditEvent(
             AuditEventUser auditEventUser, SignedJWT verifiableCredential, boolean isSuccessful)
-            throws ParseException, JsonProcessingException, SqsException {
+            throws ParseException, SqsException, AuditExtensionException, UnrecognisedVotException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,

@@ -44,3 +44,13 @@ updates:
           - "eslint"
           - "eslint-*"
           - "@typescript-eslint/*"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "03:00"
+    target-branch: main
+    labels:
+    - dependabot
+    commit-message:
+      prefix: BAU

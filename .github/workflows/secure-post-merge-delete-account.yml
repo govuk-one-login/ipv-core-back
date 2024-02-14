@@ -21,7 +21,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -60,7 +60,7 @@ jobs:
 
       - name: Generate code signing config
         id: signing
-        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
         with:
           template: ./deploy-delete-user-data/template.yaml
           profile: ${{ secrets.SIGNING_PROFILE_NAME }}

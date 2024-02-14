@@ -1,19 +1,96 @@
 # RevokeVcsHandler
 
-What this lambda is for and does: https://govukverify.atlassian.net/browse/PYIC-4555
+---
 
-To run this lambda, create an appropriate payload including userIds with vcs in the the appropriate environment.
+## Terms
 
-```bash
-aws-vault exec <profile> -- aws lambda invoke --function-name revoke-vcs-<env> --invocation-type RequestResponse --payload fileb://revokeVcsLambdaPayload.json response.json
+- `PROFILE` is the aws account profile you want to use for this call. E.g. if you were running it in `build` then it could be `core-build-admin`.
+- `ENVIRONMENT` is the environment to run it in, linked to `PROFILE` because in the same example it would have to be `build`.
+- `PAYLOAD_PATH` is the path (from the working directory) to the JSON file with the payload in it.
+- `OUTPUT_FILE` is the path (from the working directory) which gets written to with the lambda output.
+
+---
+
+## Description
+
+- This lambda takes a payload with an array of key pairs to iterate through and revoke the associated verifiable credential (VC) for each.
+- In order to safely revoke these VCs we perform the following operation on each VC:
+  1. Read the VC from the main table, fails if not exists.
+     - The `userId` and `criId` keys provided in each entry of the payload list uniquely identify a VC.
+  2. Enter VC into the archive table.
+  3. Submit audit event `IPV_VC_REVOKED` for the revocation.
+  4. Delete the VC from the main table.
+  5. Log the progress through the list.
+
+
+- This lambda works on user credentials in the `user-issued-credentials-v2-ENVIRONMENT` table ([e.g.](https://eu-west-2.console.aws.amazon.com/dynamodbv2/home?region=eu-west-2#item-explorer?table=user-issued-credentials-v2-build)).
+- The lambda archives during revocation in the `revoked-user-credentials-ENVIRONMENT` table ([e.g.](https://eu-west-2.console.aws.amazon.com/dynamodbv2/home?region=eu-west-2#item-explorer?table=revoked-user-credentials-build)).
+- In the case of failures which can have audit events, we send the audit event `IPV_VC_REVOKED_FAILURE`.
+- In the case where we cannot send audit events, we break the loop through the list.
+
+---
+
+## Running the lambda
+
+> This lambda should not be invoked in production without explicit sign-off from stakeholders
+
+### Payload
+
+- To revoke Vcs, this lambda needs a payload file with a list of `userId`'s paired with `criId`'s. 
+- These must be associated with VCs in the `user-issued-credentials-v2-ENVIRONMENT` table.
+- e.g. payload at `PAYLOAD_PATH`:
+```json
+{
+  "userIdCriIdPairs": [
+    { "userId": "urn:uuid:878e1871-8b7d-4a17-91ba-516bd86a0abc", "criId": "passport" },
+    { "userId": "urn:uuid:96aecbd3-7cce-47a3-80b4-b4211412ebb1", "criId": "drivingLicense" },
+    { "userId": "urn:uuid:0243cd17-f9b3-4617-9441-040b1860664e", "criId": "kbv" }
+  ]
+}
 ```
 
-This lambda iterates the `userId` and `criId` pairs and for each:
-1. Archives the vc, entering it into the `revoked-user-credentials-{env}` table
-2. Sends `IPV_VC_REVOKED` audit event
-3. Deletes the vc in the `user-issued-credentials-v2-{env}` table
+### Command
 
-For each VC we try to delete we will do the following:
+```bash
+aws-vault exec PROFILE -- \
+  aws lambda invoke \
+    --function-name revoke-vcs-ENVIRONMENT \
+    --invocation-type RequestResponse \
+    --payload fileb://PAYLOAD_PATH \
+    OUTPUT_PATH \
+    --cli-read-timeout 600
+```
+
+NB: the read timeout is increased over the default to receive output file from lambda even after a long execution period.
+
+### Output
+
+- Logging statuses with progress level through the list.
+- Audit events: `IPV_VC_REVOKED` & `IPV_VC_REVOKED_FAILURE`, which have the userId associated.
+  - `IPV_VC_REVOKED` additionally contains issuer & evidence stored.
+  - `IPV_VC_REVOKED_FAILURE` additionally contains `criId` in the extension.
+- The lambda also outputs to `OUTPUT_FILE` which contains the summary view of the run.
+  - e.g. summary at `OUTPUT_FILE`:
+
+```json
+{
+  "successes" : [
+    { "userIdCriIdPair": { "userId": "urn:uuid:878e1871-8b7d-4a17-91ba-516bd86a0abc", "criId": "passport" } },
+    { "userIdCriIdPair": { "userId": "urn:uuid:0243cd17-f9b3-4617-9441-040b1860664e", "criId": "kbv" } }
+  ],
+  "failures": [
+    { 
+      "userIdCriIdPair": { "userId": "urn:uuid:96aecbd3-7cce-47a3-80b4-b4211412ebb1", "criId": "drivingLicense" },
+      "errorMessage": "VC cannot be found"
+    }
+  ]
+}
+```
+
+### Error handling
+
+For each VC we will do the following:
+
 ```mermaid
 flowchart LR
 %% VC does exist and can send audit event
@@ -48,9 +125,3 @@ J ---> -1
 I --failure--> K([Successfully archived & unsuccessfully revoked\n audit event: IPV_VC_REVOKED])
 K --> BREAK
 ```
-
-Either the process works or we get one of the two following failure paths:
-1. `IPV_VC_REVOKED_FAILURE` audit event
-2. The loop is broken and logs indicate why and where
-
-Either way, we can identify what error caused each failure path in the logs, and the progress through the list at which it occurred.

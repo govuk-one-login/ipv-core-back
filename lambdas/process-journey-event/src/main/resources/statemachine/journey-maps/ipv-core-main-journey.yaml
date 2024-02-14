@@ -478,7 +478,7 @@ CRI_TICF_BEFORE_ERROR:
 PRE_EXPERIAN_KBV_TRANSITION_PAGE:
   response:
     type: page
-    pageId: page-pre-kbv-transition
+    pageId: page-pre-experian-kbv-transition
   events:
     next:
       targetState: CRI_EXPERIAN_KBV
@@ -783,6 +783,8 @@ CRI_BANK_ACCOUNT_M2B:
   events:
     next:
       targetState: CRI_NINO_WITH_SCOPE_M2B
+    fail-with-ci:
+      targetState: PYI_NO_MATCH_BAV_M2B
 
 CRI_NINO_WITH_SCOPE_M2B:
   response:
@@ -811,7 +813,7 @@ ADDRESS_AND_FRAUD_M2B:
 PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B:
   response:
     type: page
-    pageId: page-pre-kbv-transition
+    pageId: page-pre-experian-kbv-transition
   events:
     next:
       targetState: CRI_EXPERIAN_KBV_M2B
@@ -837,6 +839,13 @@ CRI_EXPERIAN_KBV_M2B:
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
+
+PYI_NO_MATCH_BAV_M2B:
+  response:
+    type: page
+    context: bankAccount
+    pageId: pyi-no-match
+  parent: END_JOURNEY
 
 # Mitigation journey (01)
 MITIGATION_01:

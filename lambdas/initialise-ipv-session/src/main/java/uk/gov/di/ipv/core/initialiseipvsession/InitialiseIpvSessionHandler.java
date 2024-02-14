@@ -29,14 +29,17 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -58,7 +61,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsReproveIdentity.REPROVE_IDENTITY_KEY;
+import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -74,7 +78,6 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
-
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
@@ -185,11 +188,13 @@ public class InitialiseIpvSessionHandler
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
                 if (inheritedIdentityJwtClaim.isPresent()) {
+
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
                             inheritedIdentityJwtClaim.get(),
                             claimsSet,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            auditEventUser);
                 }
             }
 
@@ -198,17 +203,15 @@ public class InitialiseIpvSessionHandler
                             ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
                             : null;
 
-            AuditExtensionsReproveIdentity reproveAuditExtension =
-                    reproveIdentity == null
-                            ? null
-                            : new AuditExtensionsReproveIdentity(reproveIdentity);
+            AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
+                    new AuditExtensionsIpvJourneyStart(reproveIdentity, vtr);
 
             AuditEvent auditEvent =
                     new AuditEvent(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            reproveAuditExtension);
+                            extensionsIpvJourneyStart);
 
             auditService.sendAuditEvent(auditEvent);
 
@@ -300,17 +303,24 @@ public class InitialiseIpvSessionHandler
             String userId,
             InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
-            IpvSessionItem ipvSessionItem)
-            throws RecoverableJarValidationException, ParseException, CredentialParseException {
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser)
+            throws RecoverableJarValidationException, ParseException, CredentialParseException,
+                    SqsException {
         try {
+
             var signedInheritedIdentityJWT =
                     validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
+            sendInheritedIdentityReceivedAuditEvent(signedInheritedIdentityJWT, auditEventUser);
             if (!isHmrcInheritedIdentityWithStrongerVotPresent(
                     signedInheritedIdentityJWT, userId)) {
                 storeHmrcInheritedIdentity(
                         userId, claimsSet, ipvSessionItem, signedInheritedIdentityJWT);
             }
-        } catch (VerifiableCredentialException | ParseException e) {
+        } catch (VerifiableCredentialException
+                | ParseException
+                | UnrecognisedVotException
+                | AuditExtensionException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Inherited identity JWT failed to validate"),
@@ -404,6 +414,25 @@ public class InitialiseIpvSessionHandler
             }
 
             return indexOfIncomingVot > indexOfExistingVot;
+        } catch (ParseException | IllegalArgumentException e) {
+            throw new CredentialParseException(
+                    "Encountered a parsing error while attempting to parse credentials", e);
+        }
+    }
+
+    private void sendInheritedIdentityReceivedAuditEvent(
+            SignedJWT signedInheritedIdentityJWT, AuditEventUser auditEventUser)
+            throws SqsException, ParseException, AuditExtensionException, CredentialParseException,
+                    UnrecognisedVotException {
+        try {
+            AuditExtensionsVcEvidence auditExtensions =
+                    getExtensionsForAudit(signedInheritedIdentityJWT, null);
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            auditExtensions));
         } catch (ParseException | IllegalArgumentException e) {
             throw new CredentialParseException(
                     "Encountered a parsing error while attempting to parse or compare credentials",

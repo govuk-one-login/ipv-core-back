@@ -13,11 +13,14 @@ dependencies {
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":libs:common-services"),
-			project(":libs:gpg45-evaluator")
+			project(":libs:gpg45-evaluator"),
+			project(":libs:verifiable-credentials")
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.10.0"
+			"org.mockito:mockito-junit-jupiter:5.10.0",
+			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"

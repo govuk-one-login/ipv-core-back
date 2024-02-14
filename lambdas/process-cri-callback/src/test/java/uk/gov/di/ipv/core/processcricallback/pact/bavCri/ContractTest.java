@@ -378,7 +378,7 @@ class ContractTest {
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid POST request")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -468,7 +468,7 @@ class ContractTest {
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid POST request")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -553,7 +553,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyBavComponentId is a valid issuer")
                 .uponReceiving("Invalid POST request due to invalid access token")
-                .path("/credential")
+                .path("/userinfo")
                 .method("POST")
                 .headers(
                         "x-api-key",
@@ -647,7 +647,7 @@ class ContractTest {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/userinfo"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
