@@ -67,7 +67,7 @@ RESET_IDENTITY:
       deleteOnlyGPG45VCs: true
   events:
     next:
-      targetState: IPV_IDENTITY_START_PAGE
+      targetState: IDENTITY_START_PAGE
 
 IDENTITY_START_PAGE:
   response:
@@ -201,7 +201,7 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
@@ -224,7 +224,7 @@ PYI_ESCAPE:
     next:
       targetState: RESET_IDENTITY
     end:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 PYI_CRI_ESCAPE:
   response:
@@ -247,7 +247,7 @@ PYI_CRI_ESCAPE_NO_F2F:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 EVALUATE_GPG45_SCORES:
   response:
@@ -274,7 +274,7 @@ IPV_SUCCESS_PAGE:
     next:
       targetState: RETURN_TO_RP
 
-END:
+RETURN_TO_RP:
   response:
     type: process
     lambda: build-client-oauth-response
