@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -20,11 +22,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
@@ -32,25 +30,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FAILED_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC_WITH_CI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1_PASSPORT_VC_MISSING_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_SCORE_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_INVALID_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL_WITH_ICAOCODE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
@@ -192,6 +172,23 @@ class VcHelperTest {
     void shouldCheckIsItOperationalVC() throws ParseException {
         assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(VC_HMRC_MIGRATION)));
         assertFalse(VcHelper.isOperationalProfileVc(SignedJWT.parse(M1A_PASSPORT_VC)));
+    }
+
+    @Test
+    void shouldGetVcVot() throws Exception {
+        assertEquals(Vot.PCL250, VcHelper.getVcVot(SignedJWT.parse(VC_HMRC_MIGRATION)));
+    }
+
+    @Test
+    void shouldThrowUnrecognisedVotExceptionIfInvalidVcVot() {
+        assertThrows(
+                UnrecognisedVotException.class,
+                () -> VcHelper.getVcVot(SignedJWT.parse(VC_INVALID_VOT)));
+    }
+
+    @Test
+    void shouldReturnNullIfVcVotIsNotPresent() throws Exception {
+        assertNull(VcHelper.getVcVot(SignedJWT.parse(VC_NULL_VOT)));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {

@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -294,7 +294,7 @@ class CallTicfCriHandlerTest {
                 List.of(
                         new SqsException("Oops"),
                         new ParseException("Oops", 1),
-                        new JsonProcessingException("") {},
+                        new AuditExtensionException(""),
                         new CiPutException("Oops"),
                         new CiPostMitigationsException("Oops"),
                         new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));

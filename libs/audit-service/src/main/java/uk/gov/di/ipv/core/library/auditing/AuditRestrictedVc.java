@@ -1,10 +1,9 @@
-package uk.gov.di.ipv.core.processasynccricredential.auditing;
+package uk.gov.di.ipv.core.library.auditing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.auditing.AuditRestricted;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
