@@ -171,7 +171,7 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialWithMissingICAOCode() throws ParseException {
-        assertNull(
+        assertTrue(
                 VcHelper.checkIfDocUKIssuedForCredential(
                         SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
     }
