@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.restorevcs;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +27,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.restorevcs.exceptions.RestoreVcException;
 
@@ -37,6 +35,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.List;
+
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 
 @ExcludeFromGeneratedCoverageReport
 @SuppressWarnings("unused") // Temporarily disable to pass sonarqube
@@ -171,18 +171,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         var signedCredential = SignedJWT.parse(vcStoreItem.getCredential());
-        var jwtClaimsSet = signedCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim("vc");
-        var evidence = vc.getAsString("evidence");
-
-        var auditExtensions =
-                new AuditExtensionsVcEvidence(
-                        jwtClaimsSet.getIssuer(),
-                        evidence,
-                        null,
-                        VcHelper.getVcVot(signedCredential),
-                        VcHelper.checkIfDocUKIssuedForCredential(signedCredential),
-                        VcHelper.extractAgeFromCredential(signedCredential));
+        AuditExtensionsVcEvidence auditExtensions = getExtensionsForAudit(signedCredential, null);
 
         var auditEvent =
                 new AuditEvent(
