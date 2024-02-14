@@ -55,7 +55,7 @@ public class AuditExtensionsVcEvidence implements AuditExtensions {
             this.isUkIssued = isUkIssued;
             this.age = age;
         } catch (JsonProcessingException e) {
-            throw new AuditExtensionException(e.getMessage());
+            throw new AuditExtensionException(e);
         }
     }
 
