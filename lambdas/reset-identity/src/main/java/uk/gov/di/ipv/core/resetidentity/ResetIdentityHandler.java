@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -33,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.EmailService;
 import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
@@ -101,6 +103,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String ipvSessionId = getIpvSessionId(event);
             String featureSet = RequestHelper.getFeatureSet(event);
             boolean isUserInitiated = RequestHelper.getIsUserInitiated(event);
+            boolean deleteOnlyGPG45VCs = RequestHelper.getDeleteOnlyGPG45VCs(event);
 
             configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -111,14 +114,15 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            // Make sure we do this before deleting the credentials!
-            String userName = null;
-            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-
             List<VcStoreItem> credentials =
                     verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId());
 
-            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (deleteOnlyGPG45VCs) {
+                credentials = VcHelper.filterVCBasedOnProfileType(credentials, ProfileType.GPG45);
+            }
+
+            // Make sure we do this before deleting the credentials!
+            String userName = getUnconfirmedUserName(credentials);
 
             verifiableCredentialService.deleteVcStoreItems(credentials, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
@@ -130,7 +134,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                 // configuration.
                 final EmailService emailService = emailServiceFactory.getEmailService();
 
-                userName = getUnconfirmedUserName(credentials);
+                CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
                 if (f2fRequest == null) {
                     emailService.sendUserTriggeredIdentityResetConfirmation(
                             ipvSessionItem.getEmailAddress(), userName);

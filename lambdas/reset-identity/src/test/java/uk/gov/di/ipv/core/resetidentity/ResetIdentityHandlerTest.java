@@ -62,6 +62,7 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String TEST_JOURNEY = "journey/reset-identity";
     private static final String IS_USER_INITIATED = "isUserInitiated";
+    private static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
 
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
@@ -110,7 +111,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, false))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, false, DELETE_ONLY_GPG45_VCS, false))
                         .build();
 
         // Act
@@ -139,7 +140,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 
@@ -192,7 +193,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 
@@ -234,7 +235,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 

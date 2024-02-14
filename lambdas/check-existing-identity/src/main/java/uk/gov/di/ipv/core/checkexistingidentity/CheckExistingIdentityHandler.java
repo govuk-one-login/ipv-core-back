@@ -71,6 +71,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGR
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
@@ -92,6 +93,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
+    private static final JourneyResponse JOURNEY_RESET_GPG45_IDENTITY =
+            new JourneyResponse(JOURNEY_RESET_GPG45_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
@@ -367,7 +370,7 @@ public class CheckExistingIdentityHandler
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-            return JOURNEY_RESET_IDENTITY;
+            return JOURNEY_RESET_GPG45_IDENTITY;
         }
         LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
         return JOURNEY_IPV_GPG45_MEDIUM;

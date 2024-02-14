@@ -102,6 +102,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGR
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
@@ -144,6 +145,8 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
+    private static final JourneyResponse JOURNEY_RESET_GPG45_IDENTITY =
+            new JourneyResponse(JOURNEY_RESET_GPG45_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
@@ -501,7 +504,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -567,7 +570,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -753,7 +756,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -1056,7 +1059,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);

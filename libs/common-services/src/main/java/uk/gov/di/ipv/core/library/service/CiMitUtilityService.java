@@ -28,8 +28,8 @@ public class CiMitUtilityService {
                                 .getContraIndicatorConfigMap()
                                 .get(ci.getCode())
                                 .getCheckedScore();
-        var threshold = Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
-        return scoreOnceMitigated > threshold;
+        return scoreOnceMitigated
+                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
     public Optional<JourneyResponse> getCiMitigationJourneyStep(ContraIndicators contraIndicators)

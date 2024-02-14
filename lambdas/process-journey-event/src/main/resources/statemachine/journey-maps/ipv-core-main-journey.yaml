@@ -109,6 +109,8 @@ CHECK_EXISTING_IDENTITY:
       targetState: IPV_IDENTITY_START_PAGE
     reset-identity:
       targetState: RESET_IDENTITY
+    reset-gpg45-identity:
+      targetState: RESET_GPG45_IDENTITY
     reuse:
       targetState: IPV_IDENTITY_REUSE_PAGE
       checkFeatureFlag:
@@ -152,6 +154,18 @@ RESET_IDENTITY:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: false
+      deleteOnlyGPG45VCs: false
+  events:
+    next:
+      targetState: IPV_IDENTITY_START_PAGE
+
+RESET_GPG45_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -567,6 +581,7 @@ RESET_IDENTITY_USER_INITIATED:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: true
+      deleteOnlyGPG45VCs: false
   events:
     next:
       targetState: PYI_DETAILS_DELETED_PAGE
@@ -586,6 +601,7 @@ RESET_IDENTITY_USER_INITIATED_F2F:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: true
+      deleteOnlyGPG45VCs: false
   events:
     next:
       targetState: PYI_DETAILS_DELETED_PAGE_F2F
@@ -845,6 +861,7 @@ MITIGATION_01:
     lambda: reset-identity
     lambdaInput:
       isUserInitiated: false
+      deleteOnlyGPG45VCs: true
     mitigationStart: true
   events:
     next:

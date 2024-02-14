@@ -142,6 +142,15 @@ public class RequestHelper {
                         ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER));
     }
 
+    public static boolean getDeleteOnlyGPG45VCs(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        return Boolean.TRUE.equals(
+                extractValueFromLambdaInput(
+                        request,
+                        "deleteOnlyGPG45VCs",
+                        ErrorResponse.MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER));
+    }
+
     private static <T> T extractValueFromLambdaInput(
             ProcessRequest request, String key, ErrorResponse errorResponse)
             throws HttpResponseExceptionWithErrorBody {
