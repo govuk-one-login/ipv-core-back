@@ -833,7 +833,7 @@ CRI_EXPERIAN_KBV_M2B:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH
     enhanced-verification:
-      targetState: PYI_KBV_FAIL_M2B
+      targetState: MITIGATION_KBV_FAIL_M2B
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
