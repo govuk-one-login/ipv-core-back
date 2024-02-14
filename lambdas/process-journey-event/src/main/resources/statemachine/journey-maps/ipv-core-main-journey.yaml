@@ -839,7 +839,7 @@ CRI_EXPERIAN_KBV_M2B:
   parent: CRI_STATE
   events:
     fail-with-no-ci:
-      targetState: PYI_KBV_DROPOUT_M2B
+      targetState: PYI_CRI_ESCAPE
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
@@ -849,48 +849,10 @@ CRI_EXPERIAN_KBV_M2B:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH
     enhanced-verification:
-      targetState: MITIGATION_KBV_FAIL_M2B
+      targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
-
-MITIGATION_KBV_FAIL_M2B:
-  response:
-    mitigationStart: true
-    type: page
-    pageId: pyi-kbv-escape-m2b
-  events:
-    f2f:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
-      targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
-
-PYI_KBV_DROPOUT_M2B:
-  response:
-    type: page
-    pageId: pyi-kbv-escape-m2b
-    context: dropout
-  events:
-    f2f:
-      targetState: CRI_F2F
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
-      targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 # Mitigation journey (01)
 MITIGATION_01:
