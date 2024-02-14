@@ -3,13 +3,14 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
+	id "com.github.spotbugs" version "6.0.7"
 }
 
 repositories {
 	mavenCentral()
 }
 
-def var = dependencies {
+dependencies {
 	implementation "software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
@@ -19,8 +20,10 @@ def var = dependencies {
 			"org.mockito:mockito-junit-jupiter:5.10.0",
 			project(":libs:common-services").sourceSets.test.output
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	spotbugs "com.github.spotbugs:spotbugs:$rootProject.ext.dependencyVersions.spotbugs"
+	spotbugsPlugins("software.amazon.lambda.snapstart:aws-lambda-snapstart-java-rules:$rootProject.ext.dependencyVersions.awsLambdaSnapstartJavaRules")
 }
-var
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17

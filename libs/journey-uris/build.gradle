@@ -3,6 +3,7 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
+	id "com.github.spotbugs" version "6.0.7"
 }
 
 repositories {
@@ -10,6 +11,8 @@ repositories {
 }
 
 dependencies {
+	spotbugs "com.github.spotbugs:spotbugs:$rootProject.ext.dependencyVersions.spotbugs"
+	spotbugsPlugins("software.amazon.lambda.snapstart:aws-lambda-snapstart-java-rules:$rootProject.ext.dependencyVersions.awsLambdaSnapstartJavaRules")
 }
 
 java {

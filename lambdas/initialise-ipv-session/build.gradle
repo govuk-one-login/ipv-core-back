@@ -3,6 +3,7 @@ plugins {
 	id "idea"
 	id "jacoco"
 	id 'io.freefair.aspectj.post-compile-weaving' version '8.4'
+	id "com.github.spotbugs" version "6.0.7"
 }
 
 repositories {
@@ -10,7 +11,6 @@ repositories {
 }
 
 dependencies {
-
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"com.amazonaws:aws-java-sdk-kms:$rootProject.ext.dependencyVersions.awsJavcSdkKms",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
@@ -37,6 +37,9 @@ dependencies {
 			"org.mockito:mockito-junit-jupiter:5.10.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	spotbugs "com.github.spotbugs:spotbugs:$rootProject.ext.dependencyVersions.spotbugs"
+	spotbugsPlugins("software.amazon.lambda.snapstart:aws-lambda-snapstart-java-rules:$rootProject.ext.dependencyVersions.awsLambdaSnapstartJavaRules")
 }
 
 java {

@@ -41,6 +41,7 @@ ext {
 		awsLambdaJavaCore:'1.2.1',
 		awsLambdaJavaEvents:'3.11.0',
 		awsLambdaJavaLog4j2:'1.5.1',
+		awsLambdaSnapstartJavaRules:'0.2.0',
 		dynamodbEnhanced:'2.17.89',
 		gson:'2.8.9',
 		jacksonDataformatYaml:'2.13.2',
@@ -51,7 +52,8 @@ ext {
 		notificationsJavaClient: '4.1.1-RELEASE',
 		powertoolsParameters:'1.16.1',
 		powertoolsLogging:'1.16.1',
-		powertoolsTracing:'1.16.1'
+		powertoolsTracing:'1.16.1',
+		spotbugs:'4.8.3'
 	]
 }
 
