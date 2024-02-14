@@ -56,6 +56,8 @@ import static org.mockito.Mockito.when;
 class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
+    // DUMMY_ACCESS_TOKEN provided by F2F team for subject 74655ce3-a679-4c09-a3b0-1d0dc2eff373
+    private static final String DUMMY_ACCESS_TOKEN = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiI3NDY1NWNlMy1hNjc5LTRjMDktYTNiMC0xZDBkYzJlZmYzNzMiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjIwMjI3OTE3Njd9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
@@ -112,7 +114,7 @@ class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("grant_type is invalid (auth_code)")
@@ -134,7 +136,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(401)
                 .toPact();
     }
 
@@ -143,14 +145,14 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyTestUser is a valid subject")
                 .given("dummyApiKey is a valid x-api-key")
-                .given("dummyAccessToken is a valid Authorization header")
+                .given("74655ce3-a679-4c09-a3b0-1d0dc2eff373 is a valid session ID")
                 .given("credentialStatus is pending")
                 .uponReceiving("Valid credential request")
                 .path("/userinfo")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer " + DUMMY_ACCESS_TOKEN)
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(
                         newJsonBody(
                                         (body) -> {
@@ -182,7 +184,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
+                        new BearerAccessToken(DUMMY_ACCESS_TOKEN),
                         new CriCallbackRequest(
                                 "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
                                 credentialIssuerConfig.getClientId(),
@@ -261,7 +263,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstF2FCri_receivesUnauthorizedWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
