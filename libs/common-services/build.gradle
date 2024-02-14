@@ -75,3 +75,12 @@ tasks.register('jarTest', Jar) {
 artifacts {
 	tests jarTest
 }
+
+spotbugs {
+	visitors = [
+		"LambdaHandlerInitedWithRandomValue",
+		"CacheLambdaHandlerFields",
+		"CacheLambdaHandlerParentClasses",
+		"BuildRandomReturningMethodsDatabase"
+	]
+}

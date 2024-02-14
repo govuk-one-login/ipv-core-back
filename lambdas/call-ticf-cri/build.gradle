@@ -59,3 +59,12 @@ jacocoTestReport {
 		xml.required.set(true)
 	}
 }
+
+spotbugs {
+	visitors = [
+		"LambdaHandlerInitedWithRandomValue",
+		"CacheLambdaHandlerFields",
+		"CacheLambdaHandlerParentClasses",
+		"BuildRandomReturningMethodsDatabase"
+	]
+}
