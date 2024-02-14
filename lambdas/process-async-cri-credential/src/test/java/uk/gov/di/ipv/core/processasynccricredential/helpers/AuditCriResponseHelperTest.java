@@ -35,15 +35,15 @@ class AuditCriResponseHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.getSuccessful());
-        assertEquals("test-issuer", auditExtensions.getIss());
+        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
         assertEquals(
-                "[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}]",
+                "[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}]",
                 auditExtensions.getEvidence().toString());
         assertEquals(
-                "{\"iss\":\"test-issuer\",\"evidence\":[{\"validityScore\":2,\"strengthScore\":4,\"ci\":null,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}],\"successful\":false,\"age\":4}",
+                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
                 OBJECT_MAPPER.writeValueAsString(auditExtensions));
         assertNotNull(auditExtensions.getAge());
-        assertNull(auditExtensions.getIsUkIssued());
+        assertTrue(auditExtensions.getIsUkIssued());
     }
 
     @Test
@@ -64,7 +64,7 @@ class AuditCriResponseHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Paul\"}]}],\"docExpiryDate\":\"2020-01-01\"}",
+                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -91,7 +91,7 @@ class AuditCriResponseHelperTest {
     void shouldGetPassportExpiryDateForAudit() throws ParseException {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
-        assertEquals("2020-01-01", auditNameParts.getDocExpiryDate());
+        assertEquals("2030-01-01", auditNameParts.getDocExpiryDate());
     }
 
     @Test
