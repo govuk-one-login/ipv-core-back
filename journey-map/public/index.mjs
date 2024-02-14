@@ -36,7 +36,8 @@ const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
 
 // Load the journey map
-const journeyResponse = await fetch('./ipv-core-main-journey.yaml');
+const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'ipv-core-main-journey';
+const journeyResponse = await fetch(`./${encodeURIComponent(journeyType)}.yaml`);
 const journeyMap = yaml.parse(await journeyResponse.text());
 const nestedResponse = await fetch('./nested-journey-definitions.yaml');
 const nestedJourneys = yaml.parse(await nestedResponse.text());
@@ -96,6 +97,8 @@ const highlightState = (state) => {
         .forEach((node) => node.classList.add('highlight'));
 };
 
+const upperToKebab = (str) => str.toLowerCase().replaceAll('_', '-');
+
 // Set up the click handlers that mermaid binds to each node
 const setupMermaidClickHandlers = () => {
     const getDesc = (def) => {
@@ -106,6 +109,8 @@ const setupMermaidClickHandlers = () => {
                 return `Page node displaying the \'${def.pageId}\' screen in IPV Core.`;
             case 'cri':
                 return `CRI node routing to the ${CRI_NAMES[def.criId] || `'${def.criId}' CRI`}.`;
+            case 'journeyTransition':
+                return `Journey transition to the ${def.targetJourney} journey type (${def.targetState}).`
             default:
                 return '';
         }
@@ -128,6 +133,12 @@ const setupMermaidClickHandlers = () => {
                 link.href += `?context=${def.context}`
             }
             link.target = '_blank';
+            nodeDesc.append(link);
+        }
+        if (def.type === 'journeyTransition') {
+            const link = document.createElement('a');
+            link.innerText = 'Click here to view the journey';
+            link.href = `/?journeyType=${encodeURIComponent(upperToKebab(def.targetJourney))}`;
             nodeDesc.append(link);
         }
     };

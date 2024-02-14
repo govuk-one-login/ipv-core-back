@@ -57,6 +57,8 @@ h1 {
 }
 #diagram > * {
     height: 100%;
+    width: 100%;
+    max-width: unset !important;
 }
 form {
     flex: 0 1 525px;
@@ -149,8 +151,13 @@ form fieldset p {
     background: #ffa;
     border-radius: 4px;
 }
-.key-node.error {
+.key-node.journey_transition {
+    background: #aaf;
+    border-radius: 4px;
+}
+.key-node.error_transition {
     background: #f99;
+    border-radius: 4px;
 }
 .key-node.other {
     background: #f3f2f1;
