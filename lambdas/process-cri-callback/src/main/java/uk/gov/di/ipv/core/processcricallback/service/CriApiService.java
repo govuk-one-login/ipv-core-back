@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -137,6 +138,11 @@ public class CriApiService {
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             secureTokenHelper.generate());
+
+            if (signer instanceof KmsEs256Signer kmsEs256Signer) {
+                kmsEs256Signer.setKeyId(configService.getSigningKeyId());
+            }
+
             var signedClientJwt = JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();

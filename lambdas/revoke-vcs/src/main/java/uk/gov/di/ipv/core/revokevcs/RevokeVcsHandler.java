@@ -49,7 +49,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     private final DataStore<VcStoreItem> archivedVcDataStore;
     private final AuditService auditService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings("unused") // Used through dependency injection
     public RevokeVcsHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
@@ -61,7 +61,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         this.auditService = auditService;
     }
 
-    @SuppressWarnings("unused") // Used through dependency injection
+    @SuppressWarnings("unused") // Used by AWS
     public RevokeVcsHandler() {
         this.configService = new ConfigService();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);

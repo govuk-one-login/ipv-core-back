@@ -108,7 +108,6 @@ public class ProcessCriCallbackHandler
         var criResponseService = new CriResponseService(configService);
         var signer = new KmsEs256Signer();
 
-        signer.setKeyId(configService.getSigningKeyId());
         VcHelper.setConfigService(configService);
 
         criApiService =

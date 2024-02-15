@@ -47,7 +47,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     private final DataStore<VcStoreItem> archivedVcDataStore;
     private final AuditService auditService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings("unused") // Used through dependency injection
     public RestoreVcsHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
@@ -59,7 +59,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         this.auditService = auditService;
     }
 
-    @SuppressWarnings("unused") // Used through dependency injection
+    @SuppressWarnings("unused") // Used by AWS
     public RestoreVcsHandler() {
         this.configService = new ConfigService();
         boolean isRunningLocally = this.configService.isRunningLocally();

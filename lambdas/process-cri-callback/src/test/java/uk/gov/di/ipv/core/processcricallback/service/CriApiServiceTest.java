@@ -6,13 +6,13 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
@@ -34,6 +35,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Clock;
 import java.util.Base64;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -43,11 +45,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RESPONSE;
@@ -65,17 +70,16 @@ class CriApiServiceTest {
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
     @Mock private ConfigService mockConfigService;
-    @Mock private ECDSASigner mockSigner;
-    @InjectMocks private CriApiService criApiService;
+    private CriApiService criApiService;
 
     @BeforeEach
     void setUp(WireMockRuntimeInfo wmRuntimeInfo)
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        mockSigner = new ECDSASigner(getPrivateKey());
+        var signer = new ECDSASigner(getPrivateKey());
         criApiService =
                 new CriApiService(
                         mockConfigService,
-                        mockSigner,
+                        signer,
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
 
@@ -282,6 +286,32 @@ class CriApiServiceTest {
 
         // Assert
         assertTrue(request.getQuery().contains("redirect_uri="));
+    }
+
+    @Test
+    void buildFetchAccessTokenRequestShouldSetKeyIdOnKmsSigner() throws Exception {
+        // Arrange
+        var callbackRequest = getValidCallbackRequest();
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+
+        var mockKmsSigner = mock(KmsEs256Signer.class);
+        when(mockKmsSigner.supportedJWSAlgorithms()).thenReturn(Set.of(ES256));
+        when(mockKmsSigner.sign(any(), any())).thenReturn(Base64URL.from("aSignature"));
+        when(mockConfigService.getSigningKeyId()).thenReturn("a-kms-key-id");
+
+        criApiService =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsSigner,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
+
+        // Act
+        criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+
+        // Assert
+
+        verify(mockKmsSigner).setKeyId("a-kms-key-id");
     }
 
     @Test

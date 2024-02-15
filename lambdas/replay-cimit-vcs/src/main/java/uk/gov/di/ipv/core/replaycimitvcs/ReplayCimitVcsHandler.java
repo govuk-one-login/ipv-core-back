@@ -34,7 +34,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     private final CiMitService ciMitService;
     private final VerifiableCredentialService verifiableCredentialService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings("unused") // Used through dependency injection
     public ReplayCimitVcsHandler(
             ConfigService configService,
             CiMitService ciMitService,
@@ -44,7 +44,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
         this.verifiableCredentialService = verifiableCredentialService;
     }
 
-    @SuppressWarnings("unused") // Used through dependency injection
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
         this.configService = new ConfigService();
