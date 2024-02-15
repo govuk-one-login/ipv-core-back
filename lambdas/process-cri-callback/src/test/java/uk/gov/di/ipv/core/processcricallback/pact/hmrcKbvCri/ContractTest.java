@@ -204,6 +204,11 @@ class ContractTest {
                         "checkMethod": "kbv"
                     },
                     {
+                        "kbvResponseMode": "free_text",
+                        "kbvQuality": 2,
+                        "checkMethod": "kbv"
+                    },
+                    {
                         "kbvResponseMode": "multiple_choice",
                         "kbvQuality": 3,
                         "checkMethod": "kbv"
@@ -290,7 +295,7 @@ class ContractTest {
             "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg";
 
     private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
-            "ORLdGC-6s6FraVBMkVLXwa-SpQQ6_ULcj0WgxefFU72LlIzrfYjjbSuO4DONj9MVw8TD6wkVRNb7jW9tWbtWFQ";
+            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew";
 
     private static final String FAILED_VC_SIGNATURE =
             "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw";
@@ -537,7 +542,7 @@ class ContractTest {
                 .given("VC evidence verificationScore is 2")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC personalNumber is AA000003D")
-                .given("VC evidence checkDetails are free_text, multiple_choice")
+                .given("VC evidence checkDetails are free_text, free_text, multiple_choice")
                 .given("VC evidence failedCheckDetails is multiple_choice")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
@@ -691,8 +696,8 @@ class ContractTest {
                 .given("VC evidence verificationScore is 0")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC personalNumber is AA000003D")
-                .given(
-                        "VC evidence failedCheckDetails are free_text, multiple_choice, multiple_choice")
+                .given("VC evidence checkDetails is free_text")
+                .given("VC evidence failedCheckDetails are free_text, multiple_choice")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
