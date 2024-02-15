@@ -346,6 +346,26 @@ class RequestHelperTest {
     }
 
     @Test
+    void getDeleteOnlyGPG45VCsShouldReturnTrue() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("deleteOnlyGPG45VCs", true))
+                        .build();
+
+        assertTrue(RequestHelper.getDeleteOnlyGPG45VCs(request));
+    }
+
+    @Test
+    void getDeleteOnlyGPG45VCsShouldReturnFalse() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("deleteOnlyGPG45VCs", false))
+                        .build();
+
+        assertFalse(RequestHelper.getDeleteOnlyGPG45VCs(request));
+    }
+
+    @Test
     void getIsUserInitiatedShouldThrowIfNull() {
         var lambdaInput = new HashMap<String, Object>();
         lambdaInput.put("isUserInitiated", null);

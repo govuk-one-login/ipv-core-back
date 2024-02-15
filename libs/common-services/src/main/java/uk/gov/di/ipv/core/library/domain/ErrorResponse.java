@@ -76,7 +76,8 @@ public enum ErrorResponse {
     MISSING_VTR(1064, "The 'vtr' claim is required and was not provided in the request."),
     NO_IPV_FOR_CRI_OAUTH_SESSION(1065, "No ipvSession for existing CriOAuthSession."),
     FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1066, "Failed to parse cri callback request."),
-    ERROR_PROCESSING_TICF_CRI_RESPONSE(1067, "Error processing response from the TICF CRI");
+    ERROR_PROCESSING_TICF_CRI_RESPONSE(1067, "Error processing response from the TICF CRI"),
+    MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER(1068, "Missing deleteOnlyGPG45VCs in request");
 
     @JsonProperty("code")
     private final int code;

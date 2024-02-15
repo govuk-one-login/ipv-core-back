@@ -285,9 +285,7 @@ class VerifiableCredentialServiceTest {
                         TestFixtures.createVcStoreItem(
                                 "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2));
 
-        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-        verifiableCredentialService.deleteVcStoreItems("a-users-id", true);
+        verifiableCredentialService.deleteVcStoreItems(vcStoreItems, true);
 
         verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
         verify(mockDataStore).delete("a-users-id", EXPERIAN_FRAUD_CRI);

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.EmailService;
 import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.ArrayList;
@@ -42,11 +44,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.DELETE_ONLY_GPG45_VCS;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IS_USER_INITIATED;
 
 @ExtendWith(MockitoExtension.class)
 public class ResetIdentityHandlerTest {
@@ -61,7 +66,6 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String TEST_JOURNEY = "journey/reset-identity";
-    private static final String IS_USER_INITIATED = "isUserInitiated";
 
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
@@ -98,8 +102,7 @@ public class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext()
-            throws SqsException {
+    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext() {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -111,7 +114,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, false))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, false, DELETE_ONLY_GPG45_VCS, false))
                         .build();
 
         // Act
@@ -120,7 +123,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, false);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verifyNoInteractions(mockAuditService);
         verifyNoInteractions(emailService);
@@ -140,7 +143,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 
@@ -150,7 +153,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -193,7 +196,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 
@@ -203,7 +206,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -235,7 +238,7 @@ public class ResetIdentityHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of(IS_USER_INITIATED, true))
+                        .lambdaInput(Map.of(IS_USER_INITIATED, true, DELETE_ONLY_GPG45_VCS, false))
                         .build();
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
 
@@ -245,11 +248,75 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(TEST_USER_ID, true);
+        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
                 .sendUserTriggeredF2FIdentityResetConfirmation(TEST_EMAIL_ADDRESS, null);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequest_whenDeleteOnlyGPG45Vcs_shouldCallVcHelperToFilterOnGPG45VCs() {
+        try (MockedStatic<VcHelper> dummyStatic = mockStatic(VcHelper.class)) {
+            // Arrange
+            when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            ProcessRequest event =
+                    ProcessRequest.processRequestBuilder()
+                            .ipvSessionId(TEST_SESSION_ID)
+                            .ipAddress(TEST_CLIENT_SOURCE_IP)
+                            .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                            .journey(TEST_JOURNEY)
+                            .featureSet(TEST_FEATURE_SET)
+                            .lambdaInput(
+                                    Map.of(IS_USER_INITIATED, false, DELETE_ONLY_GPG45_VCS, true))
+                            .build();
+
+            // Act
+            JourneyResponse journeyResponse =
+                    objectMapper.convertValue(
+                            resetIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(1));
+            verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+            verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+            assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+        }
+    }
+
+    @Test
+    void handleRequest_whenFalseDeleteOnlyGPG45Vcs_shouldNotCallVcHelperToFilterOnGPG45VCs() {
+        try (MockedStatic<VcHelper> dummyStatic = mockStatic(VcHelper.class)) {
+            // Arrange
+            when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            ProcessRequest event =
+                    ProcessRequest.processRequestBuilder()
+                            .ipvSessionId(TEST_SESSION_ID)
+                            .ipAddress(TEST_CLIENT_SOURCE_IP)
+                            .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                            .journey(TEST_JOURNEY)
+                            .featureSet(TEST_FEATURE_SET)
+                            .lambdaInput(
+                                    Map.of(IS_USER_INITIATED, false, DELETE_ONLY_GPG45_VCS, false))
+                            .build();
+
+            // Act
+            JourneyResponse journeyResponse =
+                    objectMapper.convertValue(
+                            resetIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(0));
+            verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+            verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
+            assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+        }
     }
 }
