@@ -219,16 +219,15 @@ public class CheckExistingIdentityHandler
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
-            // Incomplete F2F journey
-            if (isF2FIncomplete) {
-                return buildF2FIncompleteResponse(f2fRequest);
-            }
-
             var ciScoringCheckResponse =
                     checkForCIScoringFailure(
                             ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
+
             if (ciScoringCheckResponse.isPresent()) {
-                return ciScoringCheckResponse.get();
+                return isF2FIncomplete
+                        ? buildF2FIncompleteResponse(
+                                f2fRequest) // F2F mitigation journey in progress
+                        : ciScoringCheckResponse.get(); // CI fail or mitigation journey
             }
 
             // Check for credentials correlation failure
@@ -243,6 +242,11 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated);
             if (profileMatchResponse.isPresent()) {
                 return profileMatchResponse.get();
+            }
+
+            // No profile matched but has a pending F2F request
+            if (isF2FIncomplete) {
+                return buildF2FIncompleteResponse(f2fRequest);
             }
 
             // No profile match
