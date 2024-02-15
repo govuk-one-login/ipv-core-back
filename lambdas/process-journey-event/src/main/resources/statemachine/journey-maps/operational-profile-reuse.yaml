@@ -6,7 +6,7 @@ START:
       targetState: REUSE_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_REUSE
+          targetState: CRI_TICF_BEFORE_REUSE
 
 # Journey states
 

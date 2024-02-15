@@ -6,7 +6,7 @@ INELIGIBLE:
       targetState: ANOTHER_WAY_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_ANOTHER_WAY
+          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 INELIGIBLE_NO_TICF:
   events:

@@ -6,7 +6,7 @@ ERROR:
       targetState: ERROR_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_ERROR
+          targetState: CRI_TICF_BEFORE_ERROR
 
 ERROR_NO_TICF:
   events:

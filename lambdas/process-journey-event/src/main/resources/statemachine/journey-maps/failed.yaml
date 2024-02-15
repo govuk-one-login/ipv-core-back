@@ -6,7 +6,7 @@ FAILED:
       targetState: NO_MATCH_PAGE
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_NO_MATCH
+          targetState: CRI_TICF_BEFORE_NO_MATCH
 
 FAILED_NO_TICF:
   events:

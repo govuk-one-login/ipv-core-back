@@ -6,7 +6,7 @@ START:
       targetState: RETURN_TO_RP
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CALL_TICF_BEFORE_RETURN_TO_RP
+          targetState: CRI_TICF_BEFORE_RETURN_TO_RP
 
 # Journey states
 
