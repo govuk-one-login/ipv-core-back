@@ -3,6 +3,20 @@ import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
+const JOURNEY_TYPES = {
+    IPV_CORE_MAIN_JOURNEY: 'IPV Core main journey',
+    NEW_P2_IDENTITY: 'New P2 identity',
+    REUSE_EXISTING_IDENTITY: 'Reuse existing identity',
+    INELIGIBLE: 'Ineligible journey',
+    FAILED: 'Failed journey',
+    TECHNICAL_ERROR: 'Technical error',
+    SESSION_TIMEOUT: 'Session timeout',
+    F2F_PENDING: 'F2F pending',
+    F2F_FAILED: 'F2F failed',
+    OPERATIONAL_PROFILE_MIGRATION: 'Operational profile migration',
+    OPERATIONAL_PROFILE_REUSE: 'Operational profile reuse',
+};
+
 const CRI_NAMES = {
     address: 'Address CRI',
     claimedIdentity: 'Claimed Identity CRI',
@@ -26,6 +40,7 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerBar = document.getElementById('header-bar');
 const headerContent = document.getElementById('header-content');
 const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
@@ -35,15 +50,47 @@ const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
 
-// Load the journey map
-const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'ipv-core-main-journey';
-const journeyResponse = await fetch(`./${encodeURIComponent(journeyType)}.yaml`);
-const journeyMap = yaml.parse(await journeyResponse.text());
-const nestedResponse = await fetch('./nested-journey-definitions.yaml');
-const nestedJourneys = yaml.parse(await nestedResponse.text());
+let svgPanZoomInstance = null;
+let journeyMap = {};
+let nestedJourneys = {};
+let selectedState = null;
 
-// svg-pan-zoom instance, for resizing viewport
-let svgPanZoomInstance;
+const loadJourney = async () => {
+    const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'ipv-core-main-journey';
+    const journeyResponse = await fetch(`./${encodeURIComponent(journeyType)}.yaml`);
+    journeyMap = yaml.parse(await journeyResponse.text());
+    const nestedResponse = await fetch('./nested-journey-definitions.yaml');
+    nestedJourneys = yaml.parse(await nestedResponse.text());
+};
+
+const getPageUrl = (id) => `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
+const getJourneyUrl = (id) => `/?journeyType=${encodeURIComponent(upperToKebab(id))}`;
+
+const switchJourney = async (id) => {
+    window.history.pushState(undefined, undefined, getJourneyUrl(id));
+    await loadJourney();
+    await renderSvg();
+};
+
+const setupHeader = () => {
+    // Add header entries for each journey
+    Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+        const link = document.createElement('a');
+        link.href = getJourneyUrl(id);
+        link.innerText = label;
+        link.onclick = async (e) => {
+            e.preventDefault();
+            await switchJourney(id);
+        }
+        headerBar.appendChild(link);
+    });
+
+    // Handle user navigating back/forwards
+    window.addEventListener('popstate', async () => {
+        await loadJourney();
+        await renderSvg();
+    });
+};
 
 const setupOptions = (name, options, fieldset, labels) => {
     if (options.length) {
@@ -77,7 +124,11 @@ const renderSvg = async () => {
     if (bindFunctions) {
         bindFunctions(diagramElement);
     }
-    svgPanZoomInstance = svgPanZoom('#diagramSvg', { controlIconsEnabled: true });
+    svgPanZoomInstance = svgPanZoom('#diagramSvg', {
+        controlIconsEnabled: true,
+        dblClickZoomEnabled: false,
+        preventMouseEventsDefault: false,
+    });
     // Pan to correct header offset
     svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
 };
@@ -116,11 +167,25 @@ const setupMermaidClickHandlers = () => {
         }
     };
 
-    window.onStateClick = (state, encodedDef) => {
+    window.onStateClick = async (state, encodedDef) => {
+        const def = JSON.parse(atob(encodedDef));
+
+        // Clicking a node twice opens the link
+        if (selectedState === state) {
+            if (def.pageId) {
+                window.open(getPageUrl(def.pageId), '_blank');
+                return;
+            }
+            if (def.targetJourney) {
+                await switchJourney(def.targetJourney);
+                return;
+            }
+        }
+
+        selectedState = state;
         highlightState(state);
         nodeTitle.innerText = state;
         nodeDesc.innerHTML = '';
-        const def = JSON.parse(atob(encodedDef));
         nodeDef.innerText = JSON.stringify(def, undefined, 2);
         const desc = document.createElement('p');
         desc.innerText = getDesc(def);
@@ -128,9 +193,9 @@ const setupMermaidClickHandlers = () => {
         if (def.pageId) {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the page in build';
-            link.href = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(def.pageId)}/en`;
+            link.href = getPageUrl(def.pageId);
             if (def.context) {
-                link.href += `?context=${def.context}`
+                link.href += `?context=${def.context}`;
             }
             link.target = '_blank';
             nodeDesc.append(link);
@@ -138,7 +203,11 @@ const setupMermaidClickHandlers = () => {
         if (def.type === 'journeyTransition') {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the journey';
-            link.href = `/?journeyType=${encodeURIComponent(upperToKebab(def.targetJourney))}`;
+            link.href = getJourneyUrl(def.targetJourney);
+            link.onclick = async (e) => {
+                e.preventDefault();
+                await switchJourney(def.targetJourney);
+            }
             nodeDesc.append(link);
         }
     };
@@ -155,6 +224,8 @@ const setupHeaderToggleClickHandlers = () => {
 }
 
 const initialize = async () => {
+    setupHeader();
+    await loadJourney();
     const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
