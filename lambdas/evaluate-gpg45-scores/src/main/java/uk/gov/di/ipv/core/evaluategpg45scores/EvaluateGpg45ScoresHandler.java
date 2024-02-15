@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -42,10 +43,12 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -129,13 +132,33 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            return checkForMatchingGpg45Profile(
+            List<SignedJWT> gpg45Credentials = new ArrayList<>();
+
+            for (SignedJWT credential : credentials) {
+                if (!VcHelper.isOperationalProfileVc(credential)) {
+                    gpg45Credentials.add(credential);
+                }
+            }
+
+            JourneyResponse checkForMatchingGpg45Profile =
+                    checkForMatchingGpg45Profile(
                             vcStoreItems,
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            credentials,
-                            ipAddress)
-                    .toObjectMap();
+                            gpg45Credentials,
+                            ipAddress);
+
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                if (checkForMatchingGpg45Profile.equals(JOURNEY_MET)) {
+                    for (SignedJWT credential : credentials) {
+                        if (VcHelper.isOperationalProfileVc(credential)) {
+                            verifiableCredentialService.deleteVcStoreItem(
+                                    userId, HMRC_MIGRATION_CRI);
+                        }
+                    }
+                }
+            }
+            return checkForMatchingGpg45Profile.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
             return new JourneyErrorResponse(
@@ -180,6 +203,7 @@ public class EvaluateGpg45ScoresHandler
                             gpg45Scores, Vot.P2.getSupportedGpg45Profiles());
 
             if (matchedProfile.isPresent()) {
+
                 auditService.sendAuditEvent(
                         buildProfileMatchedAuditEvent(
                                 ipvSessionItem,
