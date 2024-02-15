@@ -26,6 +26,8 @@ public class RequestHelper {
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
+    public static final String IS_USER_INITIATED = "isUserInitiated";
+    public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
@@ -138,7 +140,7 @@ public class RequestHelper {
         return Boolean.TRUE.equals(
                 extractValueFromLambdaInput(
                         request,
-                        "isUserInitiated",
+                        IS_USER_INITIATED,
                         ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER));
     }
 
@@ -147,7 +149,7 @@ public class RequestHelper {
         return Boolean.TRUE.equals(
                 extractValueFromLambdaInput(
                         request,
-                        "deleteOnlyGPG45VCs",
+                        DELETE_ONLY_GPG45_VCS,
                         ErrorResponse.MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER));
     }
 
