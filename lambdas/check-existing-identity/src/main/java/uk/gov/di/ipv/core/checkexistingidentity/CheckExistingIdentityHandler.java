@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -56,8 +57,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -454,6 +454,15 @@ public class CheckExistingIdentityHandler
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
+            //            remove weaker operational profile
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                for (SignedJWT credential : credentials) {
+                    if (VcHelper.isOperationalProfileVc(credential)) {
+                        verifiableCredentialService.deleteVcStoreItem(
+                                auditEventUser.getUserId(), HMRC_MIGRATION_CRI);
+                    }
+                }
+            }
             sendProfileMatchedAuditEvent(
                     matchedGpg45Profile.get(), gpg45Scores, credentials, auditEventUser);
 
