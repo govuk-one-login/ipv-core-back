@@ -122,11 +122,6 @@ public class ResetIdentityHandlerTest {
                 objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
-        try (MockedStatic mock = mockStatic(VcHelper.class)) {
-            // record mock expectations
-            // test code
-            // verify mock
-        }
         // Assert
         verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
