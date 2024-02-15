@@ -370,6 +370,28 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(Vot.PCL250, ipvSessionItem.getVot());
         }
 
+        @Test // User returning after migration
+        void shouldReturnJourneyOpProfileReuseResponseIfOpProfileAndPendingF2F() throws Exception {
+            when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
+            when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(List.of(pcl250Vc));
+
+            clientOAuthSessionItem.setVtr(List.of(Vot.P2.name(), Vot.PCL250.name()));
+            ipvSessionItem.setVcReceivedThisSession(List.of());
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(Vot.PCL250, ipvSessionItem.getVot());
+        }
+
         @Test // User in process of migration
         void
                 shouldReturnJourneyInMigrationReuseResponseIfPCL200RequestedAndMetWhenVcInCurrentSession()
@@ -451,7 +473,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldNoMatchForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
+    void shouldReturnNoMatchForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -639,6 +661,28 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_PENDING, journeyResponse);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
