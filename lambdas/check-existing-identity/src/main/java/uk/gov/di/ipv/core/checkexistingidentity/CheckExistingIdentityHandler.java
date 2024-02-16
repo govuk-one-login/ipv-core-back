@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -51,11 +50,13 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.*;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
@@ -458,11 +459,17 @@ public class CheckExistingIdentityHandler
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
                                 gpg45Scores, requestedVot.getSupportedGpg45Profiles())
                         : Optional.empty();
+        List<SignedJWT> gpg45Credentials = new ArrayList<>();
+        for (SignedJWT credential : credentials) {
+            if (!VcHelper.isOperationalProfileVc(credential)) {
+                gpg45Credentials.add(credential);
+            }
+        }
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
-            //            remove weaker operational profile
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+            // remove weaker operational profile
+            if (configService.enabled(INHERITED_IDENTITY.getName())) {
                 for (SignedJWT credential : credentials) {
                     if (VcHelper.isOperationalProfileVc(credential)) {
                         verifiableCredentialService.deleteVcStoreItem(
@@ -471,7 +478,7 @@ public class CheckExistingIdentityHandler
                 }
             }
             sendProfileMatchedAuditEvent(
-                    matchedGpg45Profile.get(), gpg45Scores, credentials, auditEventUser);
+                    matchedGpg45Profile.get(), gpg45Scores, gpg45Credentials, auditEventUser);
 
             return true;
         }
