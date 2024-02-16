@@ -61,10 +61,10 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
-        String maxAllowedTtl = configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
+        long maxAllowedTtlSeconds =
+                Long.parseLong(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
 
-        OffsetDateTime offsetDateTime =
-                OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
+        OffsetDateTime offsetDateTime = OffsetDateTime.now().plusSeconds(maxAllowedTtlSeconds);
         if (expirationTime.getTime() / 1000L > offsetDateTime.toEpochSecond()) {
             LOGGER.error(
                     LogHelper.buildLogMessage("Client JWT expiry date is too far in the future"));
