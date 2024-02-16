@@ -77,6 +77,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -86,15 +87,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -135,6 +128,8 @@ class CheckExistingIdentityHandlerTest {
                     M1B_DCMAW_VC);
     private static final String TICF_CRI = "ticf";
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
+    private static final List<SignedJWT> PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY =
+            new ArrayList<>();
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
@@ -175,6 +170,9 @@ class CheckExistingIdentityHandlerTest {
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
+        PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
+        PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
+                SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
         jwtSigner = createJwtSigner();
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);
@@ -1068,6 +1066,72 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldRemoveOperationalProfileIfMatchingGpg45ProfileIsPresent() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(VC_STORE_ITEMS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.parseCredentials(any()))
+                .thenReturn(PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        //        enables the inherited identity feature (could be better)
+        when(configService.enabled(anyString())).thenReturn(false).thenReturn(true);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+        assertEquals(JOURNEY_REUSE, journeyResponse);
+        InOrder inOrder = inOrder(mockVerifiableCredentialService);
+        inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
+        inOrder.verify(mockVerifiableCredentialService)
+                .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
+
+        ArgumentCaptor<String> configServiceArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(configService, times(2)).enabled(configServiceArgumentCaptor.capture());
+        assertEquals(RESET_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(0));
+        assertEquals(
+                INHERITED_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(1));
+    }
+
+    @Test
+    void shouldNotRemoveOperationalProfileIfMatchingGpg45ProfileIsNotPresent() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(VC_STORE_ITEMS);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.parseCredentials(any()))
+                .thenReturn(PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.empty());
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        //        enables the inherited identity feature (could be better)
+        when(configService.enabled(anyString())).thenReturn(false).thenReturn(true);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        InOrder inOrder = inOrder(mockVerifiableCredentialService);
+        inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
+        inOrder.verify(mockVerifiableCredentialService, never())
+                .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
