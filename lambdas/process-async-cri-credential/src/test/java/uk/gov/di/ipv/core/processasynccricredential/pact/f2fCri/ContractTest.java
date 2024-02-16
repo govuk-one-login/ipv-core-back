@@ -24,12 +24,12 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
-import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtTestHelper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -613,8 +613,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_PASSPORT_BODY,
                                                             VALID_F2F_VC_PASSPORT_SIGNATURE);
@@ -626,13 +626,14 @@ public class ContractTest {
                                                     "state",
                                                     "f5f0d4d1-b937-4abe-b379-8269f600ad44");
                                             body.nullValue("error_description");
-                                            body.minArrayLike(
+                                            body.minMaxArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
+                                                    1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -733,8 +734,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_F2F_VC_WITH_PASSPORT_BODY,
                                                             FAILED_F2F_VC_PASSPORT_SIGNATURE);
@@ -750,9 +751,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -866,8 +867,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY,
                                                             FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE);
@@ -883,9 +884,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1005,8 +1006,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_DVLA_BODY,
                                                             VALID_F2F_VC_DL_SIGNATURE);
@@ -1022,9 +1023,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1139,8 +1140,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_EU_DL_BODY,
                                                             VALID_F2F_VC_EU_DL_SIGNATURE);
@@ -1156,9 +1157,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1269,8 +1270,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_EEA_CARD_BODY,
                                                             VALID_F2F_VC_EEA_SIGNATURE);
@@ -1286,9 +1287,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1390,8 +1391,8 @@ public class ContractTest {
                 .withContent(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtHelper =
-                                                    new JwtTestHelper(
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_BRP_BODY,
                                                             VALID_F2F_VC_BRP_SIGNATURE);
@@ -1407,9 +1408,9 @@ public class ContractTest {
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtHelper
+                                                            jwtBulder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtHelper.buildJwt()),
+                                                            jwtBulder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1519,7 +1520,7 @@ public class ContractTest {
                         TEST_USER,
                         TEST_OAUTH_STATE,
                         List.of(
-                                new JwtTestHelper(VALID_VC_HEADER, jwtBody, jwtSignature)
+                                new PactJwtBuilder(VALID_VC_HEADER, jwtBody, jwtSignature)
                                         .buildJwt()),
                         null,
                         null);

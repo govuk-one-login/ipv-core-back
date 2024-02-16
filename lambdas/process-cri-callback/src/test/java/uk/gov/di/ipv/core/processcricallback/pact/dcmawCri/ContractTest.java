@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processcricallback.pact.dcmawCri;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -34,11 +35,11 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.pact.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
@@ -1445,8 +1446,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DVLA_VC_BODY, VALID_DVLA_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVLA_VC_BODY,
+                                                            VALID_DVLA_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1542,10 +1561,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
-                                VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
+                                                            VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1638,10 +1673,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_DVLA_VC_WITH_CI_BODY,
-                                FAILED_DVLA_VC_WITH_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_DVLA_VC_WITH_CI_BODY,
+                                                            FAILED_DVLA_VC_WITH_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1737,10 +1788,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_DVA_VC_NO_CI_BODY,
-                                FAILED_DVA_VC_NO_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_DVA_VC_NO_CI_BODY,
+                                                            FAILED_DVA_VC_NO_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1837,8 +1904,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DVA_VC_BODY, VALID_DVA_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVA_VC_BODY,
+                                                            VALID_DVA_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1937,10 +2022,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
-                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
+                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2036,10 +2137,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_UK_PASSPORT_VC_BODY,
-                                VALID_UK_PASSPORT_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_UK_PASSPORT_VC_BODY,
+                                                            VALID_UK_PASSPORT_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2128,10 +2245,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_NLD_PASSPORT_VC_BODY,
-                                VALID_NLD_PASSPORT_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_NLD_PASSPORT_VC_BODY,
+                                                            VALID_NLD_PASSPORT_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2220,10 +2353,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_PASSPORT_VC_WITH_CI_BODY,
-                                FAILED_PASSPORT_VC_WITH_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_PASSPORT_VC_WITH_CI_BODY,
+                                                            FAILED_PASSPORT_VC_WITH_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2314,8 +2463,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_BRP_VC_BODY, VALID_BRP_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_BRP_VC_BODY,
+                                                            VALID_BRP_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2401,8 +2568,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_BRP_VC_BODY, FAILED_BRP_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BRP_VC_BODY,
+                                                            FAILED_BRP_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2491,8 +2676,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_BRC_VC_BODY, VALID_BRC_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_BRC_VC_BODY,
+                                                            VALID_BRC_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2585,8 +2788,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_BRC_VC_BODY, FAILED_BRC_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBulder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BRC_VC_BODY,
+                                                            FAILED_BRC_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBulder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBulder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 

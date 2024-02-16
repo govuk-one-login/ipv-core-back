@@ -1,17 +1,17 @@
-package uk.gov.di.ipv.core.processasynccricredential.helpers;
+package uk.gov.di.ipv.core.library.pacttesthelpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Base64URL;
 
-public class JwtTestHelper {
+public class PactJwtBuilder {
     private final String minifiedHeaderJson;
     private final String minifiedBodyJson;
     private final String signature;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JwtTestHelper(String headerJson, String bodyJson, String signature) {
+    public PactJwtBuilder(String headerJson, String bodyJson, String signature) {
         this.minifiedHeaderJson = minifyJson(headerJson);
         this.minifiedBodyJson = minifyJson(bodyJson);
         this.signature = signature;
