@@ -1298,7 +1298,6 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
         return builder.given("c6af9ac6-7b61-11e6-9a41-93e8deadbeef is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
                 .given("dummyDcmawComponentId is the DCMAW CRI component ID")
                 .given(
                         "DCMAW CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -1372,10 +1371,8 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
-        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyDcmawComponentId is the DCMAW CRI component ID")
+    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
+        return builder.given("dummyDcmawComponentId is the DCMAW CRI component ID")
                 .given(
                         "DCMAW CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
                 .uponReceiving("Invalid auth code")
@@ -1394,12 +1391,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
@@ -1444,8 +1441,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaCredential(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -1563,8 +1559,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaCredentialWithNoGivenName(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -1679,8 +1674,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaResponseFailedWithCi(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -1798,8 +1792,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvaResponseFailedNoCis(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -1918,8 +1911,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvaCredential(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2040,8 +2032,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDrivingLicenceCredential(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2159,8 +2150,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsPassportCredential(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2271,8 +2261,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsNldPassportCredential(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token") // qqqqqqqqqqq
+        return builder.given("dummyAccessToken is a valid access token") // qqqqqqqqqqq
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2461,8 +2450,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedPassportCredential(
             PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2575,8 +2563,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsBrpCredential(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2684,8 +2671,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedBrpCredential(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2796,8 +2782,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidBrcResponse(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2834,8 +2819,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedBrcResponse(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -2953,8 +2937,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyInvalidAccessToken is an invalid access token")
+        return builder.given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .uponReceiving("Invalid credential request due to invalid access token")
