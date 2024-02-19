@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,8 +53,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
@@ -67,6 +68,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");
     private static final OauthCriConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
             createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
+    private static String VC_PASSPORT_MISSING_NAME;
+    private static String VC_PASSPORT_MISSING_BIRTH_DATE;
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -101,6 +104,12 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
+    }
+
+    @BeforeAll
+    static void setVcs() throws Exception {
+        VC_PASSPORT_MISSING_NAME = vcPassportMissingName();
+        VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
     }
 
     @Test

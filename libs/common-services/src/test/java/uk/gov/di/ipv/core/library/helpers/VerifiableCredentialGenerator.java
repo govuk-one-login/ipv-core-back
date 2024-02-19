@@ -49,7 +49,37 @@ public class VerifiableCredentialGenerator {
                         .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
+        return signTestJWT(claimsSet);
+    }
 
+    public static String generateVerifiableCredential(TestVc vcClaim, String subject, String issuer)
+            throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, subject)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, now.getEpochSecond())
+                        .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .build();
+        return signTestJWT(claimsSet);
+    }
+
+    public static String generateVerifiableCredential(
+            TestVc vcClaim, String subject, String issuer, Instant nbf) throws Exception {
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, subject)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, nbf.getEpochSecond())
+                        .claim(EXPIRATION_TIME, nbf.plusSeconds(600).getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .build();
+        return signTestJWT(claimsSet);
+    }
+
+    private static String signTestJWT(JWTClaimsSet claimsSet) throws Exception {
         KeyFactory kf = KeyFactory.getInstance("EC");
         EncodedKeySpec privateKeySpec =
                 new PKCS8EncodedKeySpec(Base64.getDecoder().decode(EC_PRIVATE_KEY));

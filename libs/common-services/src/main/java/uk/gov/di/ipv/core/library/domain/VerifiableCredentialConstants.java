@@ -11,7 +11,9 @@ public class VerifiableCredentialConstants {
     public static final String DI_CONTEXT =
             "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld";
     public static final String IDENTITY_CHECK_CREDENTIAL_TYPE = "IdentityCheckCredential";
+    public static final String IDENTITY_CHECK_EVIDENCE_TYPE = "IdentityCheck";
     public static final String VC_BIRTH_DATE = "birthDate";
+    public static final String VC_NAME_PARTS = "nameParts";
     public static final String VC_CLAIM = "vc";
     public static final String VC_CONTEXT = "@context";
     public static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";

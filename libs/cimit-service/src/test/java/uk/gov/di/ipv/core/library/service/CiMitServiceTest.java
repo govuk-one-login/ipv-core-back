@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,7 +47,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitServiceTest {
@@ -58,7 +59,7 @@ class CiMitServiceTest {
     private static final String TEST_USER_ID = "a-user-id";
     private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     private static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
-
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static final ObjectMapper MAPPER = new ObjectMapper();
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
@@ -67,13 +68,17 @@ class CiMitServiceTest {
     @Mock VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     @InjectMocks CiMitService ciMitService;
 
+    @BeforeAll
+    static void setup() throws Exception {
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+    }
+
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
-
         ciMitService.submitVC(
                 SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                 GOVUK_SIGNIN_JOURNEY_ID,
@@ -463,7 +468,7 @@ class CiMitServiceTest {
 
     @Test
     void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
-            throws CiRetrievalException, JsonProcessingException {
+            throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
