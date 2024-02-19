@@ -24,7 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -32,11 +31,11 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.pact.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
@@ -46,8 +45,6 @@ import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -378,21 +375,13 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsExperianIssuedCredential")
-    void testCallToDummyAddressIssueCredential(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+    void fetchVerifiableCredential_whenCalledAgainstAddressCri_retrievesAnExperianAddressVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
-        ciConfigMap.put("A03", ciConfig2);
-
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialJwtValidator(
@@ -489,21 +478,13 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedAddressCredential")
-    void testCallToDummyAddressIssuesCredential(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+    void fetchVerifiableCredential_whenCalledAgainstAddressCri_retrievesAnAddressVc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, 4, null, null);
-
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
-        ciConfigMap.put("A03", ciConfig2);
-
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialJwtValidator(
