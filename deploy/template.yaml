@@ -182,7 +182,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "457601271792": # Build
-      provisionedConcurrency: 1
+      provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
       environment: build
