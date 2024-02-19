@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -1290,6 +1291,7 @@ class ContractTest {
             "77iM911qVdFEzBmfDI_M6GP62jq51laUj0LyK5ISwWWioDuciwi4aZji6yVsjk-SsZsckt6EOVBlUQ0RhFPRuA";
 
     @Mock private ConfigService mockConfigService;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
@@ -1342,6 +1344,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -1351,7 +1354,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -1405,6 +1411,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -1414,7 +1421,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -1481,7 +1491,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -1596,7 +1609,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -1708,7 +1724,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -1823,7 +1842,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -1939,7 +1961,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2057,7 +2082,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2172,7 +2200,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2280,7 +2311,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2337,6 +2371,83 @@ class ContractTest {
                         });
     }
 
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode residencePermitNode =
+                                        credentialSubject.get("residencePermit").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+
+                                assertEquals(
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "ZR8016200",
+                                        residencePermitNode.get("documentNumber").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
+
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
+
+                                assertEquals(4, evidence.get("strengthScore").asInt());
+                                assertEquals(3, evidence.get("validityScore").asInt());
+                            } catch (VerifiableCredentialException
+                                     | ParseException
+                                     | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedPassportCredential(
             PactDslWithProvider builder) {
@@ -2388,7 +2499,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2498,7 +2612,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2603,7 +2720,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2699,80 +2819,6 @@ class ContractTest {
                 .toPact();
     }
 
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
-
-        // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
-
-        // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
-
-                                JsonNode vc =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vc.get("credentialSubject");
-                                JsonNode evidence = vc.get("evidence").get(0);
-
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode residencePermitNode =
-                                        credentialSubject.get("residencePermit").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals(
-                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
-
-                                assertEquals(
-                                        "2024-02-25",
-                                        residencePermitNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "ZR8016200",
-                                        residencePermitNode.get("documentNumber").asText());
-                                assertEquals(
-                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals(
-                                        "CR", residencePermitNode.get("documentType").asText());
-
-                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
-
-                                assertEquals(4, evidence.get("strengthScore").asInt());
-                                assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-    }
-
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedBrcResponse(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
@@ -2823,7 +2869,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -2919,7 +2968,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =

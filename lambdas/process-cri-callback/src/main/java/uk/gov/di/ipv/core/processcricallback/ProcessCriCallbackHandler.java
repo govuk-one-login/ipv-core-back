@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -100,38 +100,33 @@ public class ProcessCriCallbackHandler
         verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
 
-        var userIdentityService = new UserIdentityService(configService);
         var auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         var verifiableCredentialService = new VerifiableCredentialService(configService);
         var ciMitService = new CiMitService(configService);
-        var ciMitUtilityService = new CiMitUtilityService(configService);
-        var criResponseService = new CriResponseService(configService);
-        var signer = new KmsEs256Signer();
-
-        signer.setKeyId(configService.getSigningKeyId());
-        VcHelper.setConfigService(configService);
 
         criApiService =
                 new CriApiService(
                         configService,
-                        signer,
+                        new KmsEs256SignerFactory(),
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
         criCheckingService =
                 new CriCheckingService(
                         configService,
                         auditService,
-                        userIdentityService,
+                        new UserIdentityService(configService),
                         ciMitService,
-                        ciMitUtilityService,
+                        new CiMitUtilityService(configService),
                         verifiableCredentialService);
         criStoringService =
                 new CriStoringService(
                         configService,
                         auditService,
-                        criResponseService,
+                        new CriResponseService(configService),
                         verifiableCredentialService,
                         ciMitService);
+
+        VcHelper.setConfigService(configService);
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high

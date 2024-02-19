@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -348,6 +349,7 @@ class ContractTest {
             "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw";
 
     @Mock private ConfigService mockConfigService;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
@@ -400,6 +402,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -409,7 +412,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -463,6 +469,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -472,7 +479,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -531,7 +541,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -633,7 +646,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -731,7 +747,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -820,7 +839,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -906,7 +928,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =
