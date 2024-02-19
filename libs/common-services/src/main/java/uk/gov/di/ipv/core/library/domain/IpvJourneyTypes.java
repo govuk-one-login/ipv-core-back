@@ -6,8 +6,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum IpvJourneyTypes {
-    // Main entry point
+    // TODO: PYIC-4459 Delete this once no active sessions are using it
     IPV_CORE_MAIN_JOURNEY("ipv-core-main-journey"),
+
+    // Main entry point
+    INITIAL_JOURNEY_SELECTION("initial-journey-selection"),
 
     // Successful journeys
     REUSE_EXISTING_IDENTITY("reuse-existing-identity"),

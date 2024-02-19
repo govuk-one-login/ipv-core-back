@@ -49,7 +49,7 @@ class StateMachineInitializerTest {
         assertThrows(
                 JourneyMapDeserializationException.class,
                 () -> {
-                    new StateMachineInitializer(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY, modeMock)
+                    new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock)
                             .initialize();
                 });
     }
@@ -59,7 +59,7 @@ class StateMachineInitializerTest {
     void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
-                                IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
+                                IpvJourneyTypes.INITIAL_JOURNEY_SELECTION,
                                 StateMachineInitializerMode.TEST)
                         .initialize();
 

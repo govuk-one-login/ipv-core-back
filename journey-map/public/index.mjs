@@ -4,7 +4,7 @@ import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
 const JOURNEY_TYPES = {
-    IPV_CORE_MAIN_JOURNEY: 'IPV Core main journey',
+    INITIAL_JOURNEY_SELECTION: 'Initial journey selection',
     NEW_P2_IDENTITY: 'New P2 identity',
     REUSE_EXISTING_IDENTITY: 'Reuse existing identity',
     INELIGIBLE: 'Ineligible journey',
@@ -56,7 +56,7 @@ let nestedJourneys = {};
 let selectedState = null;
 
 const loadJourney = async () => {
-    const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'ipv-core-main-journey';
+    const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'initial-journey-selection';
     const journeyResponse = await fetch(`./${encodeURIComponent(journeyType)}.yaml`);
     journeyMap = yaml.parse(await journeyResponse.text());
     const nestedResponse = await fetch('./nested-journey-definitions.yaml');

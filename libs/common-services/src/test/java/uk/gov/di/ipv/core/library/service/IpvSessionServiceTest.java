@@ -9,7 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -27,8 +27,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
-    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
-    private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
+    private static final String START_STATE = "START";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
     @Mock private DataStore<IpvSessionItem> mockDataStore;
@@ -43,7 +42,7 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        ipvSessionItem.setUserState(START_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -111,8 +110,6 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, null);
@@ -127,14 +124,11 @@ class IpvSessionServiceTest {
         assertEquals(
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(START_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
     void shouldCreateSessionItemWithEmail() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, "test@test.com");
@@ -149,15 +143,12 @@ class IpvSessionServiceTest {
         assertEquals(
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(START_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
         assertEquals("test@test.com", ipvSessionItemArgumentCaptor.getValue().getEmailAddress());
     }
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
@@ -173,7 +164,9 @@ class IpvSessionServiceTest {
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
-                FAILED_CLIENT_JAR_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+                IpvJourneyTypes.TECHNICAL_ERROR,
+                ipvSessionItemArgumentCaptor.getValue().getJourneyType());
+        assertEquals("ERROR", ipvSessionItemArgumentCaptor.getValue().getUserState());
         assertEquals(
                 testErrorObject.getCode(), ipvSessionItemArgumentCaptor.getValue().getErrorCode());
         assertEquals(
@@ -185,7 +178,7 @@ class IpvSessionServiceTest {
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        ipvSessionItem.setUserState(START_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.updateIpvSession(ipvSessionItem);

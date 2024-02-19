@@ -1,76 +1,3 @@
-# Entry points
-
-INITIAL_IPV_JOURNEY:
-  events:
-    next:
-      targetState: CHECK_EXISTING_IDENTITY
-
-# Journey states
-
-CHECK_EXISTING_IDENTITY:
-  response:
-    type: process
-    lambda: check-existing-identity
-  events:
-    ipv-gpg45-medium:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-    reset-identity:
-      targetState: RESET_IDENTITY
-    reset-gpg45-identity:
-      targetState: RESET_GPG45_IDENTITY
-    reuse:
-      targetJourney: REUSE_EXISTING_IDENTITY
-      targetState: START
-    operational-profile-reuse:
-      targetJourney: OPERATIONAL_PROFILE_REUSE
-      targetState: START
-    in-migration-reuse:
-      targetJourney: OPERATIONAL_PROFILE_MIGRATION
-      targetState: START
-    pending:
-      targetJourney: F2F_PENDING
-      targetState: PENDING
-    fail-with-ci:
-      targetJourney: FAILED
-      targetState: FAILED
-    f2f-fail:
-      targetJourney: F2F_FAILED
-      targetState: FAILED
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
-    enhanced-verification:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: ENHANCED_VERIFICATION
-
-RESET_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-
-RESET_GPG45_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-
-## Legacy journey states
-## TODO: PYIC-4459 Delete everything below here once no active sessions require them
-
 # parent states
 END_JOURNEY:
   events:
@@ -130,6 +57,10 @@ CRI_TICF_STATE:
       targetState: ERROR
 
 # Shared states
+INITIAL_IPV_JOURNEY:
+  events:
+    next:
+      targetState: CHECK_EXISTING_IDENTITY
 
 F2F_START_PAGE:
   response:
@@ -166,6 +97,78 @@ BANK_ACCOUNT_START_PAGE:
       targetState: CRI_CLAIMED_IDENTITY_M2B
     end:
       targetState: PYI_ESCAPE
+
+CHECK_EXISTING_IDENTITY:
+  response:
+    type: process
+    lambda: check-existing-identity
+  events:
+    next:
+      targetState: IPV_IDENTITY_START_PAGE
+    ipv-gpg45-medium:
+      targetState: IPV_IDENTITY_START_PAGE
+    reset-identity:
+      targetState: RESET_IDENTITY
+    reset-gpg45-identity:
+      targetState: RESET_GPG45_IDENTITY
+    reuse:
+      targetState: IPV_IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_REUSE
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
+    operational-profile-reuse:
+      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE
+    in-migration-reuse:
+      targetState: END
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_END
+    pending:
+      targetState: IPV_IDENTITY_PENDING_PAGE
+      checkFeatureFlag:
+        deleteDetailsEnabled:
+          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
+    fail-with-ci:
+      targetState: PYI_NO_MATCH
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH
+    f2f-fail:
+      targetState: PYI_F2F_TECHNICAL
+    error:
+      targetState: ERROR
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_ERROR
+    enhanced-verification:
+      targetState: MITIGATION_01
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: false
+  events:
+    next:
+      targetState: IPV_IDENTITY_START_PAGE
+
+RESET_GPG45_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
+  events:
+    next:
+      targetState: IPV_IDENTITY_START_PAGE
 
 IPV_IDENTITY_REUSE_PAGE:
   response:
