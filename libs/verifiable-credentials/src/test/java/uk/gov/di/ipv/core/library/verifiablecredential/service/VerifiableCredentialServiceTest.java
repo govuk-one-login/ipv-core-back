@@ -7,6 +7,7 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,15 +48,21 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_SCORE_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_KBV_SCORE_2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
     private static final String USER_ID_1 = "user-id-1";
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
     private VerifiableCredentialService verifiableCredentialService;
+
+    @BeforeAll
+    static void setVcs() throws Exception {
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+    }
 
     @BeforeEach
     void setUp() {

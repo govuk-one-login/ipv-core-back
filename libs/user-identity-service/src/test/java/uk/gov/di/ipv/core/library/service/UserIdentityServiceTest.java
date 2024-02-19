@@ -101,8 +101,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_PASSPORT;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
@@ -129,6 +129,7 @@ class UserIdentityServiceTest {
                     RETURN_CODES_NON_CI_BREACHING_P0,
                     "🐧");
     public static OauthCriConfig claimedIdentityConfig;
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -146,6 +147,7 @@ class UserIdentityServiceTest {
                         .requiresApiKey(true)
                         .requiresAdditionalEvidence(false)
                         .build();
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
     }
 
     @BeforeEach

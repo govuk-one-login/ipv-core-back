@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
@@ -77,6 +78,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
@@ -99,6 +101,11 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private JwtParser jwtParser;
 
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
+
+    @BeforeAll()
+    static void setup() throws Exception {
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+    }
 
     @Test
     void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully() throws Exception {

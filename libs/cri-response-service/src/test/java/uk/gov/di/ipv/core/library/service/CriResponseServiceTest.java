@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 public class CriResponseServiceTest {
@@ -41,6 +42,12 @@ public class CriResponseServiceTest {
                     + "\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
 
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+
+    @BeforeAll
+    static void setVcs() throws Exception {
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+    }
 
     @BeforeEach
     void setUp() {

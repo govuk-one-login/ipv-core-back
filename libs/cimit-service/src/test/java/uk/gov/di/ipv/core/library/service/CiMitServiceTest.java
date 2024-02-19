@@ -467,8 +467,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
-            throws JsonProcessingException {
+    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock() throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))

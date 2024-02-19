@@ -94,7 +94,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -155,7 +155,7 @@ class CheckExistingIdentityHandlerTest {
     private static ECDSASigner jwtSigner;
     private static SignedJWT pcl200Vc;
     private static SignedJWT pcl250Vc;
-
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -181,6 +181,7 @@ class CheckExistingIdentityHandlerTest {
         jwtSigner = createJwtSigner();
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
     }
 
     @BeforeEach

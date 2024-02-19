@@ -9,6 +9,7 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,7 +55,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RES
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
@@ -64,9 +65,15 @@ class CriApiServiceTest {
     private static final String TEST_API_KEY = "test_api_key";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
+    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     @Mock private ConfigService mockConfigService;
     @Mock private ECDSASigner mockSigner;
     @InjectMocks private CriApiService criApiService;
+
+    @BeforeAll
+    static void setVcs() throws Exception {
+        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+    }
 
     @BeforeEach
     void setUp(WireMockRuntimeInfo wmRuntimeInfo)
