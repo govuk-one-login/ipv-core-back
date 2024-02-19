@@ -1297,7 +1297,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given("c6af9ac6-7b61-11e6-9a41-93e8deadbeef is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyDcmawComponentId is the DCMAW CRI component ID")
                 .given(
@@ -1306,7 +1306,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Ddcmaw&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=c6af9ac6-7b61-11e6-9a41-93e8deadbeef&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fmock-redirect-uri.gov.uk&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -1362,7 +1362,8 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -1381,7 +1382,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Ddcmaw&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fmock-redirect-uri.gov.uk&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -1500,7 +1501,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1618,7 +1620,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1733,7 +1736,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1851,7 +1855,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1970,7 +1975,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2091,7 +2097,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2209,7 +2216,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2320,7 +2328,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2392,7 +2401,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2508,7 +2518,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2621,7 +2632,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2729,7 +2741,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2878,7 +2891,8 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2980,7 +2994,9 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest(
+                                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+                                                credentialIssuerConfig),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -3047,9 +3063,7 @@ class ContractTest {
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
                 .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
-                .clientCallbackUrl(
-                        URI.create(
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw"))
+                .clientCallbackUrl(URI.create("https://mock-redirect-uri.gov.uk"))
                 .requiresApiKey(true)
                 .requiresAdditionalEvidence(false)
                 .build();
