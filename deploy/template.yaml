@@ -7,9 +7,9 @@ Globals:
   Function:
     Timeout: 40
     SnapStart:
-      ApplyOn: !If [IsDevelopment, PublishedVersions, None]
+      ApplyOn: !If [ IsSnapStartEnvironment, PublishedVersions, None ]
     Architectures:
-      - !If [ IsSnapStartEnvironment, x86_64, arm64 ]
+      - !If [ IsX86Arch, x86_64, arm64 ]
     MemorySize: !If [IsDevelopment, 1024, 3072]
     Runtime: java17
     Environment:
@@ -132,6 +132,9 @@ Conditions:
   IsSnapStartEnvironment: !Or
     - !Condition IsDevelopment
     - !Equals [ !Ref Environment, build ]
+  IsX86Arch: !Or
+    - !Condition IsSnapStartEnvironment
+    - !Equals [ !Ref Environment, staging ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -179,7 +182,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "457601271792": # Build
-      provisionedConcurrency: 1
+      provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
       environment: build
