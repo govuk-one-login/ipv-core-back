@@ -7,7 +7,7 @@ Globals:
   Function:
     Timeout: 40
     SnapStart:
-      ApplyOn: !If [ IsSnapStartEnvironment, PublishedVersions, None ]
+      ApplyOn: !If [ IsDevelopment, PublishedVersions, None ]
     Architectures:
       - !If [ IsX86Arch, x86_64, arm64 ]
     MemorySize: !If [IsDevelopment, 1024, 3072]
