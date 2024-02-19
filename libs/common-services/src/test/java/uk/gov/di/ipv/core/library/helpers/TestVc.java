@@ -14,6 +14,7 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 
 @AllArgsConstructor
@@ -34,10 +35,13 @@ public class TestVc {
     @Builder
     public static class TestCredentialSubject {
         @Builder.Default
-        private List<NameParts> name =
+        private List<Map<String, List<NameParts>>> name =
                 List.of(
-                        new NameParts("KENNETH", VC_GIVEN_NAME),
-                        new NameParts("DECERQUEIRA", VC_FAMILY_NAME));
+                        Map.of(
+                                VC_NAME_PARTS,
+                                List.of(
+                                        new NameParts("KENNETH", VC_GIVEN_NAME),
+                                        new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate("1965-07-08"));
 
