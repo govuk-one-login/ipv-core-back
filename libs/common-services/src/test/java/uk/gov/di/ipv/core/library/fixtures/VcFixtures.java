@@ -4,6 +4,7 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public interface VcFixtures {
 
     static String vcPassportMissingName() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().name(null).build();
+                TestVc.TestCredentialSubject.builder().name(Collections.emptyList()).build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
@@ -54,7 +55,7 @@ public interface VcFixtures {
 
     static String vcPassportMissingBirthDate() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().birthDate(null).build();
+                TestVc.TestCredentialSubject.builder().birthDate(Collections.emptyList()).build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
@@ -80,7 +81,7 @@ public interface VcFixtures {
 
     static String vcPassportMissingPassport() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().passport(null).build();
+                TestVc.TestCredentialSubject.builder().passport(Collections.emptyList()).build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
