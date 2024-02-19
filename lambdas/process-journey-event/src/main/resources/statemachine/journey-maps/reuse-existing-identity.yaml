@@ -85,8 +85,8 @@ DETAILS_DELETED_PAGE:
     pageId: pyi-details-deleted
   events:
     next:
-      targetJourney: IPV_CORE_MAIN_JOURNEY
-      targetState: IPV_IDENTITY_START_PAGE
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START
 
 RETURN_TO_RP:
   response:
