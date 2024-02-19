@@ -22,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -108,7 +110,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String TEST_EVIDENCE_REQUESTED = "evidence_requested";
-    private static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
@@ -142,6 +143,8 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @InjectMocks private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
 
     private OauthCriConfig oauthCriConfig;
     private OauthCriConfig addressOauthCriConfig;
@@ -149,26 +152,10 @@ class BuildCriOauthRequestHandlerTest {
     private OauthCriConfig f2FOauthCriConfig;
     private OauthCriConfig claimedIdentityOauthCriConfig;
     private OauthCriConfig hmrcKbvOauthCriConfig;
-    private BuildCriOauthRequestHandler underTest;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
-    void setUp()
-            throws URISyntaxException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException {
-        ECDSASigner signer = new ECDSASigner(getSigningPrivateKey());
-
-        underTest =
-                new BuildCriOauthRequestHandler(
-                        configService,
-                        userIdentityService,
-                        signer,
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockCriOAuthSessionService,
-                        mockClientOAuthSessionDetailsService,
-                        mockGpg45ProfileEvaluator,
-                        mockVerifiableCredentialService);
+    void setUp() throws URISyntaxException {
         oauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI(CRI_TOKEN_URL))
@@ -316,6 +303,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -386,6 +375,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -457,6 +448,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -531,6 +524,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -604,6 +599,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -756,6 +753,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -811,6 +810,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -864,6 +865,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -938,6 +941,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -993,6 +998,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1056,6 +1063,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1118,6 +1127,8 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1178,6 +1189,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1250,6 +1263,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1330,7 +1345,7 @@ class BuildCriOauthRequestHandlerTest {
 
     private String handleRequest(JourneyRequest event, Context context)
             throws JsonProcessingException {
-        final var response = underTest.handleRequest(event, context);
+        final var response = buildCriOauthRequestHandler.handleRequest(event, context);
         return getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
     }
 }

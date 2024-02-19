@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -30,7 +29,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -55,18 +54,18 @@ public class CriApiService {
     private static final String API_KEY_HEADER = "x-api-key";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
-    private final JWSSigner signer;
+    private final KmsEs256SignerFactory signerFactory;
     private final SecureTokenHelper secureTokenHelper;
     private final Clock clock;
 
     @ExcludeFromGeneratedCoverageReport
     public CriApiService(
             ConfigService configService,
-            JWSSigner signer,
+            KmsEs256SignerFactory signerFactory,
             SecureTokenHelper secureTokenHelper,
             Clock clock) {
         this.configService = configService;
-        this.signer = signer;
+        this.signerFactory = signerFactory;
         this.secureTokenHelper = secureTokenHelper;
         this.clock = clock;
     }
@@ -139,11 +138,10 @@ public class CriApiService {
                                     .toEpochSecond(),
                             secureTokenHelper.generate());
 
-            if (signer instanceof KmsEs256Signer kmsEs256Signer) {
-                kmsEs256Signer.setKeyId(configService.getSigningKeyId());
-            }
-
-            var signedClientJwt = JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
+            var signedClientJwt =
+                    JwtHelper.createSignedJwtFromObject(
+                            clientAuthClaims,
+                            signerFactory.getSigner(configService.getSigningKeyId()));
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 
