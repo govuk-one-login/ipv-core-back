@@ -35,8 +35,8 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -2441,8 +2441,8 @@ class ContractTest {
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
