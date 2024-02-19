@@ -1448,7 +1448,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_DVLA_VC_BODY,
@@ -1460,9 +1460,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1563,7 +1563,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
@@ -1575,9 +1575,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1675,7 +1675,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_DVLA_VC_WITH_CI_BODY,
@@ -1687,9 +1687,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1790,7 +1790,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_DVA_VC_NO_CI_BODY,
@@ -1802,9 +1802,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -1906,7 +1906,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_DVA_VC_BODY,
@@ -1918,9 +1918,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2024,7 +2024,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
@@ -2036,9 +2036,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2139,7 +2139,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_UK_PASSPORT_VC_BODY,
@@ -2151,9 +2151,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2247,7 +2247,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_NLD_PASSPORT_VC_BODY,
@@ -2259,9 +2259,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2355,7 +2355,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_PASSPORT_VC_WITH_CI_BODY,
@@ -2367,9 +2367,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2465,7 +2465,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_BRP_VC_BODY,
@@ -2477,9 +2477,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2570,7 +2570,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_BRP_VC_BODY,
@@ -2582,9 +2582,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2678,7 +2678,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_BRC_VC_BODY,
@@ -2690,9 +2690,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())
@@ -2790,7 +2790,7 @@ class ContractTest {
                 .body(
                         newJsonBody(
                                         (body) -> {
-                                            var jwtBulder =
+                                            var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             FAILED_BRC_VC_BODY,
@@ -2802,9 +2802,9 @@ class ContractTest {
                                                     1,
                                                     1,
                                                     PactDslJsonRootValue.stringMatcher(
-                                                            jwtBulder
+                                                            jwtBuilder
                                                                     .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBulder.buildJwt()),
+                                                            jwtBuilder.buildJwt()),
                                                     1);
                                         })
                                 .build())

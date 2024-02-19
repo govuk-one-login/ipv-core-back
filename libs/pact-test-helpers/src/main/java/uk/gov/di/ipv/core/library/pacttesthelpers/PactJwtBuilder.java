@@ -33,6 +33,9 @@ public class PactJwtBuilder {
                 + "\\..*";
     }
 
+    // This is test code and any exception we throw will be caught by the test framework and fail
+    // the test.
+    @SuppressWarnings("java:S112")
     private String minifyJson(String prettyJson) {
         JsonNode jsonNode;
         try {
