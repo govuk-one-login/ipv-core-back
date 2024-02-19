@@ -18,8 +18,7 @@ CHECK_EXISTING_IDENTITY:
     reset-identity:
       targetState: RESET_IDENTITY
     reset-gpg45-identity:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START_WITH_RESET
+      targetState: RESET_GPG45_IDENTITY
     reuse:
       targetJourney: REUSE_EXISTING_IDENTITY
       targetState: START
@@ -52,6 +51,18 @@ RESET_IDENTITY:
     lambdaInput:
       isUserInitiated: false
       deleteOnlyGPG45VCs: false
+  events:
+    next:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START
+
+RESET_GPG45_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
   events:
     next:
       targetJourney: NEW_P2_IDENTITY
@@ -155,17 +166,6 @@ BANK_ACCOUNT_START_PAGE:
       targetState: CRI_CLAIMED_IDENTITY_M2B
     end:
       targetState: PYI_ESCAPE
-
-RESET_GPG45_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetState: IPV_IDENTITY_START_PAGE
 
 IPV_IDENTITY_REUSE_PAGE:
   response:
