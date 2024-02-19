@@ -13,6 +13,10 @@ dependencies {
 	implementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"au.com.dius.pact.consumer:junit5:4.6.5",
 			'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
+			"org.mockito:mockito-junit-jupiter:5.10.0",
+			testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
@@ -31,4 +35,9 @@ tasks.named('jar') {
 		attributes('Implementation-Title': project.name,
 		'Implementation-Version': project.version)
 	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
 }
