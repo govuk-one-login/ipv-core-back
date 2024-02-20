@@ -8,8 +8,6 @@ Globals:
     Timeout: 40
     SnapStart:
       ApplyOn: !If [ IsSnapStartEnvironment, PublishedVersions, None ]
-    Architectures:
-      - !If [ IsX86Arch, x86_64, arm64 ]
     MemorySize: !If [IsDevelopment, 1024, 3072]
     Runtime: java17
     Environment:
@@ -133,10 +131,6 @@ Conditions:
     - !Condition IsDevelopment
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
-  IsX86Arch: !Or
-    - !Condition IsSnapStartEnvironment
-    - !Equals [ !Ref Environment, integration ]
-    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
