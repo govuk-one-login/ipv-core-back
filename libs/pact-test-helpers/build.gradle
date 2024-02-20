@@ -12,7 +12,7 @@ repositories {
 dependencies {
 	implementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"au.com.dius.pact.consumer:junit5:4.6.5",
-			'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+			'com.fasterxml.jackson.core:jackson-databind:2.16.1'
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.10.0",
