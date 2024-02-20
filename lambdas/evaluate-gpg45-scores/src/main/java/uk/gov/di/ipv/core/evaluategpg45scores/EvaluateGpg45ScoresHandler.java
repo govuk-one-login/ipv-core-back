@@ -104,7 +104,7 @@ public class EvaluateGpg45ScoresHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
