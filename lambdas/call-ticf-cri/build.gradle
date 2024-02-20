@@ -14,6 +14,7 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"au.com.dius.pact.consumer:junit5:4.6.5",
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
@@ -32,6 +33,7 @@ dependencies {
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.10.0",
+			"au.com.dius.pact.consumer:junit5:4.6.5",
 			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"

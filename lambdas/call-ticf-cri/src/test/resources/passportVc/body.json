@@ -1,0 +1,62 @@
+{
+  "sub": "dummyUserId",
+  "aud": "dummyComponentId",
+  "iss": "dummyComponentId",
+  "jti": "test-jti",
+  "nbf": 4070908800,
+  "exp": 4070909400,
+  "vc": {
+    "type": [
+      "VerifiableCredential",
+      "IdentityCheckCredential"
+    ],
+    "credentialSubject": {
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "Kenneth"
+            },
+            {
+              "type": "FamilyName",
+              "value": "Decerqueira"
+            }
+          ]
+        }
+      ],
+      "birthDate": [
+        {
+          "value": "1965-07-08"
+        }
+      ],
+      "socialSecurityRecord": [],
+      "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+      "passport": [
+        {
+          "expiryDate": "2030-01-01",
+          "documentNumber": "321654987"
+        }
+      ]
+    },
+    "evidence": [
+      {
+        "checkDetails": [
+          {
+            "identityCheckPolicy": "published",
+            "checkMethod": "vcrypt"
+          },
+          {
+            "biometricVerificationProcessLevel": 3,
+            "checkMethod": "bvr"
+          }
+        ],
+        "validityScore": 2,
+        "verificationScore": 3,
+        "strengthScore": 4,
+        "type": "IdentityCheck",
+        "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+      }
+    ]
+  }
+}

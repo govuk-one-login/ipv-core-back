@@ -1,0 +1,69 @@
+{
+  "sub": "dummyUserId",
+  "aud": "dummyComponentId",
+  "iss": "dummyComponentId",
+  "jti": "test-jti",
+  "nbf": 4070908800,
+  "exp": 4070909400,
+  "vc": {
+    "evidence": [
+      {
+        "activityHistoryScore": 0,
+        "ci": ["B00"],
+        "failedCheckDetails": [
+          {
+            "identityCheckPolicy": "published",
+            "checkMethod": "data"
+          }
+        ],
+        "validityScore": 0,
+        "strengthScore": 3,
+        "txn": "dummyTxn",
+        "type": "IDENTITY_CHECK"
+      }
+    ],
+    "credentialSubject": {
+      "address": [
+        {
+          "addressCountry": "GB",
+          "postalCode": "BS981TL"
+        }
+      ],
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "PETER"
+            },
+            {
+              "type": "GivenName",
+              "value": "BENJAMIN"
+            },
+            {
+              "type": "FamilyName",
+              "value": "PARKER"
+            }
+          ]
+        }
+      ],
+      "drivingPermit": [
+        {
+          "expiryDate": "2062-12-09",
+          "issuedBy": "DVA",
+          "personalNumber": "55667780",
+          "issueDate": "1982-05-23"
+        }
+      ],
+      "birthDate": [
+        {
+          "value": "1962-10-11"
+        }
+      ]
+    },
+    "type": [
+      "VerifiableCredential",
+      "IdentityCheckCredential"
+    ]
+  }
+}

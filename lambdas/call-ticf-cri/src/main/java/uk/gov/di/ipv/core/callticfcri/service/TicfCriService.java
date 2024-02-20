@@ -43,6 +43,13 @@ public class TicfCriService {
         this.jwtValidator = new VerifiableCredentialJwtValidator(configService);
     }
 
+    public TicfCriService(
+            ConfigService configService, VerifiableCredentialJwtValidator jwtValidator) {
+        this.configService = configService;
+        this.httpClient = HttpClient.newHttpClient();
+        this.jwtValidator = jwtValidator;
+    }
+
     protected TicfCriService(
             ConfigService configService,
             HttpClient httpClient,
@@ -80,6 +87,7 @@ public class TicfCriService {
                         X_API_KEY_HEADER,
                         configService.getCriPrivateApiKeyForActiveConnection(TICF_CRI));
             }
+            httpRequestBuilder.header("Content-Type", "application/json; charset=utf-8");
 
             var ticfCriHttpResponse = sendHttpRequest(httpRequestBuilder.build());
             checkStatusCode(ticfCriHttpResponse);
