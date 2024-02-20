@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,7 +44,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -123,7 +123,10 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+            List<VcStoreItem> allVcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+            List<VcStoreItem> vcStoreItems =
+                    VcHelper.filterVCBasedOnProfileType(allVcStoreItems, ProfileType.GPG45);
+
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getIdentityCredentials(vcStoreItems));
@@ -132,33 +135,27 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            List<SignedJWT> gpg45Credentials = new ArrayList<>();
-
-            for (SignedJWT credential : credentials) {
-                if (!VcHelper.isOperationalProfileVc(credential)) {
-                    gpg45Credentials.add(credential);
-                }
-            }
-
-            JourneyResponse checkForMatchingGpg45Profile =
+            Boolean hasMatchingGpg45Profile =
                     checkForMatchingGpg45Profile(
                             vcStoreItems,
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            gpg45Credentials,
+                            credentials,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                if (checkForMatchingGpg45Profile.equals(JOURNEY_MET)) {
-                    for (SignedJWT credential : credentials) {
-                        if (VcHelper.isOperationalProfileVc(credential)) {
-                            verifiableCredentialService.deleteVcStoreItem(
-                                    userId, HMRC_MIGRATION_CRI);
-                        }
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
+                    && hasMatchingGpg45Profile) {
+                for (VcStoreItem vcStoreItem : allVcStoreItems) {
+
+                    if (vcStoreItem.getCredentialIssuer().equals(HMRC_MIGRATION_CRI)) {
+                        verifiableCredentialService.deleteVcStoreItem(
+                                vcStoreItem.getUserId(), vcStoreItem.getCredentialIssuer());
                     }
                 }
             }
-            return checkForMatchingGpg45Profile.toObjectMap();
+            return hasMatchingGpg45Profile
+                    ? JOURNEY_MET.toObjectMap()
+                    : JOURNEY_UNMET.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
             return new JourneyErrorResponse(
@@ -189,7 +186,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    private JourneyResponse checkForMatchingGpg45Profile(
+    private Boolean checkForMatchingGpg45Profile(
             List<VcStoreItem> vcStoreItems,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -216,11 +213,11 @@ public class EvaluateGpg45ScoresHandler
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
-                return JOURNEY_MET;
+                return true;
             }
         }
         logLambdaResponse("No GPG45 profiles have been met", JOURNEY_UNMET);
-        return JOURNEY_UNMET;
+        return false;
     }
 
     private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {
