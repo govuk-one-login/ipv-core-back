@@ -194,7 +194,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "335257547869": # Staging
-      provisionedConcurrency: 1
+      provisionedConcurrency: 0
       cimitAccountId: 265689800486 # di-ipv-contra-indicators-staging
       cimitEnvironment: staging
       environment: staging
