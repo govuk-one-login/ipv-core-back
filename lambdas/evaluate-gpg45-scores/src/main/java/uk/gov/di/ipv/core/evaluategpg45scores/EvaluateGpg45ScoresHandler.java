@@ -153,9 +153,11 @@ public class EvaluateGpg45ScoresHandler
                     }
                 }
             }
-            return hasMatchingGpg45Profile
-                    ? JOURNEY_MET.toObjectMap()
-                    : JOURNEY_UNMET.toObjectMap();
+            if (hasMatchingGpg45Profile) {
+                return JOURNEY_MET.toObjectMap();
+            } else {
+                return JOURNEY_UNMET.toObjectMap();
+            }
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
             return new JourneyErrorResponse(
