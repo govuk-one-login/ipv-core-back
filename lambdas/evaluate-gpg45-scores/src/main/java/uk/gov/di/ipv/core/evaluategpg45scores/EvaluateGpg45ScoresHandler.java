@@ -135,7 +135,7 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            Boolean hasMatchingGpg45Profile =
+            boolean hasMatchingGpg45Profile =
                     checkForMatchingGpg45Profile(
                             vcStoreItems,
                             ipvSessionItem,
@@ -153,11 +153,9 @@ public class EvaluateGpg45ScoresHandler
                     }
                 }
             }
-            if (hasMatchingGpg45Profile) {
-                return JOURNEY_MET.toObjectMap();
-            } else {
-                return JOURNEY_UNMET.toObjectMap();
-            }
+            return !hasMatchingGpg45Profile
+                    ? JOURNEY_UNMET.toObjectMap()
+                    : JOURNEY_MET.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
             return new JourneyErrorResponse(
