@@ -7,7 +7,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
@@ -25,8 +24,8 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS
 
 public class IpvSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
-    private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
+    private static final String START_STATE = "START";
+    private static final String ERROR_STATE = "ERROR";
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigService configService;
@@ -101,14 +100,14 @@ public class IpvSessionService {
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
 
-        ipvSessionItem.setUserState(generateStartingState(errorObject));
-
         ipvSessionItem.setVot(Vot.P0);
 
-        String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.valueOf(journeyType));
-
-        if (errorObject != null) {
+        if (errorObject == null) {
+            ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            ipvSessionItem.setUserState(START_STATE);
+        } else {
+            ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);
+            ipvSessionItem.setUserState(ERROR_STATE);
             ipvSessionItem.setErrorCode(errorObject.getCode());
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }
@@ -152,14 +151,6 @@ public class IpvSessionService {
 
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {
         dataStore.update(updatedIpvSessionItem);
-    }
-
-    private String generateStartingState(ErrorObject errorObject) {
-        if (errorObject != null) {
-            return FAILED_CLIENT_JAR_STATE;
-        } else {
-            return INITIAL_IPV_JOURNEY_STATE;
-        }
     }
 
     private String toExpiryDateTime(long expirySeconds) {
