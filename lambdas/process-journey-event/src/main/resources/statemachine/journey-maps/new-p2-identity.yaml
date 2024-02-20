@@ -745,9 +745,6 @@ MITIGATION_02_OPTIONS_WITH_F2F:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetJourney: INELIGIBLE
-      targetState: INELIGIBLE
 
 MITIGATION_02_OPTIONS_WITH_F2F_M2B:
   response:
@@ -763,9 +760,6 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetJourney: INELIGIBLE
-      targetState: INELIGIBLE
 
 PYI_POST_OFFICE:
   response:
