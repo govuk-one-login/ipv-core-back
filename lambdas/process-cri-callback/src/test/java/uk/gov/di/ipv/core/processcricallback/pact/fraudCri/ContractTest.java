@@ -108,116 +108,81 @@ class ContractTest {
                    "nbf": 4070908800,
                    "exp": 4070909400,
                    "vc": {
-                   "type": [
-                     "VerifiableCredential",
-                     "IdentityCheckCredential"
-                   ],
-                   "credentialSubject": {
-                     "name": [
-                       {
-                         "nameParts": [
+                        "evidence": [
+                             {
+                                "activityHistoryScore": 1,
+                                 "checkDetails": [
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "mortality_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "identity_theft_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "synthetic_identity_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "impersonation_risk_check",
+                                       "txn": "dummyTxn"
+                                     },
+                                     {
+                                       "identityCheckPolicy": "none",
+                                       "activityFrom": "2013-12-01",
+                                       "checkMethod": "data"
+                                     }
+                                 ],
+                                 "ci": [],
+                                 "txn": "dummyTxn",
+                                 "identityFraudScore": 2,
+                                 "type": "IdentityCheck"
+                             }
+                          ],
+                       "type": [
+                         "VerifiableCredential",
+                         "IdentityCheckCredential"
+                       ],
+                       "credentialSubject": {
+                         "name": [
                            {
-                             "type": "GivenName",
-                             "value": "Kenneth"
-                           },
+                             "nameParts": [
+                               {
+                                 "type": "GivenName",
+                                 "value": "Kenneth"
+                               },
+                               {
+                                 "type": "FamilyName",
+                                 "value": "Decerqueira"
+                               }
+                             ]
+                           }
+                         ],
+                         "birthDate": [
                            {
-                             "type": "FamilyName",
-                             "value": "Decerqueira"
+                             "value": "1965-07-08"
+                           }
+                         ],
+                         "address": [
+                           {
+                             "streetName": "HADLEY ROAD",
+                             "addressType": "CURRENT",
+                             "postalCode": "BA2 5AA",
+                             "buildingNumber": "8",
+                             "addressLocality": "BATH"
                            }
                          ]
                        }
-                     ],
-                     "birthDate": [
-                       {
-                         "value": "1965-07-08"
-                       }
-                     ],
-                     "address": [
-                       {
-                         "streetName": "HADLEY ROAD",
-                         "addressType": "CURRENT",
-                         "postalCode": "BA2 5AA",
-                         "buildingNumber": "8",
-                         "addressLocality": "BATH"
-                       }
-                     ]
-                   },
-                   "evidence": [
-                     {
-                        "ci": [],
-                        "txn": "dummyTxn",
-                        "identityFraudScore": 1,
-                        "type": "IdentityCheck"
-                     }
-                   ]
-                 }
+                    }
                }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "-Sfj9eVhMo-OQoQPHyhCGBZUeMs4g0GARlEb6i1rNkqg_8Df10etcr9NtDAmXjzGBXA__u9-LPyGA_ZeDul-Ag";
-
-    private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_WITH_BUILDING_NAME_BODY =
-            """
-                {
-                   "sub": "test-subject",
-                   "iss": "dummyFraudComponentId",
-                   "nbf": 4070908800,
-                   "exp": 4070909400,
-                   "vc": {
-                   "type": [
-                     "VerifiableCredential",
-                     "IdentityCheckCredential"
-                   ],
-                   "credentialSubject": {
-                     "name": [
-                       {
-                         "nameParts": [
-                           {
-                             "type": "GivenName",
-                             "value": "Kenneth"
-                           },
-                           {
-                             "type": "FamilyName",
-                             "value": "Decerqueira"
-                           }
-                         ]
-                       }
-                     ],
-                     "birthDate": [
-                       {
-                         "value": "1965-07-08"
-                       }
-                     ],
-                     "address": [
-                       {
-                         "streetName": "HADLEY ROAD",
-                         "addressType": "CURRENT",
-                         "postalCode": "BA2 5AA",
-                         "buildingNumber": "8",
-                         "addressLocality": "BATH",
-                         "buildingName": "LE FLAMBE"
-                       }
-                     ]
-                   },
-                   "evidence": [
-                     {
-                        "ci": [],
-                        "txn": "dummyTxn",
-                        "identityFraudScore": 1,
-                        "type": "IdentityCheck"
-                     }
-                   ]
-                 }
-               }
-            """;
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_WITH_BUILDING_NAME_SIGNATURE =
-            "Ie1Xrv3nPvFP_yTCCwGS2eAmQg2jsKpHPzeZFE5x_W3qdspYp8HsO4PdB0ocoi71IAxB7HLC40DNo73uyxlCAQ";
+            "VAN0sTEKF6mONwHpwqKvV5fPQMnoizPBaMvHxNjYjxyHJQ_UA3wRCf4lB2Ja3pPd8Jm1i_r0FFh-BX9hNrsXkw";
 
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_BODY =
             """
@@ -227,59 +192,162 @@ class ContractTest {
                    "nbf": 4070908800,
                    "exp": 4070909400,
                    "vc": {
-                   "type": [
-                     "VerifiableCredential",
-                     "IdentityCheckCredential"
-                   ],
-                   "credentialSubject": {
-                     "name": [
-                       {
-                         "nameParts": [
+                        "evidence": [
+                             {
+                                "activityHistoryScore": 1,
+                                 "checkDetails": [
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "mortality_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "identity_theft_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "synthetic_identity_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "impersonation_risk_check",
+                                       "txn": "dummyTxn"
+                                     },
+                                     {
+                                       "identityCheckPolicy": "none",
+                                       "activityFrom": "2013-12-01",
+                                       "checkMethod": "data"
+                                     }
+                                 ],
+                                 "ci": [
+                                    "P02"
+                                 ],
+                                 "txn": "dummyTxn",
+                                 "identityFraudScore": 2,
+                                 "type": "IdentityCheck"
+                             }
+                          ],
+                       "type": [
+                         "VerifiableCredential",
+                         "IdentityCheckCredential"
+                       ],
+                       "credentialSubject": {
+                         "name": [
                            {
-                             "type": "GivenName",
-                             "value": "Kenneth"
-                           },
+                             "nameParts": [
+                               {
+                                 "type": "GivenName",
+                                 "value": "Kenneth"
+                               },
+                               {
+                                 "type": "FamilyName",
+                                 "value": "Decerqueira"
+                               }
+                             ]
+                           }
+                         ],
+                         "birthDate": [
                            {
-                             "type": "FamilyName",
-                             "value": "Decerqueira"
+                             "value": "1965-07-08"
+                           }
+                         ],
+                         "address": [
+                           {
+                             "streetName": "HADLEY ROAD",
+                             "addressType": "CURRENT",
+                             "postalCode": "BA2 5AA",
+                             "buildingNumber": "8",
+                             "addressLocality": "BATH"
                            }
                          ]
                        }
-                     ],
-                     "birthDate": [
-                       {
-                         "value": "1965-07-08"
-                       }
-                     ],
-                     "address": [
-                       {
-                         "streetName": "HADLEY ROAD",
-                         "addressType": "CURRENT",
-                         "postalCode": "BA2 5AA",
-                         "buildingNumber": "8",
-                         "addressLocality": "BATH"
-                       }
-                     ]
-                   },
-                   "evidence": [
-                     {
-                        "ci": [
-                            "A01"
-                        ],
-                        "txn": "dummyTxn",
-                        "identityFraudScore": 1,
-                        "type": "IdentityCheck"
-                     }
-                   ]
-                 },
-                 "jti": "dummyJti"
+                    }
                }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "lLKEAQ68CAnYGqkmp-qJRP3QqOkKhiPpquQ-1MVduEJNLnR5xMQw9Hz0W3F7IxzEHyoabkzgq4yVKwGRxQD18g";
+            "hpLznFrXYttz_lRk2-a0_1bsjRYS7xRfU90celrXL8Bp5wppbfsOQaIOfsvBG5gQj97TErGbBKFblq0DO0mB_A";
+
+    private static final String VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_BODY =
+            """
+                {
+                   "sub": "test-subject",
+                   "iss": "dummyFraudComponentId",
+                   "nbf": 4070908800,
+                   "exp": 4070909400,
+                   "vc": {
+                        "evidence": [
+                             {
+                                "activityHistoryScore": 1,
+                                 "checkDetails": [
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "mortality_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "identity_theft_check"
+                                     },
+                                     {
+                                       "checkMethod": "data",
+                                       "fraudCheck": "synthetic_identity_check"
+                                     }
+                                 ],
+                                "failedCheckDetails": [{
+                                    "txn": "dummyTxn",
+                                    "checkMethod": "data",
+                                    "fraudCheck": "impersonation_risk_check"
+                                }],
+                                "ci": [],
+                                "txn": "dummyTxn",
+                                "identityFraudScore": 1,
+                                "type": "IdentityCheck"
+                             }
+                          ],
+                       "type": [
+                         "VerifiableCredential",
+                         "IdentityCheckCredential"
+                       ],
+                       "credentialSubject": {
+                         "name": [
+                           {
+                             "nameParts": [
+                               {
+                                 "type": "GivenName",
+                                 "value": "Kenneth"
+                               },
+                               {
+                                 "type": "FamilyName",
+                                 "value": "Decerqueira"
+                               }
+                             ]
+                           }
+                         ],
+                         "birthDate": [
+                           {
+                             "value": "1965-07-08"
+                           }
+                         ],
+                         "address": [
+                           {
+                             "streetName": "HADLEY ROAD",
+                             "addressType": "CURRENT",
+                             "postalCode": "BA2 5AA",
+                             "buildingNumber": "8",
+                             "addressLocality": "BATH"
+                           }
+                         ]
+                       }
+                    }
+               }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_SIGNATURE =
+            "xydGjepcSjFsr7v2JBc2mna2PX5vEZI9VHVnAhvhcDI2HkzZKrU4j7wdc3-hJSgQVCmMbT2QOQ2uEM_8iFTPvA";
 
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
@@ -432,13 +500,17 @@ class ContractTest {
                 .given("dummyFraudComponentId is a valid issuer")
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC birthDate is 1965-07-08")
-                .given("VC evidence identityFraudScore is 1")
+                .given("VC evidence identityFraudScore is 2")
+                .given("VC evidence activityHistoryScore is 1")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC credentialSubject address streetName is HADLEY ROAD")
                 .given("VC credentialSubject address addressType is CURRENT")
                 .given("VC credentialSubject address postalCode is BA2 5AA")
                 .given("VC credentialSubject address buildingNumber is 8")
                 .given("VC credentialSubject address addressLocality is BATH")
+                .given(
+                        "Experian conducted mortality_check, identity_theft_check, synthetic_identity_check and impersonation_risk_check")
+                .given("VC evidence activityFrom is 2013-12-01")
                 .uponReceiving("Valid credential request for identity check VC")
                 .path("/credential/issue")
                 .method("POST")
@@ -503,7 +575,7 @@ class ContractTest {
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
 
-                                assertEquals("1", evidence.get("identityFraudScore").asText());
+                                assertEquals("2", evidence.get("identityFraudScore").asText());
 
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
@@ -527,9 +599,8 @@ class ContractTest {
     }
 
     @Pact(provider = "FraudCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact
-            validRequestReturnsExperianFraudCheckIssuedCredentialWithBuildingName(
-                    PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsExperianFraudCheckIssuedCredentialWithoutPepCheck(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -553,16 +624,16 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                VALID_EXPERIAN_FRAUD_CHECK_VC_WITH_BUILDING_NAME_BODY,
-                                VALID_EXPERIAN_FRAUD_CHECK_VC_WITH_BUILDING_NAME_SIGNATURE))
+                                VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_BODY,
+                                VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_SIGNATURE))
                 .toPact();
     }
 
     @Test
     @PactTestFor(
-            pactMethod = "validRequestReturnsExperianFraudCheckIssuedCredentialWithBuildingName")
+            pactMethod = "validRequestReturnsExperianFraudCheckIssuedCredentialWithoutPepCheck")
     void
-            fetchVerifiableCredential_whenCalledAgainstFraudCheckCri_retrievesAValidExperianFraudCheckVc_withBuildingName(
+            fetchVerifiableCredential_whenCalledAgainstFraudCheckCri_retrievesAValidExperianFraudCheckVc_withoutPepCheck(
                     MockServer mockServer) throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -621,7 +692,6 @@ class ContractTest {
                                 assertEquals("BA2 5AA", addressNode.get("postalCode").asText());
                                 assertEquals("8", addressNode.get("buildingNumber").asText());
                                 assertEquals("BATH", addressNode.get("addressLocality").asText());
-                                assertEquals("LE FLAMBE", addressNode.get("buildingName").asText());
 
                                 assertEquals("1965-07-08", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
@@ -715,8 +785,8 @@ class ContractTest {
 
                                 JsonNode ciNode = evidence.get("ci");
 
-                                assertEquals("1", evidence.get("identityFraudScore").asText());
-                                assertEquals("A01", ciNode.get(0).asText());
+                                assertEquals("2", evidence.get("identityFraudScore").asText());
+                                assertEquals("P02", ciNode.get(0).asText());
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
@@ -824,7 +894,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A01", ciConfig1);
+        ciConfigMap.put("P02", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
