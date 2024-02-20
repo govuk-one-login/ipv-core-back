@@ -64,7 +64,7 @@ const loadJourney = async () => {
 };
 
 const getPageUrl = (id) => `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
-const getJourneyUrl = (id) => `/?journeyType=${encodeURIComponent(upperToKebab(id))}`;
+const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(upperToKebab(id))}`;
 
 const switchJourney = async (id) => {
     window.history.pushState(undefined, undefined, getJourneyUrl(id));
