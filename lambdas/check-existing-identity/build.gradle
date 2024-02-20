@@ -48,6 +48,10 @@ test {
 	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	testLogging {
+		outputs.upToDateWhen {false}
+		showStandardStreams = true
+	}
 }
 
 jacocoTestReport {
