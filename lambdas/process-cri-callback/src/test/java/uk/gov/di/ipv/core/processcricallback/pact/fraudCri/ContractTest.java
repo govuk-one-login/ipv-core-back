@@ -220,7 +220,7 @@ class ContractTest {
                                      }
                                  ],
                                  "ci": [
-                                    "P02"
+                                    "A02"
                                  ],
                                  "txn": "dummyTxn",
                                  "identityFraudScore": 2,
@@ -268,7 +268,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "hpLznFrXYttz_lRk2-a0_1bsjRYS7xRfU90celrXL8Bp5wppbfsOQaIOfsvBG5gQj97TErGbBKFblq0DO0mB_A";
+            "ts-L4lL6mikHbwwJ-SJrKcDdyMZHWYDFrLDibLSpwbO9M6VuuMIcNVgt4tTY7odKFux5tAUWniVyDexFf85nhg";
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_BODY =
             """
@@ -786,7 +786,7 @@ class ContractTest {
                                 JsonNode ciNode = evidence.get("ci");
 
                                 assertEquals("2", evidence.get("identityFraudScore").asText());
-                                assertEquals("P02", ciNode.get(0).asText());
+                                assertEquals("A02", ciNode.get(0).asText());
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
@@ -894,7 +894,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("P02", ciConfig1);
+        ciConfigMap.put("A02", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
