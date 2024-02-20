@@ -13,6 +13,7 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -46,7 +47,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
-// @Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "TicfCriProvider")
@@ -94,7 +95,7 @@ class ContractTest {
                 .given(
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving("Request for uplift risk assessment for user with no interventions")
+                .uponReceiving("Request for risk assessment for user with no interventions")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -161,7 +162,7 @@ class ContractTest {
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
-                        "Request for uplift risk assessment for user with no interventions with warnings")
+                        "Request for risk assessment for user with no interventions with warnings")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -230,8 +231,7 @@ class ContractTest {
                 .given(
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving(
-                        "Request for uplift risk assessment for user with no interventions with warnings")
+                .uponReceiving("Request for risk assessment for user with interventions")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -301,8 +301,7 @@ class ContractTest {
                 .given(
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving(
-                        "Request for uplift risk assessment for user with no interventions with warnings")
+                .uponReceiving("Request for risk assessment for user where TICF timeouts")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -363,7 +362,8 @@ class ContractTest {
                 .given(
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving("Request for uplift risk assessment for user with no interventions")
+                .uponReceiving(
+                        "Request for risk assessment for user with no interventions provided multiple VCs")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -427,7 +427,8 @@ class ContractTest {
                 .given(
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving("Request for uplift risk assessment for user with no interventions")
+                .uponReceiving(
+                        "Request for risk assessment for user with no interventions provided no VCs")
                 .path(API_PATH)
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY)
@@ -490,7 +491,7 @@ class ContractTest {
                         "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
-                        "Request for uplift risk assessment for user with no interventions with warnings")
+                        "Request for uplift risk assessment for user with no interventions with warnings provided VC with CI")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
