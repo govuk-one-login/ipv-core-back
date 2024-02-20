@@ -7,8 +7,6 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.ECDSASigner;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,8 +25,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.pacttesthelpers.Injector;
-import uk.gov.di.ipv.core.library.pacttesthelpers.MockHttpServer;
+import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -37,15 +34,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
-import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
@@ -57,16 +47,15 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 @Provider("IpvCoreBack")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class IssueClientAccessTokenHandlerTest {
+class IssueClientAccessTokenHandlerTest {
 
     private static final int PORT = 5050;
 
+    private LambdaHttpServer httpServer;
     @Mock private ConfigService configService;
     @Mock private DataStore<IpvSessionItem> ipvSessionDataStore;
     @Mock private DataStore<ClientOAuthSessionItem> oAuthDataStore;
     @Mock private DataStore<ClientAuthJwtIdItem> jwtIdStore;
-
-    private ClientAuthJwtIdItem jwtIdItem;
 
     private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
             """
@@ -112,38 +101,24 @@ public class IssueClientAccessTokenHandlerTest {
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
-        // when(jwtIdStore.getItem("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY",
-        // false)).thenReturn(jwtIdItem);
 
-        // qq:DCC is this needed?
-        KeyFactory kf = KeyFactory.getInstance("EC");
-        EncodedKeySpec privateKeySpec =
-                new PKCS8EncodedKeySpec(
-                        Base64.getDecoder()
-                                .decode(
-                                        "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCBYNBSda5ttN9Wu4Do4"
-                                                + "gLV1xaks+DB5n6ity2MvBlzDUw=="));
-        JWSSigner signer = new ECDSASigner((ECPrivateKey) kf.generatePrivate(privateKeySpec));
-
-        Injector tokenHandlerInjector =
-                new Injector(
+        var handler =
                         new IssueClientAccessTokenHandler(
                                 accessTokenService,
                                 sessionService,
                                 configService,
                                 clientOAuthSessionService,
-                                tokenRequestValidator),
-                        "/token",
-                        "/");
+                                tokenRequestValidator);
 
-        MockHttpServer.startServer(new ArrayList<>(List.of(tokenHandlerInjector)), PORT, signer);
+        httpServer = new LambdaHttpServer(handler, "/token", PORT);
+        httpServer.startServer();
 
         context.setTarget(new HttpTestTarget("localhost", PORT));
     }
 
     @AfterEach
     public void tearDown() {
-        MockHttpServer.stopServer();
+        httpServer.stopServer();
     }
 
     @State("dummyAuthCode is a valid authorization code")
