@@ -1183,6 +1183,11 @@ class CheckExistingIdentityHandlerTest {
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
+
+        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        System.out.println(journeyResponse.toString());
+        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
         assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
         InOrder inOrder = inOrder(mockVerifiableCredentialService);
         inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
