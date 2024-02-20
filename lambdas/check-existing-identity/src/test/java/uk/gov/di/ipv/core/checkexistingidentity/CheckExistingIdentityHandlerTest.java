@@ -1183,7 +1183,7 @@ class CheckExistingIdentityHandlerTest {
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
         InOrder inOrder = inOrder(mockVerifiableCredentialService);
         inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
         inOrder.verify(mockVerifiableCredentialService, never())
