@@ -9,6 +9,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -43,6 +44,7 @@ public class TicfCriService {
         this.jwtValidator = new VerifiableCredentialJwtValidator(configService);
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public TicfCriService(
             ConfigService configService, VerifiableCredentialJwtValidator jwtValidator) {
         this.configService = configService;
