@@ -98,10 +98,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
@@ -130,6 +130,9 @@ class UserIdentityServiceTest {
                     "🐧");
     public static OauthCriConfig claimedIdentityConfig;
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+    private static String VC_PASSPORT_MISSING_BIRTH_DATE;
+    private static String VC_PASSPORT_MISSING_NAME;
+    private static String VC_PASSPORT_MISSING_PASSPORT;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -148,6 +151,9 @@ class UserIdentityServiceTest {
                         .requiresAdditionalEvidence(false)
                         .build();
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+        VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
+        VC_PASSPORT_MISSING_NAME = vcPassportMissingName();
+        VC_PASSPORT_MISSING_PASSPORT = vcPassportMissingPassport();
     }
 
     @BeforeEach
@@ -920,7 +926,7 @@ class UserIdentityServiceTest {
                         USER_ID_1, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertNull(credentials.getPassportClaim());
+        assertTrue(credentials.getPassportClaim().isEmpty());
     }
 
     @Test

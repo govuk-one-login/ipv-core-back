@@ -60,7 +60,6 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
         return signTestJWT(claimsSet);

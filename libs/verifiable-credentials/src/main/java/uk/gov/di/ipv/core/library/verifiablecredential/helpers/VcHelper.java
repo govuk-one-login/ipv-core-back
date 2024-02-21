@@ -129,9 +129,9 @@ public class VcHelper {
         var jwtClaimsSet = credential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
-        if (credentialSubject != null) {
+        if (credentialSubject != null && !credentialSubject.isEmpty()) {
             var birthDateArr = (JSONArray) credentialSubject.get(VC_BIRTH_DATE);
-            if (birthDateArr != null) {
+            if (birthDateArr != null && !birthDateArr.isEmpty()) {
                 var dobObj = (JSONObject) birthDateArr.get(ONLY);
                 age = getAge(dobObj.getAsString(VC_ATTR_VALUE_NAME));
             }
