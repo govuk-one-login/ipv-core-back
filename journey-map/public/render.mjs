@@ -17,14 +17,16 @@ const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) =
 };
 
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMap) => {
+export const getOptions = (journeyMaps) => {
     const disabledOptions = [];
     const featureFlagOptions = [];
 
-    Object.values(journeyMap).forEach((definition) => {
-        const events = definition.events || definition.exitEvents || {};
-        Object.values(events).forEach((def) => {
-            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    Object.values(journeyMaps).forEach((journeyMap) => {
+        Object.values(journeyMap).forEach((definition) => {
+            const events = definition.events || definition.exitEvents || {};
+            Object.values(events).forEach((def) => {
+                addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+            });
         });
     });
 
