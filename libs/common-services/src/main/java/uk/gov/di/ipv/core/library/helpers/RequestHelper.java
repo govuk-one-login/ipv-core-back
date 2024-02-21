@@ -107,17 +107,18 @@ public class RequestHelper {
 
     public static List<String> getFeatureSet(APIGatewayProxyRequestEvent event) {
         List<String> featureSet = getFeatureSet(event.getHeaders());
-        if (featureSet != null && !featureSet.isEmpty()) {
-            LogHelper.attachFeatureSetToLogs(featureSet);
-        }
+        LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
     }
 
     public static List<String> getFeatureSet(Map<String, String> headers) {
         String featureSetHeaderValue = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
-        return (featureSetHeaderValue != null)
-                ? Arrays.asList(featureSetHeaderValue.split(","))
-                : null;
+        List<String> featureSet =
+                (featureSetHeaderValue != null)
+                        ? Arrays.asList(featureSetHeaderValue.split(","))
+                        : null;
+        LogHelper.attachFeatureSetToLogs(featureSet);
+        return featureSet;
     }
 
     public static String getJourneyParameter(URI journeyUri, String key) {
