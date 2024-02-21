@@ -14,11 +14,11 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -106,16 +106,14 @@ public class RequestHelper {
     }
 
     public static List<String> getFeatureSet(APIGatewayProxyRequestEvent event) {
-        List<String> featureSet = getFeatureSet(event.getHeaders());
-        LogHelper.attachFeatureSetToLogs(featureSet);
-        return featureSet;
+        return getFeatureSet(event.getHeaders());
     }
 
     public static List<String> getFeatureSet(Map<String, String> headers) {
         String featureSetHeaderValue = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
         List<String> featureSet =
                 (featureSetHeaderValue != null)
-                        ? Arrays.asList(featureSetHeaderValue.split(","))
+                        ? Stream.of(featureSetHeaderValue.split(",")).map(String::trim).toList()
                         : null;
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
