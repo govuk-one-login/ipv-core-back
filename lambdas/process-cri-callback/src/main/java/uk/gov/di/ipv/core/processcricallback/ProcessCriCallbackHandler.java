@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.*;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
@@ -221,7 +222,7 @@ public class ProcessCriCallbackHandler
         try {
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
-            callbackRequest.setFeatureSet(input.getHeaders().get("feature-set"));
+            callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
             callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
 
             return callbackRequest;

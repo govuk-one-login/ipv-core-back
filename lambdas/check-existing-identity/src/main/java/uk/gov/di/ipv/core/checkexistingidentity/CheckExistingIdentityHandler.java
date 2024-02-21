@@ -164,8 +164,7 @@ public class CheckExistingIdentityHandler
         try {
             String ipvSessionId = getIpvSessionId(event);
             String ipAddress = getIpAddress(event);
-            String featureSet = RequestHelper.getFeatureSet(event);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =

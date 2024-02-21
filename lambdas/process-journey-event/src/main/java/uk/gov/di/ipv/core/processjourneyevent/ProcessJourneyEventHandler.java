@@ -99,7 +99,7 @@ public class ProcessJourneyEventHandler
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
-            String featureSet = StepFunctionHelpers.getFeatureSet(input);
+            configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -111,7 +111,6 @@ public class ProcessJourneyEventHandler
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
-            configService.setFeatureSet(featureSet);
 
             // Attach variables to logs
             LogHelper.attachGovukSigninJourneyIdToLogs(

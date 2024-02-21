@@ -155,8 +155,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             throws ParseException, TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     ConfigException, AuditExtensionException, UnrecognisedVotException {
-        String featureSet = RequestHelper.getFeatureSet(request);
-        configService.setFeatureSet(featureSet);
+        configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());

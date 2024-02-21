@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.List;
+
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,5 +22,5 @@ public class CriCallbackRequest {
     private String error;
     private String errorDescription;
     private String ipAddress;
-    private String featureSet;
+    private List<String> featureSet;
 }

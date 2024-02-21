@@ -48,6 +48,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -968,7 +969,7 @@ class ContractTest {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyFeatureSet");
+                List.of("dummyFeatureSet"));
     }
 
     @NotNull

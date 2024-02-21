@@ -43,6 +43,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -678,7 +679,7 @@ class CredentialTests {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyFeatureSet");
+                List.of("dummyFeatureSet"));
     }
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {

@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -94,7 +95,7 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
         mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
         mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
-        mockSessionItem.setFeatureSet("someCoolNewThing");
+        mockSessionItem.setFeatureSet(List.of("someCoolNewThing"));
     }
 
     @Test
@@ -128,7 +129,7 @@ class IssueClientAccessTokenHandlerTest {
                 tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(),
                 responseBody.get("access_token").toString());
 
-        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
     }
 
     @Test
@@ -372,15 +373,13 @@ class IssueClientAccessTokenHandlerTest {
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
-                        .responseType("code")
-                        .state("test-state")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId("test-user-id")
-                        .build();
-        return clientOAuthSessionItem;
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(SecureTokenHelper.getInstance().generate())
+                .responseType("code")
+                .state("test-state")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId("test-user-id")
+                .build();
     }
 }

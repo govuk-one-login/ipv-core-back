@@ -84,10 +84,9 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String featureSet = RequestHelper.getFeatureSet(event);
             String scoreType = RequestHelper.getScoreType(event);
             Integer scoreThreshold = RequestHelper.getScoreThreshold(event);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
             int scoreToCompare = getScore(ipvSessionId, scoreType);
             if (scoreToCompare >= scoreThreshold) {

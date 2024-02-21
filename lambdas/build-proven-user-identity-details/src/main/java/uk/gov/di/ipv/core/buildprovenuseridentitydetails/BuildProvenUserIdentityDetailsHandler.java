@@ -94,8 +94,7 @@ public class BuildProvenUserIdentityDetailsHandler
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
         try {
-            String featureSet = RequestHelper.getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(input));
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 

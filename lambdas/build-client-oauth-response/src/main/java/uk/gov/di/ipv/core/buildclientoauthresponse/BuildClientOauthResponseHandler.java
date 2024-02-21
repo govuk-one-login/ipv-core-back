@@ -95,7 +95,7 @@ public class BuildClientOauthResponseHandler
             String ipvSessionId = getIpvSessionIdAllowNull(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
-            String featureSet = getFeatureSet(input);
+            List<String> featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);

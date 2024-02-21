@@ -4,9 +4,12 @@ import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class StepFunctionHelpers {
     private static final String CODE = "code";
@@ -41,10 +44,12 @@ public class StepFunctionHelpers {
         return input.get(IP_ADDRESS);
     }
 
-    public static String getFeatureSet(Map<String, String> input) {
+    public static List<String> getFeatureSet(Map<String, String> input) {
         String featureSet = input.get(FEATURE_SET);
-        LogHelper.attachFeatureSetToLogs(featureSet);
-        return featureSet;
+        LogHelper.attachFeatureSetToLogs(Collections.singletonList(featureSet));
+        return (featureSet != null)
+                ? Stream.of(featureSet.split(",")).map(String::trim).toList()
+                : null;
     }
 
     public static String getJourneyEvent(Map<String, String> input)

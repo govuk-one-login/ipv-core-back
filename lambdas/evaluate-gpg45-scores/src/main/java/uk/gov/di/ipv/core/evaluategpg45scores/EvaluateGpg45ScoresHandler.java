@@ -109,8 +109,7 @@ public class EvaluateGpg45ScoresHandler
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             String ipAddress = RequestHelper.getIpAddress(event);
-            String featureSet = RequestHelper.getFeatureSet(event);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
