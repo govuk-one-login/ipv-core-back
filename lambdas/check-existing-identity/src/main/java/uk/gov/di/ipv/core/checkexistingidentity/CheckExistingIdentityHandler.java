@@ -59,7 +59,6 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
@@ -461,22 +460,18 @@ public class CheckExistingIdentityHandler
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
                                 gpg45Scores, requestedVot.getSupportedGpg45Profiles())
                         : Optional.empty();
-        List<SignedJWT> gpg45Credentials = new ArrayList<>();
-        for (SignedJWT credential : credentials) {
-            if (!VcHelper.isOperationalProfileVc(credential)) {
-                gpg45Credentials.add(credential);
-            }
-        }
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
             if (configService.enabled(INHERITED_IDENTITY.getName())) {
-                for (SignedJWT credential : credentials) {
-                    if (VcHelper.isOperationalProfileVc(credential)) {
-                        verifiableCredentialService.deleteVcStoreItem(
-                                auditEventUser.getUserId(), HMRC_MIGRATION_CRI);
-                    }
+                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+            }
+
+            List<SignedJWT> gpg45Credentials = new ArrayList<>();
+            for (SignedJWT credential : credentials) {
+                if (!VcHelper.isOperationalProfileVc(credential)) {
+                    gpg45Credentials.add(credential);
                 }
             }
             sendProfileMatchedAuditEvent(

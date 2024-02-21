@@ -1148,10 +1148,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
         assertEquals(JOURNEY_REUSE, journeyResponse);
-        InOrder inOrder = inOrder(mockVerifiableCredentialService);
-        inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
-        inOrder.verify(mockVerifiableCredentialService)
-                .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
+        verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
 
         ArgumentCaptor<String> configServiceArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(configService, times(2)).enabled(configServiceArgumentCaptor.capture());

@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -123,21 +122,21 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<VcStoreItem> allVcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
-            List<VcStoreItem> vcStoreItems =
-                    VcHelper.filterVCBasedOnProfileType(allVcStoreItems, ProfileType.GPG45);
+            List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+            List<VcStoreItem> gpg45VcStoreItems =
+                    VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45);
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getIdentityCredentials(vcStoreItems));
+                            userIdentityService.getIdentityCredentials(gpg45VcStoreItems));
 
-            if (!userIdentityService.areVCsCorrelated(vcStoreItems)) {
+            if (!userIdentityService.areVCsCorrelated(gpg45VcStoreItems)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
             boolean hasMatchingGpg45Profile =
-                    checkForMatchingGpg45Profile(
-                            vcStoreItems,
+                    hasMatchingGpg45Profile(
+                            gpg45VcStoreItems,
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             credentials,
@@ -145,13 +144,7 @@ public class EvaluateGpg45ScoresHandler
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
                     && hasMatchingGpg45Profile) {
-                for (VcStoreItem vcStoreItem : allVcStoreItems) {
-
-                    if (vcStoreItem.getCredentialIssuer().equals(HMRC_MIGRATION_CRI)) {
-                        verifiableCredentialService.deleteVcStoreItem(
-                                vcStoreItem.getUserId(), vcStoreItem.getCredentialIssuer());
-                    }
-                }
+                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
             }
             return hasMatchingGpg45Profile
                     ? JOURNEY_MET.toObjectMap()
@@ -186,7 +179,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    private boolean checkForMatchingGpg45Profile(
+    private boolean hasMatchingGpg45Profile(
             List<VcStoreItem> vcStoreItems,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,

@@ -316,7 +316,8 @@ class EvaluateGpg45ScoresHandlerTest {
                         evaluateGpg45ScoresHandler.handleRequest(request, context),
                         JourneyResponse.class);
 
-        verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
+        verify(mockVerifiableCredentialService)
+                .deleteHmrcInheritedIdentityIfPresent(VC_STORE_ITEMS);
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
     }
@@ -339,7 +340,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         verify(mockVerifiableCredentialService, never())
-                .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
+                .deleteHmrcInheritedIdentityIfPresent(any());
 
         assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
     }
