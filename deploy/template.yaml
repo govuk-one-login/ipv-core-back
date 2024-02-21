@@ -132,9 +132,11 @@ Conditions:
   IsSnapStartEnvironment: !Or
     - !Condition IsDevelopment
     - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
   IsX86Arch: !Or
     - !Condition IsSnapStartEnvironment
-    - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, integration ]
+    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
