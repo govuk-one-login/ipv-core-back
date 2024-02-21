@@ -135,7 +135,7 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            Boolean hasMatchingGpg45Profile =
+            boolean hasMatchingGpg45Profile =
                     checkForMatchingGpg45Profile(
                             vcStoreItems,
                             ipvSessionItem,
