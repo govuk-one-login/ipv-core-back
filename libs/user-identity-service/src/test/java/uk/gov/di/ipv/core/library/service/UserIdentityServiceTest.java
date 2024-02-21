@@ -696,7 +696,7 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -729,7 +729,7 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -1718,7 +1718,7 @@ class UserIdentityServiceTest {
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
@@ -1748,7 +1748,7 @@ class UserIdentityServiceTest {
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 
@@ -1776,7 +1776,7 @@ class UserIdentityServiceTest {
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 

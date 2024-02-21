@@ -92,7 +92,6 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, nbf.getEpochSecond())
-                        .claim(EXPIRATION_TIME, nbf.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
         return signTestJWT(claimsSet);

@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +39,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
@@ -47,6 +48,7 @@ class CriStoringServiceTest {
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
+    private static String M1A_PASSPORT_VC;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
@@ -62,6 +64,11 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
     @Captor private ArgumentCaptor<SignedJWT> signedJwtCaptor;
     @Captor private ArgumentCaptor<List<String>> vcListCaptor;
+
+    @BeforeAll
+    static void setVcs() throws Exception {
+        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+    }
 
     @BeforeEach
     void setUp() {

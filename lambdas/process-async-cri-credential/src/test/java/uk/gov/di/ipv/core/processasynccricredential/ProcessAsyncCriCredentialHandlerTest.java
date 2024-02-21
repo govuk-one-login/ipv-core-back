@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -285,7 +284,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         null,
                         TEST_USER_ID,
                         testOauthState,
-                        List.of(TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
                         null,
                         null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();

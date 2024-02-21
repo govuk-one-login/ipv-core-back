@@ -41,10 +41,10 @@ class AuditExtensionsHelperTest {
         assertFalse(auditExtensions.getSuccessful());
         assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
         assertEquals(
-                "[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}]",
+                "[{\"checkDetails\":[{\"dataCheck\":\"cancelled_check\",\"checkMethod\":\"data\"},{\"dataCheck\":\"record_check\",\"checkMethod\":\"data\"}],\"validityScore\":2,\"verificationScore\":0,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}]",
                 auditExtensions.getEvidence().toString());
         assertEquals(
-                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"checkMethod\":\"data\",\"dataCheck\":\"cancelled_check\"},{\"checkMethod\":\"data\",\"dataCheck\":\"record_check\"}],\"validityScore\":2,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
+                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"dataCheck\":\"cancelled_check\",\"checkMethod\":\"data\"},{\"dataCheck\":\"record_check\",\"checkMethod\":\"data\"}],\"validityScore\":2,\"verificationScore\":0,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
                 OBJECT_MAPPER.writeValueAsString(auditExtensions));
         assertNotNull(auditExtensions.getAge());
         assertTrue(auditExtensions.getIsUkIssued());

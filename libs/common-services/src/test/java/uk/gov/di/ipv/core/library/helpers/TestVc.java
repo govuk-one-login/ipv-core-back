@@ -44,8 +44,8 @@ public class TestVc {
                         Map.of(
                                 VC_NAME_PARTS,
                                 List.of(
-                                        new NameParts("Kenneth", VC_GIVEN_NAME),
-                                        new NameParts("Decerqueira", VC_FAMILY_NAME))));
+                                        new NameParts("KENNETH", VC_GIVEN_NAME),
+                                        new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate("1965-07-08"));
 

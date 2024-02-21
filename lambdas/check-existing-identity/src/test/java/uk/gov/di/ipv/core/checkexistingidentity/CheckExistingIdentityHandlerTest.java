@@ -90,7 +90,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
@@ -117,13 +116,8 @@ class CheckExistingIdentityHandlerTest {
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static List<VcStoreItem> VC_STORE_ITEMS;
-    private static final List<String> CREDENTIALS =
-            List.of(
-                    M1A_PASSPORT_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    M1A_VERIFICATION_VC,
-                    M1B_DCMAW_VC);
+    private static List<String> CREDENTIALS;
+    private static String M1A_PASSPORT_VC;
     private static final String TICF_CRI = "ticf";
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
@@ -165,6 +159,14 @@ class CheckExistingIdentityHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
+        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        CREDENTIALS =
+                List.of(
+                        M1A_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        M1A_VERIFICATION_VC,
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }

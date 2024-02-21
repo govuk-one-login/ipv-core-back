@@ -59,9 +59,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
@@ -72,13 +72,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static JourneyRequest request;
-    private static final List<String> CREDENTIALS =
-            List.of(
-                    M1A_PASSPORT_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    M1A_VERIFICATION_VC,
-                    M1B_DCMAW_VC);
+    private static List<String> CREDENTIALS;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     public static OauthCriConfig addressConfig = null;
     public static OauthCriConfig claimedIdentityConfig = null;
@@ -87,6 +81,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
+    private static String M1A_PASSPORT_VC;
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -146,6 +141,14 @@ class EvaluateGpg45ScoresHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_CLIENT_SOURCE_IP)
                         .build();
+        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        CREDENTIALS =
+                List.of(
+                        M1A_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        M1A_VERIFICATION_VC,
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
@@ -385,7 +388,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(M1A, extension.getGpg45Profile());
         assertEquals(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2), extension.getGpg45Scores());
         assertEquals(
-                List.of("6e61e5db-a175-4e16-af83-1ddfc5668e2b", "RB000103490087", "abc1234"),
+                List.of("1c04edf0-a205-4585-8877-be6bd1776a39", "RB000103490087", "abc1234"),
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);

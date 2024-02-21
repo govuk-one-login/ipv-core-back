@@ -29,7 +29,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -84,7 +83,6 @@ class VerifiableCredentialServiceTest {
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(Instant.parse("2024-01-24T02:04:14Z"), vcStoreItem.getExpirationTime());
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
     }
 
@@ -200,7 +198,6 @@ class VerifiableCredentialServiceTest {
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(Instant.parse("2024-01-24T02:04:14Z"), vcStoreItem.getExpirationTime());
         assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
     }
 
