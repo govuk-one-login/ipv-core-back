@@ -19,19 +19,21 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+    private static String VC_ADDRESS_2;
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
     static void setUp() throws Exception {
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+        VC_ADDRESS_2 = vcAddressTwo();
     }
 
     @Test

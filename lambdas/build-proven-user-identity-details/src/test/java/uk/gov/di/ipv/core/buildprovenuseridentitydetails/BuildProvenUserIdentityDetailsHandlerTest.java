@@ -45,13 +45,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
@@ -71,6 +71,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static String VC_PASSPORT_MISSING_BIRTH_DATE;
     private static String VC_HMRC_MIGRATION;
     private static String M1A_PASSPORT_VC;
+    private static String M1A_FAILED_PASSPORT_VC;
+    private static String M1A_ADDRESS_VC;
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -112,6 +114,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
         VC_HMRC_MIGRATION = vcHmrcMigration();
         M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        M1A_FAILED_PASSPORT_VC = vcPassportM1aFailed();
+        M1A_ADDRESS_VC = vcAddressM1a();
     }
 
     @Test

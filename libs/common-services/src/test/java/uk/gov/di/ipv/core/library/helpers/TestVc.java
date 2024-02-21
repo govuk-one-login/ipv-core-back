@@ -57,6 +57,7 @@ public class TestVc {
                                 "icaoIssuerCode", "GBR",
                                 "expiryDate", "2030-01-01"));
 
+        private List<Object> address;
         private List<Object> socialSecurityRecord;
     }
 

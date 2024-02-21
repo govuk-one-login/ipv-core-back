@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.replaycimitvcs;
 
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,16 +32,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 
 @ExtendWith(MockitoExtension.class)
 class ReplayCimitVcsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CRI_ID = "address";
+    private static String M1A_ADDRESS_VC;
     @Mock private CiMitService ciMitService;
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private ReplayCimitVcsHandler replayCimitVcsHandler;
+
+    @BeforeAll
+    static void setup() throws Exception {
+        M1A_ADDRESS_VC = vcAddressM1a();
+    }
 
     @Test
     void shouldSubmitVcsToCimit() throws CiPutException {

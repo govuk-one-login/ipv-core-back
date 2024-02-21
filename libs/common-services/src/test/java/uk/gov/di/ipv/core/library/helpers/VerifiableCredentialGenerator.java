@@ -55,13 +55,24 @@ public class VerifiableCredentialGenerator {
         return signTestJWT(claimsSet);
     }
 
-    public static String generateVerifiableCredential(TestVc vcClaim, String subject, String issuer)
-            throws Exception {
-        Instant now = Instant.now();
+    public static String generateVerifiableCredential(
+            TestVc vcClaim, String subject, String issuer, Instant nbf) throws Exception {
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, nbf.getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .build();
+        return signTestJWT(claimsSet);
+    }
+
+    public static String generateVerifiableCredential(TestVc vcClaim) throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980")
+                        .claim(ISSUER, "https://review-p.staging.account.gov.uk")
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
@@ -85,12 +96,12 @@ public class VerifiableCredentialGenerator {
         return signTestJWT(claimsSet);
     }
 
-    public static String generateVerifiableCredential(
-            TestVc vcClaim, String subject, String issuer, Instant nbf) throws Exception {
+    public static String generateVerifiableCredential(TestVc vcClaim, Instant nbf)
+            throws Exception {
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, subject)
-                        .claim(ISSUER, issuer)
+                        .claim(SUBJECT, "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980")
+                        .claim(ISSUER, "https://review-p.staging.account.gov.uk")
                         .claim(NOT_BEFORE, nbf.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();

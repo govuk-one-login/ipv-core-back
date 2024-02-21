@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.revokevcs;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -10,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -28,10 +28,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class RevokeVcsHandlerTest {
     private final String TEST_USER_ID = "urn:uuid:0369ce52-b72d-42f5-83d4-ab561fa01fd7";
+    private static String M1A_PASSPORT_VC;
     @Mock private OutputStream outputStream;
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<VcStoreItem> mockDataStore;
@@ -40,18 +42,18 @@ class RevokeVcsHandlerTest {
     @InjectMocks private RevokeVcsHandler revokeVcsHandler;
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
 
+    @BeforeAll
+    static void setup() throws Exception {
+        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+    }
+
     @Test
     void shouldRevokeVc() throws IOException, SqsException {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
         VcStoreItem testKbvVc =
-                new VcStoreItem(
-                        TEST_USER_ID,
-                        "kbv",
-                        TestFixtures.M1A_PASSPORT_VC,
-                        Instant.now(),
-                        Instant.now());
+                new VcStoreItem(TEST_USER_ID, "kbv", M1A_PASSPORT_VC, Instant.now(), Instant.now());
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
                 .thenReturn(testKbvVc);
 
@@ -94,12 +96,7 @@ class RevokeVcsHandlerTest {
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
         VcStoreItem testKbvVc =
-                new VcStoreItem(
-                        TEST_USER_ID,
-                        "kbv",
-                        TestFixtures.M1A_PASSPORT_VC,
-                        Instant.now(),
-                        Instant.now());
+                new VcStoreItem(TEST_USER_ID, "kbv", M1A_PASSPORT_VC, Instant.now(), Instant.now());
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
                 .thenReturn(testKbvVc);
         doThrow(new RuntimeException("Some error")).when(mockDataStore).create(any());

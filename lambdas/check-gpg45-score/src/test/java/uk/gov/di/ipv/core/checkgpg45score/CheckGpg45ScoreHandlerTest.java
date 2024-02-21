@@ -38,10 +38,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,6 +80,7 @@ class CheckGpg45ScoreHandlerTest {
                         .lambdaInput(new HashMap<>(Map.of("scoreThreshold", 2)))
                         .build();
         String M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        String M1A_ADDRESS_VC = vcAddressM1a();
         CREDENTIALS =
                 List.of(
                         M1A_PASSPORT_VC,

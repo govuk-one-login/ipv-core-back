@@ -32,10 +32,14 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportInvalidBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aMissingEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
@@ -50,6 +54,11 @@ class VcHelperTest {
     private static String VC_HMRC_MIGRATION;
     private static String VC_INVALID_VOT;
     private static String VC_NULL_VOT;
+    private static String M1A_PASSPORT_VC;
+    private static String M1A_FAILED_PASSPORT_VC;
+    private static String M1A_PASSPORT_VC_WITH_CI;
+    private static String M1_PASSPORT_VC_MISSING_EVIDENCE;
+    private static String M1A_ADDRESS_VC;
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -59,6 +68,11 @@ class VcHelperTest {
         VC_HMRC_MIGRATION = vcHmrcMigration();
         VC_INVALID_VOT = vcInvalidVot();
         VC_NULL_VOT = vcNullVot();
+        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        M1A_FAILED_PASSPORT_VC = vcPassportM1aFailed();
+        M1A_PASSPORT_VC_WITH_CI = vcPassportM1aWithCI();
+        M1_PASSPORT_VC_MISSING_EVIDENCE = vcPassportM1aMissingEvidence();
+        M1A_ADDRESS_VC = vcAddressM1a();
     }
 
     static {

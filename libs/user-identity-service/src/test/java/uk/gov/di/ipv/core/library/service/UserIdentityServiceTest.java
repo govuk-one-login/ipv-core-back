@@ -84,9 +84,6 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_ADDRESS_MISSING_ADDRESS_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
@@ -97,8 +94,11 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_S
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcMissingCredentialSubject;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingPassport;
@@ -135,6 +135,9 @@ class UserIdentityServiceTest {
     private static String VC_PASSPORT_MISSING_PASSPORT;
     private static String VC_HMRC_MIGRATION;
     private static String VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
+    private static String VC_ADDRESS;
+    private static String VC_ADDRESS_2;
+    private static String VC_ADDRESS_MISSING_ADDRESS_PROPERTY;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -158,6 +161,9 @@ class UserIdentityServiceTest {
         VC_PASSPORT_MISSING_PASSPORT = vcPassportMissingPassport();
         VC_HMRC_MIGRATION = vcHmrcMigration();
         VC_HMRC_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
+        VC_ADDRESS = vcAddressOne();
+        VC_ADDRESS_2 = vcAddressTwo();
+        VC_ADDRESS_MISSING_ADDRESS_PROPERTY = vcMissingCredentialSubject();
     }
 
     @BeforeEach
