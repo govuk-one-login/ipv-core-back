@@ -186,7 +186,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    private Boolean checkForMatchingGpg45Profile(
+    private boolean checkForMatchingGpg45Profile(
             List<VcStoreItem> vcStoreItems,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
