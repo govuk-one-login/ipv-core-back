@@ -58,6 +58,13 @@ jobs:
           role-to-assume: ${{ secrets.GH_ACTIONS_DELETE_ACCOUNT_ROLE_ARN }}
           aws-region: eu-west-2
 
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
+        with:
+          template: ./deploy-delete-user-data/template.yaml
+          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+
       - name: SAM validate
         working-directory: ./deploy-delete-user-data
         run: sam validate --region ${{ env.AWS_REGION }}
@@ -67,7 +74,7 @@ jobs:
         run: sam build
 
       - name: Deploy SAM app
-        uses: govuk-one-login/devplatform-upload-action@v3.5
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
             artifact-bucket-name: ${{ secrets.DELETE_ACCOUNT_ARTIFACT_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
