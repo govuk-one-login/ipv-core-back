@@ -13,18 +13,17 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
-import uk.gov.di.ipv.core.callticfcri.helpers.JwtTestHelper;
 import uk.gov.di.ipv.core.callticfcri.service.TicfCriService;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -47,7 +46,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
-@Disabled("PACT tests should not be run in build pipelines at this time")
+// @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "TicfCriProvider")
@@ -62,30 +61,35 @@ class ContractTest {
     private static final String APPLICATION_JSON = "application/json";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static JwtTestHelper dvlaVcJwtHelper;
-    private static JwtTestHelper passportVcJwtHelper;
-    private static JwtTestHelper dvlaWithCiVcJwtHelper;
-    private static JwtTestHelper emptyTicfVcJwtHelper;
-    private static JwtTestHelper interventionTicfVcJwtHelper;
-    private static JwtTestHelper noInterventionTicfVcJwtHelper;
-    private static JwtTestHelper noInterventionWithWarningsTicfVcJwtHelper;
+    private static PactJwtBuilder dvlaVcJwtHelper;
+    private static PactJwtBuilder passportVcJwtHelper;
+    private static PactJwtBuilder dvlaWithCiVcJwtHelper;
+    private static PactJwtBuilder emptyTicfVcJwtHelper;
+    private static PactJwtBuilder interventionTicfVcJwtHelper;
+    private static PactJwtBuilder noInterventionTicfVcJwtHelper;
+    private static PactJwtBuilder noInterventionWithWarningsTicfVcJwtHelper;
 
     @Mock ConfigService mockConfigService;
 
     @BeforeAll
     public static void setup() throws IOException {
-        dvlaVcJwtHelper = new JwtTestHelper("dvlaVc");
-        passportVcJwtHelper = new JwtTestHelper("passportVc");
-        dvlaWithCiVcJwtHelper = new JwtTestHelper("dvlaWithCiVc");
-        emptyTicfVcJwtHelper = new JwtTestHelper("ticfVc/empty");
-        interventionTicfVcJwtHelper = new JwtTestHelper("ticfVc/intervention");
-        noInterventionTicfVcJwtHelper = new JwtTestHelper("ticfVc/noIntervention");
+        var testFixturesPath = "src/test/resources/";
+
+        dvlaVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "dvlaVc");
+        passportVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "passportVc");
+        dvlaWithCiVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "dvlaWithCiVc");
+        emptyTicfVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/empty");
+        interventionTicfVcJwtHelper =
+                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/intervention");
+        noInterventionTicfVcJwtHelper =
+                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/noIntervention");
         noInterventionWithWarningsTicfVcJwtHelper =
-                new JwtTestHelper("ticfVc/noInterventionWithWarnings");
+                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/noInterventionWithWarnings");
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserWithNoInterventions(PactDslWithProvider builder) {
+    public RequestResponsePact validPassportVcReturnsVcWithNoInterventions(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
@@ -104,13 +108,13 @@ class ContractTest {
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(noInterventionTicfVcJwtHelper))
+                .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserWithNoInterventions")
-    void fetchRiskAssessment_whenCalledWithOneVcOnTicfCri_returnsNoInterventionsTicfVc(
+    @PactTestFor(pactMethod = "validPassportVcReturnsVcWithNoInterventions")
+    void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithNoInterventions(
             MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
@@ -150,7 +154,7 @@ class ContractTest {
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserWithNoInterventionsWithWarnings(
+    public RequestResponsePact validPassportVcReturnsVcWithWarningsButNoInterventions(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
@@ -171,15 +175,16 @@ class ContractTest {
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(noInterventionWithWarningsTicfVcJwtHelper))
+                .body(getResponseBody(List.of(noInterventionWithWarningsTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserWithNoInterventionsWithWarnings")
-    void fetchRiskAssessment_whenCalledWithOneVcOnTicfCri_returnsNoInterventionsWithWarningsTicfVc(
-            MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+    @PactTestFor(pactMethod = "validPassportVcReturnsVcWithWarningsButNoInterventions")
+    void
+            fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithWarningsButNoInterventions(
+                    MockServer mockServer)
+                    throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
@@ -221,7 +226,8 @@ class ContractTest {
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserWithInterventions(PactDslWithProvider builder) {
+    public RequestResponsePact validPassportVcReturnsVcWithInterventions(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
@@ -240,13 +246,13 @@ class ContractTest {
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(interventionTicfVcJwtHelper))
+                .body(getResponseBody(List.of(interventionTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserWithInterventions")
-    void fetchRiskAssessment_whenCalledWithOneVcOnTicfCri_returnsInterventionsTicfVc(
+    @PactTestFor(pactMethod = "validPassportVcReturnsVcWithInterventions")
+    void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithInterventions(
             MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
@@ -292,7 +298,7 @@ class ContractTest {
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserTimeouts(PactDslWithProvider builder) {
+    public RequestResponsePact validPassportVcReturnsEmptyVc(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
@@ -312,13 +318,13 @@ class ContractTest {
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(emptyTicfVcJwtHelper))
+                .body(getResponseBody(List.of(emptyTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserTimeouts")
-    void fetchRiskAssessment_whenCalledWithOneVcOnTicfCri_timeouts(MockServer mockServer)
+    @PactTestFor(pactMethod = "validPassportVcReturnsEmptyVc")
+    void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_timeouts(MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -352,7 +358,7 @@ class ContractTest {
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserProvidedMultipleVcs(PactDslWithProvider builder) {
+    public RequestResponsePact validVcsReturnVcWithNoInterventions(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
                         "Provided VCs can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
@@ -372,13 +378,13 @@ class ContractTest {
                 .body(getRequestBody(List.of(dvlaVcJwtHelper, passportVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(noInterventionTicfVcJwtHelper))
+                .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserProvidedMultipleVcs")
-    void fetchRiskAssessment_whenCalledWithMultipleVcsOnTicfCri_returnsNoInterventionsTicfVc(
+    @PactTestFor(pactMethod = "validVcsReturnVcWithNoInterventions")
+    void fetchRiskAssessment_whenCalledWithMultipleVcsOnTicfCri_returnsVcWithNoInterventions(
             MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
@@ -419,7 +425,7 @@ class ContractTest {
 
     // Identity reuse journey
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserProvidedNoVcs(PactDslWithProvider builder) {
+    public RequestResponsePact noVcsReturnVcWithNoInterventions(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("TICF VC has no interventions or warnings")
                 .given("TICF VC risk assessment has id riskAssessmentId")
@@ -435,13 +441,13 @@ class ContractTest {
                 .body(getRequestBody(List.of()))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(noInterventionTicfVcJwtHelper))
+                .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserProvidedNoVcs")
-    void fetchRiskAssessment_whenCalledWithNoVcsOnTicfCri_returnsNoInterventionsTicfVc(
+    @PactTestFor(pactMethod = "noVcsReturnVcWithNoInterventions")
+    void fetchRiskAssessment_whenCalledWithNoVcsOnTicfCri_returnsVcWithNoInterventions(
             MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
@@ -479,7 +485,7 @@ class ContractTest {
 
     // F2F
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact requestForUserWithNoInterventionsWithWarningsProvidedVcWithCi(
+    public RequestResponsePact dvlaVcWithCiReturnVcWithWarningsButNoInterventions(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
@@ -500,14 +506,14 @@ class ContractTest {
                 .body(getRequestBody(List.of(dvlaWithCiVcJwtHelper)))
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBody(noInterventionWithWarningsTicfVcJwtHelper))
+                .body(getResponseBody(List.of(noInterventionWithWarningsTicfVcJwtHelper)))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "requestForUserWithNoInterventionsWithWarningsProvidedVcWithCi")
+    @PactTestFor(pactMethod = "dvlaVcWithCiReturnVcWithWarningsButNoInterventions")
     void
-            fetchRiskAssessment_whenCalledWithOneVcWithCiOnTicfCri_returnsNoInterventionsWithWarningsTicfVc(
+            fetchRiskAssessment_whenCalledWithDvlaVcWithCiOnTicfCri_returnsVcWithWarningsButNoInterventions(
                     MockServer mockServer)
                     throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
@@ -563,7 +569,7 @@ class ContractTest {
         return new TicfCriService(mockConfigService, verifiableCredentialJwtValidator);
     }
 
-    private DslPart getRequestBody(List<JwtTestHelper> jwtTestHelpers) {
+    private DslPart getRequestBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
                         (body) -> {
                             body.stringType("sub", "dummyUserId");
@@ -575,15 +581,15 @@ class ContractTest {
                             body.array(
                                     "https://vocab.account.gov.uk/v1/credentialJWT",
                                     (LambdaDslJsonArray array) -> {
-                                        for (JwtTestHelper jwtTestHelper : jwtTestHelpers) {
-                                            array.stringValue(jwtTestHelper.buildJwt());
+                                        for (PactJwtBuilder pactJwtBuilder : pactJwtBuilders) {
+                                            array.stringValue(pactJwtBuilder.buildJwt());
                                         }
                                     });
                         })
                 .build();
     }
 
-    private DslPart getResponseBody(JwtTestHelper jwtTestHelper) {
+    private DslPart getResponseBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
                         (body) -> {
                             body.stringValue("sub", "dummyUserId");
@@ -592,13 +598,16 @@ class ContractTest {
                             body.stringValue("vtm", "https://oidc.account.gov.uk/trustmark");
                             body.stringValue(
                                     "govuk_signin_journey_id", "dummyGovukSigninJourneyId");
-                            body.minArrayLike(
+                            body.array(
                                     "https://vocab.account.gov.uk/v1/credentialJWT",
-                                    1,
-                                    PactDslJsonRootValue.stringMatcher(
-                                            jwtTestHelper.buildRegexMatcherIgnoringSignature(),
-                                            jwtTestHelper.buildJwt()),
-                                    1);
+                                    (LambdaDslJsonArray array) -> {
+                                        for (var pactJwtBuilder : pactJwtBuilders) {
+                                            array.stringMatcher(
+                                                    pactJwtBuilder
+                                                            .buildRegexMatcherIgnoringSignature(),
+                                                    pactJwtBuilder.buildJwt());
+                                        }
+                                    });
                         })
                 .build();
     }
