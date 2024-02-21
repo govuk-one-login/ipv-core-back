@@ -32,6 +32,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportInvalidBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
@@ -44,12 +47,18 @@ class VcHelperTest {
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static String VC_PASSPORT_MISSING_BIRTH_DATE;
     private static String VC_PASSPORT_INVALID_BIRTH_DATE;
+    private static String VC_HMRC_MIGRATION;
+    private static String VC_INVALID_VOT;
+    private static String VC_NULL_VOT;
 
     @BeforeAll
     public static void setup() throws Exception {
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
         VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
         VC_PASSPORT_INVALID_BIRTH_DATE = vcPassportInvalidBirthDate();
+        VC_HMRC_MIGRATION = vcHmrcMigration();
+        VC_INVALID_VOT = vcInvalidVot();
+        VC_NULL_VOT = vcNullVot();
     }
 
     static {

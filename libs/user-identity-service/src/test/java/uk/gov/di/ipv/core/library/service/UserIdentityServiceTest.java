@@ -93,12 +93,12 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_SCORE_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_WITHOUT_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_KBV_SCORE_2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingPassport;
@@ -133,6 +133,8 @@ class UserIdentityServiceTest {
     private static String VC_PASSPORT_MISSING_BIRTH_DATE;
     private static String VC_PASSPORT_MISSING_NAME;
     private static String VC_PASSPORT_MISSING_PASSPORT;
+    private static String VC_HMRC_MIGRATION;
+    private static String VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -154,6 +156,8 @@ class UserIdentityServiceTest {
         VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
         VC_PASSPORT_MISSING_NAME = vcPassportMissingName();
         VC_PASSPORT_MISSING_PASSPORT = vcPassportMissingPassport();
+        VC_HMRC_MIGRATION = vcHmrcMigration();
+        VC_HMRC_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
     }
 
     @BeforeEach
@@ -692,7 +696,7 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -725,7 +729,7 @@ class UserIdentityServiceTest {
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -1714,7 +1718,7 @@ class UserIdentityServiceTest {
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
         assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+        assertEquals("Kenneth", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
 

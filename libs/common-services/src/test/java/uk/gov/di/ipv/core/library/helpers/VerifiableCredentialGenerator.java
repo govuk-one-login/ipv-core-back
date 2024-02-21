@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static com.nimbusds.jwt.JWTClaimNames.EXPIRATION_TIME;
 import static com.nimbusds.jwt.JWTClaimNames.ISSUER;
+import static com.nimbusds.jwt.JWTClaimNames.JWT_ID;
 import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
 import static com.nimbusds.jwt.JWTClaimNames.SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.DI_CONTEXT;
@@ -28,6 +29,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VOT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VTM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3_BASE_CONTEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -61,6 +64,23 @@ public class VerifiableCredentialGenerator {
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
+                        .build();
+        return signTestJWT(claimsSet);
+    }
+
+    public static String generateVerifiableCredential(
+            TestVc vcClaim, String subject, String issuer, String vot, String jti, String vtm)
+            throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, subject)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, now.getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .claim(VC_VOT, vot)
+                        .claim(JWT_ID, jti)
+                        .claim(VC_VTM, vtm)
                         .build();
         return signTestJWT(claimsSet);
     }

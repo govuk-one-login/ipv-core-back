@@ -52,13 +52,12 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
-
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
@@ -70,7 +69,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
     private static String VC_PASSPORT_MISSING_NAME;
     private static String VC_PASSPORT_MISSING_BIRTH_DATE;
-
+    private static String VC_HMRC_MIGRATION;
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -110,6 +109,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     static void setVcs() throws Exception {
         VC_PASSPORT_MISSING_NAME = vcPassportMissingName();
         VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
+        VC_HMRC_MIGRATION = vcHmrcMigration();
     }
 
     @Test
@@ -183,7 +183,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 toResponseClass(
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
-        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("Kenneth Decerqueira", provenUserIdentityDetails.getName());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());

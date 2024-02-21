@@ -93,7 +93,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
@@ -116,17 +116,7 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
-    private static final List<VcStoreItem> VC_STORE_ITEMS =
-            List.of(
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+    private static List<VcStoreItem> VC_STORE_ITEMS;
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -182,6 +172,18 @@ class CheckExistingIdentityHandlerTest {
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
+        String VC_HMRC_MIGRATION = vcHmrcMigration();
+        VC_STORE_ITEMS =
+                List.of(
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
     }
 
     @BeforeEach

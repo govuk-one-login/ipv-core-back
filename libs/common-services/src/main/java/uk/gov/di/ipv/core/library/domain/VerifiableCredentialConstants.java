@@ -15,6 +15,8 @@ public class VerifiableCredentialConstants {
     public static final String VC_BIRTH_DATE = "birthDate";
     public static final String VC_NAME_PARTS = "nameParts";
     public static final String VC_CLAIM = "vc";
+    public static final String VC_VOT = "vot";
+    public static final String VC_VTM = "vtm";
     public static final String VC_CONTEXT = "@context";
     public static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
     public static final String VC_PASSPORT = "passport";

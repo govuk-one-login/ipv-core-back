@@ -44,8 +44,8 @@ public class TestVc {
                         Map.of(
                                 VC_NAME_PARTS,
                                 List.of(
-                                        new NameParts("KENNETH", VC_GIVEN_NAME),
-                                        new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
+                                        new NameParts("Kenneth", VC_GIVEN_NAME),
+                                        new NameParts("Decerqueira", VC_FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate("1965-07-08"));
 
@@ -56,6 +56,8 @@ public class TestVc {
                                 "documentNumber", "321654987",
                                 "icaoIssuerCode", "GBR",
                                 "expiryDate", "2030-01-01"));
+
+        private List<Object> socialSecurityRecord;
     }
 
     @AllArgsConstructor
@@ -67,6 +69,7 @@ public class TestVc {
         @Builder.Default private String txn = "1c04edf0-a205-4585-8877-be6bd1776a39";
         private int strengthScore;
         private int validityScore;
+        private int verificationScore;
         @Builder.Default private List<Object> ci = Collections.emptyList();
         @Builder.Default private List<Object> ciReasons = Collections.emptyList();
 
