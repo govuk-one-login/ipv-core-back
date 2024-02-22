@@ -262,7 +262,7 @@ class ConfigServiceTest {
             String featureSet, String expectedFeatureSet) {
         configService.setFeatureSet(Collections.singletonList(featureSet));
         if (expectedFeatureSet == null) {
-            assertEquals(expectedFeatureSet, configService.getFeatureSet());
+            assertNull(configService.getFeatureSet());
         } else {
             assertEquals(
                     Collections.singletonList(expectedFeatureSet), configService.getFeatureSet());
