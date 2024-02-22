@@ -68,6 +68,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -99,6 +100,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_GPG45_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
@@ -199,15 +202,6 @@ public class CheckExistingIdentityHandler
             // Clear TICF VCs
             verifiableCredentialService.deleteVcStoreItem(userId, TICF_CRI);
 
-            // Reset identity if reprove is true.
-            // or
-            // Force reset
-            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if ((reproveIdentity != null && reproveIdentity)
-                    || configService.enabled(RESET_IDENTITY.getName())) {
-                return buildForceResetResponse();
-            }
-
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
@@ -221,10 +215,15 @@ public class CheckExistingIdentityHandler
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
-            var ciScoringCheckResponse =
+            Optional<JourneyResponse> ciScoringCheckResponse =
                     checkForCIScoringFailure(
                             ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
 
+            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if ((reproveIdentity != null && reproveIdentity)
+                    || configService.enabled(RESET_IDENTITY.getName())) {
+                return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
+            }
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -276,9 +275,20 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private JourneyResponse buildForceResetResponse() {
-        LOGGER.info(
-                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
+    private JourneyResponse buildForceResetResponse(JourneyResponse ciScoringCheckResponse) {
+        if (ciScoringCheckResponse != null) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "resetIdentity flag is enabled, reset users identity."));
+            if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
+                //                forces a reset of the user's identity if the CI score is breached
+                // and no mitigation is possible
+                return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
+            }
+            //            sends the user on mitigation journey if the CI score is breached and
+            // mitigation is possible
+            return ciScoringCheckResponse;
+        }
         return JOURNEY_RESET_IDENTITY;
     }
 
