@@ -3,6 +3,8 @@ import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
+const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
+
 const JOURNEY_TYPES = {
     INITIAL_JOURNEY_SELECTION: 'Initial journey selection',
     NEW_P2_IDENTITY: 'New P2 identity',
@@ -51,24 +53,28 @@ const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
 
 let svgPanZoomInstance = null;
-let journeyMap = {};
+let journeyMaps = {};
 let nestedJourneys = {};
+
 let selectedState = null;
 
-const loadJourney = async () => {
-    const journeyType = new URLSearchParams(window.location.search).get('journeyType') || 'initial-journey-selection';
-    const journeyResponse = await fetch(`./${encodeURIComponent(journeyType)}.yaml`);
-    journeyMap = yaml.parse(await journeyResponse.text());
+const upperToKebab = (str) => str.toLowerCase().replaceAll('_', '-');
+
+const loadJourneyMaps = async () => {
+    await Promise.all(Object.keys(JOURNEY_TYPES).map(async (journeyType) => {
+        const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
+        journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
+    }));
     const nestedResponse = await fetch('./nested-journey-definitions.yaml');
     nestedJourneys = yaml.parse(await nestedResponse.text());
 };
 
 const getPageUrl = (id) => `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
-const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(upperToKebab(id))}`;
+const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 
-const switchJourney = async (id) => {
-    window.history.pushState(undefined, undefined, getJourneyUrl(id));
-    await loadJourney();
+const switchJourney = async (journeyType) => {
+    window.history.pushState(undefined, undefined, getJourneyUrl(journeyType));
+    selectedState = null;
     await renderSvg();
 };
 
@@ -87,7 +93,6 @@ const setupHeader = () => {
 
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
-        await loadJourney();
         await renderSvg();
     });
 };
@@ -117,7 +122,8 @@ const setupOptions = (name, options, fieldset, labels) => {
 
 // Render the journey map SVG
 const renderSvg = async () => {
-    const diagram = render(journeyMap, nestedJourneys, new FormData(form));
+    const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
+    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, new FormData(form));
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
@@ -147,8 +153,6 @@ const highlightState = (state) => {
         .filter((node) => node.id.startsWith(`flowchart-${state}-`))
         .forEach((node) => node.classList.add('highlight'));
 };
-
-const upperToKebab = (str) => str.toLowerCase().replaceAll('_', '-');
 
 // Set up the click handlers that mermaid binds to each node
 const setupMermaidClickHandlers = () => {
@@ -225,8 +229,8 @@ const setupHeaderToggleClickHandlers = () => {
 
 const initialize = async () => {
     setupHeader();
-    await loadJourney();
-    const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
+    await loadJourneyMaps();
+    const { disabledOptions, featureFlagOptions } = getOptions(journeyMaps);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
     setupMermaidClickHandlers();

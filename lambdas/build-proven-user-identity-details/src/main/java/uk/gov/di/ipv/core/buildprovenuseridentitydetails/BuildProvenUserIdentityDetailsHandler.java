@@ -90,7 +90,7 @@ public class BuildProvenUserIdentityDetailsHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
         try {

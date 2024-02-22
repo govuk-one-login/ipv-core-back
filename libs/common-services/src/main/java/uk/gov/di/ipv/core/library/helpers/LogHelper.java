@@ -84,7 +84,7 @@ public class LogHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void attachComponentIdToLogs(ConfigService configService) {
+    public static void attachComponentId(ConfigService configService) {
         attachFieldToLogs(
                 LogField.LOG_COMPONENT_ID,
                 configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID));
