@@ -15,7 +15,7 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.apache.logging.log4j:log4j-1.2-api:2.22.0",
-			"org.apache.logging.log4j:log4j-api:2.22.0",
+			"org.apache.logging.log4j:log4j-api:2.23.0",
 			"org.apache.logging.log4j:log4j-core:2.22.0",
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-client-oauth-response"),
