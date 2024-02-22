@@ -16,12 +16,45 @@ FAILED_BAV:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
 
+FAILED_FORCED_RESET:
+  events:
+    next:
+      targetState: RESET_VCS
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_RESET_VCS
+
+
 FAILED_NO_TICF:
   events:
     next:
       targetState: NO_MATCH_PAGE
 
 # Journey states
+
+RESET_VCS:
+  response:
+    type: process
+    lambda: reset-identity
+  events:
+    next:
+      targetState: NO_MATCH_PAGE
+
+CRI_TICF_BEFORE_RESET_VCS:
+  response:
+      type: process
+      lambda: call-ticf-cri
+  events:
+      next:
+        targetState: RESET_VCS
+      enhanced-verification:
+          targetState: NO_MATCH_PAGE
+      fail-with-ci:
+          targetState: NO_MATCH_PAGE
+      error:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR_NO_TICF
+
 
 CRI_TICF_BEFORE_NO_MATCH:
   response:
