@@ -84,15 +84,15 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitFailedChecks;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
@@ -141,6 +141,9 @@ class UserIdentityServiceTest {
     private static String VC_EXPERIAN_FRAUD_SCORE_1;
     private static String VC_EXPERIAN_FRAUD_WITHOUT_NAME;
     private static String VC_EXPERIAN_KBV_SCORE_2;
+    private static String VC_DRIVING_PERMIT_DCMAW;
+    private static String VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
+    private static String VC_DRIVING_PERMIT_DCMAW_FAILED;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -170,6 +173,10 @@ class UserIdentityServiceTest {
         VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
         VC_EXPERIAN_FRAUD_WITHOUT_NAME = vcExperianFraudMissingName();
         VC_EXPERIAN_KBV_SCORE_2 = vcExperianFraudScoreTwo();
+        VC_DRIVING_PERMIT_DCMAW = vcDrivingPermit();
+        VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY =
+                vcDrivingPermitMissingDrivingPermit();
+        VC_DRIVING_PERMIT_DCMAW_FAILED = vcDrivingPermitFailedChecks();
     }
 
     @BeforeEach
@@ -1376,7 +1383,7 @@ class UserIdentityServiceTest {
                         USER_ID_1, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertNull(credentials.getDrivingPermitClaim());
+        assertTrue(credentials.getDrivingPermitClaim().isNull());
     }
 
     @Test

@@ -62,6 +62,7 @@ public class TestVc {
 
         private List<Object> address;
         private List<Object> socialSecurityRecord;
+        private List<Object> drivingPermit;
     }
 
     @AllArgsConstructor
@@ -78,11 +79,14 @@ public class TestVc {
         @Builder.Default private List<Object> ci = Collections.emptyList();
         @Builder.Default private List<Object> ciReasons = Collections.emptyList();
         private Integer identityFraudScore;
+        private Integer activityHistoryScore;
 
         @Builder.Default
         private List<Object> checkDetails =
                 List.of(
                         Map.of("checkMethod", "data", "dataCheck", "cancelled_check"),
                         Map.of("checkMethod", "data", "dataCheck", "record_check"));
+
+        private List<Object> failedCheckDetails;
     }
 }

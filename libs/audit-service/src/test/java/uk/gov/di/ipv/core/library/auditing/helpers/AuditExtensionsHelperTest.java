@@ -12,28 +12,32 @@ import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_NON_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static String VC_ADDRESS_2;
+    private static String VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
+    private static String VC_DRIVING_PERMIT_NON_DCMAW;
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
     static void setUp() throws Exception {
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
         VC_ADDRESS_2 = vcAddressTwo();
+        VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY =
+                vcDrivingPermitMissingDrivingPermit();
+        VC_DRIVING_PERMIT_NON_DCMAW = vcDrivingPermitNonDcmaw();
     }
 
     @Test
@@ -41,15 +45,22 @@ class AuditExtensionsHelperTest {
         SignedJWT testVerifiableCredential = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.getSuccessful());
-        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
-        assertEquals(
-                "[{\"checkDetails\":[{\"dataCheck\":\"cancelled_check\",\"checkMethod\":\"data\"},{\"dataCheck\":\"record_check\",\"checkMethod\":\"data\"}],\"validityScore\":2,\"verificationScore\":0,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}]",
-                auditExtensions.getEvidence().toString());
-        assertEquals(
-                "{\"iss\":\"https://review-p.staging.account.gov.uk\",\"evidence\":[{\"checkDetails\":[{\"dataCheck\":\"cancelled_check\",\"checkMethod\":\"data\"},{\"dataCheck\":\"record_check\",\"checkMethod\":\"data\"}],\"validityScore\":2,\"verificationScore\":0,\"strengthScore\":4,\"ci\":[],\"txn\":\"1c04edf0-a205-4585-8877-be6bd1776a39\",\"type\":\"IdentityCheck\",\"ciReasons\":[]}],\"successful\":false,\"isUkIssued\":true,\"age\":58}",
-                OBJECT_MAPPER.writeValueAsString(auditExtensions));
-        assertNotNull(auditExtensions.getAge());
         assertTrue(auditExtensions.getIsUkIssued());
+        assertEquals(58, auditExtensions.getAge());
+        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
+        assertEquals(2, auditExtensions.getEvidence().get(0).get("validityScore").asInt());
+        assertEquals(4, auditExtensions.getEvidence().get(0).get("strengthScore").asInt());
+        assertEquals(
+                "1c04edf0-a205-4585-8877-be6bd1776a39",
+                auditExtensions.getEvidence().get(0).get("txn").asText());
+        assertEquals(
+                2,
+                auditExtensions
+                        .getEvidence()
+                        .get(0)
+                        .get("checkDetails")
+                        .findValues("dataCheck")
+                        .size());
     }
 
     @Test

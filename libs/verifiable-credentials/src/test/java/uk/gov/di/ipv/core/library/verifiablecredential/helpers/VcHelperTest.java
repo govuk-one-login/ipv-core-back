@@ -33,6 +33,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
@@ -65,6 +66,7 @@ class VcHelperTest {
     private static String M1A_EXPERIAN_FRAUD_VC;
     private static String M1A_EXPERIAN_FAILED_FRAUD_VC;
     private static String VC_EXPERIAN_FRAUD_SCORE_1;
+    private static String VC_DRIVING_PERMIT_DCMAW;
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -82,6 +84,7 @@ class VcHelperTest {
         M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
         M1A_EXPERIAN_FAILED_FRAUD_VC = vcExperianFraudFailed();
         VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
+        VC_DRIVING_PERMIT_DCMAW = vcDrivingPermit();
     }
 
     static {
