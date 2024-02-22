@@ -264,7 +264,7 @@ class ConfigServiceTest {
         assertEquals(
                 (expectedFeatureSet != null && !expectedFeatureSet.isBlank())
                         ? Collections.singletonList(expectedFeatureSet)
-                        : Collections.EMPTY_LIST,
+                        : Collections.emptyList(),
                 configService.getFeatureSet());
     }
 
@@ -374,7 +374,7 @@ class ConfigServiceTest {
     void shouldGetNamedFeatureFlag(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
         List<String> fsList =
-                featureSet != null ? List.of(featureSet.split(",")) : Collections.EMPTY_LIST;
+                featureSet != null ? List.of(featureSet.split(",")) : Collections.emptyList();
         configService.setFeatureSet(fsList);
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
@@ -745,6 +745,6 @@ class ConfigServiceTest {
     private static List<String> getFeatureSet(String featureSet) {
         return (featureSet != null && !featureSet.isBlank())
                 ? Collections.singletonList(featureSet)
-                : Collections.EMPTY_LIST;
+                : Collections.emptyList();
     }
 }
