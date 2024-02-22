@@ -464,7 +464,8 @@ public class CheckExistingIdentityHandler
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY.getName())) {
+            if (configService.enabled(INHERITED_IDENTITY.getName())
+                    && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
             }
 
