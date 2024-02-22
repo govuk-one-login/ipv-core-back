@@ -84,9 +84,6 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
@@ -99,6 +96,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScor
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcMissingCredentialSubject;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoMissingSocialSecurityRecord;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoUnsuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingPassport;
@@ -144,6 +144,9 @@ class UserIdentityServiceTest {
     private static String VC_DRIVING_PERMIT_DCMAW;
     private static String VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
     private static String VC_DRIVING_PERMIT_DCMAW_FAILED;
+    private static String VC_NINO_SUCCESSFUL;
+    private static String VC_NINO_UNSUCCESSFUL;
+    private static String VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -177,6 +180,9 @@ class UserIdentityServiceTest {
         VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY =
                 vcDrivingPermitMissingDrivingPermit();
         VC_DRIVING_PERMIT_DCMAW_FAILED = vcDrivingPermitFailedChecks();
+        VC_NINO_SUCCESSFUL = vcNinoSuccessful();
+        VC_NINO_UNSUCCESSFUL = vcNinoUnsuccessful();
+        VC_NINO_MISSING_SOCIAL_SECURITY_RECORD = vcNinoMissingSocialSecurityRecord();
     }
 
     @BeforeEach

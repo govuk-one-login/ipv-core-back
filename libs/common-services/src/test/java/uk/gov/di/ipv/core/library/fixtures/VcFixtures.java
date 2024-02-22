@@ -536,6 +536,80 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
+    static String vcNinoSuccessful() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(null)
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .passport(null)
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                                .checkDetails(
+                                                        List.of(Map.of("checkMethod", "data")))
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
+                "https://review-xx.account.gov.uk",
+                Instant.ofEpochSecond(1697097326));
+    }
+
+    static String vcNinoUnsuccessful() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(null)
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .passport(null)
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                                .failedCheckDetails(
+                                                        List.of(Map.of("checkMethod", "data")))
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
+                "https://review-xx.account.gov.uk",
+                Instant.ofEpochSecond(1697097326));
+    }
+
+    static String vcNinoMissingSocialSecurityRecord() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(null)
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .passport(null)
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                                .failedCheckDetails(
+                                                        List.of(Map.of("checkMethod", "data")))
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
+                "https://review-xx.account.gov.uk",
+                Instant.ofEpochSecond(1697097326));
+    }
+
     static String vcMissingCredentialSubject() throws Exception {
         return generateVerifiableCredential(TestVc.builder().credentialSubject(null).build());
     }

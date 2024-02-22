@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportInvalidBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
@@ -67,6 +68,7 @@ class VcHelperTest {
     private static String M1A_EXPERIAN_FAILED_FRAUD_VC;
     private static String VC_EXPERIAN_FRAUD_SCORE_1;
     private static String VC_DRIVING_PERMIT_DCMAW;
+    private static String VC_NINO_SUCCESSFUL;
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -85,6 +87,7 @@ class VcHelperTest {
         M1A_EXPERIAN_FAILED_FRAUD_VC = vcExperianFraudFailed();
         VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
         VC_DRIVING_PERMIT_DCMAW = vcDrivingPermit();
+        VC_NINO_SUCCESSFUL = vcNinoSuccessful();
     }
 
     static {
