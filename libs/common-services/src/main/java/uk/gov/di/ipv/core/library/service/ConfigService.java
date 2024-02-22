@@ -132,18 +132,11 @@ public class ConfigService {
     }
 
     public List<String> getFeatureSet() {
-        return (featureSet != null && !featureSet.isEmpty()) ? featureSet : null;
+        return featureSet;
     }
 
     public void setFeatureSet(List<String> featureSet) {
-        if (featureSet == null || featureSet.isEmpty()) {
-            this.featureSet = null;
-        } else {
-            this.featureSet =
-                    featureSet.stream()
-                            .filter(fs -> (fs != null && !fs.isEmpty() && !fs.isBlank()))
-                            .toList();
-        }
+        this.featureSet = featureSet;
     }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {

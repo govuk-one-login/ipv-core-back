@@ -248,7 +248,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnNullFromJourneyIfNoFeatureSet() {
+    void getFeatureSetShouldReturnEmptyListFromJourneyIfNoFeatureSet() {
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_IPV_SESSION_ID)
@@ -256,7 +256,7 @@ class RequestHelperTest {
                         .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
                         .journey(TEST_JOURNEY)
                         .build();
-        assertNull(getFeatureSet(event));
+        assertTrue(getFeatureSet(event).isEmpty());
     }
 
     @ParameterizedTest

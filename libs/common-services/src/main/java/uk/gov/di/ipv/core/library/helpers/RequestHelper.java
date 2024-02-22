@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,7 +103,7 @@ public class RequestHelper {
     public static List<String> getFeatureSet(JourneyRequest request) {
         List<String> featureSet = request.getFeatureSet();
         LogHelper.attachFeatureSetToLogs(featureSet);
-        return (featureSet != null && !featureSet.isEmpty()) ? featureSet : null;
+        return (featureSet != null) ? featureSet : Collections.EMPTY_LIST;
     }
 
     public static List<String> getFeatureSet(APIGatewayProxyRequestEvent event) {
@@ -114,7 +115,7 @@ public class RequestHelper {
         List<String> featureSet =
                 (featureSetHeaderValue != null)
                         ? Stream.of(featureSetHeaderValue.split(",")).map(String::trim).toList()
-                        : null;
+                        : Collections.EMPTY_LIST;
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
     }

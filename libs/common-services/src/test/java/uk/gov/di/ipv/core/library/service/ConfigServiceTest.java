@@ -260,13 +260,12 @@ class ConfigServiceTest {
     @CsvSource({",", "' ',", "' \t\n',", "fs0001,fs0001"})
     void shouldNormaliseNullAndEmptyFeatureSetsToNull(
             String featureSet, String expectedFeatureSet) {
-        configService.setFeatureSet(Collections.singletonList(featureSet));
-        if (expectedFeatureSet == null) {
-            assertNull(configService.getFeatureSet());
-        } else {
-            assertEquals(
-                    Collections.singletonList(expectedFeatureSet), configService.getFeatureSet());
-        }
+        configService.setFeatureSet(getFeatureSet(featureSet));
+        assertEquals(
+                (expectedFeatureSet != null && !expectedFeatureSet.isBlank())
+                        ? Collections.singletonList(expectedFeatureSet)
+                        : Collections.EMPTY_LIST,
+                configService.getFeatureSet());
     }
 
     @Nested
@@ -280,7 +279,7 @@ class ConfigServiceTest {
                 String featureSet,
                 String featureSetValue) {
             environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet(Collections.singletonList(featureSet));
+            configService.setFeatureSet(getFeatureSet(featureSet));
             if (featureSet == null) {
                 when(ssmProvider.get(
                                 String.format(
@@ -362,7 +361,7 @@ class ConfigServiceTest {
     })
     void shouldReturnListOfClientRedirectUrls(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
-        configService.setFeatureSet(Collections.singletonList(featureSet));
+        configService.setFeatureSet(getFeatureSet(featureSet));
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
@@ -542,9 +541,7 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameterForClient(
             String configVariableName, String featureSet) {
-        configService =
-                new ConfigService(
-                        ssmProvider, secretsProvider, Collections.singletonList(featureSet));
+        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -571,9 +568,7 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameter(
             String configVariableName, String featureSet) {
-        configService =
-                new ConfigService(
-                        ssmProvider, secretsProvider, Collections.singletonList(featureSet));
+        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -745,5 +740,11 @@ class ConfigServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/featureFlags/testFlagName")).thenReturn("false");
         assertFalse(configService.enabled("testFlagName"));
+    }
+
+    private static List<String> getFeatureSet(String featureSet) {
+        return (featureSet != null && !featureSet.isBlank())
+                ? Collections.singletonList(featureSet)
+                : Collections.EMPTY_LIST;
     }
 }

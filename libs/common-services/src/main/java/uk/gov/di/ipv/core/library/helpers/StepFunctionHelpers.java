@@ -49,7 +49,7 @@ public class StepFunctionHelpers {
         LogHelper.attachFeatureSetToLogs(Collections.singletonList(featureSet));
         return (featureSet != null)
                 ? Stream.of(featureSet.split(",")).map(String::trim).toList()
-                : null;
+                : Collections.EMPTY_LIST;
     }
 
     public static String getJourneyEvent(Map<String, String> input)
