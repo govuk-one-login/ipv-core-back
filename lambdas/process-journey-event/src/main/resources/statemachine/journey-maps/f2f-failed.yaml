@@ -1,0 +1,35 @@
+# Entry points
+
+FAILED:
+  events:
+    next:
+      targetState: F2F_FAILED_PAGE
+
+# Journey states
+
+F2F_FAILED_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-technical
+  events:
+    next:
+      targetState: RESET_IDENTITY
+    end:
+      targetState: RETURN_TO_RP
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
+  events:
+    next:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response

@@ -2,7 +2,7 @@ plugins {
 	id "java"
 	id "idea"
 	id "jacoco"
-	id 'io.freefair.aspectj.post-compile-weaving' version '8.4'
+	id 'io.freefair.aspectj.post-compile-weaving' version '8.6'
 }
 
 repositories {
@@ -36,7 +36,8 @@ dependencies {
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.10.0",
 			"au.com.dius.pact.consumer:junit5:4.6.5",
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:pact-test-helpers')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

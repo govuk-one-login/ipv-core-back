@@ -1,66 +1,88 @@
-# parent states
-END_JOURNEY:
+# Entry points
+
+START:
   events:
     next:
-      targetState: END
+      targetState: IDENTITY_START_PAGE
+
+ENHANCED_VERIFICATION:
+  events:
+    next:
+      targetState: MITIGATION_01
+
+# Parent states
 
 CRI_STATE:
   events:
     not-found:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     fail-with-no-ci:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
     access-denied:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     enhanced-verification:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
     fail-with-ci:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     vcs-not-correlated:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
 
 CRI_TICF_STATE:
   events:
     enhanced-verification:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-ci:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     error:
-      targetState: ERROR
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
 
-# Shared states
-INITIAL_IPV_JOURNEY:
+# Journey states
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
   events:
     next:
-      targetState: CHECK_EXISTING_IDENTITY
+      targetState: IDENTITY_START_PAGE
+
+IDENTITY_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-identity-document-start
+  events:
+    next:
+      targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+    end:
+      targetState: F2F_START_PAGE
+      checkIfDisabled:
+        f2f:
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 F2F_START_PAGE:
   response:
@@ -96,132 +118,7 @@ BANK_ACCOUNT_START_PAGE:
     next:
       targetState: CRI_CLAIMED_IDENTITY_M2B
     end:
-      targetState: PYI_ESCAPE
-
-CHECK_EXISTING_IDENTITY:
-  response:
-    type: process
-    lambda: check-existing-identity
-  events:
-    next:
-      targetState: IPV_IDENTITY_START_PAGE
-    ipv-gpg45-medium:
-      targetState: IPV_IDENTITY_START_PAGE
-    reset-identity:
-      targetState: RESET_IDENTITY
-    reset-gpg45-identity:
-      targetState: RESET_GPG45_IDENTITY
-    reuse:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_REUSE
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
-    operational-profile-reuse:
-      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE
-    in-migration-reuse:
-      targetState: END
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_END
-    pending:
-      targetState: IPV_IDENTITY_PENDING_PAGE
-      checkFeatureFlag:
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_PENDING_PAGE_TEST
-    fail-with-ci:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
-    f2f-fail:
-      targetState: PYI_F2F_TECHNICAL
-    error:
-      targetState: ERROR
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
-    enhanced-verification:
-      targetState: MITIGATION_01
-
-RESET_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: IPV_IDENTITY_START_PAGE
-
-RESET_GPG45_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetState: IPV_IDENTITY_START_PAGE
-
-IPV_IDENTITY_REUSE_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-  parent: END_JOURNEY
-
-OPERATIONAL_PROFILE_REUSE_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-    context: operational-profile
-  parent: END_JOURNEY
-
-# User initiated details delete for f2f journey. Hidden behind deleteDetailsEnabled feature flag.
-IPV_IDENTITY_PENDING_PAGE_TEST:
-  response:
-    type: page
-    context: f2f-delete-details
-    pageId: page-ipv-pending
-  events:
-    next:
-      targetState: PYI_F2F_DELETE_PAGE
-
-IPV_IDENTITY_PENDING_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-pending
-  events:
-    next:
-      targetState: END
-
-IPV_IDENTITY_START_PAGE:
-  response:
-    type: page
-    pageId: page-ipv-identity-document-start
-  events:
-    next:
-      targetState: CRI_DCMAW
-      checkIfDisabled:
-        dcmaw:
-          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
-          checkIfDisabled:
-            f2f:
-              targetState: MULTIPLE_DOC_CHECK_PAGE
-    end:
-      targetState: F2F_START_PAGE
-      checkIfDisabled:
-        f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+      targetState: PYI_ESCAPE_M2B
 
 CRI_F2F:
   response:
@@ -234,30 +131,31 @@ CRI_F2F:
     enhanced-verification:
       targetState: F2F_HANDOFF_PAGE
     access-denied:
-      targetState: PYI_ANOTHER_WAY
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_NO_TICF
     not-found:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-no-ci:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-ci:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     vcs-not-correlated:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     error:
-      targetState: ERROR
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
     temporarily-unavailable:
-      targetState: ERROR
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
 
 F2F_HANDOFF_PAGE:
   response:
     type: page
     pageId: page-face-to-face-handoff
-
-PYI_ANOTHER_WAY:
-  response:
-    type: page
-    pageId: pyi-another-way
-  parent: END_JOURNEY
 
 CRI_DCMAW:
   response:
@@ -298,7 +196,7 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
@@ -313,22 +211,6 @@ MULTIPLE_DOC_F2F_CHECK_PAGE:
     end:
       targetState: F2F_PYI_POST_OFFICE
 
-PYI_NO_MATCH:
-  response:
-    type: page
-    pageId: pyi-no-match
-  parent: END_JOURNEY
-
-PYI_F2F_TECHNICAL:
-  response:
-    type: page
-    pageId: pyi-f2f-technical
-  events:
-    next:
-      targetState: RESET_IDENTITY
-    end:
-      targetState: END
-
 PYI_ESCAPE:
   response:
     type: page
@@ -337,7 +219,7 @@ PYI_ESCAPE:
     next:
       targetState: RESET_IDENTITY
     end:
-      targetState: END
+      targetState: RETURN_TO_RP
 
 PYI_CRI_ESCAPE:
   response:
@@ -360,20 +242,7 @@ PYI_CRI_ESCAPE_NO_F2F:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
-      targetState: END
-
-ERROR:
-  response:
-    type: error
-    pageId: pyi-technical
-    statusCode: 500
-  parent: END_JOURNEY
-
-CORE_SESSION_TIMEOUT:
-  response:
-    type: page
-    pageId: pyi-timeout-unrecoverable
-  parent: END_JOURNEY
+      targetState: RETURN_TO_RP
 
 EVALUATE_GPG45_SCORES:
   response:
@@ -386,23 +255,21 @@ EVALUATE_GPG45_SCORES:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS
     unmet:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     vcs-not-correlated:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
 
 IPV_SUCCESS_PAGE:
   response:
     type: page
     pageId: page-ipv-success
-  parent: END_JOURNEY
+  events:
+    next:
+      targetState: RETURN_TO_RP
 
-END:
+RETURN_TO_RP:
   response:
     type: process
     lambda: build-client-oauth-response
@@ -416,36 +283,6 @@ CRI_TICF_BEFORE_SUCCESS:
     next:
       targetState: IPV_SUCCESS_PAGE
 
-CRI_TICF_BEFORE_REUSE:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-      checkFeatureFlag:
-        deleteDetailsEnabled:
-          targetState: IPV_IDENTITY_REUSE_PAGE_TEST
-
-CRI_TICF_BEFORE_OPERATIONAL_PROFILE_REUSE:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: OPERATIONAL_PROFILE_REUSE_PAGE
-
-CRI_TICF_BEFORE_END:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: END
-
 CRI_TICF_BEFORE_F2F:
   response:
     type: process
@@ -456,37 +293,6 @@ CRI_TICF_BEFORE_F2F:
       targetState: CRI_F2F
     enhanced-verification:
       targetState: CRI_F2F
-
-CRI_TICF_BEFORE_NO_MATCH:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: PYI_NO_MATCH
-
-CRI_TICF_BEFORE_ANOTHER_WAY:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: PYI_ANOTHER_WAY
-    enhanced-verification:
-      targetState: PYI_ANOTHER_WAY
-
-CRI_TICF_BEFORE_ERROR:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  parent: CRI_TICF_STATE
-  events:
-    next:
-      targetState: ERROR
-    enhanced-verification:
-      targetState: ERROR
 
 # Common pages
 PRE_EXPERIAN_KBV_TRANSITION_PAGE:
@@ -516,107 +322,6 @@ CRI_EXPERIAN_KBV:
         f2f:
           targetState: MITIGATION_02_OPTIONS
 
-# User initiated details delete
-IPV_IDENTITY_REUSE_PAGE_TEST:
-  response:
-    type: page
-    pageId: page-ipv-reuse
-  parent: END_JOURNEY
-  events:
-    next:
-      targetState:
-        PYI_NEW_DETAILS_PAGE
-
-PYI_F2F_DELETE_PAGE:
-  response:
-    type: page
-    pageId: pyi-f2f-delete-details
-  parent: END_JOURNEY
-  events:
-    next:
-      targetState:
-        PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE
-    end:
-      targetState:
-        IPV_IDENTITY_PENDING_PAGE_TEST
-
-PYI_F2F_CONFIRM_DELETE_DETAILS_PAGE:
-  response:
-    type: page
-    context: f2f
-    pageId: pyi-confirm-delete-details
-  events:
-    next:
-      targetState:
-        RESET_IDENTITY_USER_INITIATED_F2F
-    end:
-      targetState:
-        IPV_IDENTITY_PENDING_PAGE_TEST
-
-PYI_NEW_DETAILS_PAGE:
-  response:
-    type: page
-    pageId: pyi-new-details
-  events:
-    next:
-      targetState:
-        PYI_CONFIRM_DELETE_DETAILS_PAGE
-    end:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-
-PYI_CONFIRM_DELETE_DETAILS_PAGE:
-  response:
-    type: page
-    pageId: pyi-confirm-delete-details
-  events:
-    next:
-      targetState:
-        RESET_IDENTITY_USER_INITIATED
-    end:
-      targetState: IPV_IDENTITY_REUSE_PAGE
-
-RESET_IDENTITY_USER_INITIATED:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: PYI_DETAILS_DELETED_PAGE
-
-PYI_DETAILS_DELETED_PAGE:
-  response:
-    type: page
-    pageId: pyi-details-deleted
-  events:
-    next:
-      targetState:
-        IPV_IDENTITY_START_PAGE
-
-RESET_IDENTITY_USER_INITIATED_F2F:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: PYI_DETAILS_DELETED_PAGE_F2F
-
-PYI_DETAILS_DELETED_PAGE_F2F:
-  response:
-    type: page
-    context: f2f
-    pageId: pyi-details-deleted
-  events:
-    next:
-      targetState:
-        IPV_IDENTITY_START_PAGE
-
-
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
   response:
@@ -632,10 +337,8 @@ ADDRESS_AND_FRAUD_J1:
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
 
 # Passport journey (J2)
 CRI_UK_PASSPORT_J2:
@@ -703,10 +406,8 @@ CHECK_FRAUD_SCORE_J3:
         hmrcKbv:
           targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
     unmet:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -800,7 +501,8 @@ CRI_BANK_ACCOUNT_M2B:
     next:
       targetState: CRI_NINO_WITH_SCOPE_M2B
     fail-with-ci:
-      targetState: PYI_NO_MATCH_BAV_M2B
+      targetJourney: FAILED
+      targetState: FAILED_BAV
 
 CRI_NINO_WITH_SCOPE_M2B:
   response:
@@ -841,27 +543,63 @@ CRI_EXPERIAN_KBV_M2B:
   parent: CRI_STATE
   events:
     fail-with-no-ci:
-      targetState: PYI_CRI_ESCAPE
+      targetState: PYI_KBV_DROPOUT_M2B
       checkIfDisabled:
         f2f:
           targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
-      targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+      targetState: MITIGATION_KBV_FAIL_M2B
       checkIfDisabled:
         f2f:
           targetState: MITIGATION_02_OPTIONS
 
-PYI_NO_MATCH_BAV_M2B:
+MITIGATION_KBV_FAIL_M2B:
+  response:
+    mitigationStart: true
+    type: page
+    pageId: pyi-kbv-escape-m2b
+  events:
+    f2f:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F
+    dcmaw:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
+
+PYI_ESCAPE_M2B:
   response:
     type: page
-    context: bankAccount
-    pageId: pyi-no-match
-  parent: END_JOURNEY
+    pageId: pyi-escape-m2b
+  events:
+    next:
+      targetState: IDENTITY_START_PAGE
+    bankAccount:
+      targetState: BANK_ACCOUNT_START_PAGE
+    end:
+      targetState: RETURN_TO_RP
+
+PYI_KBV_DROPOUT_M2B:
+  response:
+    type: page
+    pageId: pyi-kbv-escape-m2b
+    context: dropout
+  events:
+    f2f:
+      targetState: CRI_F2F
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_F2F
+    dcmaw:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
 
 # Mitigation journey (01)
 MITIGATION_01:
@@ -887,10 +625,8 @@ MITIGATION_01_IDENTITY_START_PAGE:
       targetState: MITIGATION_01_F2F_START_PAGE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 MITIGATION_01_CRI_DCMAW:
   response:
@@ -901,42 +637,32 @@ MITIGATION_01_CRI_DCMAW:
     next:
       targetState: POST_DCMAW_SUCCESS_PAGE
     not-found:
-      targetState: PYI_NO_MATCH
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED
     access-denied:
       targetState: MITIGATION_01_PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     temporarily-unavailable:
       targetState: MITIGATION_01_PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     fail-with-no-ci:
       targetState: MITIGATION_01_PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     enhanced-verification:
       targetState: MITIGATION_01_PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 MITIGATION_01_F2F_START_PAGE:
   response:
@@ -949,10 +675,8 @@ MITIGATION_01_F2F_START_PAGE:
         ticfCriBeta:
           targetState: CRI_CLAIMED_IDENTITY_J4
     end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
 
 MITIGATION_01_PYI_POST_OFFICE:
   response:
@@ -965,10 +689,8 @@ MITIGATION_01_PYI_POST_OFFICE:
         ticfCriBeta:
           targetState: CRI_CLAIMED_IDENTITY_J4
     end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
@@ -980,10 +702,8 @@ MITIGATION_02_OPTIONS:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
 
 CRI_DCMAW_PYI_ESCAPE:
   response:
@@ -997,42 +717,32 @@ CRI_DCMAW_PYI_ESCAPE:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_NO_MATCH
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_NO_MATCH
+          targetJourney: FAILED
+          targetState: FAILED
     access-denied:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     temporarily-unavailable:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     fail-with-no-ci:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
     enhanced-verification:
       targetState: PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
-          targetState: PYI_ANOTHER_WAY
-          checkFeatureFlag:
-            ticfCriBeta:
-              targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 MITIGATION_02_OPTIONS_WITH_F2F:
   response:
@@ -1047,11 +757,6 @@ MITIGATION_02_OPTIONS_WITH_F2F:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 MITIGATION_02_OPTIONS_WITH_F2F_M2B:
   response:
@@ -1067,11 +772,6 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
-    end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
 PYI_POST_OFFICE:
   response:
@@ -1084,7 +784,5 @@ PYI_POST_OFFICE:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
     end:
-      targetState: PYI_ANOTHER_WAY
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE

@@ -42,7 +42,7 @@ public class DataStoreIpvSessionIT {
             SecureTokenHelper.getInstance().generate();
 
     private static List<String> createdItemIds = new ArrayList<>();
-    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
+    private static final String START_STATE = "START";
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
@@ -107,7 +107,7 @@ public class DataStoreIpvSessionIT {
     private IpvSessionItem setUpIpvSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        ipvSessionItem.setUserState(START_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
@@ -142,7 +142,7 @@ public class DataStoreIpvSessionIT {
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        updatedIpvSessionItem.setUserState(START_STATE);
         updatedIpvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);
         updatedIpvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
 

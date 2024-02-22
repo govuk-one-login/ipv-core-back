@@ -9,18 +9,28 @@ body {
     overflow: hidden;
     font-family: sans-serif;
 }
-h1 {
-    display: flex;
-    gap: 8px;
-    background: black;
-    color: white;
-    padding: 8px;
-}
 #header {
     position: relative;
     border-bottom: 3px solid black;
     background: white;
     z-index: 1;
+}
+#header-bar {
+    display: flex;
+    background: black;
+    color: white;
+    padding: 8px;
+    align-items: center;
+}
+#header-bar h1 {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+ }
+#header-bar a {
+    flex: 1 1 auto;
+    color: white;
+    text-align: center;
 }
 #header-content {
     display: flex;
@@ -57,6 +67,8 @@ h1 {
 }
 #diagram > * {
     height: 100%;
+    width: 100%;
+    max-width: unset !important;
 }
 form {
     flex: 0 1 525px;
@@ -149,8 +161,13 @@ form fieldset p {
     background: #ffa;
     border-radius: 4px;
 }
-.key-node.error {
+.key-node.journey_transition {
+    background: #aaf;
+    border-radius: 4px;
+}
+.key-node.error_transition {
     background: #f99;
+    border-radius: 4px;
 }
 .key-node.other {
     background: #f3f2f1;

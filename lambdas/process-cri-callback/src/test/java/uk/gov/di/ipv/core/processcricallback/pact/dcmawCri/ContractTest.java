@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processcricallback.pact.dcmawCri;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -34,11 +35,12 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.pact.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
@@ -1289,12 +1291,13 @@ class ContractTest {
             "77iM911qVdFEzBmfDI_M6GP62jq51laUj0LyK5ISwWWioDuciwi4aZji6yVsjk-SsZsckt6EOVBlUQ0RhFPRuA";
 
     @Mock private ConfigService mockConfigService;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given("c6af9ac6-7b61-11e6-9a41-93e8deadbeef is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyDcmawComponentId is the DCMAW CRI component ID")
                 .given(
@@ -1303,7 +1306,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Ddcmaw&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=c6af9ac6-7b61-11e6-9a41-93e8deadbeef&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fmock-redirect-uri.gov.uk&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -1341,6 +1344,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -1350,12 +1354,16 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -1374,7 +1382,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Ddcmaw&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fmock-redirect-uri.gov.uk&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -1404,6 +1412,7 @@ class ContractTest {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate())
@@ -1413,7 +1422,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -1445,8 +1457,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DVLA_VC_BODY, VALID_DVLA_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVLA_VC_BODY,
+                                                            VALID_DVLA_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1462,13 +1492,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1542,10 +1576,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
-                                VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVLA_VC_NO_GIVEN_NAME_BODY,
+                                                            VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1561,13 +1611,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1638,10 +1692,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_DVLA_VC_WITH_CI_BODY,
-                                FAILED_DVLA_VC_WITH_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_DVLA_VC_WITH_CI_BODY,
+                                                            FAILED_DVLA_VC_WITH_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1657,13 +1727,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1737,10 +1811,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_DVA_VC_NO_CI_BODY,
-                                FAILED_DVA_VC_NO_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_DVA_VC_NO_CI_BODY,
+                                                            FAILED_DVA_VC_NO_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1756,13 +1846,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1837,8 +1931,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_DVA_VC_BODY, VALID_DVA_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DVA_VC_BODY,
+                                                            VALID_DVA_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1854,13 +1966,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1937,10 +2053,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
-                                VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
+                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -1956,13 +2088,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2036,10 +2172,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_UK_PASSPORT_VC_BODY,
-                                VALID_UK_PASSPORT_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_UK_PASSPORT_VC_BODY,
+                                                            VALID_UK_PASSPORT_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2055,13 +2207,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2128,10 +2284,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                VALID_NLD_PASSPORT_VC_BODY,
-                                VALID_NLD_PASSPORT_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_NLD_PASSPORT_VC_BODY,
+                                                            VALID_NLD_PASSPORT_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2147,13 +2319,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2204,6 +2380,84 @@ class ContractTest {
                         });
     }
 
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCriOAuthSessionItem());
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode vc =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vc.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode residencePermitNode =
+                                        credentialSubject.get("residencePermit").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+
+                                assertEquals(
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "ZR8016200",
+                                        residencePermitNode.get("documentNumber").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
+
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
+
+                                assertEquals(4, evidence.get("strengthScore").asInt());
+                                assertEquals(3, evidence.get("validityScore").asInt());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedPassportCredential(
             PactDslWithProvider builder) {
@@ -2220,10 +2474,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER,
-                                FAILED_PASSPORT_VC_WITH_CI_BODY,
-                                FAILED_PASSPORT_VC_WITH_CI_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_PASSPORT_VC_WITH_CI_BODY,
+                                                            FAILED_PASSPORT_VC_WITH_CI_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2239,13 +2509,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2314,8 +2588,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_BRP_VC_BODY, VALID_BRP_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_BRP_VC_BODY,
+                                                            VALID_BRP_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2331,13 +2623,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2401,8 +2697,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_BRP_VC_BODY, FAILED_BRP_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BRP_VC_BODY,
+                                                            FAILED_BRP_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2418,13 +2732,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2491,83 +2809,27 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_BRC_VC_BODY, VALID_BRC_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_BRC_VC_BODY,
+                                                            VALID_BRC_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
-
-        // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
-
-        // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
-
-                                JsonNode vc =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vc.get("credentialSubject");
-                                JsonNode evidence = vc.get("evidence").get(0);
-
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode residencePermitNode =
-                                        credentialSubject.get("residencePermit").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals(
-                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
-
-                                assertEquals(
-                                        "2024-02-25",
-                                        residencePermitNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "ZR8016200",
-                                        residencePermitNode.get("documentNumber").asText());
-                                assertEquals(
-                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals(
-                                        "CR", residencePermitNode.get("documentType").asText());
-
-                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
-
-                                assertEquals(4, evidence.get("strengthScore").asInt());
-                                assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
@@ -2585,8 +2847,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_BRC_VC_BODY, FAILED_BRC_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BRC_VC_BODY,
+                                                            FAILED_BRC_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -2602,13 +2882,17 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -2698,7 +2982,10 @@ class ContractTest {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSigner, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -2707,7 +2994,9 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest(
+                                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+                                                credentialIssuerConfig),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -2774,9 +3063,7 @@ class ContractTest {
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
                 .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
-                .clientCallbackUrl(
-                        URI.create(
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw"))
+                .clientCallbackUrl(URI.create("https://mock-redirect-uri.gov.uk"))
                 .requiresApiKey(true)
                 .requiresAdditionalEvidence(false)
                 .build();

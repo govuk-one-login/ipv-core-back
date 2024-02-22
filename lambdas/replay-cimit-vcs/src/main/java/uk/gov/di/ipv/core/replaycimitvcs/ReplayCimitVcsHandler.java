@@ -34,7 +34,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     private final CiMitService ciMitService;
     private final VerifiableCredentialService verifiableCredentialService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings("unused") // Used through dependency injection
     public ReplayCimitVcsHandler(
             ConfigService configService,
             CiMitService ciMitService,
@@ -44,7 +44,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
         this.verifiableCredentialService = verifiableCredentialService;
     }
 
-    @SuppressWarnings("unused") // Used through dependency injection
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
         this.configService = new ConfigService();
@@ -56,7 +56,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     @Tracing
     @Logging(clearState = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         ObjectMapper mapper = new ObjectMapper();
         String failureMessage = "Failed to replay VCs to CIMIT because: '%s'";
         List<ReplayItem> requestItems;

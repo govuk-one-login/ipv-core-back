@@ -49,7 +49,7 @@ class StateMachineInitializerTest {
         assertThrows(
                 JourneyMapDeserializationException.class,
                 () -> {
-                    new StateMachineInitializer(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY, modeMock)
+                    new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock)
                             .initialize();
                 });
     }
@@ -59,7 +59,7 @@ class StateMachineInitializerTest {
     void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
-                                IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
+                                IpvJourneyTypes.INITIAL_JOURNEY_SELECTION,
                                 StateMachineInitializerMode.TEST)
                         .initialize();
 
@@ -90,19 +90,6 @@ class StateMachineInitializerTest {
                                 ((BasicEvent) pageState.getEvents().get("eventTwo"))
                                         .getCheckIfDisabled()
                                         .get("aCriId"))
-                        .getTargetStateObj());
-
-        // journey state assertions
-        assertEquals("/journey/letsgosomewhere", journeyState.getResponse().value().get("journey"));
-        assertEquals(
-                criState,
-                ((BasicEvent) journeyState.getEvents().get("eventOne")).getTargetStateObj());
-        assertEquals(
-                errorState,
-                ((BasicEvent)
-                                ((BasicEvent) journeyState.getEvents().get("eventOne"))
-                                        .getCheckFeatureFlag()
-                                        .get("aFeatureFlagName"))
                         .getTargetStateObj());
 
         // cri state assertions
@@ -192,9 +179,7 @@ class StateMachineInitializerTest {
                         .getTargetStateObj());
 
         // nested state one assertions
-        assertEquals(
-                "/journey/nestedStateOneJourneyStepId",
-                nestedStateOne.getResponse().value().get("journey"));
+        assertEquals("page-id-nested-state-one", nestedStateOne.getResponse().value().get("page"));
         assertEquals(parentState, nestedStateOne.getParentObj());
         assertEquals(
                 nestedStateTwo,
@@ -240,8 +225,8 @@ class StateMachineInitializerTest {
 
         // doubly nested state one assertions
         assertEquals(
-                "/journey/doublyNestedStateOneJourneyStepId",
-                doublyNestedStateOne.getResponse().value().get("journey"));
+                "page-id-doubly-nested-state-one",
+                doublyNestedStateOne.getResponse().value().get("page"));
         assertEquals(
                 doublyNestedStateTwo,
                 ((BasicEvent) doublyNestedStateOne.getEvents().get("eventOne"))

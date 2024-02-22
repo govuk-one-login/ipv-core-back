@@ -60,7 +60,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final VerifiableCredentialService verifiableCredentialService;
     private final UserIdentityService userIdentityService;
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings("unused") // Used through dependency injection
     public ResetIdentityHandler(
             ConfigService configService,
             AuditService auditService,
@@ -80,7 +80,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.userIdentityService = userIdentityService;
     }
 
-    @SuppressWarnings("unused") // Used through dependency injection
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public ResetIdentityHandler() {
         this.configService = new ConfigService();
@@ -97,7 +97,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);

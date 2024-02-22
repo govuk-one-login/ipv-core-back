@@ -34,8 +34,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachi
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
@@ -45,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -54,8 +54,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STA
 public class ProcessJourneyEventHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
+    private static final String NEXT_EVENT = "next";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -85,14 +85,14 @@ public class ProcessJourneyEventHandler
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
                 loadStateMachines(
-                        List.of(IPV_CORE_MAIN_JOURNEY), StateMachineInitializerMode.STANDARD);
+                        List.of(IpvJourneyTypes.values()), StateMachineInitializerMode.STANDARD);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             // Extract variables
@@ -139,34 +139,33 @@ public class ProcessJourneyEventHandler
     @Tracing
     private StepResponse executeJourneyEvent(String journeyEvent, IpvSessionItem ipvSessionItem)
             throws JourneyEngineException {
-        String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
-            updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID, "", null);
+            updateUserSessionForTimeout(ipvSessionItem.getUserState(), ipvSessionItem);
+            journeyEvent = NEXT_EVENT;
         }
 
         try {
-            StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
-            if (stateMachine == null) {
-                throw new StateMachineNotFoundException(
-                        String.format(
-                                "State machine not found for journey type: '%s'",
-                                ipvSessionItem.getJourneyType()));
-            }
-            LOGGER.info(
-                    "Found state machine for journey type: {}",
-                    ipvSessionItem.getJourneyType().getValue());
+            var newState = executeStateTransition(ipvSessionItem, journeyEvent);
 
-            BasicState newState =
-                    (BasicState)
-                            stateMachine.transition(
-                                    ipvSessionItem.getUserState(),
-                                    journeyEvent,
-                                    JourneyContext.withFeatureSet(configService.getFeatureSet()));
+            while (newState instanceof JourneyChangeState journeyChangeState) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Transitioned to new journey type")
+                                .with(
+                                        LOG_JOURNEY_TYPE.getFieldName(),
+                                        journeyChangeState.getJourneyType())
+                                .with(
+                                        LOG_USER_STATE.getFieldName(),
+                                        journeyChangeState.getInitialState()));
+                ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
+                ipvSessionItem.setUserState(journeyChangeState.getInitialState());
+                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
+            }
+
+            var basicState = (BasicState) newState;
 
             updateUserState(
                     ipvSessionItem.getUserState(),
-                    newState.getName(),
+                    basicState.getName(),
                     journeyEvent,
                     ipvSessionItem);
 
@@ -174,7 +173,7 @@ public class ProcessJourneyEventHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return newState.getResponse();
+            return basicState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -203,6 +202,28 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
+    private State executeStateTransition(IpvSessionItem ipvSessionItem, String journeyEvent)
+            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
+        StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
+        if (stateMachine == null) {
+            throw new StateMachineNotFoundException(
+                    String.format(
+                            "State machine not found for journey type: '%s'",
+                            ipvSessionItem.getJourneyType()));
+        }
+        LOGGER.debug(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Found state machine for journey type: %s",
+                                ipvSessionItem.getJourneyType().name())));
+
+        return stateMachine.transition(
+                ipvSessionItem.getUserState(),
+                journeyEvent,
+                JourneyContext.withFeatureSet(configService.getFeatureSet()));
+    }
+
+    @Tracing
     private void updateUserState(
             String oldState, String newState, String journeyEvent, IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setUserState(newState);
@@ -226,20 +247,13 @@ public class ProcessJourneyEventHandler
     private void updateUserSessionForTimeout(String oldState, IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-        var message =
-                new StringMapMessage()
-                        .with("journeyEngine", "State transition")
-                        .with("event", "timeout")
-                        .with("from", oldState)
-                        .with("to", CORE_SESSION_TIMEOUT_STATE);
-        LOGGER.info(message);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.SESSION_TIMEOUT);
+        updateUserState(oldState, CORE_SESSION_TIMEOUT_STATE, "timeout", ipvSessionItem);
     }
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!CORE_SESSION_TIMEOUT_STATE.equals(ipvSessionItem.getUserState()))
+        return (!IpvJourneyTypes.SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()

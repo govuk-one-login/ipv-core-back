@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -42,7 +41,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -98,7 +97,7 @@ public class BuildCriOauthRequestHandler
     private final ObjectMapper mapper = new ObjectMapper();
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
-    private final JWSSigner signer;
+    private final KmsEs256SignerFactory signerFactory;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
@@ -109,7 +108,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler(
             ConfigService configService,
             UserIdentityService userIdentityService,
-            JWSSigner signer,
+            KmsEs256SignerFactory signerFactory,
             AuditService auditService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
@@ -119,7 +118,7 @@ public class BuildCriOauthRequestHandler
 
         this.configService = configService;
         this.userIdentityService = userIdentityService;
-        this.signer = signer;
+        this.signerFactory = signerFactory;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
@@ -133,7 +132,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
-        this.signer = new KmsEs256Signer();
+        this.signerFactory = new KmsEs256SignerFactory();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
@@ -147,10 +146,7 @@ public class BuildCriOauthRequestHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
-        if (signer instanceof KmsEs256Signer kmsEs256Signer) {
-            kmsEs256Signer.setKeyId(configService.getSigningKeyId());
-        }
+        LogHelper.attachComponentId(configService);
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
@@ -326,7 +322,7 @@ public class BuildCriOauthRequestHandler
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
-                        signer,
+                        signerFactory.getSigner(configService.getSigningKeyId()),
                         oauthCriConfig,
                         configService,
                         oauthState,

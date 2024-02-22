@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.kmses256signer;
 
 import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.MessageType;
 import com.amazonaws.services.kms.model.SignRequest;
 import com.amazonaws.services.kms.model.SignResult;
@@ -14,7 +13,6 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jca.JCAContext;
 import com.nimbusds.jose.util.Base64URL;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -28,19 +26,11 @@ public class KmsEs256Signer implements JWSSigner {
 
     private static final Base64.Encoder b64UrlEncoder = Base64.getUrlEncoder();
     private final JCAContext jcaContext = new JCAContext();
-    private String keyId;
+    private final String keyId;
 
-    @ExcludeFromGeneratedCoverageReport
-    public KmsEs256Signer() {
-        this.kmsClient = AWSKMSClientBuilder.defaultClient();
-    }
-
-    public KmsEs256Signer(AWSKMS kmsClient) {
-        this.kmsClient = kmsClient;
-    }
-
-    public void setKeyId(String keyId) {
+    public KmsEs256Signer(AWSKMS kmsClient, String keyId) {
         this.keyId = keyId;
+        this.kmsClient = kmsClient;
     }
 
     @Override

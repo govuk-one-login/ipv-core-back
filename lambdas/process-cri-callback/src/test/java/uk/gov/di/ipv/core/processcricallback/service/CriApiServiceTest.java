@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -23,6 +22,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
@@ -69,8 +69,8 @@ class CriApiServiceTest {
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static Map<String, Object> DCMAW_SUCCESS_RESPONSE;
     @Mock private ConfigService mockConfigService;
-    @Mock private ECDSASigner mockSigner;
-    @InjectMocks private CriApiService criApiService;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    private CriApiService criApiService;
 
     @BeforeAll
     static void setVcs() throws Exception {
@@ -84,13 +84,11 @@ class CriApiServiceTest {
     }
 
     @BeforeEach
-    void setUp(WireMockRuntimeInfo wmRuntimeInfo)
-            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        mockSigner = new ECDSASigner(getPrivateKey());
+    void setUp(WireMockRuntimeInfo wmRuntimeInfo) {
         criApiService =
                 new CriApiService(
                         mockConfigService,
-                        mockSigner,
+                        mockKmsEs256SignerFactory,
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
 
@@ -99,11 +97,13 @@ class CriApiServiceTest {
     }
 
     @Test
-    void fetchAccessTokenShouldReturnAccessTokenForValidTokenResponse() throws CriApiException {
+    void fetchAccessTokenShouldReturnAccessTokenForValidTokenResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -127,10 +127,12 @@ class CriApiServiceTest {
     }
 
     @Test
-    void fetchAccessTokenShouldReturnAccessTokenForNoApiKey() throws CriApiException {
+    void fetchAccessTokenShouldReturnAccessTokenForNoApiKey() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -154,11 +156,13 @@ class CriApiServiceTest {
     }
 
     @Test
-    void fetchAccessTokenThrowsCriApiExceptionForErrorTokenResponse() {
+    void fetchAccessTokenThrowsCriApiExceptionForErrorTokenResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -181,11 +185,13 @@ class CriApiServiceTest {
     }
 
     @Test
-    void fetchAccessTokenThrowsCriApiExceptionForInvalidHeaderResponse() {
+    void fetchAccessTokenThrowsCriApiExceptionForInvalidHeaderResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -207,11 +213,13 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldGetApiKeyIfPresent() throws CriApiException {
+    void buildFetchAccessTokenRequestShouldGetApiKeyIfPresent() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
@@ -222,10 +230,12 @@ class CriApiServiceTest {
 
     @Test
     void buildFetchAccessTokenRequestShouldUseCorrectTokenEndpoint(
-            WireMockRuntimeInfo wmRuntimeInfo) throws CriApiException {
+            WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
@@ -237,13 +247,15 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldHandleJOSEException() {
+    void buildFetchAccessTokenRequestShouldHandleJOSEException() throws Exception {
         // Arrange
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
                     .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
             when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+            when(mockKmsEs256SignerFactory.getSigner(any()))
+                    .thenReturn(new ECDSASigner(getPrivateKey()));
 
             var callbackRequest = getValidCallbackRequest();
 
@@ -255,12 +267,13 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey()
-            throws CriApiException {
+    void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn("InvalidApiKey");
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var httpRequest = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
@@ -271,10 +284,12 @@ class CriApiServiceTest {
 
     @Test
     void buildFetchAccessTokenRequestShouldIncludeAuthorizationCodeInRequestBody()
-            throws CriApiException {
+            throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
@@ -284,11 +299,12 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody()
-            throws CriApiException {
+    void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
