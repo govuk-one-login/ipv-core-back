@@ -132,9 +132,7 @@ public class ConfigService {
     }
 
     public List<String> getFeatureSet() {
-        return (featureSet != null && !featureSet.isEmpty())
-                ? featureSet
-                : Collections.singletonList(null);
+        return (featureSet != null && !featureSet.isEmpty()) ? featureSet : null;
     }
 
     public void setFeatureSet(List<String> featureSet) {

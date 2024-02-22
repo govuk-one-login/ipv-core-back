@@ -66,7 +66,9 @@ public class IpvSessionItem implements DynamodbItem {
     }
 
     public List<String> getFeatureSet() {
-        return Stream.of(featureSet.split(",")).map(String::trim).toList();
+        return (featureSet != null)
+                ? Stream.of(featureSet.split(",")).map(String::trim).toList()
+                : null;
     }
 
     public void setFeatureSet(List<String> featureSet) {

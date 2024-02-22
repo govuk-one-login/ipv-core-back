@@ -261,7 +261,12 @@ class ConfigServiceTest {
     void shouldNormaliseNullAndEmptyFeatureSetsToNull(
             String featureSet, String expectedFeatureSet) {
         configService.setFeatureSet(Collections.singletonList(featureSet));
-        assertEquals(Collections.singletonList(expectedFeatureSet), configService.getFeatureSet());
+        if (expectedFeatureSet == null) {
+            assertEquals(expectedFeatureSet, configService.getFeatureSet());
+        } else {
+            assertEquals(
+                    Collections.singletonList(expectedFeatureSet), configService.getFeatureSet());
+        }
     }
 
     @Nested
