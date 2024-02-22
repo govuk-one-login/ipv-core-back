@@ -34,6 +34,9 @@ CHECK_EXISTING_IDENTITY:
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED
+    fail-with-ci-and-forced-reset:
+      targetJourney: FAILED
+      targetState: FAILED_FORCED_RESET
     f2f-fail:
       targetJourney: F2F_FAILED
       targetState: FAILED
