@@ -45,7 +45,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
@@ -55,6 +54,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
@@ -76,6 +76,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static String M1A_MULTI_ADDRESS_VC;
     private static String M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
     private static String M1A_EXPERIAN_FRAUD_VC;
+    private static String M1A_VERIFICATION_VC;
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -122,6 +123,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         M1A_MULTI_ADDRESS_VC = vcAddressMultipleAddresses();
         M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD = vcAddressMultipleAddressesNoValidFrom();
         M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
+        M1A_VERIFICATION_VC = vcVerificationM1a();
     }
 
     @Test

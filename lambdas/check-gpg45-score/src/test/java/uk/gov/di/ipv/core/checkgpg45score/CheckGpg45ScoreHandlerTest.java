@@ -38,11 +38,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class CheckGpg45ScoreHandlerTest {
@@ -82,6 +82,8 @@ class CheckGpg45ScoreHandlerTest {
         String M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
         String M1A_ADDRESS_VC = vcAddressM1a();
         String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
+        String M1A_VERIFICATION_VC = vcVerificationM1a();
+        String M1B_DCMAW_VC = vcDcmawM1b();
         CREDENTIALS =
                 List.of(
                         M1A_PASSPORT_VC,

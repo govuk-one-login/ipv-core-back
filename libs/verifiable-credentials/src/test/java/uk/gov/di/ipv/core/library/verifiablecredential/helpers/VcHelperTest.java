@@ -31,12 +31,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
@@ -47,6 +48,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aMissin
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
@@ -69,6 +72,10 @@ class VcHelperTest {
     private static String VC_EXPERIAN_FRAUD_SCORE_1;
     private static String VC_DRIVING_PERMIT_DCMAW;
     private static String VC_NINO_SUCCESSFUL;
+    private static String VC_TICF;
+    private static String M1A_VERIFICATION_VC;
+    private static String M1B_DCMAW_VC;
+    private static String M1A_F2F_VC;
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -88,6 +95,10 @@ class VcHelperTest {
         VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
         VC_DRIVING_PERMIT_DCMAW = vcDrivingPermit();
         VC_NINO_SUCCESSFUL = vcNinoSuccessful();
+        VC_TICF = vcTicf();
+        M1A_VERIFICATION_VC = vcVerificationM1a();
+        M1B_DCMAW_VC = vcDcmawM1b();
+        M1A_F2F_VC = vcF2fM1a();
     }
 
     static {

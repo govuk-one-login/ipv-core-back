@@ -87,13 +87,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -118,6 +118,7 @@ class CheckExistingIdentityHandlerTest {
     private static List<VcStoreItem> VC_STORE_ITEMS;
     private static List<String> CREDENTIALS;
     private static final String TICF_CRI = "ticf";
+    private static String M1A_F2F_VC;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
@@ -161,6 +162,9 @@ class CheckExistingIdentityHandlerTest {
         String M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
         String M1A_ADDRESS_VC = vcAddressM1a();
         String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
+        String M1A_VERIFICATION_VC = vcVerificationM1a();
+        String M1B_DCMAW_VC = vcDcmawM1b();
+        M1A_F2F_VC = vcF2fM1a();
         CREDENTIALS =
                 List.of(
                         M1A_PASSPORT_VC,

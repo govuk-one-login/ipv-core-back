@@ -42,9 +42,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,6 +75,7 @@ class TicfCriServiceTest {
         VC_ADDRESS = vcAddressOne();
         String M1A_ADDRESS_VC = vcAddressM1a();
         String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
+        String M1B_DCMAW_VC = vcDcmawM1b();
         credentials = List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
         ticfCriResponse =
                 new TicfCriDto(

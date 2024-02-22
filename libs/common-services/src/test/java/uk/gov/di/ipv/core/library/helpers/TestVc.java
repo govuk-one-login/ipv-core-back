@@ -63,6 +63,8 @@ public class TestVc {
         private List<Object> address;
         private List<Object> socialSecurityRecord;
         private List<Object> drivingPermit;
+        private List<Object> residencePermit;
+        private List<Object> idCard;
     }
 
     @AllArgsConstructor

@@ -82,27 +82,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitFailedChecks;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcMissingCredentialSubject;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoMissingSocialSecurityRecord;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoUnsuccessful;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingPassport;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
@@ -147,6 +127,9 @@ class UserIdentityServiceTest {
     private static String VC_NINO_SUCCESSFUL;
     private static String VC_NINO_UNSUCCESSFUL;
     private static String VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
+    private static String VC_TICF;
+    private static String M1B_DCMAW_VC;
+    private static String M1A_F2F_VC;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -183,6 +166,9 @@ class UserIdentityServiceTest {
         VC_NINO_SUCCESSFUL = vcNinoSuccessful();
         VC_NINO_UNSUCCESSFUL = vcNinoUnsuccessful();
         VC_NINO_MISSING_SOCIAL_SECURITY_RECORD = vcNinoMissingSocialSecurityRecord();
+        VC_TICF = vcTicf();
+        M1B_DCMAW_VC = vcDcmawM1b();
+        M1A_F2F_VC = vcF2fM1a();
     }
 
     @BeforeEach

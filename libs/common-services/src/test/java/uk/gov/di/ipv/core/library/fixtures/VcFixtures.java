@@ -11,9 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.CRI_STUB_CHECK_EVIDENCE_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 
 public interface VcFixtures {
@@ -136,6 +139,12 @@ public interface VcFixtures {
                                                     2)))
                             .build());
 
+    List<TestVc.TestEvidence> TICF_EVIDENCE =
+            List.of(
+                    TestVc.TestEvidence.builder()
+                            .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
+                            .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                            .build());
     Map<String, String> ADDRESS_1 =
             Map.ofEntries(
                     Map.entry("validFrom", "2000-01-01"),
@@ -237,6 +246,19 @@ public interface VcFixtures {
                             new NameParts("Alice", VC_GIVEN_NAME),
                             new NameParts("Jane", VC_GIVEN_NAME),
                             new NameParts("Parker", VC_FAMILY_NAME)));
+    Map<String, List<NameParts>> MORGAN_SARAH_MEREDYTH_NAME =
+            Map.of(
+                    VC_NAME_PARTS,
+                    List.of(
+                            new NameParts("MORGAN", VC_GIVEN_NAME),
+                            new NameParts("SARAH MEREDYTH", VC_FAMILY_NAME)));
+
+    Map<String, List<NameParts>> MARY_WATSON_NAME =
+            Map.of(
+                    VC_NAME_PARTS,
+                    List.of(
+                            new NameParts("Mary", VC_GIVEN_NAME),
+                            new NameParts("Watson", VC_FAMILY_NAME)));
 
     Map<String, Object> DRIVING_PERMIT =
             Map.of(
@@ -608,6 +630,196 @@ public interface VcFixtures {
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
                 "https://review-xx.account.gov.uk",
                 Instant.ofEpochSecond(1697097326));
+    }
+
+    static String vcTicf() throws Exception {
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .credentialSubject(null)
+                        .evidence(TICF_EVIDENCE)
+                        .type(
+                                new String[] {
+                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
+                                })
+                        .build(),
+                "urn:uuid:d1823066-2137-4380-b0ba-4b61947e08e6",
+                "https://tcif.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1704822570));
+    }
+
+    static String vcVerificationM1a() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_4))
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .passport(null)
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("abc1234")
+                                                .verificationScore(2)
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "test-subject",
+                "https://review-k.integration.account.gov.uk",
+                Instant.ofEpochSecond(1653403140));
+    }
+
+    static String vcDcmawM1b() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
+                        .address(List.of(ADDRESS_4))
+                        .drivingPermit(List.of(DRIVING_PERMIT))
+                        .passport(null)
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("bcd2346")
+                                                .strengthScore(3)
+                                                .validityScore(2)
+                                                .activityHistoryScore(1)
+                                                .checkDetails(
+                                                        List.of(
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "vri",
+                                                                        "identityCheckPolicy",
+                                                                        "published",
+                                                                        "activityFrom",
+                                                                        "2019-01-01"),
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "bvr",
+                                                                        "biometricVerificationProcessLevel",
+                                                                        3)))
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static String vcF2fM1a() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of(MARY_WATSON_NAME))
+                        .passport(
+                                List.of(
+                                        Map.of(
+                                                "expiryDate",
+                                                "2030-01-01",
+                                                "documentNumber",
+                                                "824159121")))
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("24929d38-420c-4ba9-b846-3005ee691e26")
+                                                .strengthScore(4)
+                                                .validityScore(2)
+                                                .verificationScore(2)
+                                                .checkDetails(
+                                                        List.of(
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "vri",
+                                                                        "identityCheckPolicy",
+                                                                        "published",
+                                                                        "txn",
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26"),
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "pvr",
+                                                                        "biometricVerificationProcessLevel",
+                                                                        3,
+                                                                        "txn",
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")))
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static String vcF2fBrp() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(
+                                List.of(
+                                        Map.of(
+                                                VC_NAME_PARTS,
+                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
+                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                        .passport(null)
+                        .residencePermit(
+                                List.of(
+                                        Map.of(
+                                                "icaoIssuerCode",
+                                                "UTO",
+                                                "documentType",
+                                                "CR",
+                                                "documentNumber",
+                                                "AX66K69P2",
+                                                "expiryDate",
+                                                "2030-07-13")))
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("some-uuid")
+                                                .type(CRI_STUB_CHECK_EVIDENCE_TYPE)
+                                                .verificationScore(2)
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1652953080));
+    }
+
+    static String vcF2fIdCard() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(
+                                List.of(
+                                        Map.of(
+                                                VC_NAME_PARTS,
+                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
+                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                        .passport(null)
+                        .idCard(
+                                List.of(
+                                        Map.of(
+                                                "icaoIssuerCode",
+                                                "NLD",
+                                                "documentNumber",
+                                                "SPEC12031",
+                                                "expiryDate",
+                                                "2031-08-02",
+                                                "issueDate",
+                                                "2021-08-02")))
+                        .build();
+        return generateVerifiableCredential(
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("some-uuid")
+                                                .type(CRI_STUB_CHECK_EVIDENCE_TYPE)
+                                                .verificationScore(2)
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1652953080));
     }
 
     static String vcMissingCredentialSubject() throws Exception {

@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_BRP_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.F2F_ID_CARD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +29,8 @@ class AuditExtensionsHelperTest {
     private static String VC_ADDRESS_2;
     private static String VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
     private static String VC_DRIVING_PERMIT_NON_DCMAW;
+    private static String F2F_BRP_VC;
+    private static String F2F_ID_CARD_VC;
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
@@ -38,6 +40,8 @@ class AuditExtensionsHelperTest {
         VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY =
                 vcDrivingPermitMissingDrivingPermit();
         VC_DRIVING_PERMIT_NON_DCMAW = vcDrivingPermitNonDcmaw();
+        F2F_BRP_VC = vcF2fBrp();
+        F2F_ID_CARD_VC = vcF2fIdCard();
     }
 
     @Test

@@ -50,8 +50,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +65,7 @@ class CallTicfCriHandlerTest {
     public static List<String> VC_IN_STORE;
     public static String M1A_ADDRESS_VC;
     public static String M1A_EXPERIAN_FRAUD_VC;
+    public static String M1B_DCMAW_VC;
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
@@ -74,7 +75,6 @@ class CallTicfCriHandlerTest {
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     public static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
-
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -93,6 +93,7 @@ class CallTicfCriHandlerTest {
     static void setVcs() throws Exception {
         M1A_ADDRESS_VC = vcAddressM1a();
         M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
+        M1B_DCMAW_VC = vcDcmawM1b();
         VC_IN_STORE = List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
     }
 
