@@ -12,8 +12,8 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @DynamoDbBean
@@ -67,12 +67,11 @@ public class IpvSessionItem implements DynamodbItem {
 
     public List<String> getFeatureSet() {
         return (featureSet != null)
-                ? Stream.of(featureSet.split(",")).map(String::trim).toList()
-                : null;
+                ? Stream.of(featureSet.split(",")).toList()
+                : Collections.emptyList();
     }
 
     public void setFeatureSet(List<String> featureSet) {
-        this.featureSet =
-                (featureSet != null) ? featureSet.stream().collect(Collectors.joining(",")) : null;
+        this.featureSet = (featureSet != null) ? String.join(",", featureSet) : null;
     }
 }

@@ -48,7 +48,7 @@ public class StepFunctionHelpers {
         String featureSet = input.get(FEATURE_SET);
         LogHelper.attachFeatureSetToLogs(Collections.singletonList(featureSet));
         return (featureSet != null)
-                ? Stream.of(featureSet.split(",")).map(String::trim).toList()
+                ? Stream.of(featureSet.split(",")).toList()
                 : Collections.emptyList();
     }
 

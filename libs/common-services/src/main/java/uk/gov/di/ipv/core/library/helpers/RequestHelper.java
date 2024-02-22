@@ -114,7 +114,7 @@ public class RequestHelper {
         String featureSetHeaderValue = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
         List<String> featureSet =
                 (featureSetHeaderValue != null)
-                        ? Stream.of(featureSetHeaderValue.split(",")).map(String::trim).toList()
+                        ? Stream.of(featureSetHeaderValue.split(",")).toList()
                         : Collections.emptyList();
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
