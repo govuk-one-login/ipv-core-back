@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -26,6 +27,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -33,6 +35,7 @@ import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -57,11 +60,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
@@ -72,6 +83,17 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static JourneyRequest request;
+    private static final List<VcStoreItem> VC_STORE_ITEMS =
+            List.of(
+                    TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                    TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
+                    TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                    TestFixtures.createVcStoreItem(
+                            TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -83,6 +105,8 @@ class EvaluateGpg45ScoresHandlerTest {
     public static OauthCriConfig addressConfig = null;
     public static OauthCriConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
+    private static final List<SignedJWT> PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY =
+            new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
@@ -149,6 +173,10 @@ class EvaluateGpg45ScoresHandlerTest {
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
+
+        PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
+        PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
+                SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
     }
 
     @BeforeEach
@@ -270,6 +298,51 @@ class EvaluateGpg45ScoresHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldRemoveOperationalProfileIfGpg45ProfileMatched() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(VC_STORE_ITEMS);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.of(M1A));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        verify(mockVerifiableCredentialService)
+                .deleteHmrcInheritedIdentityIfPresent(VC_STORE_ITEMS);
+
+        assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
+    }
+
+    @Test
+    void shouldNotRemoveOperationalProfileIfGpg45ProfileNotMatched() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getIdentityCredentials(any())).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.parseCredentials(any()))
+                .thenReturn(PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.empty());
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        verify(mockVerifiableCredentialService, never())
+                .deleteHmrcInheritedIdentityIfPresent(any());
+
+        assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
     }
 
     @Test
