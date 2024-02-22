@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 @Data
 @Builder
 @Jacksonized
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestVc {
     @Builder.Default
     private String[] type = {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE};
@@ -37,6 +39,7 @@ public class TestVc {
     @NoArgsConstructor
     @Data
     @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TestCredentialSubject {
         @Builder.Default
         private List<Map<String, List<NameParts>>> name =
@@ -65,14 +68,16 @@ public class TestVc {
     @NoArgsConstructor
     @Data
     @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TestEvidence {
         @Builder.Default private String type = IDENTITY_CHECK_EVIDENCE_TYPE;
         @Builder.Default private String txn = "1c04edf0-a205-4585-8877-be6bd1776a39";
-        private int strengthScore;
-        private int validityScore;
-        private int verificationScore;
+        private Integer strengthScore;
+        private Integer validityScore;
+        private Integer verificationScore;
         @Builder.Default private List<Object> ci = Collections.emptyList();
         @Builder.Default private List<Object> ciReasons = Collections.emptyList();
+        private Integer identityFraudScore;
 
         @Builder.Default
         private List<Object> checkDetails =

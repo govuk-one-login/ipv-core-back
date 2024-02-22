@@ -1,13 +1,6 @@
 package uk.gov.di.ipv.core.callticfcri.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +29,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,14 +43,13 @@ import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(MockitoExtension.class)
 class TicfCriServiceTest {
-
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final ClientOAuthSessionItem clientSessionItem =
             ClientOAuthSessionItem.builder()
@@ -72,7 +62,6 @@ class TicfCriServiceTest {
     // validator - we just need something that can be parsed
     private static TicfCriDto ticfCriResponse;
     private static String VC_ADDRESS;
-    private static String M1A_ADDRESS_VC;
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
@@ -85,7 +74,8 @@ class TicfCriServiceTest {
     @BeforeAll
     static void setVcs() throws Exception {
         VC_ADDRESS = vcAddressOne();
-        M1A_ADDRESS_VC = vcAddressM1a();
+        String M1A_ADDRESS_VC = vcAddressM1a();
+        String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
         credentials = List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
         ticfCriResponse =
                 new TicfCriDto(
@@ -276,25 +266,5 @@ class TicfCriServiceTest {
         assertThrows(
                 TicfCriServiceException.class,
                 () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
-    }
-
-    private String generateSignedJwt() throws Exception {
-        JWSHeader header =
-                new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
-
-        JWTClaimsSet claimsSet =
-                new JWTClaimsSet.Builder()
-                        .issuer("ticf-cri")
-                        .subject("a-user-id")
-                        .jwtID("a-unique-jwt-id")
-                        .notBeforeTime(Date.from(Instant.now()))
-                        .expirationTime(Date.from(Instant.now().plusSeconds(60)))
-                        .claim("vc", "some-stuff-here")
-                        .build();
-
-        SignedJWT signedJWT = new SignedJWT(header, claimsSet);
-        ECDSASigner ecdsaSigner = new ECDSASigner(ECKey.parse(EC_PRIVATE_KEY_JWK));
-        signedJWT.sign(ecdsaSigner);
-        return signedJWT.serialize();
     }
 }

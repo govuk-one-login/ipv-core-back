@@ -87,15 +87,15 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_FAILED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_DRIVING_PERMIT_DCMAW_MISSING_DRIVING_PERMIT_PROPERTY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_SCORE_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_WITHOUT_NAME;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcMissingCredentialSubject;
@@ -138,6 +138,9 @@ class UserIdentityServiceTest {
     private static String VC_ADDRESS;
     private static String VC_ADDRESS_2;
     private static String VC_ADDRESS_MISSING_ADDRESS_PROPERTY;
+    private static String VC_EXPERIAN_FRAUD_SCORE_1;
+    private static String VC_EXPERIAN_FRAUD_WITHOUT_NAME;
+    private static String VC_EXPERIAN_KBV_SCORE_2;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -164,6 +167,9 @@ class UserIdentityServiceTest {
         VC_ADDRESS = vcAddressOne();
         VC_ADDRESS_2 = vcAddressTwo();
         VC_ADDRESS_MISSING_ADDRESS_PROPERTY = vcMissingCredentialSubject();
+        VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
+        VC_EXPERIAN_FRAUD_WITHOUT_NAME = vcExperianFraudMissingName();
+        VC_EXPERIAN_KBV_SCORE_2 = vcExperianFraudScoreTwo();
     }
 
     @BeforeEach
@@ -1825,7 +1831,7 @@ class UserIdentityServiceTest {
         vcStoreItems.add(vcStoreItem);
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems, false);
         assertTrue(result.isPresent());
-        assertEquals("Kenneth Decerqueira", result.get().getFullName());
+        assertEquals("KENNETH DECERQUEIRA", result.get().getFullName());
     }
 
     @Test

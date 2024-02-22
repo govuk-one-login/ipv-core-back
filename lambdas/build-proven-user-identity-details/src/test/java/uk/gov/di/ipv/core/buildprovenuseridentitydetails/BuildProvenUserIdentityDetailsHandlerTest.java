@@ -45,11 +45,11 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
@@ -73,6 +73,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static String M1A_PASSPORT_VC;
     private static String M1A_FAILED_PASSPORT_VC;
     private static String M1A_ADDRESS_VC;
+    private static String M1A_MULTI_ADDRESS_VC;
+    private static String M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
+    private static String M1A_EXPERIAN_FRAUD_VC;
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -116,6 +119,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
         M1A_FAILED_PASSPORT_VC = vcPassportM1aFailed();
         M1A_ADDRESS_VC = vcAddressM1a();
+        M1A_MULTI_ADDRESS_VC = vcAddressMultipleAddresses();
+        M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD = vcAddressMultipleAddressesNoValidFrom();
+        M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
     }
 
     @Test
@@ -273,7 +279,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("S5 6UN", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        assertEquals("CA14 5PH", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 

@@ -57,10 +57,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
@@ -83,6 +83,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
     private static String M1A_PASSPORT_VC;
     private static String M1A_ADDRESS_VC;
+    private static String M1A_EXPERIAN_FRAUD_VC;
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -144,6 +145,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         .build();
         M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
         M1A_ADDRESS_VC = vcAddressM1a();
+        M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
         CREDENTIALS =
                 List.of(
                         M1A_PASSPORT_VC,
