@@ -80,7 +80,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     @Tracing
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         var userIdCriIdPairs =
                 new ObjectMapper()
                         .readValue(inputStream, VcsActionRequest.class)

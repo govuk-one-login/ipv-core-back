@@ -92,7 +92,7 @@ public class ProcessJourneyEventHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             // Extract variables
