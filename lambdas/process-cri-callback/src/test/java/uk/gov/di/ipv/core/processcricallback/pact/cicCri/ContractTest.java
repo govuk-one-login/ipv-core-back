@@ -68,134 +68,41 @@ import static org.mockito.Mockito.when;
 @PactTestFor(providerName = "CicCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
-    private static final String TEST_USER = "test-subject";
-    private static final String TEST_ISSUER = "dummyClaimedIdentityComponentId";
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final String PRIVATE_API_KEY = "dummyApiKey";
-    private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
-
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String VALID_VC_HEADER =
-            """
-            {
-              "alg": "ES256",
-              "typ": "JWT"
-            }
-            """;
-
-    private static final String VALID_VC_SIGNATURE =
-            "R54rF9t9R8leIotteoBaFnfG-JNmnWaUg9ZAr5Dgdn0Dwf1awOafzAfH96D6NqKy7g35VgvoI_9sKclhhrQxEw";
-
-    private static final String IN_VALID_VC_SIGNATURE =
-            "aebRTKRTOKF-xOrrUgkeR1bvNdUF0ENqKGG4MzJ7sXZNlsboUFy92VhaJF0NWtwDn9bDZbzrIrKBUK_6rzAvOA";
-
-    private static final String VALID_VC_BODY =
-            """
-            {
-              "iss": "dummyClaimedIdentityComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "exp": 4070909400,
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
-                ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ],
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-            """;
-
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyClaimedIdentityComponentId is the cic CRI component ID")
-                .given("Cic CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Valid auth code")
-                .path("/token")
+    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyClaimedIdentityComponentId is a valid issuer")
+                .given("VC givenName is Mary")
+                .given("VC familyName is Watson")
+                .given("VC birthDate is 1932-02-25")
+                .uponReceiving("Valid credential request for VC")
+                .path("/userinfo")
                 .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlDbGFpbWVkSWRlbnRpdHlDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
                 .status(200)
                 .body(
-                        newJsonBody(
-                                        (body) -> {
-                                            body.stringType("access_token");
-                                            body.stringValue("token_type", "Bearer");
-                                            body.integerType("expires_in");
-                                        })
-                                .build())
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_VC_BODY, VALID_VC_SIGNATURE))
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
-    void fetchAccessToken_whenCalledAgainstCicCri_retrievesAValidAccessToken(MockServer mockServer)
-            throws URISyntaxException, JOSEException, CriApiException {
+    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
+    void fetchVerifiableCredential_whenCalledAgainstCicCri_retrievesAValidVc(MockServer mockServer)
+            throws URISyntaxException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn("900");
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
-
-        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
-        // generated by the test as mocking out the AWSKMS class inside the real signer would be
-        // painful.
-        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
-        when(mockSigner.sign(any(), any()))
-                .thenReturn(
-                        new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
-        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate())
-                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+        configureMockConfigService(credentialIssuerConfig);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -207,14 +114,40 @@ class ContractTest {
                         CURRENT_TIME);
 
         // Act
-        BearerAccessToken accessToken =
-                underTest.fetchAccessToken(
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
                         getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        CRI_OAUTH_SESSION_ITEM);
+
         // Assert
-        assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
-        assertThat(accessToken.getValue(), notNullValue());
-        assertThat(accessToken.getLifetime(), greaterThan(0L));
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                verifiableCredentialJwtValidator.validate(
+                                        credential, credentialIssuerConfig, TEST_USER);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Mary", nameParts.get(0).get("value").asText());
+                                assertEquals("Watson", nameParts.get(1).get("value").asText());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
@@ -261,13 +194,91 @@ class ContractTest {
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
                                         getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                                        getCriOAuthSessionItem()));
+                                        CRI_OAUTH_SESSION_ITEM));
 
         // Assert
         assertThat(
                 exception.getErrorResponse(),
                 is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
         assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
+    }
+
+    @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
+        return builder.given("dummyAuthCode is a valid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("dummyClaimedIdentityComponentId is the cic CRI component ID")
+                .given("Cic CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Valid auth code")
+                .path("/token")
+                .method("POST")
+                .body(
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                (body) -> {
+                                    body.stringType("access_token");
+                                    body.stringValue("token_type", "Bearer");
+                                    body.integerType("expires_in");
+                                })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
+    void fetchAccessToken_whenCalledAgainstCicCri_retrievesAValidAccessToken(MockServer mockServer)
+            throws URISyntaxException, JOSEException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn("900");
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
+
+        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
+        // generated by the test as mocking out the AWSKMS class inside the real signer would be
+        // painful.
+        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
+        when(mockSigner.sign(any(), any()))
+                .thenReturn(
+                        new Base64URL(
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSecureTokenHelper.generate())
+                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        BearerAccessToken accessToken =
+                underTest.fetchAccessToken(
+                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        CRI_OAUTH_SESSION_ITEM);
+        // Assert
+        assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
+        assertThat(accessToken.getValue(), notNullValue());
+        assertThat(accessToken.getLifetime(), greaterThan(0L));
     }
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
@@ -280,7 +291,12 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlDbGFpbWVkSWRlbnRpdHlDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -335,87 +351,11 @@ class ContractTest {
                                 underTest.fetchAccessToken(
                                         getCallbackRequest(
                                                 "dummyInvalidAuthCode", credentialIssuerConfig),
-                                        getCriOAuthSessionItem()));
+                                        CRI_OAUTH_SESSION_ITEM));
 
         // Assert
         assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
         assertEquals(400, exception.getHttpStatusCode());
-    }
-
-    @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
-            throws Exception {
-        return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
-                .given("dummyClaimedIdentityComponentId is a valid issuer")
-                .given("VC givenName is Mary")
-                .given("VC familyName is Watson")
-                .given("VC birthDate is 1932-02-25")
-                .uponReceiving("Valid credential request for VC")
-                .path("/userinfo")
-                .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
-                .willRespondWith()
-                .status(200)
-                .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_BODY, VALID_VC_SIGNATURE))
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
-    void fetchVerifiableCredential_whenCalledAgainstCicCri_retrievesAValidVc(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
-
-        // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
-
-        // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
-
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get("vc")
-                                                .get("credentialSubject");
-
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("Mary", nameParts.get(0).get("value").asText());
-                                assertEquals("Watson", nameParts.get(1).get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
     }
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
@@ -441,12 +381,6 @@ class ContractTest {
                                 exactMatchClaims,
                                 requiredClaims,
                                 Date.from(CURRENT_TIME.instant()))));
-    }
-
-    @NotNull
-    private static CriOAuthSessionItem getCriOAuthSessionItem() {
-        return new CriOAuthSessionItem(
-                "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
     }
 
     @NotNull
@@ -482,4 +416,86 @@ class ContractTest {
                 .requiresAdditionalEvidence(false)
                 .build();
     }
+
+    private static final String TEST_USER = "test-subject";
+    private static final String TEST_ISSUER = "dummyClaimedIdentityComponentId";
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final String PRIVATE_API_KEY = "dummyApiKey";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
+            new CriOAuthSessionItem(
+                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
+            """
+            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
+            """;
+    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
+            """
+            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
+            """;
+
+    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    private static final String CLIENT_ASSERTION_BODY =
+            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlDbGFpbWVkSWRlbnRpdHlDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9";
+    // Signature generated using JWT.io
+    private static final String CLIENT_ASSERTION_SIGNATURE =
+            "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw";
+
+    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
+    // sent by the CRI team
+    private static final String VALID_VC_HEADER =
+            """
+            {
+              "alg": "ES256",
+              "typ": "JWT"
+            }
+            """;
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_VC_BODY =
+            """
+            {
+              "iss": "dummyClaimedIdentityComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_SIGNATURE =
+            "R54rF9t9R8leIotteoBaFnfG-JNmnWaUg9ZAr5Dgdn0Dwf1awOafzAfH96D6NqKy7g35VgvoI_9sKclhhrQxEw";
 }

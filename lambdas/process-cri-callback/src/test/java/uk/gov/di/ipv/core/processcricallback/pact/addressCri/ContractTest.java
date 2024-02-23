@@ -64,138 +64,7 @@ import static org.mockito.Mockito.when;
 @PactTestFor(providerName = "AddressCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
-    private static final String TEST_USER = "test-subject";
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final String PRIVATE_API_KEY = "dummyApiKey";
-    private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
-    // sent by the CRI team
-    private static final String VALID_VC_HEADER =
-            """
-            {
-              "typ": "JWT",
-              "alg": "ES256"
-            }
-            """;
-    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_EXPERIAN_ADDRESS_VC_BODY =
-            """
-                {
-                  "iss": "dummyAddressComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "exp": 4070909400,
-                  "vc": {
-                     "type": [
-                       "VerifiableCredential",
-                       "IdentityCheckCredential"
-                     ],
-                     "credentialSubject": {
-                       "name": [
-                         {
-                           "nameParts": [
-                             {
-                               "type": "GivenName",
-                               "value": "Kenneth"
-                             },
-                             {
-                               "type": "FamilyName",
-                               "value": "Decerqueira"
-                             }
-                           ]
-                         }
-                       ],
-                       "birthDate": [
-                         {
-                           "value": "1965-07-08"
-                         }
-                       ],
-                       "address": [
-                         {
-                           "addressCountry": "GB",
-                           "buildingName": "",
-                           "streetName": "HADLEY ROAD",
-                           "postalCode": "BA2 5AA",
-                           "buildingNumber": "8",
-                           "addressLocality": "BATH",
-                           "validFrom": "2000-01-01"
-                         }
-                       ]
-                     }
-                   },
-                   "jti": "dummyJti"
-                 }
-            """;
-
-    private static final String VALID_ADDRESS_BODY =
-            """
-                {
-                  "iss": "dummyAddressComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "exp": 4070909400,
-                  "vc": {
-                     "type": [
-                       "VerifiableCredential",
-                       "IdentityCheckCredential"
-                     ],
-                     "credentialSubject": {
-                       "name": [
-                         {
-                           "nameParts": [
-                             {
-                               "type": "GivenName",
-                               "value": "Mary"
-                             },
-                             {
-                               "type": "FamilyName",
-                               "value": "Watson"
-                             }
-                           ]
-                         }
-                       ],
-                       "birthDate": [
-                         {
-                           "value": "1932-02-25"
-                         }
-                       ],
-                       "address": [
-                         {
-                            "buildingName": "221B",
-                            "streetName": "BAKER STREET",
-                            "postalCode": "NW1 6XE",
-                            "addressLocality": "LONDON",
-                            "validFrom": "1887-01-01"
-                          }
-                       ]
-                     }
-                   },
-                   "jti": "dummyJti"
-                 }
-                    """;
-
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
-    private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
-    public static final CriOAuthSessionItem CRI_O_AUTH_SESSION_ITEM =
-            new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
-
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
@@ -268,7 +137,7 @@ class ContractTest {
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
                         getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        CRI_O_AUTH_SESSION_ITEM);
+                        CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -338,7 +207,7 @@ class ContractTest {
                             underTest.fetchAccessToken(
                                     getCriCallbackRequest(
                                             "dummyInvalidAuthCode", credentialIssuerConfig),
-                                    CRI_O_AUTH_SESSION_ITEM);
+                                    CRI_OAUTH_SESSION_ITEM);
                         });
         // Assert
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -407,7 +276,7 @@ class ContractTest {
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
                         getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        CRI_O_AUTH_SESSION_ITEM);
+                        CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -510,7 +379,7 @@ class ContractTest {
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
                         getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        CRI_O_AUTH_SESSION_ITEM);
+                        CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -598,7 +467,7 @@ class ContractTest {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
                                     getCriCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                                    CRI_O_AUTH_SESSION_ITEM);
+                                    CRI_OAUTH_SESSION_ITEM);
                         });
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
@@ -632,7 +501,7 @@ class ContractTest {
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
                 .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
-                .componentId("dummyAddressComponentId")
+                .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address"))
@@ -640,4 +509,138 @@ class ContractTest {
                 .requiresAdditionalEvidence(false)
                 .build();
     }
+
+    private static final String TEST_USER = "test-subject";
+    private static final String TEST_ISSUER = "dummyAddressComponentId";
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final String PRIVATE_API_KEY = "dummyApiKey";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
+            new CriOAuthSessionItem(
+                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
+            """
+            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
+            """;
+    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
+            """
+            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
+            """;
+
+    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
+    // sent by the CRI team
+    private static final String VALID_VC_HEADER =
+            """
+            {
+              "typ": "JWT",
+              "alg": "ES256"
+            }
+            """;
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_EXPERIAN_ADDRESS_VC_BODY =
+            """
+                {
+                  "iss": "dummyAddressComponentId",
+                  "sub": "test-subject",
+                  "nbf": 4070908800,
+                  "exp": 4070909400,
+                  "vc": {
+                     "type": [
+                       "VerifiableCredential",
+                       "IdentityCheckCredential"
+                     ],
+                     "credentialSubject": {
+                       "name": [
+                         {
+                           "nameParts": [
+                             {
+                               "type": "GivenName",
+                               "value": "Kenneth"
+                             },
+                             {
+                               "type": "FamilyName",
+                               "value": "Decerqueira"
+                             }
+                           ]
+                         }
+                       ],
+                       "birthDate": [
+                         {
+                           "value": "1965-07-08"
+                         }
+                       ],
+                       "address": [
+                         {
+                           "addressCountry": "GB",
+                           "buildingName": "",
+                           "streetName": "HADLEY ROAD",
+                           "postalCode": "BA2 5AA",
+                           "buildingNumber": "8",
+                           "addressLocality": "BATH",
+                           "validFrom": "2000-01-01"
+                         }
+                       ]
+                     }
+                   },
+                   "jti": "dummyJti"
+                 }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_EXPERIAN_SIGNATURE =
+            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
+
+    private static final String VALID_ADDRESS_BODY =
+            """
+                {
+                  "iss": "dummyAddressComponentId",
+                  "sub": "test-subject",
+                  "nbf": 4070908800,
+                  "exp": 4070909400,
+                  "vc": {
+                     "type": [
+                       "VerifiableCredential",
+                       "IdentityCheckCredential"
+                     ],
+                     "credentialSubject": {
+                       "name": [
+                         {
+                           "nameParts": [
+                             {
+                               "type": "GivenName",
+                               "value": "Mary"
+                             },
+                             {
+                               "type": "FamilyName",
+                               "value": "Watson"
+                             }
+                           ]
+                         }
+                       ],
+                       "birthDate": [
+                         {
+                           "value": "1932-02-25"
+                         }
+                       ],
+                       "address": [
+                         {
+                            "buildingName": "221B",
+                            "streetName": "BAKER STREET",
+                            "postalCode": "NW1 6XE",
+                            "addressLocality": "LONDON",
+                            "validFrom": "1887-01-01"
+                          }
+                       ]
+                     }
+                   },
+                   "jti": "dummyJti"
+                 }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_ADDRESS_SIGNATURE =
+            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
 }
