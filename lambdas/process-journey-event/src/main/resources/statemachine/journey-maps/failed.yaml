@@ -36,6 +36,9 @@ RESET_VCS:
   response:
     type: process
     lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: false
   events:
     next:
       targetState: NO_MATCH_PAGE

@@ -215,13 +215,13 @@ public class CheckExistingIdentityHandler
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
-            Optional<JourneyResponse> ciScoringCheckResponse =
+            var ciScoringCheckResponse =
                     checkForCIScoringFailure(
                             ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
 
-            Boolean reproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if ((reproveIdentity != null && reproveIdentity)
-                    || configService.enabled(RESET_IDENTITY.getName())) {
+            Optional<Boolean> reproveIdentity =
+                    Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
+            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY.getName())) {
                 return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
             }
             if (ciScoringCheckResponse.isPresent()) {
@@ -276,17 +276,15 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private JourneyResponse buildForceResetResponse(JourneyResponse ciScoringCheckResponse) {
+        LOGGER.info(
+                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
         if (ciScoringCheckResponse != null) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "resetIdentity flag is enabled, reset users identity."));
             if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
-                //                forces a reset of the user's identity if the CI score is breached
-                // and no mitigation is possible
+                // forces a reset of the user's identity if the CI breached and no
+                // possible mitigation
                 return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
             }
-            //            sends the user on mitigation journey if the CI score is breached and
-            // mitigation is possible
+            // sends the user on mitigation journey if the CI breached and mitigation is possible
             return ciScoringCheckResponse;
         }
         return JOURNEY_RESET_IDENTITY;
