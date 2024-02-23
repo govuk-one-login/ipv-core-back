@@ -99,6 +99,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDEN
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -1185,6 +1186,54 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
         inOrder.verify(mockVerifiableCredentialService, never())
                 .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
+    }
+
+    @Test
+    void
+            shouldReturnJourneyFailedWithCiAndForcedResetResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
+                    throws Exception {
+        var testContraIndicators = ContraIndicators.builder().build();
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(any())).thenReturn(Optional.empty());
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH, journeyResponse.getJourney());
+    }
+
+    @Test
+    void
+            shouldReturnMitigationJourneyStepResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
+                    throws Exception {
+        var testJourneyResponse = "/journey/test-response";
+        var testContraIndicators = ContraIndicators.builder().build();
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+                .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(testJourneyResponse, journeyResponse.getJourney());
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
