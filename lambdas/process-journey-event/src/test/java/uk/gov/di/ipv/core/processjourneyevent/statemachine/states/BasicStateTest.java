@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
 import java.util.Map;
 
@@ -23,8 +23,8 @@ class BasicStateTest {
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
         BasicState targetState = new BasicState();
-        JourneyStepResponse journeyStepResponse = new JourneyStepResponse("stepId", null);
-        targetState.setResponse(journeyStepResponse);
+        PageStepResponse stepResponse = new PageStepResponse("stepId", "context", null);
+        targetState.setResponse(stepResponse);
 
         BasicState currentState = new BasicState();
         BasicEvent currentToTargetEvent = new BasicEvent(mockConfigService);
@@ -37,7 +37,7 @@ class BasicStateTest {
                                 "next", "startState", JourneyContext.emptyContext());
 
         assertEquals(targetState, transitionedState);
-        assertEquals(journeyStepResponse, transitionedState.getResponse());
+        assertEquals(stepResponse, transitionedState.getResponse());
     }
 
     @Test

@@ -112,7 +112,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(TICF_CRI);
 
         IpvSessionItem ipvSessionItem = null;

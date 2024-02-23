@@ -18,7 +18,6 @@ public enum ConfigurationVariable {
     CREDENTIAL_ISSUERS("credentialIssuers"),
     FEATURE_FLAGS("featureFlags/%s"),
     CRI_RESPONSE_TTL("self/criResponseTtl"),
-    JOURNEY_TYPE("self/journey/type"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_COMPONENT_ID("cimit/componentId"),
     CIMIT_CONFIG("cimit/config"),

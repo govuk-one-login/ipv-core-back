@@ -50,11 +50,13 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -159,7 +161,7 @@ public class CheckExistingIdentityHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);
@@ -461,8 +463,20 @@ public class CheckExistingIdentityHandler
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
+            // remove weaker operational profile
+            if (configService.enabled(INHERITED_IDENTITY.getName())
+                    && requestedVot.equals(Vot.P2)) {
+                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+            }
+
+            List<SignedJWT> gpg45Credentials = new ArrayList<>();
+            for (SignedJWT credential : credentials) {
+                if (!VcHelper.isOperationalProfileVc(credential)) {
+                    gpg45Credentials.add(credential);
+                }
+            }
             sendProfileMatchedAuditEvent(
-                    matchedGpg45Profile.get(), gpg45Scores, credentials, auditEventUser);
+                    matchedGpg45Profile.get(), gpg45Scores, gpg45Credentials, auditEventUser);
 
             return true;
         }

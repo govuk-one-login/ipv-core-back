@@ -1,0 +1,33 @@
+# Entry points
+
+START:
+  events:
+    next:
+      targetState: RETURN_TO_RP
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_RETURN_TO_RP
+
+# Journey states
+
+CRI_TICF_BEFORE_RETURN_TO_RP:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: RETURN_TO_RP
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response

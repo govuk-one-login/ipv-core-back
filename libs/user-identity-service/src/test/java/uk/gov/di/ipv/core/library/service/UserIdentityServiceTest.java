@@ -94,7 +94,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_FRAUD_WITHOUT_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_EXPERIAN_KBV_SCORE_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_MISSING_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_SUCCESSFUL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_NINO_UNSUCCESSFUL;
@@ -1850,7 +1850,9 @@ class UserIdentityServiceTest {
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         VcStoreItem vcStoreItem =
                 TestFixtures.createVcStoreItem(
-                        USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION_WITH_NO_EVIDENCE);
+                        USER_ID_1,
+                        HMRC_MIGRATION_CRI,
+                        VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE);
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
         vcStoreItems.add(vcStoreItem);
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems);

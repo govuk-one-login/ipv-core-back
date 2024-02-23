@@ -7,7 +7,6 @@ import java.util.Map;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = JourneyStepResponse.class, name = "journey"),
     @JsonSubTypes.Type(value = PageStepResponse.class, name = "page"),
     @JsonSubTypes.Type(value = ErrorStepResponse.class, name = "error"),
     @JsonSubTypes.Type(value = CriStepResponse.class, name = "cri"),

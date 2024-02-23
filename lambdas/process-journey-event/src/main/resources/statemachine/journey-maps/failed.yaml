@@ -1,0 +1,76 @@
+# Entry points
+
+FAILED:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH
+
+FAILED_BAV:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_BAV
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
+
+FAILED_NO_TICF:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE
+
+# Journey states
+
+CRI_TICF_BEFORE_NO_MATCH:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: NO_MATCH_PAGE
+    enhanced-verification:
+      targetState: NO_MATCH_PAGE
+    fail-with-ci:
+      targetState: NO_MATCH_PAGE
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
+CRI_TICF_BEFORE_NO_MATCH_BAV:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_BAV
+    enhanced-verification:
+      targetState: NO_MATCH_PAGE_BAV
+    fail-with-ci:
+      targetState: NO_MATCH_PAGE_BAV
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
+NO_MATCH_PAGE:
+  response:
+    type: page
+    pageId: pyi-no-match
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+NO_MATCH_PAGE_BAV:
+  response:
+    type: page
+    pageId: pyi-no-match
+    context: bankAccount
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response

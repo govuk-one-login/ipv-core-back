@@ -258,7 +258,7 @@ public class ProcessCriCallbackHandler
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         // Validate callback request
         if (callbackRequest.getError() != null) {

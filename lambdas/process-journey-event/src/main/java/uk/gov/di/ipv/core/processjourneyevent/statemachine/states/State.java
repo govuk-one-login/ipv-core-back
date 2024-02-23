@@ -14,8 +14,4 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 public interface State {
     State transition(String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException, UnknownStateException;
-
-    String getName();
-
-    void setName(String name);
 }

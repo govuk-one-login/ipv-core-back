@@ -98,7 +98,7 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
 
         for (SQSMessage message : event.getRecords()) {

@@ -129,7 +129,7 @@ public class InitialiseIpvSessionHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
 
         try {
             String ipAddress = RequestHelper.getIpAddress(input);

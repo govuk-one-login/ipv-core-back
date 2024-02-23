@@ -99,7 +99,7 @@ public class BuildUserIdentityHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         try {
             AccessToken accessToken =
                     AccessToken.parse(

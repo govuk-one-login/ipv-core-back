@@ -81,7 +81,7 @@ public class IssueClientAccessTokenHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         try {
             tokenRequestValidator.authenticateClient(input.getBody());
 

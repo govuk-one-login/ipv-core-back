@@ -56,7 +56,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     @Tracing
     @Logging(clearState = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         ObjectMapper mapper = new ObjectMapper();
         String failureMessage = "Failed to replay VCs to CIMIT because: '%s'";
         List<ReplayItem> requestItems;

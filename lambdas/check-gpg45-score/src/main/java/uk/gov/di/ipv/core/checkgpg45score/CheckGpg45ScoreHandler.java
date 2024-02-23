@@ -82,6 +82,8 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
+        LogHelper.attachComponentId(configService);
+
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             String featureSet = RequestHelper.getFeatureSet(event);

@@ -7,8 +7,8 @@ NESTED_JOURNEY_DEFINITION:
   nestedJourneyStates:
     NESTED_STATE_ONE:
       response:
-        type: journey
-        journeyStepId: /journey/nestedStateOneJourneyStepId
+        type: page
+        pageId: page-id-nested-state-one
       parent: PARENT_STATE
       events:
         eventOne:
@@ -36,8 +36,8 @@ DOUBLY_NESTED_DEFINITION:
   nestedJourneyStates:
     DOUBLY_NESTED_STATE_ONE:
       response:
-        type: journey
-        journeyStepId: /journey/doublyNestedStateOneJourneyStepId
+        type: page
+        pageId: page-id-doubly-nested-state-one
       events:
         eventOne:
           targetState: DOUBLY_NESTED_STATE_TWO

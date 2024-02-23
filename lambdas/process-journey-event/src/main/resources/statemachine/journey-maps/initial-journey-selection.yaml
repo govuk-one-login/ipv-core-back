@@ -1,0 +1,69 @@
+# Entry points
+
+START:
+  events:
+    next:
+      targetState: CHECK_EXISTING_IDENTITY
+
+# Journey states
+
+CHECK_EXISTING_IDENTITY:
+  response:
+    type: process
+    lambda: check-existing-identity
+  events:
+    ipv-gpg45-medium:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START
+    reset-identity:
+      targetState: RESET_IDENTITY
+    reset-gpg45-identity:
+      targetState: RESET_GPG45_IDENTITY
+    reuse:
+      targetJourney: REUSE_EXISTING_IDENTITY
+      targetState: START
+    operational-profile-reuse:
+      targetJourney: OPERATIONAL_PROFILE_REUSE
+      targetState: START
+    in-migration-reuse:
+      targetJourney: OPERATIONAL_PROFILE_MIGRATION
+      targetState: START
+    pending:
+      targetJourney: F2F_PENDING
+      targetState: PENDING
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED
+    f2f-fail:
+      targetJourney: F2F_FAILED
+      targetState: FAILED
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    enhanced-verification:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: ENHANCED_VERIFICATION
+
+RESET_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: false
+  events:
+    next:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START
+
+RESET_GPG45_IDENTITY:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
+  events:
+    next:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: START

@@ -1,6 +1,5 @@
-const initialStates = ['INITIAL_IPV_JOURNEY'];
-const errorStates = ['ERROR', 'CRI_TICF_BEFORE_ERROR'];
-const failureStates = ['PYI_NO_MATCH', 'PYI_ANOTHER_WAY', 'CRI_TICF_BEFORE_NO_MATCH', 'CRI_TICF_BEFORE_ANOTHER_WAY'];
+const errorJourneys = ['TECHNICAL_ERROR'];
+const failureJourneys = ['INELIGIBLE', 'FAILED'];
 
 const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
     Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
@@ -18,14 +17,16 @@ const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) =
 };
 
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMap) => {
+export const getOptions = (journeyMaps) => {
     const disabledOptions = [];
     const featureFlagOptions = [];
 
-    Object.values(journeyMap).forEach((definition) => {
-        const events = definition.events || definition.exitEvents || {};
-        Object.values(events).forEach((def) => {
-            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+    Object.values(journeyMaps).forEach((journeyMap) => {
+        Object.values(journeyMap).forEach((definition) => {
+            const events = definition.events || definition.exitEvents || {};
+            Object.values(events).forEach((def) => {
+                addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+            });
         });
     });
 
@@ -63,14 +64,14 @@ const expandNestedJourneys = (journeyMap, subjourneys) => {
 
                 Object.entries(expandedDefinition.events).forEach(([evt, def]) => {
                     // Map target states to expanded states
-                    if (def.targetState) {
+                    if (def.targetState && !def.targetJourney) {
                         def.targetState = `${def.targetState}_${state}`;
                     }
 
                     // Map exit events to targets in the parent definition
                     if (def.exitEventToEmit) {
                         if (definition.exitEvents[def.exitEventToEmit]) {
-                        def.targetState = definition.exitEvents[def.exitEventToEmit].targetState;
+                            Object.assign(def, definition.exitEvents[def.exitEventToEmit]);
                         } else {
                             console.warn(`Unhandled exit event from ${state}:`, def.exitEventToEmit)
                             delete expandedDefinition.events[evt];
@@ -110,13 +111,15 @@ const resolveEventTarget = (definition, formData) => {
         return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
     }
 
-    return definition.targetState;
+    return definition;
 };
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
 const renderTransitions = (journeyMap, formData) => {
-    const states = [...initialStates];
+    // Initial states have no response or nested journey
+    const states = Object.keys(journeyMap)
+        .filter((s) => !journeyMap[s].response && !journeyMap[s].nestedJourney);
     const stateTransitions = [];
 
     for (let i = 0; i < states.length; i++) {
@@ -126,20 +129,36 @@ const renderTransitions = (journeyMap, formData) => {
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            const target = resolveEventTarget(def, formData);
+            const { targetJourney, targetState } = resolveEventTarget(def, formData);
+            const target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
 
-            if (errorStates.includes(target) && !formData.has('includeErrors')) {
+            if (errorJourneys.includes(targetJourney) && !formData.has('includeErrors')) {
                 return;
             }
-            if (failureStates.includes(target) && !formData.has('includeFailures')) {
+            if (failureJourneys.includes(targetJourney) && !formData.has('includeFailures')) {
                 return;
             }
 
             if (!states.includes(target)) {
                 states.push(target);
             }
+
             eventsByTarget[target] = eventsByTarget[target] || [];
             eventsByTarget[target].push(eventName);
+
+            if (!journeyMap[target]) {
+                if (targetJourney) {
+                    journeyMap[target] = {
+                        response: {
+                            type: 'journeyTransition',
+                            targetJourney,
+                            targetState,
+                        }
+                    };
+                } else {
+                    throw new Error(`Failed to resolve state ${target} from ${state}`);
+                }
+            }
         });
 
         Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
@@ -167,15 +186,17 @@ const renderState = (state, definition) => {
         case 'process':
             return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
         case 'page':
-            return failureStates.includes(state)
-                ? `    ${state}[${state}\\n${definition.response.pageId}]:::error_page`
-                : `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
+        case 'error':
+            return `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
         case 'cri':
             const contextInfo = definition.response.context ? `\\n context: ${definition.response.context}` : "";
             const scopeInfo = definition.response.scope ? `\\n scope: ${definition.response.scope}` : "";
             return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri`;
-        case 'error':
-            return `    ${state}:::error_page`;
+        case 'journeyTransition':
+            const { targetJourney, targetState } = definition.response;
+            return (failureJourneys.includes(targetJourney) || errorJourneys.includes(targetJourney))
+                ? `    ${state}(${targetJourney}\\n${targetState}):::error_transition`
+                : `    ${state}(${targetJourney}\\n${targetState}):::journey_transition`;
         default:
             return `    ${state}:::other`;
     }
@@ -232,8 +253,9 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
 `graph LR
     classDef process fill:#ffa,stroke:#000;
     classDef page fill:#ae8,stroke:#000;
-    classDef error_page fill:#f99,stroke:#000;
     classDef cri fill:#faf,stroke:#000;
+    classDef journey_transition fill:#aaf,stroke:#000;
+    classDef error_transition fill:#f99,stroke:#000;
     classDef other fill:#f3f2f1,stroke:#000;
 ${statesMermaid}
 ${transitionsMermaid}

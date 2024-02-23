@@ -82,7 +82,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     @Logging(clearState = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
-        LogHelper.attachComponentIdToLogs(configService);
+        LogHelper.attachComponentId(configService);
         var userIdCriIdPairs =
                 new ObjectMapper()
                         .readValue(inputStream, VcsActionRequest.class)
