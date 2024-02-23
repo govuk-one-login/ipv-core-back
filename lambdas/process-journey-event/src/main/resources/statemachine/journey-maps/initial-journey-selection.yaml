@@ -35,7 +35,6 @@ CHECK_EXISTING_IDENTITY:
       targetJourney: FAILED
       targetState: FAILED
     fail-with-ci-and-forced-reset:
-      targetJourney: FAILED
       targetState: RESET_VCS
     f2f-fail:
       targetJourney: F2F_FAILED
@@ -71,7 +70,7 @@ RESET_GPG45_IDENTITY:
       targetJourney: NEW_P2_IDENTITY
       targetState: START
 
-RESET_VCS:
+RESET_FAILED_IDENTITY:
   response:
     type: process
     lambda: reset-identity
@@ -80,4 +79,5 @@ RESET_VCS:
       deleteOnlyGPG45VCs: false
   events:
     next:
-      targetState: NO_MATCH_PAGE
+      targetJourney: FAILED
+      targetState: FAILED

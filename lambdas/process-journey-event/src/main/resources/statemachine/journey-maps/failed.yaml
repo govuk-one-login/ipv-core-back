@@ -23,22 +23,6 @@ FAILED_NO_TICF:
 
 # Journey states
 
-CRI_TICF_BEFORE_RESET_VCS:
-  response:
-      type: process
-      lambda: call-ticf-cri
-  events:
-      next:
-        targetState: RESET_VCS
-      enhanced-verification:
-          targetState: NO_MATCH_PAGE
-      fail-with-ci:
-          targetState: NO_MATCH_PAGE
-      error:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR_NO_TICF
-
-
 CRI_TICF_BEFORE_NO_MATCH:
   response:
     type: process
