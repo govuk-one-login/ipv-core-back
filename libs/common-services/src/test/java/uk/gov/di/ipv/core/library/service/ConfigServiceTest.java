@@ -370,29 +370,41 @@ class ConfigServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"FEATURE_FLAGS,", "FEATURE_FLAGS,'FS07,DS01'", "FEATURE_FLAGS,'DS01,FS07'"})
+    @CsvSource({"FEATURE_FLAGS,"})
     void shouldGetNamedFeatureFlag(String testDataSet, String featureSet) {
+        TestConfiguration testConfiguration = getTestConfiguration(testDataSet, featureSet);
+        assertEquals(
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(featureSet)),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    @Test
+    void shouldGetNamedFeatureFlag_getParamValueForFirstFeatureSet() {
+        String featureSet = "FS07,DS01";
+        TestConfiguration testConfiguration = getTestConfiguration("FEATURE_FLAGS", featureSet);
+        List<String> fsList = List.of(featureSet.split(","));
+        assertEquals(
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(0))),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    @Test
+    void shouldGetNamedFeatureFlag_loopThroughFeatureSetToFindParamValue() {
+        String featureSet = "DS01,FS07";
+        TestConfiguration testConfiguration = getTestConfiguration("FEATURE_FLAGS", featureSet);
+        List<String> fsList = List.of(featureSet.split(","));
+        assertEquals(
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(1))),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    private TestConfiguration getTestConfiguration(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
-        List<String> fsList =
-                featureSet != null ? List.of(featureSet.split(",")) : Collections.emptyList();
-        configService.setFeatureSet(fsList);
+        configService.setFeatureSet(
+                featureSet != null ? List.of(featureSet.split(",")) : Collections.emptyList());
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
-        if (featureSet == null) {
-            assertEquals(
-                    Boolean.parseBoolean(testConfiguration.getExpectedValue(featureSet)),
-                    configService.enabled(TestFeatureFlag.TEST_FEATURE));
-        } else {
-            if (fsList.get(0).equals("FS07")) {
-                assertEquals(
-                        Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(0))),
-                        configService.enabled(TestFeatureFlag.TEST_FEATURE));
-            } else {
-                assertEquals(
-                        Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(1))),
-                        configService.enabled(TestFeatureFlag.TEST_FEATURE));
-            }
-        }
+        return testConfiguration;
     }
 
     @Test

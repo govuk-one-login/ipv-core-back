@@ -4,12 +4,12 @@ import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class StepFunctionHelpers {
     private static final String CODE = "code";
@@ -48,7 +48,7 @@ public class StepFunctionHelpers {
         String featureSet = input.get(FEATURE_SET);
         LogHelper.attachFeatureSetToLogs(Collections.singletonList(featureSet));
         return (featureSet != null)
-                ? Stream.of(featureSet.split(",")).toList()
+                ? Arrays.asList(featureSet.split(","))
                 : Collections.emptyList();
     }
 

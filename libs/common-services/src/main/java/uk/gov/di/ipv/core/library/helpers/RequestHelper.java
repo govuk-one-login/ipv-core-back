@@ -14,12 +14,12 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -114,7 +114,7 @@ public class RequestHelper {
         String featureSetHeaderValue = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
         List<String> featureSet =
                 (featureSetHeaderValue != null)
-                        ? Stream.of(featureSetHeaderValue.split(",")).toList()
+                        ? Arrays.asList(featureSetHeaderValue.split(","))
                         : Collections.emptyList();
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
