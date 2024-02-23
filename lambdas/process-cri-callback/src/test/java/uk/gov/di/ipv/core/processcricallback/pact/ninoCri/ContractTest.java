@@ -525,7 +525,6 @@ class ContractTest {
         assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
     }
 
-
     @Pact(provider = "NinoCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
         return builder.given("dummyAuthCode is a valid authorization code")
@@ -552,11 +551,11 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                (body) -> {
-                                    body.stringType("access_token");
-                                    body.stringValue("token_type", "Bearer");
-                                    body.integerType("expires_in");
-                                })
+                                        (body) -> {
+                                            body.stringType("access_token");
+                                            body.stringValue("token_type", "Bearer");
+                                            body.integerType("expires_in");
+                                        })
                                 .build())
                 .toPact();
     }

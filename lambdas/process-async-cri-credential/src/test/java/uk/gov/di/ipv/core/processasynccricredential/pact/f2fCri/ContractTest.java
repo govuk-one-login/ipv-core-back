@@ -87,9 +87,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minMaxArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -208,9 +206,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -341,9 +337,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -480,9 +474,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -614,9 +606,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -744,9 +734,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -865,9 +853,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    TEST_OAUTH_STATE);
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
