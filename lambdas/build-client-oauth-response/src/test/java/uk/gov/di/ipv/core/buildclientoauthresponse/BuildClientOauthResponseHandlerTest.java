@@ -122,7 +122,7 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals("test-state", params.get(1).getValue());
 
         InOrder inOrder = inOrder(ipvSessionItem, mockSessionService);
-        inOrder.verify(ipvSessionItem).setFeatureSet("someCoolNewThing");
+        inOrder.verify(ipvSessionItem).setFeatureSet(List.of("someCoolNewThing"));
         inOrder.verify(mockSessionService).updateIpvSession(ipvSessionItem);
     }
 
@@ -149,7 +149,7 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals("access_denied", params.get(0).getValue());
         assertEquals("Missing Context", params.get(1).getValue());
         assertEquals("test-state", params.get(2).getValue());
-        verify(mockConfigService).setFeatureSet(TEST_FEATURE_SET);
+        verify(mockConfigService).setFeatureSet(List.of(TEST_FEATURE_SET));
     }
 
     @Test

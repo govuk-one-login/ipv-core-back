@@ -40,7 +40,9 @@ import uk.org.webcompere.systemstubs.properties.SystemProperties;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -116,27 +118,6 @@ class ConfigServiceTest {
     @DisplayName("active credential issuer config")
     class ActiveOauthCriConfig {
 
-        private final Map<String, String> baseCredentialIssuerConfig =
-                Map.of(
-                        "tokenUrl",
-                        "https://testTokenUrl",
-                        "credentialUrl",
-                        "https://testCredentialUrl",
-                        "authorizeUrl",
-                        "https://testAuthoriseUrl",
-                        "clientId",
-                        "ipv-core-test",
-                        "signingKey",
-                        EC_PRIVATE_KEY_JWK,
-                        "encryptionKey",
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "componentId",
-                        "https://testComponentId",
-                        "clientCallbackUrl",
-                        "https://testClientCallBackUrl",
-                        "requiresApiKey",
-                        "true");
-
         private final String oauthCriJsonConfig =
                 String.format(
                         "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
@@ -154,26 +135,6 @@ class ConfigServiceTest {
                         .componentId("https://testComponentId")
                         .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
                         .requiresApiKey(true)
-                        .requiresAdditionalEvidence(false)
-                        .build();
-
-        private final Map<String, String> featureSetCredentialIssuerConfig =
-                Map.of(
-                        "tokenUrl", "https://testTokenUrl_for_fs01",
-                        "clientId", "client_for_fs01",
-                        "requiresApiKey", "false");
-
-        private final OauthCriConfig expectedFeatureSetOauthCriConfig =
-                OauthCriConfig.builder()
-                        .tokenUrl(URI.create("https://testTokenUrl_for_fs01"))
-                        .credentialUrl(URI.create("https://testCredentialUrl"))
-                        .authorizeUrl(URI.create("https://testAuthoriseUrl"))
-                        .clientId("client_for_fs01")
-                        .signingKey(EC_PRIVATE_KEY_JWK)
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
-                        .componentId("https://testComponentId")
-                        .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
-                        .requiresApiKey(false)
                         .requiresAdditionalEvidence(false)
                         .build();
 
@@ -299,8 +260,12 @@ class ConfigServiceTest {
     @CsvSource({",", "' ',", "' \t\n',", "fs0001,fs0001"})
     void shouldNormaliseNullAndEmptyFeatureSetsToNull(
             String featureSet, String expectedFeatureSet) {
-        configService.setFeatureSet(featureSet);
-        assertEquals(expectedFeatureSet, configService.getFeatureSet());
+        configService.setFeatureSet(getFeatureSet(featureSet));
+        assertEquals(
+                (expectedFeatureSet != null && !expectedFeatureSet.isBlank())
+                        ? Collections.singletonList(expectedFeatureSet)
+                        : Collections.emptyList(),
+                configService.getFeatureSet());
     }
 
     @Nested
@@ -314,7 +279,7 @@ class ConfigServiceTest {
                 String featureSet,
                 String featureSetValue) {
             environmentVariables.set("ENVIRONMENT", "test");
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(getFeatureSet(featureSet));
             if (featureSet == null) {
                 when(ssmProvider.get(
                                 String.format(
@@ -396,7 +361,7 @@ class ConfigServiceTest {
     })
     void shouldReturnListOfClientRedirectUrls(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
-        configService.setFeatureSet(featureSet);
+        configService.setFeatureSet(getFeatureSet(featureSet));
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
@@ -405,15 +370,41 @@ class ConfigServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"FEATURE_FLAGS,", "FEATURE_FLAGS,FS07"})
+    @CsvSource({"FEATURE_FLAGS,"})
     void shouldGetNamedFeatureFlag(String testDataSet, String featureSet) {
-        environmentVariables.set("ENVIRONMENT", "test");
-        configService.setFeatureSet(featureSet);
-        TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
-        testConfiguration.setupMockConfig(ssmProvider);
+        TestConfiguration testConfiguration = getTestConfiguration(testDataSet, featureSet);
         assertEquals(
                 Boolean.parseBoolean(testConfiguration.getExpectedValue(featureSet)),
                 configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    @Test
+    void shouldGetNamedFeatureFlag_getParamValueForFirstFeatureSet() {
+        String featureSet = "FS07,DS01";
+        TestConfiguration testConfiguration = getTestConfiguration("FEATURE_FLAGS", featureSet);
+        List<String> fsList = List.of(featureSet.split(","));
+        assertEquals(
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(0))),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    @Test
+    void shouldGetNamedFeatureFlag_loopThroughFeatureSetToFindParamValue() {
+        String featureSet = "DS01,FS07";
+        TestConfiguration testConfiguration = getTestConfiguration("FEATURE_FLAGS", featureSet);
+        List<String> fsList = List.of(featureSet.split(","));
+        assertEquals(
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(fsList.get(1))),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
+    private TestConfiguration getTestConfiguration(String testDataSet, String featureSet) {
+        environmentVariables.set("ENVIRONMENT", "test");
+        configService.setFeatureSet(
+                featureSet != null ? List.of(featureSet.split(",")) : Collections.emptyList());
+        TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
+        testConfiguration.setupMockConfig(ssmProvider);
+        return testConfiguration;
     }
 
     @Test
@@ -562,7 +553,7 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameterForClient(
             String configVariableName, String featureSet) {
-        configService = new ConfigService(ssmProvider, secretsProvider, featureSet);
+        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -589,7 +580,7 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameter(
             String configVariableName, String featureSet) {
-        configService = new ConfigService(ssmProvider, secretsProvider, featureSet);
+        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -661,22 +652,6 @@ class ConfigServiceTest {
                 return featureSetValues.getOrDefault(featureSet, baseValue);
             }
         }
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-        "CREDENTIAL_ISSUERS,",
-        "CREDENTIAL_ISSUERS,FS01",
-    })
-    void shouldAccountForFeatureSetWhenRetrievingParameters(String testSet, String featureSet) {
-        configService = new ConfigService(ssmProvider, secretsProvider, featureSet);
-        environmentVariables.set("ENVIRONMENT", "test");
-        TestMultipleConfiguration testMultipleConfiguration =
-                TestMultipleConfiguration.valueOf(testSet);
-        testMultipleConfiguration.setupMockConfig(ssmProvider);
-        assertEquals(
-                testMultipleConfiguration.getExpectedValue(featureSet),
-                configService.getSsmParameters(testMultipleConfiguration.path, false));
     }
 
     private enum TestFeatureFlag implements FeatureFlag {
@@ -777,5 +752,11 @@ class ConfigServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/featureFlags/testFlagName")).thenReturn("false");
         assertFalse(configService.enabled("testFlagName"));
+    }
+
+    private static List<String> getFeatureSet(String featureSet) {
+        return (featureSet != null && !featureSet.isBlank())
+                ? Collections.singletonList(featureSet)
+                : Collections.emptyList();
     }
 }
