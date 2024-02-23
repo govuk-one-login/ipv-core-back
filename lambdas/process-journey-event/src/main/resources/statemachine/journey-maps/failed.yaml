@@ -16,32 +16,12 @@ FAILED_BAV:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
 
-FAILED_FORCED_RESET:
-  events:
-    next:
-      targetState: RESET_VCS
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_RESET_VCS
-
-
 FAILED_NO_TICF:
   events:
     next:
       targetState: NO_MATCH_PAGE
 
 # Journey states
-
-RESET_VCS:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetState: NO_MATCH_PAGE
 
 CRI_TICF_BEFORE_RESET_VCS:
   response:
