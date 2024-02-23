@@ -365,7 +365,7 @@ public class ConfigService {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {
-            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+            String parameter = ssmProvider.get(resolvePath(pathTemplate, criId, connection));
             return objectMapper.readValue(parameter, configType);
         } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
@@ -378,9 +378,5 @@ public class ConfigService {
                             "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
                             pathTemplate, e));
         }
-    }
-
-    private String getSsmParameter(String path) {
-        return ssmProvider.get(path);
     }
 }
