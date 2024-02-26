@@ -153,7 +153,7 @@ class ContractTest {
                         {
                           "checkMethod": "kbv",
                           "kbvQuality": 2,
-                          "kbvResponseMode": "free_text"
+                          "kbvResponseMode": "multiple_choice"
                         },
                         {
                           "checkMethod": "kbv",
@@ -174,7 +174,7 @@ class ContractTest {
                 }
                 """;
 
-    private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
+    private static final String VALID_THIN_FILE_VC_BODY =
             """
             {
                "iss": "dummyExperianKbvComponentId",
@@ -235,18 +235,7 @@ class ContractTest {
                      },
                      {
                        "checkMethod": "kbv",
-                       "kbvQuality": 3,
-                       "kbvResponseMode": "multiple_choice"
-                     },
-                     {
-                       "checkMethod": "kbv",
                        "kbvQuality": 2,
-                       "kbvResponseMode": "multiple_choice"
-                     }
-                   ],
-                   "failedCheckDetails": [
-                     {
-                       "checkMethod": "kbv",
                        "kbvResponseMode": "multiple_choice"
                      }
                    ]
@@ -313,19 +302,19 @@ class ContractTest {
                             {
                                 "checkMethod": "kbv",
                                 "kbvQuality": 3,
-                                "kbvResponseMode": "free_text"
+                                "kbvResponseMode": "multiple_choice"
                             }
                         ],
                         "failedCheckDetails": [
                             {
-                                "kbvResponseMode": "free_text",
+                                "kbvResponseMode": "multiple_choice",
                                 "checkMethod": "kbv"
                             },
                             {
                                 "kbvResponseMode": "multiple_choice",
                                 "checkMethod": "kbv"
                             }],
-                            "ci": ["V03"]
+                            "ci": ["A03"]
                     }
                   ]
               }
@@ -336,13 +325,13 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "tb4wtsk_zGyY70fPp5FI5-PRoAS82g3emrdCwOrb0jD96Iybidr6KEiE8BgdDsMoAVqVTuj-qNkB4s8TOYVQYg";
+            "ar6tKitq-mO854GDVKKXMfNFaYUOeMY2SZeqgByDRFGhno2dae4VR3AE2yFx798y6vUbTeFfcZ9jsRs37lZ65A";
 
-    private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
-            "5goXb5fYB4s8iEPlQ4y_vgNgRpGQ1nwDNYzs5872yflnHImI1lryT5ri0c6zw0XXqL-gr-ChkO0EZpxHSm21DQ";
+    private static final String VALID_THIN_FILE_VC_SIGNATURE =
+            "GIJxbgGgu57fydU-7Qnu7-9PN7QdOK4Lg_TvP7vSHvhhSA16k8dvbfiQpT45fZ-Hs9CrOzGCe3jCgaQAlAnOQA";
 
     private static final String FAILED_VC_SIGNATURE =
-            "Q1lMCnpsgoUT6o9bTyJaoBsMqWbSZbGc36zM0W8p1LxxIXRmZ2CHEn-in2c_SXeyVo2Xym0lkoQAS2zRpIhqvg";
+            "7sZ4VzYx1Sa-dtopqcEWptXoH2YVdbsyO41bujquBmujbovRI6F9QJAEt5eYOGTyJ-sro_6yfpEWR14uxLAycg";
 
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
@@ -524,7 +513,7 @@ class ContractTest {
                 .given("VC address addressLocality is GREAT MISSENDEN")
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
-                .given("VC evidence checkDetails are free_text, multiple_choice, multiple_choice")
+                .given("VC evidence checkDetails are multiple_choice, multiple_choice, multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 2, 2 and 1")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
@@ -653,9 +642,8 @@ class ContractTest {
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
                 .given(
-                        "VC evidence checkDetails are multiple_choice, multiple_choice, multiple_choice")
-                .given("VC evidence checkDetails kbvQuality are 3, 3 and 2")
-                .given("VC evidence failedCheckDetails are multiple_choice")
+                        "VC evidence checkDetails are multiple_choice, multiple_choice")
+                .given("VC evidence checkDetails kbvQuality are 3 and 2")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -665,8 +653,8 @@ class ContractTest {
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
                                 VALID_VC_HEADER,
-                                VALID_VC_BODY_WITH_WRONG_ANSWER,
-                                VALID_VC_WRONG_ANSWER_SIGNATURE))
+                                VALID_THIN_FILE_VC_BODY,
+                                VALID_THIN_FILE_VC_SIGNATURE))
                 .toPact();
     }
 
@@ -718,8 +706,7 @@ class ContractTest {
                                                 .readTree(credential.getJWTClaimsSet().toString())
                                                 .get("vc");
                                 JsonNode evidence = vc.get("evidence").get(0);
-                                JsonNode failedCheckDetailsNode =
-                                        evidence.get("failedCheckDetails");
+
 
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
@@ -751,16 +738,6 @@ class ContractTest {
                                         addressNode.get("addressLocality").asText());
                                 assertEquals("HP16 0AL", addressNode.get("postalCode").asText());
                                 assertEquals("GB", addressNode.get("addressCountry").asText());
-
-                                assertEquals(
-                                        "multiple_choice",
-                                        failedCheckDetailsNode
-                                                .get(0)
-                                                .get("kbvResponseMode")
-                                                .asText());
-                                assertEquals(
-                                        "kbv",
-                                        failedCheckDetailsNode.get(0).get("checkMethod").asText());
 
                             } catch (VerifiableCredentialException
                                     | ParseException
@@ -848,10 +825,10 @@ class ContractTest {
                 .given("VC address addressLocality is GREAT MISSENDEN")
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
-                .given("VC evidence checkDetails are free_text")
+                .given("VC evidence checkDetails are multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 3")
-                .given("VC evidence failedCheckDetails are free_text, multiple_choice")
-                .given("VC ci is V03")
+                .given("VC evidence failedCheckDetails are multiple_choice, multiple_choice")
+                .given("VC ci is A03")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
@@ -949,10 +926,10 @@ class ContractTest {
                                 assertEquals("HP16 0AL", addressNode.get("postalCode").asText());
                                 assertEquals("GB", addressNode.get("addressCountry").asText());
 
-                                assertEquals("V03", ciNode.get(0).asText());
+                                assertEquals("A03", ciNode.get(0).asText());
 
                                 assertEquals(
-                                        "free_text",
+                                        "multiple_choice",
                                         failedCheckDetailsNode
                                                 .get(0)
                                                 .get("kbvResponseMode")
@@ -977,7 +954,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("V03", ciConfig);
+        ciConfigMap.put("A03", ciConfig);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
