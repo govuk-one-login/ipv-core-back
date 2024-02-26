@@ -101,9 +101,13 @@ public class RequestHelper {
     }
 
     public static List<String> getFeatureSet(JourneyRequest request) {
-        List<String> featureSet = request.getFeatureSet();
-        LogHelper.attachFeatureSetToLogs(featureSet);
-        return (featureSet != null) ? featureSet : Collections.emptyList();
+        String featureSet = request.getFeatureSet();
+        List<String> featureSetList =
+                (featureSet != null && !featureSet.isBlank())
+                        ? Arrays.asList(featureSet.split(","))
+                        : Collections.emptyList();
+        LogHelper.attachFeatureSetToLogs(featureSetList);
+        return featureSetList;
     }
 
     public static List<String> getFeatureSet(APIGatewayProxyRequestEvent event) {

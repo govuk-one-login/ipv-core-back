@@ -122,7 +122,7 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals("test-state", params.get(1).getValue());
 
         InOrder inOrder = inOrder(ipvSessionItem, mockSessionService);
-        inOrder.verify(ipvSessionItem).setFeatureSet(List.of("someCoolNewThing"));
+        inOrder.verify(ipvSessionItem).setFeatureSetFromList(List.of("someCoolNewThing"));
         inOrder.verify(mockSessionService).updateIpvSession(ipvSessionItem);
     }
 
