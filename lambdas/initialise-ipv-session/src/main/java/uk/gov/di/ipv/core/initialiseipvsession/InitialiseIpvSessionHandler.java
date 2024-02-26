@@ -133,8 +133,7 @@ public class InitialiseIpvSessionHandler
 
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
-            String featureSet = RequestHelper.getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(input));
             Map<String, String> sessionParams =
                     OBJECT_MAPPER.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);

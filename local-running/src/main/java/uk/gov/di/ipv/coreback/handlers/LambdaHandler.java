@@ -27,6 +27,7 @@ import uk.gov.di.ipv.coreback.domain.CoreContext;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -260,7 +261,7 @@ public class LambdaHandler {
                 .error(requestBody.get("error"))
                 .errorDescription(requestBody.get("errorDescription"))
                 .ipAddress(request.headers(IP_ADDRESS))
-                .featureSet(request.headers(FEATURE_SET))
+                .featureSet(Arrays.asList(request.headers(FEATURE_SET).split(",")))
                 .build();
     }
 

@@ -101,11 +101,11 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
         try {
             String ipvSessionId = getIpvSessionId(event);
-            String featureSet = RequestHelper.getFeatureSet(event);
             boolean isUserInitiated = RequestHelper.getIsUserInitiated(event);
             boolean deleteOnlyGPG45VCs = RequestHelper.getDeleteOnlyGPG45VCs(event);
 
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
+
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(

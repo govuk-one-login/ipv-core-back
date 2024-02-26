@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,6 +94,6 @@ class StepFunctionHelpersTest {
     void getFeatureSetShouldReturnFeatureSet() {
         Map<String, String> input = Map.of("featureSet", "test-feature-set");
 
-        assertEquals("test-feature-set", StepFunctionHelpers.getFeatureSet(input));
+        assertEquals(List.of("test-feature-set"), StepFunctionHelpers.getFeatureSet(input));
     }
 }

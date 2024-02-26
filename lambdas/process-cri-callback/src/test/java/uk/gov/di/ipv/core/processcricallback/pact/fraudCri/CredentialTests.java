@@ -42,6 +42,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -735,7 +736,7 @@ class CredentialTests {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyFeatureSet");
+                List.of("dummyFeatureSe)t"));
     }
 
     @NotNull

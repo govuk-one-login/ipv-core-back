@@ -37,6 +37,7 @@ import java.net.URISyntaxException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -204,7 +205,7 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyFeatureSet"),
+                                List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
@@ -263,7 +264,7 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyFeatureSet"),
+                                List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
@@ -323,7 +324,7 @@ class ContractTest {
                                             null,
                                             null,
                                             "dummyIpAddress",
-                                            "dummyFeatureSet"),
+                                            List.of("dummyFeatureSet")),
                                     new CriOAuthSessionItem(
                                             "dummySessionId",
                                             "dummyOAuthSessionId",

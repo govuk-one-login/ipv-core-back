@@ -14,6 +14,8 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -98,18 +100,22 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
-    public static String getFeatureSet(JourneyRequest request) {
-        String featureSet = request.getFeatureSet();
+    public static List<String> getFeatureSet(JourneyRequest request) {
+        List<String> featureSet = request.getFeatureSet();
         LogHelper.attachFeatureSetToLogs(featureSet);
-        return StringUtils.isBlank(featureSet) ? null : featureSet;
+        return (featureSet != null) ? featureSet : Collections.emptyList();
     }
 
-    private static String getFeatureSet(Map<String, String> headers) {
-        return RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
+    public static List<String> getFeatureSet(APIGatewayProxyRequestEvent event) {
+        return getFeatureSet(event.getHeaders());
     }
 
-    public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
-        String featureSet = getFeatureSet(event.getHeaders());
+    public static List<String> getFeatureSet(Map<String, String> headers) {
+        String featureSetHeaderValue = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
+        List<String> featureSet =
+                (featureSetHeaderValue != null)
+                        ? Arrays.asList(featureSetHeaderValue.split(","))
+                        : Collections.emptyList();
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
     }

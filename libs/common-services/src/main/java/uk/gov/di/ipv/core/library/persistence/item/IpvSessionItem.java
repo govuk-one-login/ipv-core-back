@@ -12,7 +12,9 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -34,8 +36,10 @@ public class IpvSessionItem implements DynamodbItem {
     private IpvJourneyTypes journeyType;
     private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
     private String emailAddress;
+
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
+
     private String featureSet;
     private List<String> vcReceivedThisSession;
 
@@ -59,5 +63,15 @@ public class IpvSessionItem implements DynamodbItem {
             vcReceivedThisSession = new ArrayList<>();
         }
         vcReceivedThisSession.add(vc);
+    }
+
+    public List<String> getFeatureSet() {
+        return (featureSet != null)
+                ? Stream.of(featureSet.split(",")).toList()
+                : Collections.emptyList();
+    }
+
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet = (featureSet != null) ? String.join(",", featureSet) : null;
     }
 }
