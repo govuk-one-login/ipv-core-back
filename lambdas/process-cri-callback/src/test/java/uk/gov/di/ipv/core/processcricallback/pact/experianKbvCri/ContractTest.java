@@ -48,6 +48,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -513,7 +514,8 @@ class ContractTest {
                 .given("VC address addressLocality is GREAT MISSENDEN")
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
-                .given("VC evidence checkDetails are multiple_choice, multiple_choice, multiple_choice")
+                .given(
+                        "VC evidence checkDetails are multiple_choice, multiple_choice, multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 2, 2 and 1")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
@@ -641,8 +643,7 @@ class ContractTest {
                 .given("VC address addressLocality is GREAT MISSENDEN")
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
-                .given(
-                        "VC evidence checkDetails are multiple_choice, multiple_choice")
+                .given("VC evidence checkDetails are multiple_choice, multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 3 and 2")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
@@ -706,7 +707,6 @@ class ContractTest {
                                                 .readTree(credential.getJWTClaimsSet().toString())
                                                 .get("vc");
                                 JsonNode evidence = vc.get("evidence").get(0);
-
 
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
@@ -994,7 +994,7 @@ class ContractTest {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyFeatureSet");
+                List.of("dummyFeatureSet"));
     }
 
     @NotNull
