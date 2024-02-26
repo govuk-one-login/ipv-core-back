@@ -65,10 +65,10 @@ services:
     environment:
       <<: *aws_creds
       PORT: 3002
-      CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicatorCredential-production
-      CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
-      CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
-      CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
+      CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:130355686670:function:getContraIndicatorCredential-dev-chrisw
+      CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:130355686670:function:getContraIndicators-dev-chrisw
+      CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:130355686670:function:postMitigations-dev-chrisw
+      CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:130355686670:function:putContraIndicators-dev-chrisw
       CLIENT_AUTH_JWT_IDS_TABLE_NAME: client-auth-jwt-ids-${ENVIRONMENT}
       CLIENT_OAUTH_SESSIONS_TABLE_NAME: client-oauth-sessions-v2-${ENVIRONMENT}
       CONFIG_SERVICE_CACHE_DURATION_MINUTES: 0

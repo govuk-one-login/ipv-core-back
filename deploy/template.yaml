@@ -95,7 +95,7 @@ Parameters:
     AllowedValues:
       - "False"
       - "True"
-    Default: "False"
+    Default: "True"
   LocalCoreFront:
     Type: String
     Description: |
