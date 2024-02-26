@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node 18",
+  "display": "Node 20",
   "compilerOptions": {
-    "lib": ["es2022"],
+    "lib": ["es2023"],
     "module": "commonjs",
     "target": "es2022",
     "strict": true,
