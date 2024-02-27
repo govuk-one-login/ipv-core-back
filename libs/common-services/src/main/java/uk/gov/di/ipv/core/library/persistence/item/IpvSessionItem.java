@@ -12,9 +12,9 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -65,13 +65,14 @@ public class IpvSessionItem implements DynamodbItem {
         vcReceivedThisSession.add(vc);
     }
 
-    public List<String> getFeatureSet() {
-        return (featureSet != null)
-                ? Stream.of(featureSet.split(",")).toList()
+    public List<String> getFeatureSetAsList() {
+        return (featureSet != null && !featureSet.equals("[ { \"S\" : \"\" } ]"))
+                ? Arrays.asList(featureSet.split(","))
                 : Collections.emptyList();
     }
 
-    public void setFeatureSet(List<String> featureSet) {
-        this.featureSet = (featureSet != null) ? String.join(",", featureSet) : null;
+    public void setFeatureSetFromList(List<String> featureSet) {
+        this.featureSet =
+                (featureSet != null && !featureSet.isEmpty()) ? String.join(",", featureSet) : null;
     }
 }

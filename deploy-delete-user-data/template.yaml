@@ -89,7 +89,7 @@ Resources:
     Properties:
       FunctionName: !Sub "delete-user-data-${Environment}"
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       PackageType: Zip
       CodeUri: ../lambdas/delete-user-data/
       Architectures:
@@ -200,7 +200,7 @@ Resources:
       BuildProperties:
         UseNpmCi: true
         Minify: true
-        Target: "node18"
+        Target: "node20"
         Sourcemap: true  # Required to preserve error stack traces to TS source
         EntryPoints:
           - src/index.ts

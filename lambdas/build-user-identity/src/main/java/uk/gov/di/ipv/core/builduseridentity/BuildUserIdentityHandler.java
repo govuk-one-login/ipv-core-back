@@ -116,7 +116,7 @@ public class BuildUserIdentityHandler
                 return getUnknownAccessTokenApiGatewayProxyResponseEvent();
             }
 
-            configService.setFeatureSet(ipvSessionItem.getFeatureSet());
+            configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
 
             AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
 

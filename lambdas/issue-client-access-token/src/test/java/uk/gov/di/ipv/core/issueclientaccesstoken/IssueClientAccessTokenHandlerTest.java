@@ -95,7 +95,7 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
         mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
         mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
-        mockSessionItem.setFeatureSet(List.of("someCoolNewThing"));
+        mockSessionItem.setFeatureSet("someCoolNewThing");
     }
 
     @Test
