@@ -73,18 +73,14 @@ class ContractTest {
 
     @BeforeAll
     public static void setup() throws IOException {
-        var testFixturesPath = "src/test/resources/";
-
-        dvlaVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "dvlaVc");
-        passportVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "passportVc");
-        dvlaWithCiVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "dvlaWithCiVc");
-        emptyTicfVcJwtHelper = PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/empty");
-        interventionTicfVcJwtHelper =
-                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/intervention");
-        noInterventionTicfVcJwtHelper =
-                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/noIntervention");
+        dvlaVcJwtHelper = PactJwtBuilder.fromPath("/dvlaVc");
+        passportVcJwtHelper = PactJwtBuilder.fromPath("/passportVc");
+        dvlaWithCiVcJwtHelper = PactJwtBuilder.fromPath("/dvlaWithCiVc");
+        emptyTicfVcJwtHelper = PactJwtBuilder.fromPath("/ticfVc/empty");
+        interventionTicfVcJwtHelper = PactJwtBuilder.fromPath("/ticfVc/intervention");
+        noInterventionTicfVcJwtHelper = PactJwtBuilder.fromPath("/ticfVc/noIntervention");
         noInterventionWithWarningsTicfVcJwtHelper =
-                PactJwtBuilder.fromPath(testFixturesPath + "ticfVc/noInterventionWithWarnings");
+                PactJwtBuilder.fromPath("/ticfVc/noInterventionWithWarnings");
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")

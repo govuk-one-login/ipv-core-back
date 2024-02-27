@@ -4,13 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Base64URL;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PactJwtBuilder {
     private final String minifiedHeaderJson;
@@ -25,13 +22,10 @@ public class PactJwtBuilder {
     }
 
     public static PactJwtBuilder fromPath(String path) throws IOException {
-        Path headerPath = Paths.get(path, "header.json");
-        Path bodyPath = Paths.get(path, "body.json");
-        Path signaturePath = Paths.get(path, "signature");
-
-        String headerJson = readFile(headerPath);
-        String bodyJson = readFile(bodyPath);
-        String signature = readFile(signaturePath).trim();
+        String headerJson = IOUtils.resourceToString(path + "/header.json", StandardCharsets.UTF_8);
+        String bodyJson = IOUtils.resourceToString(path + "/body.json", StandardCharsets.UTF_8);
+        String signature =
+                IOUtils.resourceToString(path + "/signature", StandardCharsets.UTF_8).trim();
 
         return new PactJwtBuilder(headerJson, bodyJson, signature);
     }
@@ -63,9 +57,5 @@ public class PactJwtBuilder {
             throw new RuntimeException(e);
         }
         return jsonNode.toString();
-    }
-
-    private static String readFile(Path path) throws IOException {
-        return FileUtils.readFileToString(new File(path.toUri()), StandardCharsets.UTF_8);
     }
 }
