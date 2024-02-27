@@ -5,9 +5,9 @@ import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
@@ -56,7 +56,6 @@ public class CiMitService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static final Gson gson = new Gson();
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private final AWSLambda lambdaClient;
     private final ConfigService configService;
@@ -86,11 +85,8 @@ public class CiMitService {
                         .withFunctionName(
                                 configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                         .withPayload(
-                                gson.toJson(
-                                        new PutCiRequest(
-                                                govukSigninJourneyId,
-                                                ipAddress,
-                                                verifiableCredential.serialize())));
+                                getPutCiPayload(
+                                        verifiableCredential, govukSigninJourneyId, ipAddress));
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
@@ -110,11 +106,8 @@ public class CiMitService {
                                 configService.getEnvironmentVariable(
                                         CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                         .withPayload(
-                                gson.toJson(
-                                        new PostCiMitigationRequest(
-                                                govukSigninJourneyId,
-                                                ipAddress,
-                                                verifiableCredentialList)));
+                                getPostMitigationPayload(
+                                        verifiableCredentialList, govukSigninJourneyId, ipAddress));
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
@@ -141,34 +134,23 @@ public class CiMitService {
     public SignedJWT getContraIndicatorsVCJwt(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
-        InvokeResult result =
-                invokeClientToGetCIResult(
-                        CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN,
-                        govukSigninJourneyId,
-                        ipAddress,
-                        userId,
-                        "Retrieving CIs from CIMIT system.");
+        InvokeResult result = invokeClientToGetCIResult(govukSigninJourneyId, ipAddress, userId);
         ContraIndicatorCredentialDto contraIndicatorCredential =
-                gson.fromJson(
-                        new String(result.getPayload().array(), StandardCharsets.UTF_8),
-                        ContraIndicatorCredentialDto.class);
+                parseContraIndicatorCredentialDto(result);
+
         return extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
     }
 
     private InvokeResult invokeClientToGetCIResult(
-            EnvironmentVariable lambdaArnToInvoke,
-            String govukSigninJourneyId,
-            String ipAddress,
-            String userId,
-            String message)
+            String govukSigninJourneyId, String ipAddress, String userId)
             throws CiRetrievalException {
-        LOGGER.info(LogHelper.buildLogMessage(message));
+        LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system."));
         InvokeRequest request =
                 new InvokeRequest()
-                        .withFunctionName(configService.getEnvironmentVariable(lambdaArnToInvoke))
-                        .withPayload(
-                                gson.toJson(
-                                        new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
+                        .withFunctionName(
+                                configService.getEnvironmentVariable(
+                                        CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                        .withPayload(getGetCiPayload(userId, govukSigninJourneyId, ipAddress));
 
         InvokeResult result;
         try {
@@ -180,7 +162,7 @@ public class CiMitService {
         }
 
         if (lambdaExecutionFailed(result)) {
-            logLambdaExecutionError(result, lambdaArnToInvoke);
+            logLambdaExecutionError(result, CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN);
             throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
         }
         return result;
@@ -287,5 +269,50 @@ public class CiMitService {
         message.put(LOG_PAYLOAD.getFieldName(), getPayloadOrNull(result));
         message.values().removeIf(Objects::isNull);
         LOGGER.error(new StringMapMessage(message));
+    }
+
+    private String getPostMitigationPayload(
+            List<String> verifiableCredentialList, String govukSigninJourneyId, String ipAddress)
+            throws CiPostMitigationsException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(
+                    new PostCiMitigationRequest(
+                            govukSigninJourneyId, ipAddress, verifiableCredentialList));
+        } catch (JsonProcessingException e) {
+            throw new CiPostMitigationsException("Failed to serialise PostCiMitigationRequest", e);
+        }
+    }
+
+    private String getPutCiPayload(
+            SignedJWT verifiableCredential, String govukSigninJourneyId, String ipAddress)
+            throws CiPutException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(
+                    new PutCiRequest(
+                            govukSigninJourneyId, ipAddress, verifiableCredential.serialize()));
+        } catch (JsonProcessingException e) {
+            throw new CiPutException("Failed to serialise PutCiRequest", e);
+        }
+    }
+
+    private String getGetCiPayload(String userId, String govukSigninJourneyId, String ipAddress)
+            throws CiRetrievalException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(
+                    new GetCiRequest(govukSigninJourneyId, ipAddress, userId));
+        } catch (JsonProcessingException e) {
+            throw new CiRetrievalException("Failed to create GetCiRequest", e);
+        }
+    }
+
+    private ContraIndicatorCredentialDto parseContraIndicatorCredentialDto(InvokeResult result)
+            throws CiRetrievalException {
+        try {
+            return OBJECT_MAPPER.readValue(
+                    new String(result.getPayload().array(), StandardCharsets.UTF_8),
+                    ContraIndicatorCredentialDto.class);
+        } catch (JsonProcessingException e) {
+            throw new CiRetrievalException("Failed to create ContraIndicatorCredentialDto", e);
+        }
     }
 }

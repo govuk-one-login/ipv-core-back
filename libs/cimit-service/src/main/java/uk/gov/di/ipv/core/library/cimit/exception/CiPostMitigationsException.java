@@ -7,4 +7,8 @@ public class CiPostMitigationsException extends Exception {
     public CiPostMitigationsException(String message) {
         super(message);
     }
+
+    public CiPostMitigationsException(String message, Throwable e) {
+        super(message, e);
+    }
 }

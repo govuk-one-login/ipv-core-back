@@ -7,4 +7,8 @@ public class CiPutException extends Exception {
     public CiPutException(String message) {
         super(message);
     }
+
+    public CiPutException(String message, Throwable e) {
+        super(message, e);
+    }
 }
