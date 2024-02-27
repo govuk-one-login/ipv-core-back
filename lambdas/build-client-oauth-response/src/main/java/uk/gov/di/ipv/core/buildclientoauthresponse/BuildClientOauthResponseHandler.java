@@ -124,7 +124,7 @@ public class BuildClientOauthResponseHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
             }
 
-            ipvSessionItem.setFeatureSet(featureSet);
+            ipvSessionItem.setFeatureSetFromList(featureSet);
             sessionService.updateIpvSession(ipvSessionItem);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
