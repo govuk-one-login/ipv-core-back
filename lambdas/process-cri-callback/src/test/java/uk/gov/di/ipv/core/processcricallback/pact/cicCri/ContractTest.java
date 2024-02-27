@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processcricallback.pact.cicCri;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -33,7 +34,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
-import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -91,8 +92,26 @@ class ContractTest {
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_BODY, VALID_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_VC_BODY,
+                                                            VALID_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
