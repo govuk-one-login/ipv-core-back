@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
-import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
 
 import java.net.URI;
@@ -53,541 +52,7 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriRespo
 @PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 public class ContractTest {
-    public static final String FULL_ADDRESS = "fullAddress";
     private final JwtParser jwtParser = new JwtParser();
-    private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String TEST_ISSUER = "dummyF2fComponentId";
-    private static final String TEST_USER = "test-subject";
-    private static final String TEST_OAUTH_STATE = "f5f0d4d1-b937-4abe-b379-8269f600ad44";
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-                    {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-                    """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-                    {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-                    """;
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
-    // sent by the CRI team
-    private static final String VALID_VC_HEADER =
-            """
-                    {
-                      "typ": "JWT",
-                      "alg": "ES256"
-                    }
-                    """;
-    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    private static final String VALID_F2F_VC_WITH_PASSPORT_BODY =
-            """
-                      {
-                       "sub": "test-subject",
-                       "aud": "dummyF2fComponentId",
-                       "nbf": 4070908800,
-                       "iss": "dummyF2fComponentId",
-                       "vc": {
-                         "type": [
-                           "VerifiableCredential",
-                           "IdentityCheckCredential"
-                         ],
-                         "credentialSubject": {
-                           "name": [
-                             {
-                               "nameParts": [
-                                 {
-                                   "type": "GivenName",
-                                   "value": "Kenneth"
-                                 },
-                                 {
-                                   "type": "FamilyName",
-                                   "value": "Decerqueira"
-                                 }
-                               ]
-                             }
-                           ],
-                           "birthDate": [
-                             {
-                               "value": "1965-07-08"
-                             }
-                           ],
-                           "socialSecurityRecord": [],
-                           "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                           "passport": [
-                             {
-                               "expiryDate": "2030-01-01",
-                               "documentNumber": "321654987"
-                             }
-                           ]
-                         },
-                         "evidence": [
-                           {
-                             "checkDetails": [
-                               {
-                                 "identityCheckPolicy": "published",
-                                 "checkMethod": "vcrypt"
-                               },
-                               {
-                                 "biometricVerificationProcessLevel": 3,
-                                 "checkMethod": "bvr"
-                               }
-                             ],
-                             "validityScore": 2,
-                             "verificationScore": 3,
-                             "strengthScore": 4,
-                             "type": "IdentityCheck",
-                             "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
-                           }
-                         ]
-                       },
-                       "jti": "test-jti"
-                     }
-                    """;
-
-    private static final String FAILED_F2F_VC_WITH_PASSPORT_BODY =
-            """
-              {
-               "sub": "test-subject",
-               "aud": "dummyF2fComponentId",
-               "nbf": 4070908800,
-               "iss": "dummyF2fComponentId",
-               "vc": {
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ],
-                 "credentialSubject": {
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Kenneth"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Decerqueira"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1965-07-08"
-                     }
-                   ],
-                   "socialSecurityRecord": [],
-                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                   "passport": [
-                     {
-                       "expiryDate": "2030-01-01",
-                       "documentNumber": "321654987"
-                     }
-                   ]
-                 },
-                 "evidence": [
-                   {
-                     "failedCheckDetails": [
-                       {
-                         "identityCheckPolicy": "published",
-                         "checkMethod": "vcrypt"
-                       },
-                       {
-                         "biometricVerificationProcessLevel": 3,
-                         "checkMethod": "bvr"
-                       }
-                     ],
-                     "validityScore": 0,
-                     "verificationScore": 3,
-                     "strengthScore": 4,
-                     "type": "IdentityCheck",
-                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
-                   }
-                 ]
-               },
-               "jti": "test-jti"
-             }
-            """;
-
-    private static final String FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY =
-            """
-              {
-               "sub": "test-subject",
-               "aud": "dummyF2fComponentId",
-               "nbf": 4070908800,
-               "iss": "dummyF2fComponentId",
-               "vc": {
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ],
-                 "credentialSubject": {
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Kenneth"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Decerqueira"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1965-07-08"
-                     }
-                   ],
-                   "socialSecurityRecord": [],
-                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                   "passport": [
-                     {
-                       "expiryDate": "2030-01-01",
-                       "documentNumber": "321654987"
-                     }
-                   ]
-                 },
-                 "evidence": [
-                   {
-                     "failedCheckDetails": [
-                       {
-                         "identityCheckPolicy": "published",
-                         "checkMethod": "vcrypt"
-                       },
-                       {
-                         "biometricVerificationProcessLevel": 3,
-                         "checkMethod": "bvr"
-                       }
-                     ],
-                     "validityScore": 0,
-                     "verificationScore": 3,
-                     "strengthScore": 4,
-                     "ci": ["D14"],
-                     "type": "IdentityCheck",
-                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
-                   }
-                 ]
-               },
-               "jti": "test-jti"
-             }
-            """;
-    private static final String VALID_F2F_VC_WITH_DVLA_BODY =
-            """
-                    {
-                      "sub": "test-subject",
-                      "aud": "dummyF2fComponentId",
-                      "nbf": 4070908800,
-                      "iss": "dummyF2fComponentId",
-                      "vc": {
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Alice"
-                                },
-                                {
-                                  "type": "GivenName",
-                                  "value": "Jane"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Parker"
-                                }
-                              ]
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1970-01-01"
-                            }
-                          ],
-                          "socialSecurityRecord": [],
-                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                          "drivingPermit": [
-                            {
-                              "expiryDate": "2032-02-02",
-                              "issuedBy": "DVLA",
-                              "personalNumber": "PARKE710112PBFGA",
-                              "issueDate": "2005-02-02",
-                              "fullAddress": "dummyTestAddress"
-                            }
-                          ]
-                        },
-                        "evidence": [
-                          {
-                            "checkDetails": [
-                              {
-                                "identityCheckPolicy": "published",
-                                "checkMethod": "vcrypt"
-                              },
-                              {
-                                "biometricVerificationProcessLevel": 3,
-                                "checkMethod": "bvr"
-                              }
-                            ],
-                            "validityScore": 2,
-                            "verificationScore": 3,
-                            "strengthScore": 3,
-                            "type": "IdentityCheck",
-                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
-                          }
-                        ]
-                      },
-                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
-                    }
-                    """;
-    private static final String VALID_F2F_VC_WITH_EU_DL_BODY =
-            """
-                    {
-                      "sub": "test-subject",
-                      "aud": "dummyF2fComponentId",
-                      "nbf": 4070908800,
-                      "iss": "dummyF2fComponentId",
-                      "vc": {
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Alice"
-                                },
-                                {
-                                  "type": "GivenName",
-                                  "value": "Jane"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Parker"
-                                }
-                              ]
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1970-01-01"
-                            }
-                          ],
-                          "socialSecurityRecord": [],
-                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                          "drivingPermit": [
-                             {
-                               "personalNumber": "DOE99751010AL9OD",
-                               "expiryDate": "2022-02-02",
-                               "issueDate": "2012-02-02",
-                               "issuingCountry": "DE",
-                               "issuedBy": "Landratsamt"
-                             }
-                           ]
-                        },
-                        "evidence": [
-                          {
-                            "checkDetails": [
-                              {
-                                "identityCheckPolicy": "published",
-                                "checkMethod": "vcrypt"
-                              },
-                              {
-                                "biometricVerificationProcessLevel": 3,
-                                "checkMethod": "bvr"
-                              }
-                            ],
-                            "validityScore": 2,
-                            "verificationScore": 3,
-                            "strengthScore": 3,
-                            "type": "IdentityCheck",
-                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
-                          }
-                        ]
-                      },
-                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
-                    }
-                    """;
-
-    private static final String VALID_F2F_VC_WITH_EEA_CARD_BODY =
-            """
-                    {
-                      "sub": "test-subject",
-                      "aud": "dummyF2fComponentId",
-                      "nbf": 4070908800,
-                      "iss": "dummyF2fComponentId",
-                      "vc": {
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Saul"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Goodman"
-                                }
-                              ]
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1970-01-01"
-                            }
-                          ],
-                          "socialSecurityRecord": [],
-                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                          "idCard": [
-                             {
-                               "icaoIssuerCode": "NLD",
-                               "documentNumber": "SPEC12031",
-                               "expiryDate": "2031-08-02",
-                               "issueDate": "2021-08-02"
-                             }
-                           ]
-                        },
-                        "evidence": [
-                          {
-                            "checkDetails": [
-                              {
-                                "identityCheckPolicy": "published",
-                                "checkMethod": "vcrypt"
-                              },
-                              {
-                                "biometricVerificationProcessLevel": 3,
-                                "checkMethod": "bvr"
-                              }
-                            ],
-                            "validityScore": 2,
-                            "verificationScore": 3,
-                            "strengthScore": 4,
-                            "type": "IdentityCheck",
-                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
-                          }
-                        ]
-                      },
-                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
-                    }
-                    """;
-
-    private static final String VALID_F2F_VC_WITH_BRP_BODY =
-            """
-                    {
-                      "sub": "test-subject",
-                      "aud": "dummyF2fComponentId",
-                      "nbf": 4070908800,
-                      "iss": "dummyF2fComponentId",
-                      "vc": {
-                        "type": [
-                          "VerifiableCredential",
-                          "IdentityCheckCredential"
-                        ],
-                        "credentialSubject": {
-                          "name": [
-                            {
-                              "nameParts": [
-                                {
-                                  "type": "GivenName",
-                                  "value": "Saul"
-                                },
-                                {
-                                  "type": "FamilyName",
-                                  "value": "Goodman"
-                                }
-                              ]
-                            }
-                          ],
-                          "birthDate": [
-                            {
-                              "value": "1970-01-01"
-                            }
-                          ],
-                          "socialSecurityRecord": [],
-                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
-                          "residencePermit": [
-                              {
-                                "icaoIssuerCode": "UTO",
-                                "documentType": "CR",
-                                "documentNumber": "AX66K69P2",
-                                "expiryDate": "2030-07-13"
-                              }
-                            ]
-                        },
-                        "evidence": [
-                          {
-                            "checkDetails": [
-                              {
-                                "identityCheckPolicy": "published",
-                                "checkMethod": "vcrypt"
-                              },
-                              {
-                                "biometricVerificationProcessLevel": 3,
-                                "checkMethod": "bvr"
-                              }
-                            ],
-                            "validityScore": 2,
-                            "verificationScore": 3,
-                            "strengthScore": 4,
-                            "type": "IdentityCheck",
-                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
-                          }
-                        ]
-                      },
-                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
-                    }
-                    """;
-
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_F2F_VC_PASSPORT_SIGNATURE =
-            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw";
-    private static final String FAILED_F2F_VC_PASSPORT_SIGNATURE =
-            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw";
-    private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
-            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
-    private static final String VALID_F2F_VC_DL_SIGNATURE =
-            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg";
-    private static final String VALID_F2F_VC_EU_DL_SIGNATURE =
-            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w";
-    private static final String VALID_F2F_VC_EEA_SIGNATURE =
-            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw";
-    private static final String VALID_F2F_VC_BRP_SIGNATURE =
-            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg";
-    public static final String DOCUMENT_NUMBER = "documentNumber";
-    public static final String ICAO_ISSUER_CODE = "icaoIssuerCode";
-    public static final String RESIDENCE_PERMIT = "residencePermit";
-    public static final String NAME_PARTS = "nameParts";
-    public static final String BIRTH_DATE = "birthDate";
-    public static final String NAME = "name";
-    public static final String EXPIRY_DATE = "expiryDate";
-    public static final String DOCUMENT_TYPE = "documentType";
-    public static final String VALUE = "value";
-    public static final String NAME_TYPE = "type";
-    public static final String ISSUE_DATE = "issueDate";
-    public static final String ISSUED_BY = "issuedBy";
-    public static final String PERSONAL_NUMBER = "personalNumber";
-    public static final String DRIVING_PERMIT = "drivingPermit";
-    public static final String CREDENTIAL_SUBJECT = "credentialSubject";
-    public static final String VC = "vc";
-    public static final String PASSPORT = "passport";
     @Mock private ConfigService mockConfigService;
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
@@ -622,9 +87,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minMaxArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -743,9 +206,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -876,9 +337,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -1010,14 +469,12 @@ public class ContractTest {
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_DVLA_BODY,
-                                                            VALID_F2F_VC_DL_SIGNATURE);
+                                                            VALID_F2F_VC_DVLA_SIGNATURE);
 
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -1149,9 +606,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -1279,9 +734,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -1400,9 +853,7 @@ public class ContractTest {
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
-                                            body.stringType(
-                                                    "state",
-                                                    "f5f0d4d1-b937-4abe-b379-8269f600ad44");
+                                            body.stringType("state", TEST_OAUTH_STATE);
                                             body.nullValue("error_description");
                                             body.minArrayLike(
                                                     "https://vocab.account.gov.uk/v1/credentialJWT",
@@ -1512,18 +963,556 @@ public class ContractTest {
                 .build();
     }
 
-    private String createSuccessTestEvent(String jwtBody, String jwtSignature)
-            throws JsonProcessingException {
-        final CriResponseMessageDto criResponseMessageDto =
-                new CriResponseMessageDto(
-                        "f2f",
-                        TEST_USER,
-                        TEST_OAUTH_STATE,
-                        List.of(
-                                new PactJwtBuilder(VALID_VC_HEADER, jwtBody, jwtSignature)
-                                        .buildJwt()),
-                        null,
-                        null);
-        return OBJECT_MAPPER.writeValueAsString(criResponseMessageDto);
-    }
+    public static final String DOCUMENT_NUMBER = "documentNumber";
+    public static final String ICAO_ISSUER_CODE = "icaoIssuerCode";
+    public static final String RESIDENCE_PERMIT = "residencePermit";
+    public static final String NAME_PARTS = "nameParts";
+    public static final String BIRTH_DATE = "birthDate";
+    public static final String NAME = "name";
+    public static final String EXPIRY_DATE = "expiryDate";
+    public static final String DOCUMENT_TYPE = "documentType";
+    public static final String VALUE = "value";
+    public static final String NAME_TYPE = "type";
+    public static final String ISSUE_DATE = "issueDate";
+    public static final String ISSUED_BY = "issuedBy";
+    public static final String PERSONAL_NUMBER = "personalNumber";
+    public static final String DRIVING_PERMIT = "drivingPermit";
+    public static final String CREDENTIAL_SUBJECT = "credentialSubject";
+    public static final String VC = "vc";
+    public static final String PASSPORT = "passport";
+    public static final String FULL_ADDRESS = "fullAddress";
+    private static final String TEST_ISSUER = "dummyF2fComponentId";
+    private static final String TEST_USER = "test-subject";
+    private static final String TEST_OAUTH_STATE = "f5f0d4d1-b937-4abe-b379-8269f600ad44";
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
+            """
+                    {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
+                    """;
+    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
+            """
+                    {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
+                    """;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
+    // sent by the CRI team
+    private static final String VALID_VC_HEADER =
+            """
+                    {
+                      "typ": "JWT",
+                      "alg": "ES256"
+                    }
+                    """;
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_F2F_VC_WITH_PASSPORT_BODY =
+            """
+                      {
+                       "sub": "test-subject",
+                       "aud": "dummyF2fComponentId",
+                       "nbf": 4070908800,
+                       "iss": "dummyF2fComponentId",
+                       "vc": {
+                         "type": [
+                           "VerifiableCredential",
+                           "IdentityCheckCredential"
+                         ],
+                         "credentialSubject": {
+                           "name": [
+                             {
+                               "nameParts": [
+                                 {
+                                   "type": "GivenName",
+                                   "value": "Kenneth"
+                                 },
+                                 {
+                                   "type": "FamilyName",
+                                   "value": "Decerqueira"
+                                 }
+                               ]
+                             }
+                           ],
+                           "birthDate": [
+                             {
+                               "value": "1965-07-08"
+                             }
+                           ],
+                           "socialSecurityRecord": [],
+                           "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                           "passport": [
+                             {
+                               "expiryDate": "2030-01-01",
+                               "documentNumber": "321654987"
+                             }
+                           ]
+                         },
+                         "evidence": [
+                           {
+                             "checkDetails": [
+                               {
+                                 "identityCheckPolicy": "published",
+                                 "checkMethod": "vcrypt"
+                               },
+                               {
+                                 "biometricVerificationProcessLevel": 3,
+                                 "checkMethod": "bvr"
+                               }
+                             ],
+                             "validityScore": 2,
+                             "verificationScore": 3,
+                             "strengthScore": 4,
+                             "type": "IdentityCheck",
+                             "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+                           }
+                         ]
+                       },
+                       "jti": "test-jti"
+                     }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_F2F_VC_PASSPORT_SIGNATURE =
+            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw";
+
+    private static final String FAILED_F2F_VC_WITH_PASSPORT_BODY =
+            """
+              {
+               "sub": "test-subject",
+               "aud": "dummyF2fComponentId",
+               "nbf": 4070908800,
+               "iss": "dummyF2fComponentId",
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Kenneth"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Decerqueira"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1965-07-08"
+                     }
+                   ],
+                   "socialSecurityRecord": [],
+                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                   "passport": [
+                     {
+                       "expiryDate": "2030-01-01",
+                       "documentNumber": "321654987"
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "failedCheckDetails": [
+                       {
+                         "identityCheckPolicy": "published",
+                         "checkMethod": "vcrypt"
+                       },
+                       {
+                         "biometricVerificationProcessLevel": 3,
+                         "checkMethod": "bvr"
+                       }
+                     ],
+                     "validityScore": 0,
+                     "verificationScore": 3,
+                     "strengthScore": 4,
+                     "type": "IdentityCheck",
+                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+                   }
+                 ]
+               },
+               "jti": "test-jti"
+             }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_F2F_VC_PASSPORT_SIGNATURE =
+            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw";
+
+    private static final String FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY =
+            """
+              {
+               "sub": "test-subject",
+               "aud": "dummyF2fComponentId",
+               "nbf": 4070908800,
+               "iss": "dummyF2fComponentId",
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Kenneth"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Decerqueira"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1965-07-08"
+                     }
+                   ],
+                   "socialSecurityRecord": [],
+                   "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                   "passport": [
+                     {
+                       "expiryDate": "2030-01-01",
+                       "documentNumber": "321654987"
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "failedCheckDetails": [
+                       {
+                         "identityCheckPolicy": "published",
+                         "checkMethod": "vcrypt"
+                       },
+                       {
+                         "biometricVerificationProcessLevel": 3,
+                         "checkMethod": "bvr"
+                       }
+                     ],
+                     "validityScore": 0,
+                     "verificationScore": 3,
+                     "strengthScore": 4,
+                     "ci": ["D14"],
+                     "type": "IdentityCheck",
+                     "txn": "eda339dd-aa83-495c-a4d4-75021e9415f9"
+                   }
+                 ]
+               },
+               "jti": "test-jti"
+             }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
+            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
+
+    private static final String VALID_F2F_VC_WITH_DVLA_BODY =
+            """
+                    {
+                      "sub": "test-subject",
+                      "aud": "dummyF2fComponentId",
+                      "nbf": 4070908800,
+                      "iss": "dummyF2fComponentId",
+                      "vc": {
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Alice"
+                                },
+                                {
+                                  "type": "GivenName",
+                                  "value": "Jane"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Parker"
+                                }
+                              ]
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1970-01-01"
+                            }
+                          ],
+                          "socialSecurityRecord": [],
+                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                          "drivingPermit": [
+                            {
+                              "expiryDate": "2032-02-02",
+                              "issuedBy": "DVLA",
+                              "personalNumber": "PARKE710112PBFGA",
+                              "issueDate": "2005-02-02",
+                              "fullAddress": "dummyTestAddress"
+                            }
+                          ]
+                        },
+                        "evidence": [
+                          {
+                            "checkDetails": [
+                              {
+                                "identityCheckPolicy": "published",
+                                "checkMethod": "vcrypt"
+                              },
+                              {
+                                "biometricVerificationProcessLevel": 3,
+                                "checkMethod": "bvr"
+                              }
+                            ],
+                            "validityScore": 2,
+                            "verificationScore": 3,
+                            "strengthScore": 3,
+                            "type": "IdentityCheck",
+                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
+                          }
+                        ]
+                      },
+                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
+                    }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_F2F_VC_DVLA_SIGNATURE =
+            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg";
+
+    private static final String VALID_F2F_VC_WITH_EU_DL_BODY =
+            """
+                    {
+                      "sub": "test-subject",
+                      "aud": "dummyF2fComponentId",
+                      "nbf": 4070908800,
+                      "iss": "dummyF2fComponentId",
+                      "vc": {
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Alice"
+                                },
+                                {
+                                  "type": "GivenName",
+                                  "value": "Jane"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Parker"
+                                }
+                              ]
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1970-01-01"
+                            }
+                          ],
+                          "socialSecurityRecord": [],
+                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                          "drivingPermit": [
+                             {
+                               "personalNumber": "DOE99751010AL9OD",
+                               "expiryDate": "2022-02-02",
+                               "issueDate": "2012-02-02",
+                               "issuingCountry": "DE",
+                               "issuedBy": "Landratsamt"
+                             }
+                           ]
+                        },
+                        "evidence": [
+                          {
+                            "checkDetails": [
+                              {
+                                "identityCheckPolicy": "published",
+                                "checkMethod": "vcrypt"
+                              },
+                              {
+                                "biometricVerificationProcessLevel": 3,
+                                "checkMethod": "bvr"
+                              }
+                            ],
+                            "validityScore": 2,
+                            "verificationScore": 3,
+                            "strengthScore": 3,
+                            "type": "IdentityCheck",
+                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
+                          }
+                        ]
+                      },
+                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
+                    }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_F2F_VC_EU_DL_SIGNATURE =
+            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w";
+
+    private static final String VALID_F2F_VC_WITH_EEA_CARD_BODY =
+            """
+                    {
+                      "sub": "test-subject",
+                      "aud": "dummyF2fComponentId",
+                      "nbf": 4070908800,
+                      "iss": "dummyF2fComponentId",
+                      "vc": {
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Saul"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Goodman"
+                                }
+                              ]
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1970-01-01"
+                            }
+                          ],
+                          "socialSecurityRecord": [],
+                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                          "idCard": [
+                             {
+                               "icaoIssuerCode": "NLD",
+                               "documentNumber": "SPEC12031",
+                               "expiryDate": "2031-08-02",
+                               "issueDate": "2021-08-02"
+                             }
+                           ]
+                        },
+                        "evidence": [
+                          {
+                            "checkDetails": [
+                              {
+                                "identityCheckPolicy": "published",
+                                "checkMethod": "vcrypt"
+                              },
+                              {
+                                "biometricVerificationProcessLevel": 3,
+                                "checkMethod": "bvr"
+                              }
+                            ],
+                            "validityScore": 2,
+                            "verificationScore": 3,
+                            "strengthScore": 4,
+                            "type": "IdentityCheck",
+                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
+                          }
+                        ]
+                      },
+                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
+                    }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_F2F_VC_EEA_SIGNATURE =
+            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw";
+
+    private static final String VALID_F2F_VC_WITH_BRP_BODY =
+            """
+                    {
+                      "sub": "test-subject",
+                      "aud": "dummyF2fComponentId",
+                      "nbf": 4070908800,
+                      "iss": "dummyF2fComponentId",
+                      "vc": {
+                        "type": [
+                          "VerifiableCredential",
+                          "IdentityCheckCredential"
+                        ],
+                        "credentialSubject": {
+                          "name": [
+                            {
+                              "nameParts": [
+                                {
+                                  "type": "GivenName",
+                                  "value": "Saul"
+                                },
+                                {
+                                  "type": "FamilyName",
+                                  "value": "Goodman"
+                                }
+                              ]
+                            }
+                          ],
+                          "birthDate": [
+                            {
+                              "value": "1970-01-01"
+                            }
+                          ],
+                          "socialSecurityRecord": [],
+                          "emailAddress": "dev-platform-testing@digital.cabinet-office.gov.uk",
+                          "residencePermit": [
+                              {
+                                "icaoIssuerCode": "UTO",
+                                "documentType": "CR",
+                                "documentNumber": "AX66K69P2",
+                                "expiryDate": "2030-07-13"
+                              }
+                            ]
+                        },
+                        "evidence": [
+                          {
+                            "checkDetails": [
+                              {
+                                "identityCheckPolicy": "published",
+                                "checkMethod": "vcrypt"
+                              },
+                              {
+                                "biometricVerificationProcessLevel": 3,
+                                "checkMethod": "bvr"
+                              }
+                            ],
+                            "validityScore": 2,
+                            "verificationScore": 3,
+                            "strengthScore": 4,
+                            "type": "IdentityCheck",
+                            "txn": "9daf6fa8-bbed-4854-8f7a-e635121ab4d7"
+                          }
+                        ]
+                      },
+                      "jti": "urn:uuid:811b7c3b-c0e0-4520-903c-3c6b97c734fc"
+                    }
+                    """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_F2F_VC_BRP_SIGNATURE =
+            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg";
 }
