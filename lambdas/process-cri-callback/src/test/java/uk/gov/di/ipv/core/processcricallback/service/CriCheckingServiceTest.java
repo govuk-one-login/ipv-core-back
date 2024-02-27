@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -74,7 +74,7 @@ class CriCheckingServiceTest {
                     .contraIndicatorsMap(
                             Map.of(
                                     TEST_CI_CODE,
-                                    ContraIndicator.builder()
+                                    ContraIndicatorV1.builder()
                                             .code(TEST_CI_CODE)
                                             .mitigation(List.of(Mitigation.builder().build()))
                                             .build()))

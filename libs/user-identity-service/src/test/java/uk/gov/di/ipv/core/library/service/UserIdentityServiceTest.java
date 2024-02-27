@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -1402,9 +1402,9 @@ class UserIdentityServiceTest {
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
                                 Map.of(
-                                        "X01", ContraIndicator.builder().code("X01").build(),
-                                        "X02", ContraIndicator.builder().code("X02").build(),
-                                        "Z03", ContraIndicator.builder().code("Z03").build()))
+                                        "X01", ContraIndicatorV1.builder().code("X01").build(),
+                                        "X02", ContraIndicatorV1.builder().code("X02").build(),
+                                        "Z03", ContraIndicatorV1.builder().code("Z03").build()))
                         .build();
 
         // Act
@@ -1440,7 +1440,7 @@ class UserIdentityServiceTest {
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
-                                Map.of("wat", ContraIndicator.builder().code("wat").build()))
+                                Map.of("wat", ContraIndicatorV1.builder().code("wat").build()))
                         .build();
 
         // Act & Assert
@@ -1466,9 +1466,9 @@ class UserIdentityServiceTest {
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
                                 Map.of(
-                                        "X01", ContraIndicator.builder().code("X01").build(),
+                                        "X01", ContraIndicatorV1.builder().code("X01").build(),
                                         "X02",
-                                                ContraIndicator.builder()
+                                                ContraIndicatorV1.builder()
                                                         .code("X02")
                                                         .mitigation(
                                                                 List.of(
@@ -1476,7 +1476,7 @@ class UserIdentityServiceTest {
                                                                                 .code("M01")
                                                                                 .build()))
                                                         .build(),
-                                        "Z03", ContraIndicator.builder().code("Z03").build()))
+                                        "Z03", ContraIndicatorV1.builder().code("Z03").build()))
                         .build();
 
         // Act
@@ -1500,7 +1500,7 @@ class UserIdentityServiceTest {
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
-                                Map.of("wat", ContraIndicator.builder().code("wat").build()))
+                                Map.of("wat", ContraIndicatorV1.builder().code("wat").build()))
                         .build();
 
         assertThrows(
@@ -1526,10 +1526,10 @@ class UserIdentityServiceTest {
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
                                 Map.of(
-                                        "X01", ContraIndicator.builder().code("X01").build(),
-                                        "X02", ContraIndicator.builder().code("X02").build(),
-                                        "Z03", ContraIndicator.builder().code("Z03").build(),
-                                        "Z04", ContraIndicator.builder().code("Z04").build()))
+                                        "X01", ContraIndicatorV1.builder().code("X01").build(),
+                                        "X02", ContraIndicatorV1.builder().code("X02").build(),
+                                        "Z03", ContraIndicatorV1.builder().code("Z03").build(),
+                                        "Z04", ContraIndicatorV1.builder().code("Z04").build()))
                         .build();
 
         // Act
@@ -1557,7 +1557,7 @@ class UserIdentityServiceTest {
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(
-                                Map.of("X01", ContraIndicator.builder().code("X01").build()))
+                                Map.of("X01", ContraIndicatorV1.builder().code("X01").build()))
                         .build();
 
         // Act

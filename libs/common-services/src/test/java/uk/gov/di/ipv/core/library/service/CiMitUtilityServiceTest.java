@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 
 import java.util.Collections;
@@ -50,8 +51,8 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
         Map<String, ContraIndicator> cisMap = new HashMap<>();
-        cisMap.put("ci_1", ContraIndicator.builder().build());
-        cisMap.put("ci_2", ContraIndicator.builder().build());
+        cisMap.put("ci_1", ContraIndicatorV1.builder().build());
+        cisMap.put("ci_2", ContraIndicatorV1.builder().build());
 
         ContraIndicators cis = ContraIndicators.builder().contraIndicatorsMap(cisMap).build();
 
@@ -87,8 +88,8 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
         Map<String, ContraIndicator> cisMap = new HashMap<>();
-        cisMap.put("ci_1", ContraIndicator.builder().build());
-        cisMap.put("ci_2", ContraIndicator.builder().build());
+        cisMap.put("ci_1", ContraIndicatorV1.builder().build());
+        cisMap.put("ci_2", ContraIndicatorV1.builder().build());
 
         ContraIndicators cis = ContraIndicators.builder().contraIndicatorsMap(cisMap).build();
 
@@ -109,10 +110,10 @@ class CiMitUtilityServiceTest {
 
     @Test
     void isBreachingCiThresholdIfMitigatedShouldReturnTrueWhenScoreExceedsThreshold() {
-        ContraIndicator ci1 =
-                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
-        ContraIndicator ci2 =
-                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicatorV1 ci1 =
+                ContraIndicatorV1.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicatorV1 ci2 =
+                ContraIndicatorV1.builder().code("ciCode2").issuanceDate("some_date").build();
         ContraIndicators cis =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
@@ -130,10 +131,10 @@ class CiMitUtilityServiceTest {
 
     @Test
     void isBreachingCiThresholdIfMitigatedShouldReturnFalseWhenScoreEqualsThreshold() {
-        ContraIndicator ci1 =
-                ContraIndicator.builder().code("ciCode1").issuanceDate("some_date").build();
-        ContraIndicator ci2 =
-                ContraIndicator.builder().code("ciCode2").issuanceDate("some_date").build();
+        ContraIndicatorV1 ci1 =
+                ContraIndicatorV1.builder().code("ciCode1").issuanceDate("some_date").build();
+        ContraIndicatorV1 ci2 =
+                ContraIndicatorV1.builder().code("ciCode2").issuanceDate("some_date").build();
         ContraIndicators cis =
                 ContraIndicators.builder()
                         .contraIndicatorsMap(Map.of("ciCode1", ci1, "ciCode2", ci2))
@@ -153,7 +154,7 @@ class CiMitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
-        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var ci = ContraIndicatorV1.builder().code(code).issuanceDate("some_date").build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
         Map<String, ContraIndicatorConfig> ciConfigMap =
@@ -172,7 +173,7 @@ class CiMitUtilityServiceTest {
     void getMitigationJourneyResponseShouldReturnEmptyWhenCiIsNotMitigatable() throws Exception {
         // arrange
         var code = "ci_code";
-        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var ci = ContraIndicatorV1.builder().code(code).issuanceDate("some_date").build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
 
@@ -188,7 +189,7 @@ class CiMitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var ci =
-                ContraIndicator.builder()
+                ContraIndicatorV1.builder()
                         .code(code)
                         .issuanceDate("some_date")
                         .mitigation(List.of(Mitigation.builder().build()))
@@ -209,7 +210,7 @@ class CiMitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
-        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var ci = ContraIndicatorV1.builder().code(code).issuanceDate("some_date").build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
         Map<String, ContraIndicatorConfig> ciConfigMap =

@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 
 import java.time.Instant;
@@ -11,7 +11,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ContraIndicatorTest {
+class ContraIndicatorV1Test {
 
     private static final String CURRENT_TIME = Instant.now().toString();
 
@@ -26,8 +26,8 @@ class ContraIndicatorTest {
                     Mitigation.builder().code("MTG1").build(),
                     Mitigation.builder().code("MTG2").build());
 
-    private static final ContraIndicator CI =
-            ContraIndicator.builder()
+    private static final ContraIndicatorV1 CI =
+            ContraIndicatorV1.builder()
                     .code(CODE)
                     .issuanceDate(CURRENT_TIME)
                     .document(DOCUMENT_ID)

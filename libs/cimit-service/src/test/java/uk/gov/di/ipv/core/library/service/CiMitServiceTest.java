@@ -23,12 +23,17 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV2;
+import uk.gov.di.ipv.core.library.domain.cimitvc.MitigatingCredential;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,6 +49,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_P
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_NO_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_DOCUMENT_ARRAY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
@@ -218,9 +224,132 @@ class CiMitServiceTest {
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
+        var expectedContraIndicator =
+                ContraIndicatorV1.builder()
+                        .code("X01")
+                        .issuers(List.of("https://issuing-cri.example"))
+                        .issuanceDate("2022-09-20T15:54:50.000Z")
+                        .document("passport/GBR/824159121")
+                        .txn(List.of("abcdef"))
+                        .mitigation(
+                                List.of(
+                                        Mitigation.builder()
+                                                .code("M01")
+                                                .mitigatingCredential(
+                                                        List.of(
+                                                                MitigatingCredential.builder()
+                                                                        .issuer(
+                                                                                "https://credential-issuer.example/")
+                                                                        .validFrom(
+                                                                                "2022-09-21T15:54:50.000Z")
+                                                                        .txn("ghij")
+                                                                        .id(
+                                                                                "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
+                                                                        .build()))
+                                                .build()))
+                        .incompleteMitigation(
+                                List.of(
+                                        Mitigation.builder()
+                                                .code("M02")
+                                                .mitigatingCredential(
+                                                        List.of(
+                                                                MitigatingCredential.builder()
+                                                                        .issuer(
+                                                                                "https://another-credential-issuer.example/")
+                                                                        .validFrom(
+                                                                                "2022-09-22T15:54:50.000Z")
+                                                                        .txn("cdeef")
+                                                                        .id(
+                                                                                "urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f")
+                                                                        .build()))
+                                                .build()))
+                        .build();
+
         assertEquals(
-                "ContraIndicators(contraIndicatorsMap={D01=ContraIndicator(code=D01, issuers=[https://issuing-cri.example], issuanceDate=2022-09-20T15:54:50.000Z, document=passport/GBR/824159121, txn=[abcdef], mitigation=[Mitigation(code=M01, mitigatingCredential=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50.000Z, txn=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigation=[Mitigation(code=M02, mitigatingCredential=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50.000Z, txn=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])})",
-                contraIndications.toString());
+                Map.of("X01", expectedContraIndicator), contraIndications.getContraIndicatorsMap());
+    }
+
+    @Test
+    void getContraIndicatorsVCWithDocumentArray() throws Exception {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(
+                                        makeCiMitVCPayload(
+                                                SIGNED_CONTRA_INDICATOR_VC_DOCUMENT_ARRAY)));
+
+        ContraIndicators contraIndications =
+                ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+
+        verify(verifiableCredentialJwtValidator)
+                .validateSignatureAndClaims(
+                        any(SignedJWT.class),
+                        any(ECKey.class),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(TEST_USER_ID));
+
+        InvokeRequest request = requestCaptor.getValue();
+        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
+        assertEquals(
+                String.format(
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
+                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+
+        var expectedContraIndicator =
+                ContraIndicatorV2.builder()
+                        .code("X01")
+                        .issuers(
+                                List.of(
+                                        "https://issuing-cri.example",
+                                        "https://another-cri.example"))
+                        .issuanceDate("2022-09-20T15:54:50.000Z")
+                        .document(List.of("passport/GBR/824159121", "drivingPermit/DVLA/12345678"))
+                        .txn(List.of("abcdef"))
+                        .mitigation(
+                                List.of(
+                                        Mitigation.builder()
+                                                .code("M01")
+                                                .mitigatingCredential(
+                                                        List.of(
+                                                                MitigatingCredential.builder()
+                                                                        .issuer(
+                                                                                "https://credential-issuer.example/")
+                                                                        .validFrom(
+                                                                                "2022-09-21T15:54:50.000Z")
+                                                                        .txn("ghij")
+                                                                        .id(
+                                                                                "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
+                                                                        .build()))
+                                                .build()))
+                        .incompleteMitigation(
+                                List.of(
+                                        Mitigation.builder()
+                                                .code("M02")
+                                                .mitigatingCredential(
+                                                        List.of(
+                                                                MitigatingCredential.builder()
+                                                                        .issuer(
+                                                                                "https://another-credential-issuer.example/")
+                                                                        .validFrom(
+                                                                                "2022-09-22T15:54:50.000Z")
+                                                                        .txn("cdeef")
+                                                                        .id(
+                                                                                "urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f")
+                                                                        .build()))
+                                                .build()))
+                        .build();
+
+        assertEquals(
+                Map.of("X01", expectedContraIndicator), contraIndications.getContraIndicatorsMap());
     }
 
     @Test
@@ -319,7 +448,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorCredentialsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
+    void getContraIndicatorVcThrowsIfInvalidEvidenceWithNoCI() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -334,26 +463,11 @@ class CiMitServiceTest {
                                         makeCiMitVCPayload(
                                                 SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
-        ContraIndicators contraIndicators =
-                ciMitService.getContraIndicatorsVC(
-                        TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
-
-        verify(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
-
-        InvokeRequest request = requestCaptor.getValue();
-        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
-        assertEquals(
-                String.format(
-                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
-
-        assertEquals("ContraIndicators(contraIndicatorsMap={})", contraIndicators.toString());
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVC(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test

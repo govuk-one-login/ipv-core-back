@@ -5,8 +5,9 @@ import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
@@ -39,7 +40,6 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,6 +54,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_C
 
 public class CiMitService {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER =
+            new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final Gson gson = new Gson();
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private final AWSLambda lambdaClient;
@@ -218,18 +220,16 @@ public class CiMitService {
     private EvidenceItem parseContraIndicatorEvidence(SignedJWT signedJWT)
             throws CiRetrievalException {
 
-        Map<String, Object> claimSetJsonObject;
+        CiMitJwt ciMitJwt;
         try {
-            claimSetJsonObject = signedJWT.getJWTClaimsSet().toJSONObject();
-        } catch (ParseException e) {
+            ciMitJwt =
+                    OBJECT_MAPPER.convertValue(
+                            signedJWT.getJWTClaimsSet().toJSONObject(), CiMitJwt.class);
+        } catch (ParseException | IllegalArgumentException e) {
             String message = "Failed to parse ContraIndicators response json";
             LOGGER.error(LogHelper.buildErrorMessage(message, e));
             throw new CiRetrievalException(message);
         }
-
-        CiMitJwt ciMitJwt =
-                gson.fromJson(
-                        gson.toJson(claimSetJsonObject), new TypeToken<CiMitJwt>() {}.getType());
 
         CiMitVc vcClaim = ciMitJwt.getVc();
         if (vcClaim == null) {

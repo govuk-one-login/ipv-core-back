@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
@@ -121,8 +122,8 @@ class ContraIndicatorsTest {
 
     private void addContraIndicators(
             final String code, Instant issuanceDate, List<Mitigation> mitigations) {
-        ContraIndicator contraIndicator =
-                ContraIndicator.builder()
+        ContraIndicatorV1 contraIndicator =
+                ContraIndicatorV1.builder()
                         .code(code)
                         .issuanceDate(issuanceDate.toString())
                         .mitigation(mitigations)

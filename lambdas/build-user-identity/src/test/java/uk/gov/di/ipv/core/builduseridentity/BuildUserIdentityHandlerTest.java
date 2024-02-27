@@ -31,7 +31,7 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicatorV1;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -101,7 +101,7 @@ class BuildUserIdentityHandlerTest {
                     .contraIndicatorsMap(
                             Map.of(
                                     "X01",
-                                    ContraIndicator.builder()
+                                    ContraIndicatorV1.builder()
                                             .code("X01")
                                             .issuers(
                                                     List.of(
@@ -109,7 +109,7 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-f.account.gov.uk"))
                                             .build(),
                                     "X02",
-                                    ContraIndicator.builder()
+                                    ContraIndicatorV1.builder()
                                             .code("X02")
                                             .issuers(
                                                     List.of(
@@ -117,7 +117,7 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-f.account.gov.uk"))
                                             .build(),
                                     "Z03",
-                                    ContraIndicator.builder()
+                                    ContraIndicatorV1.builder()
                                             .code("Z03")
                                             .issuers(
                                                     List.of(
@@ -331,7 +331,7 @@ class BuildUserIdentityHandlerTest {
                         .contraIndicatorsMap(
                                 Map.of(
                                         "X01",
-                                        ContraIndicator.builder()
+                                        ContraIndicatorV1.builder()
                                                 .code("X01")
                                                 .issuers(
                                                         List.of(
@@ -339,7 +339,7 @@ class BuildUserIdentityHandlerTest {
                                                                 "https://review-f.account.gov.uk"))
                                                 .build(),
                                         "X02",
-                                        ContraIndicator.builder()
+                                        ContraIndicatorV1.builder()
                                                 .code("X02")
                                                 .issuers(
                                                         List.of(
@@ -347,7 +347,7 @@ class BuildUserIdentityHandlerTest {
                                                                 "https://review-f.account.gov.uk"))
                                                 .build(),
                                         "Z03",
-                                        ContraIndicator.builder()
+                                        ContraIndicatorV1.builder()
                                                 .code("Z03")
                                                 .issuers(
                                                         List.of(
