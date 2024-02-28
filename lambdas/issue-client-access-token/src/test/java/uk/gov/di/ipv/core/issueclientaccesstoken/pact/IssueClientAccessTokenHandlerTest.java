@@ -92,6 +92,7 @@ class IssueClientAccessTokenHandlerTest {
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
 
+        // Set up the web server for the tests
         var handler =
                 new IssueClientAccessTokenHandler(
                         accessTokenService,
@@ -110,9 +111,6 @@ class IssueClientAccessTokenHandlerTest {
     public void tearDown() {
         httpServer.stopServer();
     }
-
-    @State("localHost is a valid resource URI")
-    public void setResourceUri() {}
 
     @State("dummyAuthCode is a valid authorization code")
     public void setAuthCode() {
