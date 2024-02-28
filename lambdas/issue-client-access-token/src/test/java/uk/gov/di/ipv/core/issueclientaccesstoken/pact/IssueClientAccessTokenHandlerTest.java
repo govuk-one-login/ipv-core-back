@@ -44,7 +44,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 
 @PactFolder("pacts")
 @Disabled("PACT tests should not be run in build pipelines at this time")
-@Provider("IpvCoreBack")
+@Provider("IpvCoreBackTokenProvider")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class IssueClientAccessTokenHandlerTest {
@@ -52,15 +52,11 @@ class IssueClientAccessTokenHandlerTest {
     private static final int PORT = 5050;
 
     private LambdaHttpServer httpServer;
+    private IpvSessionItem ipvSessionItem;
     @Mock private ConfigService configService;
     @Mock private DataStore<IpvSessionItem> ipvSessionDataStore;
     @Mock private DataStore<ClientOAuthSessionItem> oAuthDataStore;
     @Mock private DataStore<ClientAuthJwtIdItem> jwtIdStore;
-
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
 
     @BeforeAll
     static void setupServer() {
@@ -79,36 +75,30 @@ class IssueClientAccessTokenHandlerTest {
         var clientAuthJwtIdService = new ClientAuthJwtIdService(configService, jwtIdStore);
         var tokenRequestValidator =
                 new TokenRequestValidator(configService, clientAuthJwtIdService);
-        var ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem = new IpvSessionItem();
         var clientOAuthSessionItem = new ClientOAuthSessionItem();
         var authorizationCodeMetadata = new AuthorizationCodeMetadata();
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired
-        authorizationCodeMetadata.setRedirectUrl(
-                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport");
 
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("dummyIpvComponentId");
-        when(configService.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "orch"))
-                .thenReturn(CRI_SIGNING_PRIVATE_KEY_JWK);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn("3153600000"); // 100 years
         when(configService.getSsmParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
                 .thenReturn("3153600000"); // 100 years
         when(configService.getBearerAccessTokenTtl()).thenReturn(3153600000L); // 100 years
-        when(ipvSessionDataStore.getItemByIndex(
-                        "authorizationCode", DigestUtils.sha256Hex("dummyAuthCode")))
-                .thenReturn(ipvSessionItem);
+
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
 
         var handler =
-                        new IssueClientAccessTokenHandler(
-                                accessTokenService,
-                                sessionService,
-                                configService,
-                                clientOAuthSessionService,
-                                tokenRequestValidator);
+                new IssueClientAccessTokenHandler(
+                        accessTokenService,
+                        sessionService,
+                        configService,
+                        clientOAuthSessionService,
+                        tokenRequestValidator);
 
         httpServer = new LambdaHttpServer(handler, "/token", PORT);
         httpServer.startServer();
@@ -121,20 +111,33 @@ class IssueClientAccessTokenHandlerTest {
         httpServer.stopServer();
     }
 
+    @State("localHost is a valid resource URI")
+    public void setResourceUri() {}
+
     @State("dummyAuthCode is a valid authorization code")
-    public void setAuthCode() {}
+    public void setAuthCode() {
+        when(ipvSessionDataStore.getItemByIndex(
+                        "authorizationCode",
+                        DigestUtils.sha256Hex(
+                                "dummyAuthCode"))) // 56298e46fe43e76f556b5aaea8601d758dd47c084495bf197b985a4e516ac5ce
+                .thenReturn(ipvSessionItem);
+    }
 
-    @State("dummyApiKey is a valid api key")
-    public void setApiKey() {}
+    @State(
+            "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}")
+    public void setSigningKey() {
+        var signingKey =
+                """
+                {"kty":"EC","d":"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A","crv":"P-256","kid":"14342354354353","x":"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw","y":"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw","alg":"ES256"}
+                """;
 
-    @State("dummyInvalidAuthCode is an invalid authorization code")
+        when(configService.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
+                .thenReturn(signingKey);
+    }
+
+    @State("dummyInvalidAuthCode is a invalid authorization code")
     public void dontSetAuthCode() {}
-
-    @State("dummyPassportComponentId is the passport CRI component ID")
-    public void setComponentId() {}
-
-    @State("Passport CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-    public void setSigningKey() {}
 
     @TestTemplate
     @ExtendWith(PactVerificationInvocationContextProvider.class)
