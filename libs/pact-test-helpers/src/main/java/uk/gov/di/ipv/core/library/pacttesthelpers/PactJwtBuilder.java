@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Base64URL;
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class PactJwtBuilder {
     private final String minifiedHeaderJson;
@@ -15,6 +19,15 @@ public class PactJwtBuilder {
         this.minifiedHeaderJson = minifyJson(headerJson);
         this.minifiedBodyJson = minifyJson(bodyJson);
         this.signature = signature;
+    }
+
+    public static PactJwtBuilder fromPath(String path) throws IOException {
+        String headerJson = IOUtils.resourceToString(path + "/header.json", StandardCharsets.UTF_8);
+        String bodyJson = IOUtils.resourceToString(path + "/body.json", StandardCharsets.UTF_8);
+        String signature =
+                IOUtils.resourceToString(path + "/signature", StandardCharsets.UTF_8).trim();
+
+        return new PactJwtBuilder(headerJson, bodyJson, signature);
     }
 
     public String buildJwt() {
