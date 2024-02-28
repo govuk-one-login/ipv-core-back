@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class VerifiableCredentialService {
@@ -81,6 +82,14 @@ public class VerifiableCredentialService {
 
     public VcStoreItem getVcStoreItem(String userId, String criId) {
         return dataStore.getItem(userId, criId);
+    }
+
+    public void deleteHmrcInheritedIdentityIfPresent(List<VcStoreItem> vcStoreItems) {
+        for (var vcStoreItem : vcStoreItems) {
+            if (HMRC_MIGRATION_CRI.equals(vcStoreItem.getCredentialIssuer())) {
+                deleteVcStoreItem(vcStoreItem.getUserId(), vcStoreItem.getCredentialIssuer());
+            }
+        }
     }
 
     public void deleteVcStoreItems(List<VcStoreItem> vcStoreItems, Boolean isUserInitiated) {

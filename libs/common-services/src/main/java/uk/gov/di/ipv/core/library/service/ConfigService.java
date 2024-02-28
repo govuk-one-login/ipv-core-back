@@ -67,10 +67,10 @@ public class ConfigService {
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private String featureSet;
+    private List<String> featureSet;
 
     public ConfigService(
-            SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
+            SSMProvider ssmProvider, SecretsProvider secretsProvider, List<String> featureSet) {
         this.ssmProvider = ssmProvider;
         this.secretsProvider = secretsProvider;
         setFeatureSet(featureSet);
@@ -80,7 +80,7 @@ public class ConfigService {
         this(ssmProvider, secretsProvider, null);
     }
 
-    public ConfigService(String featureSet) {
+    public ConfigService(List<String> featureSet) {
         if (isRunningLocally()) {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
@@ -131,24 +131,16 @@ public class ConfigService {
         return ssmProvider;
     }
 
-    public String getFeatureSet() {
+    public List<String> getFeatureSet() {
         return featureSet;
     }
 
-    public void setFeatureSet(String featureSet) {
-        if (featureSet == null || featureSet.isBlank()) {
-            this.featureSet = null;
-        } else {
-            this.featureSet = featureSet;
-        }
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet = featureSet;
     }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
-    }
-
-    public String getSsmParameter(String path) {
-        return ssmProvider.get(path);
     }
 
     public String getSsmParameter(
@@ -157,22 +149,24 @@ public class ConfigService {
     }
 
     private String getSsmParameterWithOverride(String templatePath, String... pathProperties) {
-        if (getFeatureSet() != null) {
-            final Path featureSetPath =
-                    Path.of(resolveFeatureSetPath(templatePath, pathProperties));
-            final String terminal = featureSetPath.getFileName().toString();
-            final String basePath = featureSetPath.getParent().toString();
-            final Map<String, String> overrides = ssmProvider.getMultiple(basePath);
-            if (overrides.containsKey(terminal)) {
-                return overrides.get(terminal);
-            } else {
-                LOGGER.debug(
-                        (new StringMapMessage())
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Parameter not present for featureSet")
-                                .with(LOG_PARAMETER_PATH.getFieldName(), templatePath)
-                                .with(LOG_FEATURE_SET.getFieldName(), getFeatureSet()));
+        if (this.featureSet != null) {
+            for (String fs : this.featureSet) {
+                final Path featureSetPath =
+                        Path.of(resolveFeatureSetPath(fs, templatePath, pathProperties));
+                final String terminal = featureSetPath.getFileName().toString();
+                final String basePath = featureSetPath.getParent().toString();
+                final Map<String, String> overrides = ssmProvider.getMultiple(basePath);
+                if (overrides.containsKey(terminal)) {
+                    return overrides.get(terminal);
+                } else {
+                    LOGGER.debug(
+                            (new StringMapMessage())
+                                    .with(
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "Parameter not present for featureSet")
+                                    .with(LOG_PARAMETER_PATH.getFieldName(), templatePath)
+                                    .with(LOG_FEATURE_SET.getFieldName(), fs));
+                }
             }
         }
         return ssmProvider.get(resolvePath(templatePath, pathProperties));
@@ -186,21 +180,10 @@ public class ConfigService {
         return resolveBasePath() + String.format(path, (Object[]) pathProperties);
     }
 
-    private String resolveFeatureSetPath(String path, String... pathProperties) {
+    private String resolveFeatureSetPath(String featureSet, String path, String... pathProperties) {
         return resolveBasePath()
-                + String.format("features/%s/", getFeatureSet())
+                + String.format("features/%s/", featureSet)
                 + String.format(path, (Object[]) pathProperties);
-    }
-
-    public Map<String, String> getSsmParameters(
-            String path, boolean recursive, String... pathProperties) {
-        var provider = recursive ? ssmProvider.recursive() : ssmProvider;
-        Map<String, String> parameters =
-                new HashMap<>(provider.getMultiple(resolvePath(path, pathProperties)));
-        if (getFeatureSet() != null) {
-            parameters.putAll(provider.getMultiple(resolveFeatureSetPath(path, pathProperties)));
-        }
-        return parameters;
     }
 
     public boolean isRunningLocally() {
@@ -382,7 +365,7 @@ public class ConfigService {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {
-            String parameter = getSsmParameter(resolvePath(pathTemplate, criId, connection));
+            String parameter = ssmProvider.get(resolvePath(pathTemplate, criId, connection));
             return objectMapper.readValue(parameter, configType);
         } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(

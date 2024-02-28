@@ -37,6 +37,7 @@ import java.net.URISyntaxException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -55,93 +56,10 @@ import static org.mockito.Mockito.when;
 @PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost", port = "1234")
 class ContractTest {
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final String PRIVATE_API_KEY = "dummyApiKey";
-    // DUMMY_ACCESS_TOKEN provided by F2F team for subject 74655ce3-a679-4c09-a3b0-1d0dc2eff373
-    private static final String DUMMY_ACCESS_TOKEN =
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiI3NDY1NWNlMy1hNjc5LTRjMDktYTNiMC0xZDBkYzJlZmYzNzMiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjIwMjI3OTE3Njd9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
-    private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
-    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
-    private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9";
-    // Signature generated using JWT.io
-    private static final String CLIENT_ASSERTION_SIGNATURE =
-            "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw";
-
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
-
-    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validF2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("0328ba66-a1b5-4314-acf8-f4673f1f05a2 is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyF2fComponentId is the F2F CRI component ID")
-                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Valid auth code")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=0328ba66-a1b5-4314-acf8-f4673f1f05a2&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
-                                + CLIENT_ASSERTION_HEADER
-                                + "."
-                                + CLIENT_ASSERTION_BODY
-                                + "."
-                                + CLIENT_ASSERTION_SIGNATURE)
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(200)
-                .body(
-                        newJsonBody(
-                                        (body) -> {
-                                            body.stringType("access_token");
-                                            body.stringValue("token_type", "Bearer");
-                                            body.integerType("expires_in");
-                                        })
-                                .build())
-                .toPact();
-    }
-
-    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
-        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("grant_type is invalid (auth_code)")
-                .given("dummyF2fComponentId is the F2F CRI component ID")
-                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Request body with invalid grant_type (auth_code)")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
-                                + CLIENT_ASSERTION_HEADER
-                                + "."
-                                + CLIENT_ASSERTION_BODY
-                                + "."
-                                + CLIENT_ASSERTION_SIGNATURE)
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(401)
-                .toPact();
-    }
 
     @Pact(provider = "F2fCriProvider", consumer = "IPVCoreBack")
     public RequestResponsePact issueCredentialsUri_returnsValidPendingVc(
@@ -204,7 +122,7 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyFeatureSet"),
+                                List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
@@ -216,6 +134,40 @@ class ContractTest {
                 VerifiableCredentialStatus.PENDING,
                 verifiableCredentialResponse.getCredentialStatus());
         assertEquals("dummyTestUser", verifiableCredentialResponse.getUserId());
+    }
+
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validF2FRequestReturnsValidAccessToken(PactDslWithProvider builder) {
+        return builder.given("0328ba66-a1b5-4314-acf8-f4673f1f05a2 is a valid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("dummyF2fComponentId is the F2F CRI component ID")
+                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Valid auth code")
+                .path("/token")
+                .method("POST")
+                .body(
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=0328ba66-a1b5-4314-acf8-f4673f1f05a2&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                        (body) -> {
+                                            body.stringType("access_token");
+                                            body.stringValue("token_type", "Bearer");
+                                            body.integerType("expires_in");
+                                        })
+                                .build())
+                .toPact();
     }
 
     @Test
@@ -263,7 +215,7 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyFeatureSet"),
+                                List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
@@ -274,6 +226,33 @@ class ContractTest {
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
         assertThat(accessToken.getLifetime(), greaterThan(0L));
+    }
+
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
+        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
+                .given("dummyApiKey is a valid api key")
+                .given("grant_type is invalid (auth_code)")
+                .given("dummyF2fComponentId is the F2F CRI component ID")
+                .given("F2F CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .uponReceiving("Request body with invalid grant_type (auth_code)")
+                .path("/token")
+                .method("POST")
+                .body(
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Df2f&client_assertion="
+                                + CLIENT_ASSERTION_HEADER
+                                + "."
+                                + CLIENT_ASSERTION_BODY
+                                + "."
+                                + CLIENT_ASSERTION_SIGNATURE)
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
+                .willRespondWith()
+                .status(401)
+                .toPact();
     }
 
     @Test
@@ -323,7 +302,7 @@ class ContractTest {
                                             null,
                                             null,
                                             "dummyIpAddress",
-                                            "dummyFeatureSet"),
+                                            List.of("dummyFeatureSet")),
                                     new CriOAuthSessionItem(
                                             "dummySessionId",
                                             "dummyOAuthSessionId",
@@ -347,7 +326,7 @@ class ContractTest {
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
                 .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
-                .componentId("dummyF2fComponentId")
+                .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"))
@@ -355,4 +334,27 @@ class ContractTest {
                 .requiresAdditionalEvidence(false)
                 .build();
     }
+
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final String TEST_ISSUER = "dummyF2fComponentId";
+    private static final String PRIVATE_API_KEY = "dummyApiKey";
+    // DUMMY_ACCESS_TOKEN provided by F2F team for subject 74655ce3-a679-4c09-a3b0-1d0dc2eff373
+    private static final String DUMMY_ACCESS_TOKEN =
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiI3NDY1NWNlMy1hNjc5LTRjMDktYTNiMC0xZDBkYzJlZmYzNzMiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjIwMjI3OTE3Njd9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
+            """
+            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
+            """;
+    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
+            """
+            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
+            """;
+    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    private static final String CLIENT_ASSERTION_BODY =
+            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGMmZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9";
+    // Signature generated using JWT.io
+    private static final String CLIENT_ASSERTION_SIGNATURE =
+            "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw";
 }

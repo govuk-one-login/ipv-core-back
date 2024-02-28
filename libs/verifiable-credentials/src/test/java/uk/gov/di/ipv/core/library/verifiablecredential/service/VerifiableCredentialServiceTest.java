@@ -40,13 +40,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @WireMockTest
@@ -56,6 +59,7 @@ class VerifiableCredentialServiceTest {
     private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
     private static String VC_EXPERIAN_FRAUD_SCORE_1;
     private static String VC_EXPERIAN_KBV_SCORE_2;
+    private static String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
     private VerifiableCredentialService verifiableCredentialService;
@@ -65,6 +69,7 @@ class VerifiableCredentialServiceTest {
         VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
         VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
         VC_EXPERIAN_KBV_SCORE_2 = vcExperianFraudScoreTwo();
+        VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
     }
 
     @BeforeEach
@@ -298,6 +303,48 @@ class VerifiableCredentialServiceTest {
         verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
         verify(mockDataStore).delete("a-users-id", EXPERIAN_FRAUD_CRI);
         verify(mockDataStore).delete("a-users-id", "sausages");
+    }
+
+    @Test
+    void shouldDeleteInheritedIdentityIfPresent() {
+        // Arrange
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2),
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id",
+                                HMRC_MIGRATION_CRI,
+                                VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
+
+        // Act
+        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+
+        // Assert
+        verify(mockDataStore, times(1)).delete("a-users-id", HMRC_MIGRATION_CRI);
+    }
+
+    @Test
+    void shouldNotDeleteInheritedIdentityIfNotPresent() {
+        // Arrange
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
+                        TestFixtures.createVcStoreItem(
+                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2));
+
+        // Act
+        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+
+        // Assert
+        verify(mockDataStore, times(0)).delete("a-users-id", HMRC_MIGRATION_CRI);
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

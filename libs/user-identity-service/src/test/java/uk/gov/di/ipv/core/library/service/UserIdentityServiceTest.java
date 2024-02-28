@@ -114,7 +114,7 @@ class UserIdentityServiceTest {
     private static String VC_PASSPORT_MISSING_NAME;
     private static String VC_PASSPORT_MISSING_PASSPORT;
     private static String VC_HMRC_MIGRATION;
-    private static String VC_HMRC_MIGRATION_WITH_NO_EVIDENCE;
+    private static String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
     private static String VC_ADDRESS;
     private static String VC_ADDRESS_2;
     private static String VC_ADDRESS_MISSING_ADDRESS_PROPERTY;
@@ -152,7 +152,7 @@ class UserIdentityServiceTest {
         VC_PASSPORT_MISSING_NAME = vcPassportMissingName();
         VC_PASSPORT_MISSING_PASSPORT = vcPassportMissingPassport();
         VC_HMRC_MIGRATION = vcHmrcMigration();
-        VC_HMRC_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
+        VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
         VC_ADDRESS = vcAddressOne();
         VC_ADDRESS_2 = vcAddressTwo();
         VC_ADDRESS_MISSING_ADDRESS_PROPERTY = vcMissingCredentialSubject();
@@ -1873,7 +1873,9 @@ class UserIdentityServiceTest {
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         VcStoreItem vcStoreItem =
                 TestFixtures.createVcStoreItem(
-                        USER_ID_1, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION_WITH_NO_EVIDENCE);
+                        USER_ID_1,
+                        HMRC_MIGRATION_CRI,
+                        VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE);
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
         vcStoreItems.add(vcStoreItem);
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems);

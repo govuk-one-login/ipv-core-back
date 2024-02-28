@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -101,8 +102,10 @@ public class LogHelper {
         attachFieldToLogs(LogField.LOG_IPV_SESSION_ID, sessionId);
     }
 
-    public static void attachFeatureSetToLogs(String featureSet) {
-        attachFieldToLogs(LogField.LOG_FEATURE_SET, featureSet);
+    public static void attachFeatureSetToLogs(List<String> featureSet) {
+        attachFieldToLogs(
+                LogField.LOG_FEATURE_SET,
+                (featureSet != null) ? String.join(",", featureSet) : null);
     }
 
     public static void attachClientSessionIdToLogs(String sessionId) {

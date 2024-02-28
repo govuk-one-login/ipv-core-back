@@ -104,7 +104,7 @@ public class IssueClientAccessTokenHandler
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
 
-            configService.setFeatureSet(ipvSessionItem.getFeatureSet());
+            configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(

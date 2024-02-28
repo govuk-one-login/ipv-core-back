@@ -238,7 +238,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
-        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
     }
 
     @Test
@@ -319,7 +319,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
-        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
     }
 
     @Test
@@ -430,7 +430,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
 
-        verify(mockConfigService).setFeatureSet("someCoolNewThing");
+        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
     }
 
     @Test

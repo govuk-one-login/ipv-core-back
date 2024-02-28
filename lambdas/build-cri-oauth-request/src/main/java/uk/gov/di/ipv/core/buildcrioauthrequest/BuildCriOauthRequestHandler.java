@@ -150,8 +150,8 @@ public class BuildCriOauthRequestHandler
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
-            String featureSet = getFeatureSet(input);
-            configService.setFeatureSet(featureSet);
+            configService.setFeatureSet(getFeatureSet(input));
+
             URI journeyUri = URI.create(input.getJourney());
             String journeyPath = journeyUri.getPath();
             String criContext = getJourneyParameter(journeyUri, CONTEXT);

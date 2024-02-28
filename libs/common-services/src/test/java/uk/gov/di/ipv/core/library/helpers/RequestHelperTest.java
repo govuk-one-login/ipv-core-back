@@ -12,7 +12,9 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -195,7 +197,7 @@ class RequestHelperTest {
         assertEquals(clientSessionId, getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, getIpvSessionId(event));
         assertEquals(ipAddress, getIpAddress(event));
-        assertEquals(featureSet, getFeatureSet(event));
+        assertEquals(List.of(featureSet), getFeatureSet(event));
     }
 
     @Test
@@ -221,7 +223,15 @@ class RequestHelperTest {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(FEATURE_SET_HEADER, TEST_FEATURE_SET));
 
-        assertEquals(TEST_FEATURE_SET, getFeatureSet(event));
+        assertEquals(Arrays.asList(TEST_FEATURE_SET), getFeatureSet(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnFeatureSetForHeaderMap() {
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put(FEATURE_SET_HEADER, TEST_FEATURE_SET);
+
+        assertEquals(Arrays.asList(TEST_FEATURE_SET), getFeatureSet(headerMap));
     }
 
     @Test
@@ -234,11 +244,11 @@ class RequestHelperTest {
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
                         .build();
-        assertEquals(TEST_FEATURE_SET, getFeatureSet(event));
+        assertEquals(List.of(TEST_FEATURE_SET), getFeatureSet(event));
     }
 
     @Test
-    void getFeatureSetShouldReturnNullFromJourneyIfNoFeatureSet() {
+    void getFeatureSetShouldReturnEmptyListFromJourneyIfNoFeatureSet() {
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_IPV_SESSION_ID)
@@ -246,7 +256,7 @@ class RequestHelperTest {
                         .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
                         .journey(TEST_JOURNEY)
                         .build();
-        assertNull(getFeatureSet(event));
+        assertTrue(getFeatureSet(event).isEmpty());
     }
 
     @ParameterizedTest

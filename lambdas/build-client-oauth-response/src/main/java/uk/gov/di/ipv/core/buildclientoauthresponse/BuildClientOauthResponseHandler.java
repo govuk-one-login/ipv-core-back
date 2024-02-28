@@ -95,7 +95,7 @@ public class BuildClientOauthResponseHandler
             String ipvSessionId = getIpvSessionIdAllowNull(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
-            String featureSet = getFeatureSet(input);
+            List<String> featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
@@ -124,7 +124,7 @@ public class BuildClientOauthResponseHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
             }
 
-            ipvSessionItem.setFeatureSet(featureSet);
+            ipvSessionItem.setFeatureSetFromList(featureSet);
             sessionService.updateIpvSession(ipvSessionItem);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
