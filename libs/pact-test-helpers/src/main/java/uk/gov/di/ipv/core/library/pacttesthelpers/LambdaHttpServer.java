@@ -49,6 +49,7 @@ public class LambdaHttpServer {
 
     // This class converts between HTTP requests and responses and AWS's APIGatewayProxyRequestEvent
     // and APIGatewayProxyResponseEvent
+    @ExcludeFromGeneratedCoverageReport
     private class LambdaHandlerWrapper implements HttpHandler {
 
         private final RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>
