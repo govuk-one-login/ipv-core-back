@@ -127,8 +127,9 @@ class CriStoringServiceTest {
     @Test
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
+        String passportVc = vcPassportNonDcmawSuccessful();
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        var signedJWT = SignedJWT.parse(passportVc);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
@@ -169,7 +170,7 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vcPassportNonDcmawSuccessful());
+        verify(mockIpvSessionItem).addVcReceivedThisSession(passportVc);
     }
 
     @Test

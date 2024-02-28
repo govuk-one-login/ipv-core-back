@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processcricallback;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -58,20 +57,6 @@ class ProcessCriCallbackHandlerTest {
     @Mock private CriStoringService mockCriStoringService;
     @Mock private CriCheckingService mockCriCheckingService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
-
-    @BeforeEach
-    void setUp() {
-        processCriCallbackHandler =
-                new ProcessCriCallbackHandler(
-                        mockConfigService,
-                        mockIpvSessionService,
-                        mockCriOAuthSessionService,
-                        mockVerifiableCredentialJwtValidator,
-                        mockClientOAuthSessionDetailsService,
-                        mockCriApiService,
-                        mockCriStoringService,
-                        mockCriCheckingService);
-    }
 
     @Test
     void getJourneyResponseShouldReturnNextWhenAllChecksPassForCreatedVcs() throws Exception {

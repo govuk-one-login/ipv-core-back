@@ -24,13 +24,13 @@ public interface VcFixtures {
             List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(2).build());
     List<TestVc.TestEvidence> UNSUCCESSFUL_EVIDENCE =
             List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(0).build());
-    List<TestVc.TestEvidence> D02_CI_EVIDENCE =
+    List<TestVc.TestEvidence> TEST_CI_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
                             .strengthScore(4)
                             .validityScore(2)
-                            .ci(List.of("DO2"))
-                            .ciReasons(List.of(Map.of("ci", "D02", "reason", "NoMatchingRecord")))
+                            .ci(List.of("test"))
+                            .ciReasons(List.of(Map.of("ci", "testValue", "reason", "testReason")))
                             .build());
 
     List<TestVc.TestEvidence> FRAUD_EVIDENCE =
@@ -294,7 +294,7 @@ public interface VcFixtures {
 
     static String vcPassportM1aWithCI() throws Exception {
         return generateVerifiableCredential(
-                TestVc.builder().evidence(D02_CI_EVIDENCE).build(),
+                TestVc.builder().evidence(TEST_CI_EVIDENCE).build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
