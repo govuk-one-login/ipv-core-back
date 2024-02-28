@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.replaycimitvcs;
 
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,24 +37,20 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 class ReplayCimitVcsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CRI_ID = "address";
-    private static String M1A_ADDRESS_VC;
+
     @Mock private CiMitService ciMitService;
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private ReplayCimitVcsHandler replayCimitVcsHandler;
 
-    @BeforeAll
-    static void setup() throws Exception {
-        M1A_ADDRESS_VC = vcAddressM1a();
-    }
-
     @Test
-    void shouldSubmitVcsToCimit() throws CiPutException {
+    void shouldSubmitVcsToCimit() throws Exception {
+        String addressVc = vcAddressM1a();
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
                 .thenReturn(
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, addressVc));
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
@@ -68,7 +63,7 @@ class ReplayCimitVcsHandlerTest {
                         govukSigninJourneyIdCaptor.capture(),
                         ipAddressCaptor.capture());
         var postedVc = postedVcCaptor.getValue();
-        assertEquals(M1A_ADDRESS_VC, postedVc.serialize());
+        assertEquals(addressVc, postedVc.serialize());
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -104,13 +99,13 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleICiPutExceptionOnSubmitVcList() throws IOException, CiPutException {
+    void shouldHandleICiPutExceptionOnSubmitVcList() throws Exception {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
                     .thenReturn(
                             TestFixtures.createVcStoreItem(
-                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+                                    TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()));
             doThrow(new CiPutException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitVC(any(), eq(null), eq(null));
@@ -123,13 +118,13 @@ class ReplayCimitVcsHandlerTest {
 
     @Test
     void shouldHandleICiPostMitigationsExceptionOnSubmitVcList()
-            throws IOException, CiPostMitigationsException {
+            throws Exception {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
                     .thenReturn(
                             TestFixtures.createVcStoreItem(
-                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+                                    TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()));
             doThrow(new CiPostMitigationsException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitMitigatingVcList(anyList(), eq(null), eq(null));

@@ -643,7 +643,7 @@ public interface VcFixtures {
                                 })
                         .build(),
                 "urn:uuid:d1823066-2137-4380-b0ba-4b61947e08e6",
-                "https://tcif.stubs.account.gov.uk",
+                "https://ticf.stubs.account.gov.uk",
                 Instant.ofEpochSecond(1704822570));
     }
 

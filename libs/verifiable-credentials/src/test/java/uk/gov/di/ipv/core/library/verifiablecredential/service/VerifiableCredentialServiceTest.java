@@ -7,7 +7,6 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,21 +55,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawS
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
     private static final String USER_ID_1 = "user-id-1";
-    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
-    private static String VC_EXPERIAN_FRAUD_SCORE_1;
-    private static String VC_EXPERIAN_KBV_SCORE_2;
-    private static String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
     private VerifiableCredentialService verifiableCredentialService;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
-        VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
-        VC_EXPERIAN_KBV_SCORE_2 = vcExperianFraudScoreTwo();
-        VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
-    }
 
     @BeforeEach
     void setUp() {
@@ -87,12 +74,12 @@ class VerifiableCredentialServiceTest {
         String userId = "user-id-1";
 
         verifiableCredentialService.persistUserCredentials(
-                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), credentialIssuerId, userId);
+                SignedJWT.parse(vcPassportNonDcmawSuccessful()), credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
+        assertEquals(vcPassportNonDcmawSuccessful(), vcStoreItem.getCredential());
     }
 
     @Test
@@ -130,7 +117,7 @@ class VerifiableCredentialServiceTest {
 
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any(), any());
 
-        SignedJWT signedJwt = SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
+        SignedJWT signedJwt = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         VerifiableCredentialException thrown =
                 assertThrows(
                         VerifiableCredentialException.class,
@@ -200,14 +187,14 @@ class VerifiableCredentialServiceTest {
 
         // Act
         verifiableCredentialService.persistUserCredentialsIfNotExists(
-                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL), credentialIssuerId, userId);
+                SignedJWT.parse(vcPassportNonDcmawSuccessful()), credentialIssuerId, userId);
 
         // Assert
         verify(mockDataStore).createIfNotExists(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, vcStoreItem.getCredential());
+        assertEquals(vcPassportNonDcmawSuccessful(), vcStoreItem.getCredential());
     }
 
     @Test
@@ -224,7 +211,7 @@ class VerifiableCredentialServiceTest {
                 CredentialAlreadyExistsException.class,
                 () ->
                         verifiableCredentialService.persistUserCredentialsIfNotExists(
-                                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                SignedJWT.parse(vcPassportNonDcmawSuccessful()),
                                 credentialIssuerId,
                                 userId));
     }
@@ -253,13 +240,13 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
+    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() throws Exception {
         String userId = "userId";
         String testCredentialIssuer = PASSPORT_CRI;
         List<VcStoreItem> credentialItem =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                USER_ID_1, testCredentialIssuer, VC_PASSPORT_NON_DCMAW_SUCCESSFUL));
+                                USER_ID_1, testCredentialIssuer, vcPassportNonDcmawSuccessful()));
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
@@ -272,12 +259,12 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialFromDataStoreForSpecificCri() {
+    void shouldReturnCredentialFromDataStoreForSpecificCri() throws Exception {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
         VcStoreItem credentialItem =
                 TestFixtures.createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
+                        USER_ID_1, PASSPORT_CRI, vcPassportNonDcmawSuccessful());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
@@ -288,15 +275,15 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldDeleteAllExistingVCs() {
+    void shouldDeleteAllExistingVCs() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                "a-users-id", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
+                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2));
+                                "a-users-id", "sausages", vcExperianFraudScoreTwo()));
 
         verifiableCredentialService.deleteVcStoreItems(vcStoreItems, true);
 
@@ -306,20 +293,18 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldDeleteInheritedIdentityIfPresent() {
+    void shouldDeleteInheritedIdentityIfPresent() throws Exception {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                "a-users-id", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
+                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2),
+                                "a-users-id", "sausages", vcExperianFraudScoreTwo()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id",
-                                HMRC_MIGRATION_CRI,
-                                VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
+                                "a-users-id", HMRC_MIGRATION_CRI, vcHmrcMigrationNoEvidence()));
 
         // Act
         verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
@@ -329,16 +314,16 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldNotDeleteInheritedIdentityIfNotPresent() {
+    void shouldNotDeleteInheritedIdentityIfNotPresent() throws Exception {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                "a-users-id", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
+                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", VC_EXPERIAN_KBV_SCORE_2));
+                                "a-users-id", "sausages", vcExperianFraudScoreTwo()));
 
         // Act
         verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);

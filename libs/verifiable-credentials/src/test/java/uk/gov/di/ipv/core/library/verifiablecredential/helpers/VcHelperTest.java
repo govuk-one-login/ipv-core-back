@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +18,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -56,50 +54,6 @@ class VcHelperTest {
     @Mock private ConfigService configService;
     private static OauthCriConfig addressConfig = null;
     private static OauthCriConfig claimedIdentityConfig = null;
-    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
-    private static String VC_PASSPORT_MISSING_BIRTH_DATE;
-    private static String VC_PASSPORT_INVALID_BIRTH_DATE;
-    private static String VC_HMRC_MIGRATION;
-    private static String VC_INVALID_VOT;
-    private static String VC_NULL_VOT;
-    private static String M1A_PASSPORT_VC;
-    private static String M1A_FAILED_PASSPORT_VC;
-    private static String M1A_PASSPORT_VC_WITH_CI;
-    private static String M1_PASSPORT_VC_MISSING_EVIDENCE;
-    private static String M1A_ADDRESS_VC;
-    private static String M1A_EXPERIAN_FRAUD_VC;
-    private static String M1A_EXPERIAN_FAILED_FRAUD_VC;
-    private static String VC_EXPERIAN_FRAUD_SCORE_1;
-    private static String VC_DRIVING_PERMIT_DCMAW;
-    private static String VC_NINO_SUCCESSFUL;
-    private static String VC_TICF;
-    private static String M1A_VERIFICATION_VC;
-    private static String M1B_DCMAW_VC;
-    private static String M1A_F2F_VC;
-
-    @BeforeAll
-    public static void setup() throws Exception {
-        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
-        VC_PASSPORT_MISSING_BIRTH_DATE = vcPassportMissingBirthDate();
-        VC_PASSPORT_INVALID_BIRTH_DATE = vcPassportInvalidBirthDate();
-        VC_HMRC_MIGRATION = vcHmrcMigration();
-        VC_INVALID_VOT = vcInvalidVot();
-        VC_NULL_VOT = vcNullVot();
-        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
-        M1A_FAILED_PASSPORT_VC = vcPassportM1aFailed();
-        M1A_PASSPORT_VC_WITH_CI = vcPassportM1aWithCI();
-        M1_PASSPORT_VC_MISSING_EVIDENCE = vcPassportM1aMissingEvidence();
-        M1A_ADDRESS_VC = vcAddressM1a();
-        M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
-        M1A_EXPERIAN_FAILED_FRAUD_VC = vcExperianFraudFailed();
-        VC_EXPERIAN_FRAUD_SCORE_1 = vcExperianFraudScoreOne();
-        VC_DRIVING_PERMIT_DCMAW = vcDrivingPermit();
-        VC_NINO_SUCCESSFUL = vcNinoSuccessful();
-        VC_TICF = vcTicf();
-        M1A_VERIFICATION_VC = vcVerificationM1a();
-        M1B_DCMAW_VC = vcDcmawM1b();
-        M1A_F2F_VC = vcF2fM1a();
-    }
 
     static {
         try {
@@ -111,17 +65,17 @@ class VcHelperTest {
         }
     }
 
-    private static Stream<Arguments> SuccessfulTestCases() {
+    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
-                Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
-                Arguments.of("Evidence VC", M1A_PASSPORT_VC),
-                Arguments.of("Evidence VC with CI", M1A_PASSPORT_VC_WITH_CI),
-                Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
-                Arguments.of("Verification VC", M1A_VERIFICATION_VC),
-                Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
-                Arguments.of("Verification F2F VC", M1A_F2F_VC),
-                Arguments.of("Verification Nino VC", VC_NINO_SUCCESSFUL),
-                Arguments.of("Verification TICF VC", VC_TICF));
+                Arguments.of("Non-evidence VC", vcAddressM1a()),
+                Arguments.of("Evidence VC", vcPassportNonDcmawSuccessful()),
+                Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
+                Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
+                Arguments.of("Verification VC", vcVerificationM1a()),
+                Arguments.of("Verification DCMAW VC", vcDcmawM1b()),
+                Arguments.of("Verification F2F VC", vcF2fM1a()),
+                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
+                Arguments.of("Verification TICF VC", vcTicf()));
     }
 
     @ParameterizedTest
@@ -146,31 +100,31 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_GPG45() {
+    void shouldFilterVCsBasedOnProfileType_GPG45() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                "userId", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                         TestFixtures.createVcStoreItem(
-                                "userId", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
-                        TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
+                                "userId", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
+                        TestFixtures.createVcStoreItem("userId", TICF_CRI, vcTicf()),
                         TestFixtures.createVcStoreItem(
-                                "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+                                "userId", HMRC_MIGRATION_CRI, vcHmrcMigration()));
         assertEquals(
                 3, VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).size());
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_operational() {
+    void shouldFilterVCsBasedOnProfileType_operational() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "userId", PASSPORT_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                "userId", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                         TestFixtures.createVcStoreItem(
-                                "userId", EXPERIAN_FRAUD_CRI, VC_EXPERIAN_FRAUD_SCORE_1),
-                        TestFixtures.createVcStoreItem("userId", TICF_CRI, VC_TICF),
+                                "userId", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
+                        TestFixtures.createVcStoreItem("userId", TICF_CRI, vcTicf()),
                         TestFixtures.createVcStoreItem(
-                                "userId", HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+                                "userId", HMRC_MIGRATION_CRI, vcHmrcMigration()));
         assertEquals(
                 2,
                 VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.OPERATIONAL_HMRC)
@@ -178,82 +132,82 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldExtractTxIdFromCredentials() throws ParseException {
+    void shouldExtractTxIdFromCredentials() throws Exception {
         List<String> txns =
-                VcHelper.extractTxnIdsFromCredentials(List.of(SignedJWT.parse(VC_NINO_SUCCESSFUL)));
+                VcHelper.extractTxnIdsFromCredentials(List.of(SignedJWT.parse(vcNinoSuccessful())));
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
     }
 
     @Test
-    void shouldExtractAgeFromCredential() throws ParseException {
+    void shouldExtractAgeFromCredential() throws Exception {
         assertNotNull(
-                VcHelper.extractAgeFromCredential(
-                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
+                VcHelper.extractAgeFromCredential(SignedJWT.parse(vcPassportNonDcmawSuccessful())));
     }
 
     @Test
-    void shouldExtractAgeFromCredentialWithMissingBirthDate() throws ParseException {
+    void shouldExtractAgeFromCredentialWithMissingBirthDate() throws Exception {
         assertNull(
-                VcHelper.extractAgeFromCredential(SignedJWT.parse(VC_PASSPORT_MISSING_BIRTH_DATE)));
+                VcHelper.extractAgeFromCredential(SignedJWT.parse(vcPassportMissingBirthDate())));
     }
 
     @Test
-    void shouldExtractAgeFromCredentialWithInvalidBirthDate() throws ParseException {
+    void shouldExtractAgeFromCredentialWithInvalidBirthDate() throws Exception {
         assertNull(
-                VcHelper.extractAgeFromCredential(SignedJWT.parse(VC_PASSPORT_INVALID_BIRTH_DATE)));
+                VcHelper.extractAgeFromCredential(SignedJWT.parse(vcPassportInvalidBirthDate())));
     }
 
     @Test
-    void shouldCheckIfDocUKIssuedForCredential() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredential() throws Exception {
         assertEquals(
                 Boolean.TRUE,
                 VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL)));
+                        SignedJWT.parse(vcPassportNonDcmawSuccessful())));
     }
 
     @Test
-    void shouldCheckIfDocUKIssuedForCredentialForDL() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredentialForDL() throws Exception {
         assertEquals(
                 Boolean.TRUE,
-                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW)));
+                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(vcDrivingPermit())));
     }
 
     @Test
-    void shouldCheckIfDocUKIssuedForCredentialForDCMAW() throws ParseException {
+    void shouldCheckIfDocUKIssuedForCredentialForDCMAW() throws Exception {
         assertEquals(
                 Boolean.TRUE,
-                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW)));
+                VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(vcDrivingPermit())));
     }
 
     @Test
-    void shouldCheckIsItOperationalVC() throws ParseException {
-        assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(VC_HMRC_MIGRATION)));
-        assertFalse(VcHelper.isOperationalProfileVc(SignedJWT.parse(M1A_PASSPORT_VC)));
+    void shouldCheckIsItOperationalVC() throws Exception {
+        assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(vcHmrcMigration())));
+        assertFalse(
+                VcHelper.isOperationalProfileVc(SignedJWT.parse(vcPassportNonDcmawSuccessful())));
     }
 
     @Test
     void shouldGetVcVot() throws Exception {
-        assertEquals(Vot.PCL250, VcHelper.getVcVot(SignedJWT.parse(VC_HMRC_MIGRATION)));
+        assertEquals(Vot.PCL250, VcHelper.getVcVot(SignedJWT.parse(vcHmrcMigration())));
     }
 
     @Test
     void shouldThrowUnrecognisedVotExceptionIfInvalidVcVot() {
         assertThrows(
                 UnrecognisedVotException.class,
-                () -> VcHelper.getVcVot(SignedJWT.parse(VC_INVALID_VOT)));
+                () -> VcHelper.getVcVot(SignedJWT.parse(vcInvalidVot())));
     }
 
     @Test
     void shouldReturnNullIfVcVotIsNotPresent() throws Exception {
-        assertNull(VcHelper.getVcVot(SignedJWT.parse(VC_NULL_VOT)));
+        assertNull(VcHelper.getVcVot(SignedJWT.parse(vcNullVot())));
     }
 
-    private static Stream<Arguments> UnsuccessfulTestCases() {
+    private static Stream<Arguments> UnsuccessfulTestCases() throws Exception {
         return Stream.of(
-                Arguments.of("VC missing evidence", M1_PASSPORT_VC_MISSING_EVIDENCE),
-                Arguments.of("Failed passport VC", M1A_FAILED_PASSPORT_VC),
-                Arguments.of("Failed fraud check", M1A_EXPERIAN_FAILED_FRAUD_VC));
+                Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
+                Arguments.of("Failed passport VC", vcPassportM1aFailed()),
+                Arguments.of("Failed fraud check", vcExperianFraudFailed()));
     }
 
     private void mockCredentialIssuerConfig() {

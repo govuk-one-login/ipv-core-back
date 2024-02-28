@@ -95,10 +95,6 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
-    private static String M1A_PASSPORT_VC;
-    private static String M1A_ADDRESS_VC;
-    private static String M1A_EXPERIAN_FRAUD_VC;
-    private static String M1A_VERIFICATION_VC;
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -158,37 +154,31 @@ class EvaluateGpg45ScoresHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_CLIENT_SOURCE_IP)
                         .build();
-        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
-        M1A_ADDRESS_VC = vcAddressM1a();
-        M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
-        M1A_VERIFICATION_VC = vcVerificationM1a();
-        String VC_HMRC_MIGRATION = vcHmrcMigration();
-        String M1B_DCMAW_VC = vcDcmawM1b();
-        String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
         CREDENTIALS =
                 List.of(
-                        M1A_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        M1A_VERIFICATION_VC,
-                        M1B_DCMAW_VC);
+                        vcPassportNonDcmawSuccessful(),
+                        vcAddressM1a(),
+                        vcExperianFraudM1a(),
+                        vcVerificationM1a(),
+                        vcDcmawM1b());
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
         VC_STORE_ITEMS =
                 List.of(
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                                TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+                                TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, vcDcmawM1b()),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration()));
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
-                SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
+                SignedJWT.parse(vcHmrcMigrationNoEvidence()));
     }
 
     @BeforeEach
@@ -438,10 +428,10 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldSendAuditEventWhenProfileMatched() throws Exception {
         List<SignedJWT> parsedM1ACreds =
                 List.of(
-                        SignedJWT.parse(M1A_PASSPORT_VC),
-                        SignedJWT.parse(M1A_ADDRESS_VC),
-                        SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC),
-                        SignedJWT.parse(M1A_VERIFICATION_VC));
+                        SignedJWT.parse(vcPassportNonDcmawSuccessful()),
+                        SignedJWT.parse(vcAddressM1a()),
+                        SignedJWT.parse(vcExperianFraudM1a()),
+                        SignedJWT.parse(vcVerificationM1a()));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);

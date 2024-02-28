@@ -63,9 +63,6 @@ class CallTicfCriHandlerTest {
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     public static List<String> VC_IN_STORE;
-    public static String M1A_ADDRESS_VC;
-    public static String M1A_EXPERIAN_FRAUD_VC;
-    public static String M1B_DCMAW_VC;
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
@@ -88,6 +85,9 @@ class CallTicfCriHandlerTest {
     @Spy private IpvSessionItem spyIpvSessionItem;
     @Mock private SignedJWT mockSignedJwt;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
+    private static String M1A_ADDRESS_VC;
+    private static String M1A_EXPERIAN_FRAUD_VC;
+    private static String M1B_DCMAW_VC;
 
     @BeforeAll
     static void setVcs() throws Exception {
@@ -137,14 +137,14 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldOnlySendVcsReceivedInCurrentSession() throws Exception {
-        spyIpvSessionItem.setVcReceivedThisSession(List.of(M1A_ADDRESS_VC));
+        List<String> addressVCs = List.of(M1A_ADDRESS_VC);
+        spyIpvSessionItem.setVcReceivedThisSession(addressVCs);
 
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockUserIdentityService.getIdentityCredentials(any())).thenReturn(VC_IN_STORE);
-        when(mockTicfCriService.getTicfVc(
-                        clientOAuthSessionItem, spyIpvSessionItem, List.of(M1A_ADDRESS_VC)))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, addressVCs))
                 .thenReturn(List.of(mockSignedJwt));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

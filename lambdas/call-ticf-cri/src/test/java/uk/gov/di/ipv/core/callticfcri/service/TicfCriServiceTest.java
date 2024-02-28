@@ -60,7 +60,6 @@ class TicfCriServiceTest {
     // the VC in this response is unimportant as we're mocking the
     // validator - we just need something that can be parsed
     private static TicfCriDto ticfCriResponse;
-    private static String VC_ADDRESS;
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
@@ -69,14 +68,12 @@ class TicfCriServiceTest {
     @Mock private HttpResponse<String> mockHttpResponse;
     @Captor private ArgumentCaptor<HttpRequest> requestCaptor;
     @InjectMocks private TicfCriService ticfCriService;
+    private static String VC_ADDRESS;
 
     @BeforeAll
     static void setVcs() throws Exception {
+        credentials = List.of(vcDcmawM1b(), vcExperianFraudM1a(), vcAddressM1a());
         VC_ADDRESS = vcAddressOne();
-        String M1A_ADDRESS_VC = vcAddressM1a();
-        String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
-        String M1B_DCMAW_VC = vcDcmawM1b();
-        credentials = List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
         ticfCriResponse =
                 new TicfCriDto(
                         List.of("vtr-value"),

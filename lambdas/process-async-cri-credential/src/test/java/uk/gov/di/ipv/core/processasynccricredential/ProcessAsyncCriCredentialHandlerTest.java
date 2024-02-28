@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -52,7 +51,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawS
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
-
     private static final String TEST_MESSAGE_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER_ID = CriConstants.F2F_CRI;
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
@@ -77,7 +75,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
     private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
-    private static String VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+    private static final String PASSPORT_VC;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
@@ -86,7 +84,8 @@ class ProcessAsyncCriCredentialHandlerTest {
             TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
             TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
                     createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
-        } catch (URISyntaxException e) {
+            PASSPORT_VC = vcPassportNonDcmawSuccessful();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -98,13 +97,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private CiMitService ciMitService;
     @Mock private CriResponseService criResponseService;
     @Mock private JwtParser jwtParser;
-
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
-
-    @BeforeAll()
-    static void setup() throws Exception {
-        VC_PASSPORT_NON_DCMAW_SUCCESSFUL = vcPassportNonDcmawSuccessful();
-    }
 
     @Test
     void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully() throws Exception {
@@ -277,14 +270,14 @@ class ProcessAsyncCriCredentialHandlerTest {
         return sqsEvent;
     }
 
-    private SQSEvent createSuccessTestEvent(String testOauthState) throws JsonProcessingException {
+    private SQSEvent createSuccessTestEvent(String testOauthState) throws Exception {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
                         null,
                         TEST_USER_ID,
                         testOauthState,
-                        List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        List.of(PASSPORT_VC),
                         null,
                         null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
@@ -309,7 +302,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
     }
 
-    private void verifyCiStorageServicePutContraIndicators() throws CiPutException {
+    private void verifyCiStorageServicePutContraIndicators() throws Exception {
         ArgumentCaptor<SignedJWT> ciVerifiableCredentialCaptor =
                 ArgumentCaptor.forClass(SignedJWT.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -321,7 +314,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         ipAddressCaptor.capture());
         List<SignedJWT> ciVerifiableCredentials = ciVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, ciVerifiableCredentials.size());
-        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, ciVerifiableCredentials.get(0).serialize());
+        assertEquals(PASSPORT_VC, ciVerifiableCredentials.get(0).serialize());
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -330,7 +323,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertNull(ciIpAddresses.get(0));
     }
 
-    private void verifyCiStorageServicePostMitigations() throws CiPostMitigationsException {
+    private void verifyCiStorageServicePostMitigations() throws Exception {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<String>> postedVcsCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -342,7 +335,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         ipAddressCaptor.capture());
         var postedVcs = postedVcsCaptor.getValue();
         assertEquals(1, postedVcs.size());
-        assertEquals(VC_PASSPORT_NON_DCMAW_SUCCESSFUL, postedVcs.get(0));
+        assertEquals(PASSPORT_VC, postedVcs.get(0));
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -365,7 +358,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 storableVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, storedVerifiableCredentials.size());
         assertEquals(
-                VC_PASSPORT_NON_DCMAW_SUCCESSFUL, storedVerifiableCredentials.get(0).serialize());
+                PASSPORT_VC, storedVerifiableCredentials.get(0).serialize());
         List<String> credentialIssuers = credentialIssuerCaptor.getAllValues();
         assertEquals(1, credentialIssuers.size());
         assertEquals(TEST_CREDENTIAL_ISSUER_ID, credentialIssuers.get(0));

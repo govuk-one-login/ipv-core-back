@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processcricallback;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +49,6 @@ class ProcessCriCallbackHandlerTest {
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
-    private static String M1A_PASSPORT_VC;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
@@ -60,11 +58,6 @@ class ProcessCriCallbackHandlerTest {
     @Mock private CriStoringService mockCriStoringService;
     @Mock private CriCheckingService mockCriCheckingService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
-    }
 
     @BeforeEach
     void setUp() {
@@ -88,7 +81,7 @@ class ProcessCriCallbackHandlerTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
         var bearerToken = new BearerAccessToken("value");
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())

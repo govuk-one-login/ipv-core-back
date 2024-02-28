@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +47,6 @@ class CriStoringServiceTest {
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
-    private static String M1A_PASSPORT_VC;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
@@ -64,11 +62,6 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
     @Captor private ArgumentCaptor<SignedJWT> signedJwtCaptor;
     @Captor private ArgumentCaptor<List<String>> vcListCaptor;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
-    }
 
     @BeforeEach
     void setUp() {
@@ -135,7 +128,7 @@ class CriStoringServiceTest {
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
@@ -176,7 +169,7 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).addVcReceivedThisSession(M1A_PASSPORT_VC);
+        verify(mockIpvSessionItem).addVcReceivedThisSession(vcPassportNonDcmawSuccessful());
     }
 
     @Test
@@ -224,7 +217,7 @@ class CriStoringServiceTest {
     void storeVcsShouldThrowCiPutExceptionWhenCiSubmissionFails() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPutException(""))
                 .when(mockCiMitService)
@@ -249,7 +242,7 @@ class CriStoringServiceTest {
             throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPostMitigationsException(""))
                 .when(mockCiMitService)
@@ -273,7 +266,7 @@ class CriStoringServiceTest {
     void storeVcsShouldThrowSqsExceptionWhenAuditEventFailsToSend() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
 

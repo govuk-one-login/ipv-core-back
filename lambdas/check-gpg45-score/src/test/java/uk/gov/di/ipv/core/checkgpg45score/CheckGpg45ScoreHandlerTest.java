@@ -79,18 +79,13 @@ class CheckGpg45ScoreHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .lambdaInput(new HashMap<>(Map.of("scoreThreshold", 2)))
                         .build();
-        String M1A_PASSPORT_VC = vcPassportNonDcmawSuccessful();
-        String M1A_ADDRESS_VC = vcAddressM1a();
-        String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
-        String M1A_VERIFICATION_VC = vcVerificationM1a();
-        String M1B_DCMAW_VC = vcDcmawM1b();
         CREDENTIALS =
                 List.of(
-                        M1A_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        M1A_VERIFICATION_VC,
-                        M1B_DCMAW_VC);
+                        vcPassportNonDcmawSuccessful(),
+                        vcAddressM1a(),
+                        vcExperianFraudM1a(),
+                        vcVerificationM1a(),
+                        vcDcmawM1b());
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
