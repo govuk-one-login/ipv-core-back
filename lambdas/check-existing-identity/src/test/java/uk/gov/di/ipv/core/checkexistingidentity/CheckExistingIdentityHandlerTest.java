@@ -93,9 +93,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -168,6 +168,7 @@ class CheckExistingIdentityHandlerTest {
         String M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
         String M1A_VERIFICATION_VC = vcVerificationM1a();
         String M1B_DCMAW_VC = vcDcmawM1b();
+        String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
         M1A_F2F_VC = vcF2fM1a();
         CREDENTIALS =
                 List.of(

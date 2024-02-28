@@ -60,19 +60,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
@@ -99,7 +99,6 @@ class EvaluateGpg45ScoresHandlerTest {
     private static String M1A_ADDRESS_VC;
     private static String M1A_EXPERIAN_FRAUD_VC;
     private static String M1A_VERIFICATION_VC;
-    private static String VC_HMRC_MIGRATION;
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -163,8 +162,9 @@ class EvaluateGpg45ScoresHandlerTest {
         M1A_ADDRESS_VC = vcAddressM1a();
         M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
         M1A_VERIFICATION_VC = vcVerificationM1a();
-        VC_HMRC_MIGRATION = vcHmrcMigration();
+        String VC_HMRC_MIGRATION = vcHmrcMigration();
         String M1B_DCMAW_VC = vcDcmawM1b();
+        String VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE = vcHmrcMigrationNoEvidence();
         CREDENTIALS =
                 List.of(
                         M1A_PASSPORT_VC,
@@ -175,16 +175,17 @@ class EvaluateGpg45ScoresHandlerTest {
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
-        VC_STORE_ITEMS = List.of(
-                TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
-                TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                TestFixtures.createVcStoreItem(
-                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
-                TestFixtures.createVcStoreItem(
-                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
-                TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
-                TestFixtures.createVcStoreItem(
-                        TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
+        VC_STORE_ITEMS =
+                List.of(
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
                 SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
