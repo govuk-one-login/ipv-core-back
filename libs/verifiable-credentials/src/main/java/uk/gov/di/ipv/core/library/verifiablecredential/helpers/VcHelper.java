@@ -65,7 +65,7 @@ public class VcHelper {
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
 
-        if (evidenceArray == null) {
+        if (evidenceArray == null || evidenceArray.isEmpty()) {
             String vcIssuer = vc.getJWTClaimsSet().getIssuer();
             if (excludedCredentialIssuers.contains(vcIssuer)) {
                 return true;
