@@ -90,10 +90,8 @@ class ContractTest {
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("TICF VC has no interventions or warnings")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving("Request for risk assessment for user with no interventions")
                 .path(API_PATH)
@@ -156,10 +154,8 @@ class ContractTest {
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("TICF VC has no interventions but has B00 warning")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
                         "Request for risk assessment for user with no interventions with warnings")
@@ -228,10 +224,8 @@ class ContractTest {
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("TICF VC has intervention with code 01 and reason 007")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving("Request for risk assessment for user with interventions")
                 .path(API_PATH)
@@ -298,12 +292,10 @@ class ContractTest {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
-                .given("TICF timeouts")
+                .given("TICF times out")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
-                .uponReceiving("Request for risk assessment for user where TICF timeouts")
+                .uponReceiving("Request for risk assessment for user where TICF times out")
                 .path(API_PATH)
                 .method("POST")
                 .headers(
@@ -320,7 +312,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validPassportVcReturnsEmptyVc")
-    void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_timeouts(MockServer mockServer)
+    void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_timesOut(MockServer mockServer)
             throws TicfCriServiceException, ParseException, URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
@@ -359,10 +351,8 @@ class ContractTest {
                 .given(
                         "Provided VCs can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("TICF VC has no interventions or warnings")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
                         "Request for risk assessment for user with no interventions provided multiple VCs")
@@ -424,10 +414,8 @@ class ContractTest {
     public RequestResponsePact noVcsReturnVcWithNoInterventions(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("TICF VC has no interventions or warnings")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
                         "Request for risk assessment for user with no interventions provided no VCs")
@@ -487,10 +475,8 @@ class ContractTest {
                 .given(
                         "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("TICF VC has no interventions but has B00 warning")
-                .given("TICF VC risk assessment has id riskAssessmentId")
+                .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
-                .given(
-                        "TICF VC is signed with {\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
                 .uponReceiving(
                         "Request for uplift risk assessment for user with no interventions with warnings provided VC with CI")
