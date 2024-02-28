@@ -66,7 +66,7 @@ public class IpvSessionItem implements DynamodbItem {
     }
 
     public List<String> getFeatureSetAsList() {
-        return (featureSet != null && !featureSet.equals("[ { \"S\" : \"\" } ]"))
+        return (featureSet != null)
                 ? Arrays.asList(featureSet.split(","))
                 : Collections.emptyList();
     }
