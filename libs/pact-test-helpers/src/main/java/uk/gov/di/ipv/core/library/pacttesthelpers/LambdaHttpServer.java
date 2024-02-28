@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.commons.io.IOUtils;
 import org.mockito.Mockito;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,6 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+// This class is only used in other tests which would fail if this didn't work correctly.
+@ExcludeFromGeneratedCoverageReport
 public class LambdaHttpServer {
     private final HttpServer server;
 

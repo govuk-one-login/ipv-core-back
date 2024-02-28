@@ -6,14 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.commons.io.IOUtils;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
-// This class is only used in other tests which would fail if this didn't work correctly.
-@ExcludeFromGeneratedCoverageReport
 public class PactJwtBuilder {
     private final Base64URL base64Header;
     private final Base64URL base64Body;
