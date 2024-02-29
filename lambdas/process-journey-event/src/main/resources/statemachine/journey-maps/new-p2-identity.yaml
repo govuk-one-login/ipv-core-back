@@ -598,6 +598,8 @@ PYI_ESCAPE_ABANDON_M2B:
       targetState: RETURN_TO_RP
     next:
       targetState: IDENTITY_START_PAGE
+    bankAccount:
+      targetState: BANK_ACCOUNT_START_PAGE
 
 PYI_KBV_DROPOUT_M2B:
   response:
