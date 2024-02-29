@@ -79,7 +79,7 @@ class ContractTest {
     public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
             throws Exception {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+                .given(CIC_ACCESS_TOKEN + " is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyClaimedIdentityComponentId is a valid issuer")
                 .given("VC givenName is Mary")
@@ -88,7 +88,8 @@ class ContractTest {
                 .uponReceiving("Valid credential request for VC")
                 .path("/userinfo")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer " + CIC_ACCESS_TOKEN)
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -135,8 +136,8 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        new BearerAccessToken(CIC_ACCESS_TOKEN),
+                        getCallbackRequest(CIC_AUTH_CODE, credentialIssuerConfig),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -212,7 +213,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest(CIC_AUTH_CODE, credentialIssuerConfig),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -224,7 +225,7 @@ class ContractTest {
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given(CIC_AUTH_CODE + " is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyClaimedIdentityComponentId is the cic CRI component ID")
                 .given("Cic CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -232,7 +233,9 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code="
+                                + CIC_AUTH_CODE
+                                + "&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DclaimedIdentity&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -292,7 +295,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(CIC_AUTH_CODE, credentialIssuerConfig),
                         CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -301,7 +304,7 @@ class ContractTest {
     }
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyClaimedIdentityComponentId is the cic CRI component ID")
@@ -322,12 +325,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstCicCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
 
@@ -440,6 +443,9 @@ class ContractTest {
     private static final String TEST_ISSUER = "dummyClaimedIdentityComponentId";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
+    private static final String CIC_ACCESS_TOKEN =
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJlNWUzOGI2Mi0zNmYzLTQwYTAtODRmZS1iNzVkMzc3NTg3ZGEiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjI5NDMyMzB9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+    private static final String CIC_AUTH_CODE = "b7359129-2106-412b-b3d3-7dd7d8253c39";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
@@ -466,8 +472,9 @@ class ContractTest {
     private static final String VALID_VC_HEADER =
             """
             {
-              "alg": "ES256",
-              "typ": "JWT"
+                "alg": "ES256",
+                "typ": "JWT",
+                "kid": "kid"
             }
             """;
 
@@ -475,25 +482,21 @@ class ContractTest {
     private static final String VALID_VC_BODY =
             """
             {
-              "iss": "dummyClaimedIdentityComponentId",
-              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "iss": "dummyClaimedIdentityComponentId",
+              "iat": 4070908800,
+              "jti": "jti",
+              "sub": "test-subject",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
                 "type": [
                   "VerifiableCredential",
-                  "IdentityCheckCredential"
+                  "IdentityAssertionCredential"
                 ],
                 "credentialSubject": {
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ],
                   "name": [
                     {
                       "nameParts": [
@@ -507,6 +510,11 @@ class ContractTest {
                         }
                       ]
                     }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
                   ]
                 }
               }
@@ -516,5 +524,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "R54rF9t9R8leIotteoBaFnfG-JNmnWaUg9ZAr5Dgdn0Dwf1awOafzAfH96D6NqKy7g35VgvoI_9sKclhhrQxEw";
+            "Sv9G7z26In_fkdYIv8aVuWx1X6A0jp_HxV2eXWHYfhimAM6dFRUChKm6deKG4wT3AlMKdwbwxifaWBBPBLniKg";
 }
