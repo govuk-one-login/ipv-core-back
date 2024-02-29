@@ -70,7 +70,7 @@ PAGE_STATE_AT_START_OF_MITIGATION:
   response:
     type: page
     pageId: page-id-for-some-page
-    mitigationStart: true
+    mitigationStart: a-mitigation-type
   events:
     enterNestedJourneyAtStateOne:
       targetState: NESTED_JOURNEY_INVOKE_STATE
