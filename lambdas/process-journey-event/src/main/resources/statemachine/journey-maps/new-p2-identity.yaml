@@ -557,7 +557,7 @@ CRI_EXPERIAN_KBV_M2B:
 
 MITIGATION_KBV_FAIL_M2B:
   response:
-    mitigationStart: true
+    mitigationStart: enhanced-verification
     type: page
     pageId: pyi-kbv-escape-m2b
   events:
@@ -609,7 +609,7 @@ MITIGATION_01:
     lambdaInput:
       isUserInitiated: false
       deleteOnlyGPG45VCs: true
-    mitigationStart: true
+    mitigationStart: enhanced-verification
   events:
     next:
       targetState: MITIGATION_01_IDENTITY_START_PAGE
@@ -697,7 +697,7 @@ MITIGATION_02_OPTIONS:
   response:
     type: page
     pageId: pyi-suggest-other-options-no-f2f
-    mitigationStart: true
+    mitigationStart: enhanced-verification
   events:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
@@ -748,7 +748,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
   response:
     type: page
     pageId: pyi-suggest-other-options
-    mitigationStart: true
+    mitigationStart: enhanced-verification
   events:
     f2f:
       targetState: CRI_F2F
@@ -763,7 +763,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
     type: page
     pageId: pyi-suggest-other-options
     context: no-photo-id
-    mitigationStart: true
+    mitigationStart: enhanced-verification
   events:
     f2f:
       targetState: CRI_F2F

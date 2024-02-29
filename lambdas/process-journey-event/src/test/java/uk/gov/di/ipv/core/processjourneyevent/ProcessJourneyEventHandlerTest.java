@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -293,6 +294,10 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("component_id", capturedAuditEvent.getComponentId());
         assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(
+                "a-mitigation-type",
+                ((AuditExtensionMitigationType) capturedAuditEvent.getExtensions())
+                        .mitigationType());
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {
