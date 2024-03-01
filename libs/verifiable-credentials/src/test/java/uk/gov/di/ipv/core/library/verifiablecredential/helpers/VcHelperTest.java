@@ -157,6 +157,13 @@ class VcHelperTest {
     }
 
     @Test
+    void shouldCheckIfDocUKIssuedForCredentialForResidencePermit() throws ParseException {
+        assertTrue(
+                VcHelper.checkIfDocUKIssuedForCredential(
+                        SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
+    }
+
+    @Test
     void shouldCheckIfDocUKIssuedForCredentialForDL() throws ParseException {
         assertTrue(
                 VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(VC_DRIVING_PERMIT_DCMAW)));

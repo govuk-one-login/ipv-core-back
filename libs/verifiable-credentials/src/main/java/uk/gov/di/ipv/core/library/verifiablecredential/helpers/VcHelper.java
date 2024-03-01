@@ -28,6 +28,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,15 +43,16 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ICAO_ISSUER_CODE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT_ICAO_CODE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
-    public static final String UK_PASSPORT_ICAO_CODE = "GBR";
+    public static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
     private static final int ONLY = 0;
 
@@ -145,16 +147,16 @@ public class VcHelper {
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
         if (credentialSubject != null) {
-            var passportField = credentialSubject.get(VC_PASSPORT);
-            if (passportField instanceof JSONArray passportFieldArr) {
+            var passportOrResPermitField = getPassportOrResPermitField(credentialSubject);
+            if (passportOrResPermitField instanceof JSONArray passportOrResPermitFieldArr) {
                 var icaoCode =
-                        ((JSONObject) passportFieldArr.get(ONLY))
-                                .getAsString(VC_PASSPORT_ICAO_CODE);
+                        ((JSONObject) passportOrResPermitFieldArr.get(ONLY))
+                                .getAsString(VC_ICAO_ISSUER_CODE);
                 if (icaoCode != null) {
-                    return UK_PASSPORT_ICAO_CODE.equals(icaoCode);
+                    return UK_ICAO_ISSUER_CODE.equals(icaoCode);
                 }
             }
-            // If Passport not exist then try for DL now
+            // If Passport/ResidencePermit not exist then try for DL now
             var dlField = credentialSubject.get(VC_DRIVING_LICENCE);
             if (dlField instanceof JSONArray dlFieldArr) {
                 var issuer =
@@ -223,6 +225,15 @@ public class VcHelper {
             LOGGER.info("Failed to parse dob value for the vc.");
             return null;
         }
+    }
+
+    private static Object getPassportOrResPermitField(JSONObject credentialSubject) {
+        // If Passport not exist then try for ResidencePermit (BRP/BRC/FWP)
+        Object docField = credentialSubject.get(VC_PASSPORT);
+        if (Objects.isNull(docField)) {
+            docField = credentialSubject.get(VC_RESIDENCE_PERMIT);
+        }
+        return docField;
     }
 
     public static Vot getVcVot(SignedJWT vc) throws UnrecognisedVotException {
