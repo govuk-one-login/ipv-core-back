@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.callticfcri;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,9 +49,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
@@ -62,7 +61,8 @@ class CallTicfCriHandlerTest {
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
-    public static List<String> VC_IN_STORE;
+    public static List<String> VC_IN_STORE =
+            List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
@@ -85,17 +85,6 @@ class CallTicfCriHandlerTest {
     @Spy private IpvSessionItem spyIpvSessionItem;
     @Mock private SignedJWT mockSignedJwt;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
-    private static String M1A_ADDRESS_VC;
-    private static String M1A_EXPERIAN_FRAUD_VC;
-    private static String M1B_DCMAW_VC;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        M1A_ADDRESS_VC = vcAddressM1a();
-        M1A_EXPERIAN_FRAUD_VC = vcExperianFraudM1a();
-        M1B_DCMAW_VC = vcDcmawM1b();
-        VC_IN_STORE = List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
-    }
 
     @BeforeEach
     public void setUp() {

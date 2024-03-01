@@ -38,9 +38,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
@@ -82,10 +82,10 @@ class CheckGpg45ScoreHandlerTest {
         CREDENTIALS =
                 List.of(
                         vcPassportNonDcmawSuccessful(),
-                        vcAddressM1a(),
-                        vcExperianFraudM1a(),
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),
-                        vcDcmawM1b());
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }

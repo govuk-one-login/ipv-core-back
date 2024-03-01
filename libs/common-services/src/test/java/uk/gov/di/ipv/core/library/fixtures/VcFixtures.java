@@ -286,19 +286,19 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcPassportM1aFailed() throws Exception {
+    static String vcPassportM1aFailed() {
         return generateVerifiableCredential(
                 TestVc.builder().evidence(UNSUCCESSFUL_EVIDENCE).build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcPassportM1aWithCI() throws Exception {
+    static String vcPassportM1aWithCI() {
         return generateVerifiableCredential(
                 TestVc.builder().evidence(TEST_CI_EVIDENCE).build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcPassportM1aMissingEvidence() throws Exception {
+    static String vcPassportM1aMissingEvidence() {
         return generateVerifiableCredential(
                 TestVc.builder().evidence(Collections.emptyList()).build(),
                 Instant.ofEpochSecond(1705986521));
@@ -364,21 +364,22 @@ public interface VcFixtures {
                 TestVc.builder().credentialSubject(credentialSubject).build());
     }
 
-    static String vcAddressM1a() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(null)
-                        .address(List.of(ADDRESS_3))
-                        .passport(null)
-                        .build();
-        return generateVerifiableCredential(
-                TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-a.integration.account.gov.uk",
-                Instant.ofEpochSecond(1658829720));
-    }
+    String M1A_ADDRESS_VC =
+            generateVerifiableCredential(
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .name(null)
+                                            .address(List.of(ADDRESS_3))
+                                            .passport(null)
+                                            .build())
+                            .evidence(null)
+                            .build(),
+                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                    "https://review-a.integration.account.gov.uk",
+                    Instant.ofEpochSecond(1658829720));
 
-    static String vcAddressMultipleAddresses() throws Exception {
+    static String vcAddressMultipleAddresses() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
@@ -392,7 +393,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829720));
     }
 
-    static String vcAddressMultipleAddressesNoValidFrom() throws Exception {
+    static String vcAddressMultipleAddressesNoValidFrom() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
@@ -406,24 +407,22 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829720));
     }
 
-    static String vcExperianFraudM1a() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
-                        .passport(null)
-                        .build();
-        return generateVerifiableCredential(
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-f.integration.account.gov.uk",
-                Instant.ofEpochSecond(1658829758));
-    }
+    String M1A_EXPERIAN_FRAUD_VC =
+            generateVerifiableCredential(
+                    TestVc.builder()
+                            .evidence(FRAUD_EVIDENCE)
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .address(List.of(ADDRESS_3))
+                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .passport(null)
+                                            .build())
+                            .build(),
+                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                    "https://review-f.integration.account.gov.uk",
+                    Instant.ofEpochSecond(1658829758));
 
-    static String vcExperianFraudFailed() throws Exception {
+    static String vcExperianFraudFailed() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
@@ -440,7 +439,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static String vcExperianFraudScoreOne() throws Exception {
+    static String vcExperianFraudScoreOne() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
@@ -456,7 +455,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704290386));
     }
 
-    static String vcExperianFraudScoreTwo() throws Exception {
+    static String vcExperianFraudScoreTwo() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(
@@ -478,7 +477,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1652953380));
     }
 
-    static String vcExperianFraudMissingName() throws Exception {
+    static String vcExperianFraudMissingName() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(Collections.emptyList())
@@ -495,7 +494,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704290386));
     }
 
-    static String vcDrivingPermit() throws Exception {
+    static String vcDrivingPermit() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
@@ -510,7 +509,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcDrivingPermitMissingDrivingPermit() throws Exception {
+    static String vcDrivingPermitMissingDrivingPermit() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
@@ -524,7 +523,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcDrivingPermitFailedChecks() throws Exception {
+    static String vcDrivingPermitFailedChecks() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
@@ -539,7 +538,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705468290));
     }
 
-    static String vcDrivingPermitNonDcmaw() throws Exception {
+    static String vcDrivingPermitNonDcmaw() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
@@ -558,7 +557,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static String vcNinoSuccessful() throws Exception {
+    static String vcNinoSuccessful() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
@@ -583,7 +582,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static String vcNinoUnsuccessful() throws Exception {
+    static String vcNinoUnsuccessful() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
@@ -608,7 +607,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static String vcNinoMissingSocialSecurityRecord() throws Exception {
+    static String vcNinoMissingSocialSecurityRecord() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
@@ -632,7 +631,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static String vcTicf() throws Exception {
+    static String vcTicf() {
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(null)
@@ -647,7 +646,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704822570));
     }
 
-    static String vcVerificationM1a() throws Exception {
+    static String vcVerificationM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
@@ -670,44 +669,42 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1653403140));
     }
 
-    static String vcDcmawM1b() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
-                        .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of(DRIVING_PERMIT))
-                        .passport(null)
-                        .build();
-        return generateVerifiableCredential(
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("bcd2346")
-                                                .strengthScore(3)
-                                                .validityScore(2)
-                                                .activityHistoryScore(1)
-                                                .checkDetails(
-                                                        List.of(
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "vri",
-                                                                        "identityCheckPolicy",
-                                                                        "published",
-                                                                        "activityFrom",
-                                                                        "2019-01-01"),
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "bvr",
-                                                                        "biometricVerificationProcessLevel",
-                                                                        3)))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                Instant.ofEpochSecond(1705986521));
-    }
+    String M1B_DCMAW_VC =
+            generateVerifiableCredential(
+                    TestVc.builder()
+                            .evidence(
+                                    List.of(
+                                            TestVc.TestEvidence.builder()
+                                                    .txn("bcd2346")
+                                                    .strengthScore(3)
+                                                    .validityScore(2)
+                                                    .activityHistoryScore(1)
+                                                    .checkDetails(
+                                                            List.of(
+                                                                    Map.of(
+                                                                            "checkMethod",
+                                                                            "vri",
+                                                                            "identityCheckPolicy",
+                                                                            "published",
+                                                                            "activityFrom",
+                                                                            "2019-01-01"),
+                                                                    Map.of(
+                                                                            "checkMethod",
+                                                                            "bvr",
+                                                                            "biometricVerificationProcessLevel",
+                                                                            3)))
+                                                    .build()))
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
+                                            .address(List.of(ADDRESS_4))
+                                            .drivingPermit(List.of(DRIVING_PERMIT))
+                                            .passport(null)
+                                            .build())
+                            .build(),
+                    Instant.ofEpochSecond(1705986521));
 
-    static String vcF2fM1a() throws Exception {
+    static String vcF2fM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(MARY_WATSON_NAME))
@@ -750,7 +747,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcF2fBrp() throws Exception {
+    static String vcF2fBrp() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(
@@ -786,7 +783,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1652953080));
     }
 
-    static String vcF2fIdCard() throws Exception {
+    static String vcF2fIdCard() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(

@@ -42,10 +42,10 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(MockitoExtension.class)
 class TicfCriServiceTest {
@@ -72,7 +72,7 @@ class TicfCriServiceTest {
 
     @BeforeAll
     static void setVcs() throws Exception {
-        credentials = List.of(vcDcmawM1b(), vcExperianFraudM1a(), vcAddressM1a());
+        credentials = List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
         VC_ADDRESS = vcAddressOne();
         ticfCriResponse =
                 new TicfCriDto(

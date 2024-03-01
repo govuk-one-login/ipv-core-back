@@ -35,8 +35,7 @@ class RestoreVcsHandlerTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
 
     @Test
-    void shouldRestoreVc()
-            throws Exception {
+    void shouldRestoreVc() throws Exception {
         // Arrange
         InputStream inputStream =
                 RestoreVcsHandlerTest.class.getResourceAsStream("/testRestoreVcsRequest.json");

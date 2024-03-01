@@ -274,12 +274,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
-                        null,
-                        TEST_USER_ID,
-                        testOauthState,
-                        List.of(PASSPORT_VC),
-                        null,
-                        null);
+                        null, TEST_USER_ID, testOauthState, List.of(PASSPORT_VC), null, null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
         message.setMessageId(TEST_MESSAGE_ID);
         message.setBody(OBJECT_MAPPER.writeValueAsString(criResponseMessageDto));
@@ -357,8 +352,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<SignedJWT> storedVerifiableCredentials =
                 storableVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, storedVerifiableCredentials.size());
-        assertEquals(
-                PASSPORT_VC, storedVerifiableCredentials.get(0).serialize());
+        assertEquals(PASSPORT_VC, storedVerifiableCredentials.get(0).serialize());
         List<String> credentialIssuers = credentialIssuerCaptor.getAllValues();
         assertEquals(1, credentialIssuers.size());
         assertEquals(TEST_CREDENTIAL_ISSUER_ID, credentialIssuers.get(0));

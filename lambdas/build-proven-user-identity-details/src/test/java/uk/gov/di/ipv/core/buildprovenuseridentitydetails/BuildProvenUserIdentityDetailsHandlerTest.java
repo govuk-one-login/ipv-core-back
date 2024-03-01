@@ -44,10 +44,10 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
@@ -112,9 +112,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -152,9 +152,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportMissingBirthDate()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -192,7 +192,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, vcAddressMultipleAddresses()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -237,7 +237,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         ADDRESS_CRI,
                                         vcAddressMultipleAddressesNoValidFrom()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -273,9 +273,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -306,7 +306,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -341,9 +341,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportM1aFailed()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -378,9 +378,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportMissingName()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -415,9 +415,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportMissingBirthDate()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -456,7 +456,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
-    void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
+    void shouldReceive500ResponseCodeWhenFailedToParseVc() {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -466,9 +466,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, "invalid-credential"),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -497,9 +497,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
@@ -530,9 +530,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
                                 TestFixtures.createVcStoreItem(
@@ -570,9 +570,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                                        TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                        TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
                                 TestFixtures.createVcStoreItem(

@@ -56,7 +56,7 @@ public class VerifiableCredentialGenerator {
     }
 
     public static String generateVerifiableCredential(
-            TestVc vcClaim, String subject, String issuer, Instant nbf) throws Exception {
+            TestVc vcClaim, String subject, String issuer, Instant nbf) {
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .claim(SUBJECT, subject)
@@ -64,7 +64,11 @@ public class VerifiableCredentialGenerator {
                         .claim(NOT_BEFORE, nbf.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
-        return signTestJWT(claimsSet);
+        try {
+            return signTestJWT(claimsSet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String generateVerifiableCredential(TestVc vcClaim) throws Exception {
@@ -96,8 +100,7 @@ public class VerifiableCredentialGenerator {
         return signTestJWT(claimsSet);
     }
 
-    public static String generateVerifiableCredential(TestVc vcClaim, Instant nbf)
-            throws Exception {
+    public static String generateVerifiableCredential(TestVc vcClaim, Instant nbf) {
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .claim(SUBJECT, "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980")
@@ -105,7 +108,11 @@ public class VerifiableCredentialGenerator {
                         .claim(NOT_BEFORE, nbf.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
-        return signTestJWT(claimsSet);
+        try {
+            return signTestJWT(claimsSet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static String signTestJWT(JWTClaimsSet claimsSet) throws Exception {

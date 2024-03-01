@@ -29,11 +29,11 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
@@ -67,12 +67,12 @@ class VcHelperTest {
 
     private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
-                Arguments.of("Non-evidence VC", vcAddressM1a()),
+                Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
                 Arguments.of("Evidence VC", vcPassportNonDcmawSuccessful()),
                 Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
-                Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
+                Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
                 Arguments.of("Verification VC", vcVerificationM1a()),
-                Arguments.of("Verification DCMAW VC", vcDcmawM1b()),
+                Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
                 Arguments.of("Verification F2F VC", vcF2fM1a()),
                 Arguments.of("Verification Nino VC", vcNinoSuccessful()),
                 Arguments.of("Verification TICF VC", vcTicf()));
@@ -203,7 +203,7 @@ class VcHelperTest {
         assertNull(VcHelper.getVcVot(SignedJWT.parse(vcNullVot())));
     }
 
-    private static Stream<Arguments> UnsuccessfulTestCases() throws Exception {
+    private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
                 Arguments.of("Failed passport VC", vcPassportM1aFailed()),

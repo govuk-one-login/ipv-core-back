@@ -1578,10 +1578,10 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() throws Exception {
+    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
-                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, vcDcmawM1b()));
+                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC));
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1592,11 +1592,10 @@ class UserIdentityServiceTest {
 
     @Test
     void
-            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
-                    throws Exception {
+            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
-                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, vcDcmawM1b()));
+                List.of(TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC));
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1606,11 +1605,11 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, vcDcmawM1b()),
+                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC),
                         TestFixtures.createVcStoreItem(USER_ID_1, F2F_CRI, vcF2fM1a()));
 
         // Act & Assert
@@ -1618,7 +1617,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -1632,11 +1631,11 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() throws Exception {
+    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         // Arrange
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, vcDcmawM1b()),
+                        TestFixtures.createVcStoreItem(USER_ID_1, BAV_CRI, M1B_DCMAW_VC),
                         TestFixtures.createVcStoreItem(
                                 USER_ID_1, F2F_CRI, vcExperianFraudScoreTwo()));
 
@@ -1789,7 +1788,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() throws Exception {
+    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
         VcStoreItem vcStoreItem =
                 TestFixtures.createVcStoreItem(
                         USER_ID_1, EXPERIAN_FRAUD_CRI, vcExperianFraudMissingName());

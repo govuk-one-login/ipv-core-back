@@ -74,9 +74,7 @@ class CiMitServiceTest {
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
         ciMitService.submitVC(
-                SignedJWT.parse(passportVc),
-                GOVUK_SIGNIN_JOURNEY_ID,
-                CLIENT_SOURCE_IP);
+                SignedJWT.parse(passportVc), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());

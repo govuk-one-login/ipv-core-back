@@ -87,9 +87,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
@@ -163,10 +163,10 @@ class CheckExistingIdentityHandlerTest {
         CREDENTIALS =
                 List.of(
                         vcPassportNonDcmawSuccessful(),
-                        vcAddressM1a(),
-                        vcExperianFraudM1a(),
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),
-                        vcDcmawM1b());
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
@@ -180,12 +180,12 @@ class CheckExistingIdentityHandlerTest {
                 List.of(
                         TestFixtures.createVcStoreItem(
                                 TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, vcAddressM1a()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, vcExperianFraudM1a()),
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                         TestFixtures.createVcStoreItem(
                                 TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, vcDcmawM1b()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
                         TestFixtures.createVcStoreItem(
                                 TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration()));
     }
@@ -793,7 +793,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws Exception {
+    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
