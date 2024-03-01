@@ -352,27 +352,17 @@ Resources:
                       - Fn::Split:
                           - "/"
                           - Ref: AWS::StackId
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: 1
-      DatapointsToAlarm: 1
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeleteAccountSNSDLQ.QueueName
+      MetricName: ApproximateNumberOfMessagesVisible
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
       EvaluationPeriods: 1
+      Statistic: Sum
       TreatMissingData: notBreaching
-      Metrics:
-        - Id: e1
-          Label: Sum-of-SQS-DQL-Messages
-          ReturnData: true
-          Expression: SUM(METRICS())
-        - Id: m1
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/SQS
-              MetricName: NumberOfMessagesReceived
-              Dimensions:
-                - Name: QueueName
-                  Value: !GetAtt DeleteAccountSNSDLQ.QueueName
-            Period: 300
-            Stat: Sum
 
 #Alarm for other DLQ
   DeleteAccountLambdaDLQAlarm:
@@ -395,27 +385,17 @@ Resources:
                       - Fn::Split:
                           - "/"
                           - Ref: AWS::StackId
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: 1
-      DatapointsToAlarm: 1
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeleteAccountLambdaDLQ.QueueName
+      MetricName: ApproximateNumberOfMessagesVisible
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
       EvaluationPeriods: 1
+      Statistic: Sum
       TreatMissingData: notBreaching
-      Metrics:
-        - Id: e1
-          Label: Sum-of-SQS-DQL-Messages
-          ReturnData: true
-          Expression: SUM(METRICS())
-        - Id: m1
-          ReturnData: false
-          MetricStat:
-            Metric:
-              Namespace: AWS/SQS
-              MetricName: NumberOfMessagesReceived
-              Dimensions:
-                - Name: QueueName
-                  Value: !GetAtt DeleteAccountLambdaDLQ.QueueName
-            Period: 300
-            Stat: Sum
 
 # SNS Topic for DLQ Alarms
   DLQAlarmsSNSTopic:
@@ -435,9 +415,9 @@ Resources:
                           - "/"
                           - Ref: AWS::StackId
       Subscription:
-        - Endpoint: tobias.saunders@digital.cabinet-office.gov.uk
+        - Endpoint: patrick.blakey@digital.cabinet-office.gov.uk
           Protocol: email
-        - Endpoint: kerr.rainey@digital.cabinet-office.gov.uk
+        - Endpoint: joe.edwards@digital.cabinet-office.gov.uk
           Protocol: email
         - Endpoint: vam.hedayati@digital.cabinet-office.gov.uk
           Protocol: email
