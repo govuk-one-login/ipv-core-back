@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -118,8 +119,12 @@ public class ProcessJourneyEventHandler
 
             StepResponse stepResponse = executeJourneyEvent(journeyEvent, ipvSessionItem);
 
-            if (Boolean.TRUE.equals(stepResponse.getMitigationStart())) {
-                sendMitigationStartAuditEvent(ipvSessionId, ipAddress, clientOAuthSessionItem);
+            if (stepResponse.getMitigationStart() != null) {
+                sendMitigationStartAuditEvent(
+                        ipvSessionId,
+                        ipAddress,
+                        clientOAuthSessionItem,
+                        stepResponse.getMitigationStart());
             }
 
             return stepResponse.value();
@@ -279,7 +284,10 @@ public class ProcessJourneyEventHandler
     }
 
     private void sendMitigationStartAuditEvent(
-            String ipvSessionId, String ipAddress, ClientOAuthSessionItem clientOAuthSessionItem)
+            String ipvSessionId,
+            String ipAddress,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String mitigationType)
             throws SqsException {
         var auditEventUser =
                 new AuditEventUser(
@@ -292,6 +300,7 @@ public class ProcessJourneyEventHandler
                 new AuditEvent(
                         AuditEventTypes.IPV_MITIGATION_START,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser));
+                        auditEventUser,
+                        new AuditExtensionMitigationType(mitigationType)));
     }
 }

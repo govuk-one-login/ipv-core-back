@@ -9,6 +9,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -41,6 +42,14 @@ public class TicfCriService {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
         this.jwtValidator = new VerifiableCredentialJwtValidator(configService);
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public TicfCriService(
+            ConfigService configService, VerifiableCredentialJwtValidator jwtValidator) {
+        this.configService = configService;
+        this.httpClient = HttpClient.newHttpClient();
+        this.jwtValidator = jwtValidator;
     }
 
     protected TicfCriService(
@@ -80,6 +89,7 @@ public class TicfCriService {
                         X_API_KEY_HEADER,
                         configService.getCriPrivateApiKeyForActiveConnection(TICF_CRI));
             }
+            httpRequestBuilder.header("Content-Type", "application/json; charset=utf-8");
 
             var ticfCriHttpResponse = sendHttpRequest(httpRequestBuilder.build());
             checkStatusCode(ticfCriHttpResponse);

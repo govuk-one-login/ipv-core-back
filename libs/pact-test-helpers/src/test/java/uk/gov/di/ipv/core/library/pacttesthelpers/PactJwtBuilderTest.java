@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +40,16 @@ class PactJwtBuilderTest {
         var result = underTest.buildJwt();
 
         // Assert
+        assertEquals((JWT_HEADER_BASE64 + "." + JWT_BODY_BASE64 + ".signature"), result);
+    }
+
+    @Test
+    void fromPathFetchesTestFixtures() throws IOException {
+        // Act
+        var pactJwtBuilder = PactJwtBuilder.fromPath("/dvlaVc");
+
+        // Assert
+        var result = pactJwtBuilder.buildJwt();
         assertEquals((JWT_HEADER_BASE64 + "." + JWT_BODY_BASE64 + ".signature"), result);
     }
 

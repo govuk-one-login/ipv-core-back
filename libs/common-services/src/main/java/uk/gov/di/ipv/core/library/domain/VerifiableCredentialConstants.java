@@ -23,8 +23,9 @@ public class VerifiableCredentialConstants {
     public static final String VC_VTM = "vtm";
     public static final String VC_CONTEXT = "@context";
     public static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
+    public static final String VC_RESIDENCE_PERMIT = "residencePermit";
     public static final String VC_PASSPORT = "passport";
-    public static final String VC_PASSPORT_ICAO_CODE = "icaoIssuerCode";
+    public static final String VC_ICAO_ISSUER_CODE = "icaoIssuerCode";
     public static final String VC_DRIVING_LICENCE = "drivingPermit";
     public static final String VC_DRIVING_LICENCE_ISSUED_BY = "issuedBy";
 

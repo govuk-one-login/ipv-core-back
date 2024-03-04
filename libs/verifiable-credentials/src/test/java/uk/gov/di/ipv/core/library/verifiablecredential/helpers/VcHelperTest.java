@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -65,7 +66,7 @@ class VcHelperTest {
         }
     }
 
-    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
+    private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
                 Arguments.of("Evidence VC", vcPassportNonDcmawSuccessful()),
@@ -170,6 +171,13 @@ class VcHelperTest {
         assertEquals(
                 Boolean.TRUE,
                 VcHelper.checkIfDocUKIssuedForCredential(SignedJWT.parse(vcDrivingPermit())));
+    }
+
+    @Test
+    void shouldCheckIfDocUKIssuedForCredentialForResidencePermit() throws ParseException {
+        assertTrue(
+                VcHelper.checkIfDocUKIssuedForCredential(
+                        SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
     }
 
     @Test

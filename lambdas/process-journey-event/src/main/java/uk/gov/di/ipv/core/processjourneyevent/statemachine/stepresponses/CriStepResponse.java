@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +30,7 @@ public class CriStepResponse implements StepResponse {
     private String criId;
     private String context;
     private String scope;
-    @Getter private Boolean mitigationStart;
+    private String mitigationStart;
 
     public Map<String, Object> value() {
         try {

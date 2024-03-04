@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
@@ -15,7 +14,7 @@ public class PageStepResponse implements StepResponse {
 
     private String pageId;
     private String context;
-    @Getter private Boolean mitigationStart;
+    private String mitigationStart;
 
     public Map<String, Object> value() {
         Map<String, Object> response = new HashMap<>();
