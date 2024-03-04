@@ -30,6 +30,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
@@ -66,7 +67,7 @@ class VcHelperTest {
         }
     }
 
-    private static Stream<Arguments> SuccessfulTestCases() {
+    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
                 Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
                 Arguments.of("Evidence VC", vcPassportNonDcmawSuccessful()),
@@ -175,9 +176,8 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForResidencePermit() throws ParseException {
-        assertTrue(
-                VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
+        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(
+                SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
     }
 
     @Test
