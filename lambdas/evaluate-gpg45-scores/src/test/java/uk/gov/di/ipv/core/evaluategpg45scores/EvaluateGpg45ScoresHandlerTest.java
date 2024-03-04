@@ -69,9 +69,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
@@ -156,7 +156,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         .build();
         CREDENTIALS =
                 List.of(
-                        vcPassportNonDcmawSuccessful(),
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         M1A_ADDRESS_VC,
                         M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),
@@ -167,7 +167,7 @@ class EvaluateGpg45ScoresHandlerTest {
         VC_STORE_ITEMS =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                TEST_USER_ID, PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                         TestFixtures.createVcStoreItem(
                                 TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
@@ -428,7 +428,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldSendAuditEventWhenProfileMatched() throws Exception {
         List<SignedJWT> parsedM1ACreds =
                 List.of(
-                        SignedJWT.parse(vcPassportNonDcmawSuccessful()),
+                        SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC),
                         SignedJWT.parse(vcVerificationM1a()));

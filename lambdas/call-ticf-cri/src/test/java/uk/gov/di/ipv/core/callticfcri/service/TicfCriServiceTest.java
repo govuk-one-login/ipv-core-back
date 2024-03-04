@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.callticfcri.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +44,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 
 @ExtendWith(MockitoExtension.class)
 class TicfCriServiceTest {
@@ -56,10 +55,18 @@ class TicfCriServiceTest {
                     .userId("a-user-id")
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
-    private static List<String> credentials;
+    private static final List<String> credentials =
+            List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
     // the VC in this response is unimportant as we're mocking the
     // validator - we just need something that can be parsed
-    private static TicfCriDto ticfCriResponse;
+    private static final TicfCriDto ticfCriResponse =
+            new TicfCriDto(
+                    List.of("vtr-value"),
+                    Vot.P2,
+                    TRUSTMARK,
+                    "a-user-id",
+                    "a-govuk-journey-id",
+                    List.of(VC_ADDRESS));
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
@@ -68,21 +75,6 @@ class TicfCriServiceTest {
     @Mock private HttpResponse<String> mockHttpResponse;
     @Captor private ArgumentCaptor<HttpRequest> requestCaptor;
     @InjectMocks private TicfCriService ticfCriService;
-    private static String VC_ADDRESS;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        credentials = List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
-        VC_ADDRESS = vcAddressOne();
-        ticfCriResponse =
-                new TicfCriDto(
-                        List.of("vtr-value"),
-                        Vot.P2,
-                        TRUSTMARK,
-                        "a-user-id",
-                        "a-govuk-journey-id",
-                        List.of(VC_ADDRESS));
-    }
 
     @BeforeEach
     void setUp() throws Exception {

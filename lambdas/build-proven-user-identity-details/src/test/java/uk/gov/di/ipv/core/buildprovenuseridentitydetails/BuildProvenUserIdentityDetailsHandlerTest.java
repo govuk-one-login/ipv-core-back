@@ -46,13 +46,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,7 +110,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
@@ -188,7 +190,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, vcAddressMultipleAddresses()),
                                 TestFixtures.createVcStoreItem(
@@ -231,7 +235,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID,
                                         ADDRESS_CRI,
@@ -304,7 +310,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
@@ -495,7 +503,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
@@ -528,7 +538,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
@@ -568,7 +580,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(

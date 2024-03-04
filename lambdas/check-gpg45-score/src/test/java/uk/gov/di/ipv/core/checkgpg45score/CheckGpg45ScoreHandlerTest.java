@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +81,7 @@ class CheckGpg45ScoreHandlerTest {
                         .build();
         CREDENTIALS =
                 List.of(
-                        vcPassportNonDcmawSuccessful(),
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         M1A_ADDRESS_VC,
                         M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),

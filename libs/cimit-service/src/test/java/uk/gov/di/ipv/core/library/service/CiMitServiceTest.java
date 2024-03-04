@@ -46,7 +46,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitServiceTest {
@@ -68,7 +68,7 @@ class CiMitServiceTest {
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
-        String passportVc = vcPassportNonDcmawSuccessful();
+        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
@@ -96,7 +96,7 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(vcPassportNonDcmawSuccessful()),
+                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -116,14 +116,14 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(vcPassportNonDcmawSuccessful()),
+                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
 
     @Test
     void submitMitigationVCInvokesTheLambdaClient() throws Exception {
-        String passportVc = vcPassportNonDcmawSuccessful();
+        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
@@ -152,7 +152,7 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(vcPassportNonDcmawSuccessful()),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -172,7 +172,7 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(vcPassportNonDcmawSuccessful()),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }

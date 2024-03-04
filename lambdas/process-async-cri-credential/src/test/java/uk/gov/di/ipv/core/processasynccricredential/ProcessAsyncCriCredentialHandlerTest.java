@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
@@ -84,7 +84,7 @@ class ProcessAsyncCriCredentialHandlerTest {
             TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
             TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
                     createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
-            PASSPORT_VC = vcPassportNonDcmawSuccessful();
+            PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -9,7 +9,6 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,7 +55,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
@@ -66,22 +65,16 @@ class CriApiServiceTest {
     private static final String TEST_API_KEY = "test_api_key";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
-    private static String PASSPORT_VC;
-    private static Map<String, Object> DCMAW_SUCCESS_RESPONSE;
+    private static final String PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+    private static final Map<String, Object> DCMAW_SUCCESS_RESPONSE =
+            Map.of(
+                    "sub",
+                    "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
+                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                    List.of(PASSPORT_VC));
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     private CriApiService criApiService;
-
-    @BeforeAll
-    static void setVcs() throws Exception {
-        PASSPORT_VC = vcPassportNonDcmawSuccessful();
-        DCMAW_SUCCESS_RESPONSE =
-                Map.of(
-                        "sub",
-                        "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
-                        "https://vocab.account.gov.uk/v1/credentialJWT",
-                        List.of(PASSPORT_VC));
-    }
 
     @BeforeEach
     void setUp(WireMockRuntimeInfo wmRuntimeInfo) {

@@ -71,7 +71,7 @@ public class VerifiableCredentialGenerator {
         }
     }
 
-    public static String generateVerifiableCredential(TestVc vcClaim) throws Exception {
+    public static String generateVerifiableCredential(TestVc vcClaim) {
         Instant now = Instant.now();
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
@@ -80,7 +80,11 @@ public class VerifiableCredentialGenerator {
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
-        return signTestJWT(claimsSet);
+        try {
+            return signTestJWT(claimsSet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String generateVerifiableCredential(

@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class RestoreVcsHandlerTest {
@@ -44,7 +44,7 @@ class RestoreVcsHandlerTest {
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        vcPassportNonDcmawSuccessful(),
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         Instant.now(),
                         Instant.now());
         when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVc);

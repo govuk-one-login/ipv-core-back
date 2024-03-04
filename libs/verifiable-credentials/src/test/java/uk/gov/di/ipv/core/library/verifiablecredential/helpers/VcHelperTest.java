@@ -34,6 +34,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERM
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
@@ -47,7 +48,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aMissingEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
@@ -67,10 +67,10 @@ class VcHelperTest {
         }
     }
 
-    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
+    private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
-                Arguments.of("Evidence VC", vcPassportNonDcmawSuccessful()),
+                Arguments.of("Evidence VC", PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                 Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
                 Arguments.of("Verification VC", vcVerificationM1a()),
@@ -106,7 +106,7 @@ class VcHelperTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "userId", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                "userId", PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         TestFixtures.createVcStoreItem(
                                 "userId", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
                         TestFixtures.createVcStoreItem("userId", TICF_CRI, vcTicf()),
@@ -121,7 +121,7 @@ class VcHelperTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                "userId", PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                "userId", PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         TestFixtures.createVcStoreItem(
                                 "userId", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
                         TestFixtures.createVcStoreItem("userId", TICF_CRI, vcTicf()),
@@ -144,7 +144,8 @@ class VcHelperTest {
     @Test
     void shouldExtractAgeFromCredential() throws Exception {
         assertNotNull(
-                VcHelper.extractAgeFromCredential(SignedJWT.parse(vcPassportNonDcmawSuccessful())));
+                VcHelper.extractAgeFromCredential(
+                        SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC)));
     }
 
     @Test
@@ -164,7 +165,7 @@ class VcHelperTest {
         assertEquals(
                 Boolean.TRUE,
                 VcHelper.checkIfDocUKIssuedForCredential(
-                        SignedJWT.parse(vcPassportNonDcmawSuccessful())));
+                        SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC)));
     }
 
     @Test
@@ -176,8 +177,10 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForResidencePermit() throws ParseException {
-        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(
-                SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
+        assertEquals(
+                Boolean.TRUE,
+                VcHelper.checkIfDocUKIssuedForCredential(
+                        SignedJWT.parse(VC_RESIDENCE_PERMIT_DCMAW)));
     }
 
     @Test
@@ -191,7 +194,7 @@ class VcHelperTest {
     void shouldCheckIsItOperationalVC() throws Exception {
         assertTrue(VcHelper.isOperationalProfileVc(SignedJWT.parse(vcHmrcMigration())));
         assertFalse(
-                VcHelper.isOperationalProfileVc(SignedJWT.parse(vcPassportNonDcmawSuccessful())));
+                VcHelper.isOperationalProfileVc(SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC)));
     }
 
     @Test

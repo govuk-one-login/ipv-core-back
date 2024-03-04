@@ -12,12 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
@@ -25,7 +25,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        SignedJWT testVerifiableCredential = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var auditExtensions = getExtensionsForAudit(testVerifiableCredential, false);
         assertFalse(auditExtensions.getSuccessful());
         assertTrue(auditExtensions.getIsUkIssued());
@@ -48,7 +48,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetPassportRestrictedDataForAudit() throws Exception {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        SignedJWT testVerifiableCredential = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
@@ -75,7 +75,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetPassportExpiryDateForAudit() throws Exception {
-        SignedJWT testVerifiableCredential = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        SignedJWT testVerifiableCredential = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
         assertEquals("2030-01-01", auditNameParts.getDocExpiryDate());
     }

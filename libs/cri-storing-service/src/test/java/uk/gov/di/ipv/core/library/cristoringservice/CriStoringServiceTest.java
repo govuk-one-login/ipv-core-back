@@ -38,7 +38,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
@@ -127,7 +127,7 @@ class CriStoringServiceTest {
     @Test
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
-        String passportVc = vcPassportNonDcmawSuccessful();
+        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var callbackRequest = buildValidCallbackRequest();
         var signedJWT = SignedJWT.parse(passportVc);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -218,7 +218,7 @@ class CriStoringServiceTest {
     void storeVcsShouldThrowCiPutExceptionWhenCiSubmissionFails() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPutException(""))
                 .when(mockCiMitService)
@@ -243,7 +243,7 @@ class CriStoringServiceTest {
             throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPostMitigationsException(""))
                 .when(mockCiMitService)
@@ -267,7 +267,7 @@ class CriStoringServiceTest {
     void storeVcsShouldThrowSqsExceptionWhenAuditEventFailsToSend() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(vcPassportNonDcmawSuccessful());
+        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
 

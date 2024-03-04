@@ -280,11 +280,10 @@ public interface VcFixtures {
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01");
 
-    static String vcPassportNonDcmawSuccessful() throws Exception {
-        return generateVerifiableCredential(
-                TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
-                Instant.ofEpochSecond(1705986521));
-    }
+    String PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
+            generateVerifiableCredential(
+                    TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
+                    Instant.ofEpochSecond(1705986521));
 
     static String vcPassportM1aFailed() {
         return generateVerifiableCredential(
@@ -304,7 +303,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static String vcPassportMissingName() throws Exception {
+    static String vcPassportMissingName() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder().name(Collections.emptyList()).build();
         return generateVerifiableCredential(
@@ -314,7 +313,7 @@ public interface VcFixtures {
                         .build());
     }
 
-    static String vcPassportMissingBirthDate() throws Exception {
+    static String vcPassportMissingBirthDate() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder().birthDate(Collections.emptyList()).build();
         return generateVerifiableCredential(
@@ -324,7 +323,7 @@ public interface VcFixtures {
                         .build());
     }
 
-    static String vcPassportInvalidBirthDate() throws Exception {
+    static String vcPassportInvalidBirthDate() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .birthDate(List.of(new BirthDate("invalid")))
@@ -336,7 +335,7 @@ public interface VcFixtures {
                         .build());
     }
 
-    static String vcPassportMissingPassport() throws Exception {
+    static String vcPassportMissingPassport() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder().passport(Collections.emptyList()).build();
         return generateVerifiableCredential(
@@ -346,14 +345,16 @@ public interface VcFixtures {
                         .build());
     }
 
-    static String vcAddressOne() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build();
-        return generateVerifiableCredential(
-                TestVc.builder().credentialSubject(credentialSubject).build());
-    }
+    String VC_ADDRESS =
+            generateVerifiableCredential(
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .address(List.of(ADDRESS_1))
+                                            .build())
+                            .build());
 
-    static String vcAddressTwo() throws Exception {
+    static String vcAddressTwo() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(ALICE_PARKER_NAME))
@@ -819,7 +820,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1652953080));
     }
 
-    static String vcMissingCredentialSubject() throws Exception {
+    static String vcMissingCredentialSubject() {
         return generateVerifiableCredential(TestVc.builder().credentialSubject(null).build());
     }
 

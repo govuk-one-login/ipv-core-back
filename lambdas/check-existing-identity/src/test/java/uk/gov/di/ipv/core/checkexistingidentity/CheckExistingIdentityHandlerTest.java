@@ -90,10 +90,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportNonDcmawSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
@@ -163,7 +163,7 @@ class CheckExistingIdentityHandlerTest {
     static void setUp() throws Exception {
         CREDENTIALS =
                 List.of(
-                        vcPassportNonDcmawSuccessful(),
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         M1A_ADDRESS_VC,
                         M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),
@@ -180,7 +180,7 @@ class CheckExistingIdentityHandlerTest {
         VC_STORE_ITEMS =
                 List.of(
                         TestFixtures.createVcStoreItem(
-                                TEST_USER_ID, PASSPORT_CRI, vcPassportNonDcmawSuccessful()),
+                                TEST_USER_ID, PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                         TestFixtures.createVcStoreItem(
                                 TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
@@ -666,7 +666,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -687,8 +687,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-            throws Exception {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -710,7 +709,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
+    void shouldReturnFailResponseIfFaceToFaceVerificationIsError() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriErrorResponseStoreItem(Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -1258,21 +1257,21 @@ class CheckExistingIdentityHandlerTest {
         return MAPPER.convertValue(handlerOutput, responseClass);
     }
 
-    private CriResponseItem createCriResponseStoreItem() throws Exception {
+    private CriResponseItem createCriResponseStoreItem() {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F_CRI);
-        criResponseItem.setIssuerResponse(vcPassportNonDcmawSuccessful());
+        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         criResponseItem.setDateCreated(Instant.now());
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
         return criResponseItem;
     }
 
-    private CriResponseItem createCriErrorResponseStoreItem(Instant dateCreated) throws Exception {
+    private CriResponseItem createCriErrorResponseStoreItem(Instant dateCreated) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F_CRI);
-        criResponseItem.setIssuerResponse(vcPassportNonDcmawSuccessful());
+        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
         return criResponseItem;
