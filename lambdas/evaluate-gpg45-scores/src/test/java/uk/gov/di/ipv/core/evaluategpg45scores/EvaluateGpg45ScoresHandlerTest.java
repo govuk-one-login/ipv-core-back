@@ -66,13 +66,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
@@ -83,24 +83,8 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static JourneyRequest request;
-    private static final List<VcStoreItem> VC_STORE_ITEMS =
-            List.of(
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
-    private static final List<String> CREDENTIALS =
-            List.of(
-                    M1A_PASSPORT_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    M1A_VERIFICATION_VC,
-                    M1B_DCMAW_VC);
+    private static List<String> CREDENTIALS;
+    private static List<VcStoreItem> VC_STORE_ITEMS;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     public static OauthCriConfig addressConfig = null;
     public static OauthCriConfig claimedIdentityConfig = null;
@@ -170,13 +154,31 @@ class EvaluateGpg45ScoresHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_CLIENT_SOURCE_IP)
                         .build();
+        CREDENTIALS =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a(),
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
-
+        VC_STORE_ITEMS =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration()));
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
-                SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
+                SignedJWT.parse(vcHmrcMigrationNoEvidence()));
     }
 
     @BeforeEach
@@ -426,10 +428,10 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldSendAuditEventWhenProfileMatched() throws Exception {
         List<SignedJWT> parsedM1ACreds =
                 List.of(
-                        SignedJWT.parse(M1A_PASSPORT_VC),
+                        SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC),
-                        SignedJWT.parse(M1A_VERIFICATION_VC));
+                        SignedJWT.parse(vcVerificationM1a()));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(true);
@@ -458,7 +460,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(M1A, extension.getGpg45Profile());
         assertEquals(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2), extension.getGpg45Scores());
         assertEquals(
-                List.of("6e61e5db-a175-4e16-af83-1ddfc5668e2b", "RB000103490087", "abc1234"),
+                List.of("1c04edf0-a205-4585-8877-be6bd1776a39", "RB000103490087", "abc1234"),
                 extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);

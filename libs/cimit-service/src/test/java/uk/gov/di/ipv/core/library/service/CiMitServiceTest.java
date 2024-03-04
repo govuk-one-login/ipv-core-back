@@ -46,7 +46,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitServiceTest {
@@ -58,7 +58,6 @@ class CiMitServiceTest {
     private static final String TEST_USER_ID = "a-user-id";
     private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     private static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
@@ -69,24 +68,20 @@ class CiMitServiceTest {
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
+        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
-
         ciMitService.submitVC(
-                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
-                GOVUK_SIGNIN_JOURNEY_ID,
-                CLIENT_SOURCE_IP);
+                SignedJWT.parse(passportVc), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID,
-                        CLIENT_SOURCE_IP,
-                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
@@ -101,7 +96,7 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -121,31 +116,28 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
 
     @Test
     void submitMitigationVCInvokesTheLambdaClient() throws Exception {
+        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
         ciMitService.submitMitigatingVcList(
-                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
-                GOVUK_SIGNIN_JOURNEY_ID,
-                CLIENT_SOURCE_IP);
+                List.of(passportVc), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
-                        GOVUK_SIGNIN_JOURNEY_ID,
-                        CLIENT_SOURCE_IP,
-                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
@@ -160,7 +152,7 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -180,7 +172,7 @@ class CiMitServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(VC_PASSPORT_NON_DCMAW_SUCCESSFUL),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
@@ -462,8 +454,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
-            throws CiRetrievalException, JsonProcessingException {
+    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock() throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))

@@ -36,7 +36,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -66,7 +66,7 @@ class ProcessCriCallbackHandlerTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
         var bearerToken = new BearerAccessToken("value");
-        var signedJWT = SignedJWT.parse(M1A_PASSPORT_VC);
+        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())
