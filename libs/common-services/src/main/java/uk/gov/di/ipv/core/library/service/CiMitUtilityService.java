@@ -1,15 +1,20 @@
 package uk.gov.di.ipv.core.library.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 
 public class CiMitUtilityService {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
 
     public CiMitUtilityService(ConfigService configService) {
@@ -38,10 +43,27 @@ public class CiMitUtilityService {
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
-                return Optional.of(new JourneyResponse(cimitConfig.get(ci.getCode())));
+                MitigationRoute mitigationRoute =
+                        getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument());
+                return mitigationRoute == null
+                        ? Optional.empty()
+                        : Optional.of(new JourneyResponse(mitigationRoute.getEvent()));
             }
         }
         return Optional.empty();
+    }
+
+    private MitigationRoute getMitigationRoute(
+            List<MitigationRoute> mitigationRoute, String document) {
+        String documentType = document != null ? document.split("/")[0] : null;
+        return mitigationRoute.stream()
+                .filter(mr -> (mr.getDocument() == null || mr.getDocument().equals(documentType)))
+                .findFirst()
+                .orElseGet(
+                        () -> {
+                            LOGGER.info("No mitigation journey route event found.");
+                            return null;
+                        });
     }
 
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {

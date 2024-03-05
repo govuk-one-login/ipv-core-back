@@ -26,6 +26,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
@@ -728,9 +729,49 @@ class ConfigServiceTest {
     void shouldFetchCimitConfig() throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config"))
+                .thenReturn("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}");
+        Map<String, List<MitigationRoute>> expectedCiMitConfig =
+                Map.of("X01", List.of(new MitigationRoute("/journey/do-a-thing", null)));
+        Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getEvent(),
+                cimitConfig.get("X01").get(0).getEvent());
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getDocument(),
+                cimitConfig.get("X01").get(0).getDocument());
+    }
+
+    @Test
+    void shouldFetchCimitConfig_fromOldConfig() throws ConfigException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config"))
                 .thenReturn("{\"X01\":\"/journey/do-a-thing\"}");
-        Map<String, String> expectedCiMitConfig = Map.of("X01", "/journey/do-a-thing");
-        assertEquals(expectedCiMitConfig, configService.getCimitConfig());
+        Map<String, List<MitigationRoute>> expectedCiMitConfig =
+                Map.of("X01", List.of(new MitigationRoute("/journey/do-a-thing", null)));
+        Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getEvent(),
+                cimitConfig.get("X01").get(0).getEvent());
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getDocument(),
+                cimitConfig.get("X01").get(0).getDocument());
+    }
+
+    @Test
+    void shouldFetchCimitConfigWithDocumentType() throws ConfigException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config"))
+                .thenReturn(
+                        "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}");
+        Map<String, List<MitigationRoute>> expectedCiMitConfig =
+                Map.of("X01", List.of(new MitigationRoute("/journey/do-a-thing", "drivingPermit")));
+        Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getEvent(),
+                cimitConfig.get("X01").get(0).getEvent());
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).getDocument(),
+                cimitConfig.get("X01").get(0).getDocument());
     }
 
     @Test
