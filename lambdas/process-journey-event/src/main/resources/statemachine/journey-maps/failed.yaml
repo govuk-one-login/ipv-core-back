@@ -16,6 +16,14 @@ FAILED_BAV:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
 
+FAILED_NINO:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_NINO
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH_NINO
+
 FAILED_NO_TICF:
   events:
     next:
@@ -53,6 +61,21 @@ CRI_TICF_BEFORE_NO_MATCH_BAV:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR_NO_TICF
 
+CRI_TICF_BEFORE_NO_MATCH_NINO:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_NINO
+    enhanced-verification:
+      targetState: NO_MATCH_PAGE_NINO
+    fail-with-ci:
+      targetState: NO_MATCH_PAGE_NINO
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
 NO_MATCH_PAGE:
   response:
     type: page
@@ -66,6 +89,15 @@ NO_MATCH_PAGE_BAV:
     type: page
     pageId: pyi-no-match
     context: bankAccount
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+NO_MATCH_PAGE_NINO:
+  response:
+    type: page
+    pageId: pyi-no-match
+    context: nino
   events:
     next:
       targetState: RETURN_TO_RP
