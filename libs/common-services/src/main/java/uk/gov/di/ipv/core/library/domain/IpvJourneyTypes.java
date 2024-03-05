@@ -6,6 +6,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum IpvJourneyTypes {
+    // Making changes to this enum? Let the data team know. Changes here will cause changes to the
+    // IPV_SUBJOURNEY_START audit event, which they consume
+
     // Main entry point
     INITIAL_JOURNEY_SELECTION("initial-journey-selection"),
 
