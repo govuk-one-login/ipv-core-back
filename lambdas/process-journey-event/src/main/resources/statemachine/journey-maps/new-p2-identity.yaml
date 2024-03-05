@@ -597,7 +597,7 @@ PYI_ESCAPE_ABANDON_M2B:
     end:
       targetState: RETURN_TO_RP
     next:
-      targetState: IDENTITY_START_PAGE
+      targetState: RESET_IDENTITY
 
 PYI_KBV_DROPOUT_M2B:
   response:
