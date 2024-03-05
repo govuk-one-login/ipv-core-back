@@ -50,7 +50,7 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriRespo
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "F2fCriProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 public class ContractTest {
     private final JwtParser jwtParser = new JwtParser();
     @Mock private ConfigService mockConfigService;
