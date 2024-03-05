@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "PassportVcProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;

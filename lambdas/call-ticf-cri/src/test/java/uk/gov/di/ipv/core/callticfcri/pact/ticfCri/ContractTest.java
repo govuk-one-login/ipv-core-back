@@ -50,7 +50,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "TicfCriProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final String API_PATH = "/risk-assessment";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
