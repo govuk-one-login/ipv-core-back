@@ -10,12 +10,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -65,6 +66,7 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
     @SystemStub static EnvironmentVariables environmentVariables;
 
@@ -273,6 +275,17 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("technical-error-page", output.get("page"));
         assertEquals(
                 TECHNICAL_ERROR, mockIpvSessionService.getIpvSession(sessionId).getJourneyType());
+
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvent = auditEventCaptor.getValue();
+
+        assertEquals(AuditEventTypes.IPV_SUBJOURNEY_START, capturedAuditEvent.getEventName());
+        assertEquals(
+                IpvJourneyTypes.TECHNICAL_ERROR,
+                ((AuditExtensionSubjourneyType) capturedAuditEvent.getExtensions()).journeyType());
+        assertEquals("core", capturedAuditEvent.getComponentId());
+        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
     @Test
@@ -280,18 +293,15 @@ class ProcessJourneyEventHandlerTest {
         Map<String, String> input =
                 Map.of(JOURNEY, "testWithMitigationStart", IPV_SESSION_ID, "1234");
         mockIpvSessionItemAndTimeout("CRI_STATE");
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn("component_id");
 
         getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
                 .handleRequest(input, mockContext);
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
 
         assertEquals(AuditEventTypes.IPV_MITIGATION_START, capturedAuditEvent.getEventName());
-        assertEquals("component_id", capturedAuditEvent.getComponentId());
+        assertEquals("core", capturedAuditEvent.getComponentId());
         assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
         assertEquals(
