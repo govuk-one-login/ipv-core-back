@@ -1813,7 +1813,7 @@ class UserIdentityServiceTest {
     void findIdentityReturnsIdentityClaimForOperationalVcWithNoEvidence() throws Exception {
         VcStoreItem vcStoreItem =
                 TestFixtures.createVcStoreItem(
-                        USER_ID_1, HMRC_MIGRATION_CRI, vcHmrcMigrationNoEvidence());
+                        USER_ID_1, HMRC_MIGRATION_CRI, vcHmrcMigrationPCL250NoEvidence());
         List<VcStoreItem> vcStoreItems = new ArrayList<>();
         vcStoreItems.add(vcStoreItem);
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcStoreItems);
