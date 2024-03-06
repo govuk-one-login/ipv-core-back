@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
@@ -15,7 +13,6 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 
 public class CiMitUtilityService {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
 
     public CiMitUtilityService(ConfigService configService) {
