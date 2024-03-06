@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
@@ -178,7 +180,7 @@ class CiMitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationJourneyResponseShouldReturnEmptyWhenCiCanBeMitigatedWithNoDocumentType()
+    void getMitigationJourneyResponseShouldThrowExceptionWhenCiCanBeMitigatedWithNoDocumentType()
             throws Exception {
         // arrange
         var code = "ci_code";
@@ -194,11 +196,10 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
-        // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
-
         // assert
-        assertEquals(Optional.empty(), result);
+        assertThrows(
+                MitigationRouteConfigNotFoundException.class,
+                () -> ciMitUtilityService.getCiMitigationJourneyStep(cis));
     }
 
     @Test
@@ -261,7 +262,7 @@ class CiMitUtilityServiceTest {
 
     @Test
     void
-            getMitigationJourneyResponseShouldReturnEmptyWhenCiMitigationJourneyConfigNotFoundForDocType()
+            getMitigationJourneyResponseShouldThrowExceptionWhenCiMitigationJourneyConfigNotFoundForDocType()
                     throws Exception {
         // arrange
         var code = "ci_code";
@@ -275,10 +276,9 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
-        // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
-
         // assert
-        assertEquals(Optional.empty(), result);
+        assertThrows(
+                MitigationRouteConfigNotFoundException.class,
+                () -> ciMitUtilityService.getCiMitigationJourneyStep(cis));
     }
 }

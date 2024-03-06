@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -251,6 +252,36 @@ class CallTicfCriHandlerTest {
         inOrder.verifyNoMoreInteractions();
 
         assertEquals(JOURNEY_ENHANCED_VERIFICATION, lambdaResult.get("journey"));
+    }
+
+    @Test
+    void handleRequestShouldReturnJourneyErrorResponseIfCimitUtilityServiceThrows()
+            throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockUserIdentityService.getIdentityCredentials(any())).thenReturn(List.of());
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, List.of()))
+                .thenReturn(List.of(mockSignedJwt));
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
+                .thenThrow(new MitigationRouteConfigNotFoundException("Config Error"));
+
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+
+        InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        inOrder.verifyNoMoreInteractions();
+
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
+                lambdaResult.get("code"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                lambdaResult.get("message"));
     }
 
     @Test

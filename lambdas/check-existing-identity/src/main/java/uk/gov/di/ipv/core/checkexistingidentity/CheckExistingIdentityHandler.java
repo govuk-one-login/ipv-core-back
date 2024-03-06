@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -270,6 +271,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
+        } catch (MitigationRouteConfigNotFoundException e) {
+            return buildErrorResponse(ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND, e);
         }
     }
 
@@ -314,7 +317,7 @@ public class CheckExistingIdentityHandler
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String govukSigninJourneyId)
-            throws CiRetrievalException, ConfigException {
+            throws CiRetrievalException, ConfigException, MitigationRouteConfigNotFoundException {
         var contraIndicators =
                 ciMitService.getContraIndicatorsVC(
                         clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
