@@ -93,7 +93,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
@@ -173,7 +173,7 @@ class CheckExistingIdentityHandlerTest {
         }
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
-                SignedJWT.parse(vcHmrcMigrationNoEvidence()));
+                SignedJWT.parse(vcHmrcMigrationPCL250NoEvidence()));
         jwtSigner = createJwtSigner();
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);

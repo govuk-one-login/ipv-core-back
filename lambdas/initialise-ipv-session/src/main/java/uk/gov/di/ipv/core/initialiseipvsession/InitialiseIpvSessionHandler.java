@@ -30,7 +30,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -63,6 +62,7 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -424,14 +424,14 @@ public class InitialiseIpvSessionHandler
             throws SqsException, ParseException, AuditExtensionException, CredentialParseException,
                     UnrecognisedVotException {
         try {
-            AuditExtensionsVcEvidence auditExtensions =
-                    getExtensionsForAudit(signedInheritedIdentityJWT, null);
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            auditExtensions));
+                            getExtensionsForAudit(signedInheritedIdentityJWT, null),
+                            getRestrictedAuditDataForInheritedIdentity(
+                                    signedInheritedIdentityJWT)));
         } catch (ParseException | IllegalArgumentException e) {
             throw new CredentialParseException(
                     "Encountered a parsing error while attempting to parse or compare credentials",

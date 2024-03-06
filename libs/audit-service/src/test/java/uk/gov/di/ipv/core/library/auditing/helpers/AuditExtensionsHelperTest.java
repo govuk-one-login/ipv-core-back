@@ -11,13 +11,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedDataForAuditEvent;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
@@ -49,7 +51,7 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetPassportRestrictedDataForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
-        var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var restrictedData = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
@@ -58,7 +60,7 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetDLRestrictedDataForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(vcDrivingPermitNonDcmaw());
-        var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var restrictedData = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
@@ -67,7 +69,7 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetRestrictedDataWithoutDocForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(vcAddressTwo());
-        var restrictedData = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var restrictedData = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals(
                 "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":null}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
@@ -76,28 +78,43 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetPassportExpiryDateForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
-        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var auditNameParts = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals("2030-01-01", auditNameParts.getDocExpiryDate());
     }
 
     @Test
     void shouldNotGetExpiryDateForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(vcDrivingPermitMissingDrivingPermit());
-        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var auditNameParts = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertNull(auditNameParts.getDocExpiryDate());
     }
 
     @Test
     void shouldGetBRPExpiryDateForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(vcF2fBrp());
-        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var auditNameParts = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals("2030-07-13", auditNameParts.getDocExpiryDate());
     }
 
     @Test
     void shouldGetIdCardExpiryDateForAudit() throws Exception {
         SignedJWT testVerifiableCredential = SignedJWT.parse(vcF2fIdCard());
-        var auditNameParts = getRestrictedDataForAuditEvent(testVerifiableCredential);
+        var auditNameParts = getRestrictedAuditDataForF2F(testVerifiableCredential);
         assertEquals("2031-08-02", auditNameParts.getDocExpiryDate());
+    }
+
+    @Test
+    void getAuditRestrictedInheritedIdentityShouldReturnTheRightStuff() throws Exception {
+        var migrationVc = SignedJWT.parse(vcHmrcMigration());
+
+        var restricted = getRestrictedAuditDataForInheritedIdentity(migrationVc);
+
+        assertEquals(
+                "[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}]",
+                restricted.name().toString());
+        assertEquals("[{\"value\":\"1965-07-08\"}]", restricted.birthDate().toString());
+        assertEquals(
+                "[{\"personalNumber\":\"AB123456C\"}]",
+                restricted.socialSecurityRecord().toString());
     }
 }
