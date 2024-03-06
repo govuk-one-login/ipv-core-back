@@ -49,7 +49,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
@@ -304,7 +304,9 @@ class VerifiableCredentialServiceTest {
                         TestFixtures.createVcStoreItem(
                                 "a-users-id", "sausages", vcExperianFraudScoreTwo()),
                         TestFixtures.createVcStoreItem(
-                                "a-users-id", HMRC_MIGRATION_CRI, vcHmrcMigrationNoEvidence()));
+                                "a-users-id",
+                                HMRC_MIGRATION_CRI,
+                                vcHmrcMigrationPCL250NoEvidence()));
 
         // Act
         verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);

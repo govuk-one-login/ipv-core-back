@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "FraudVcProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
@@ -290,7 +290,7 @@ class CredentialTests {
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC birthDate is 1965-07-08")
                 .given("VC evidence identityFraudScore is 1")
-                .given("VC has CI of A01")
+                .given("VC has CI of CI1")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC credentialSubject address streetName is HADLEY ROAD")
                 .given("VC credentialSubject address addressType is CURRENT")
@@ -367,7 +367,7 @@ class CredentialTests {
                                 JsonNode ciNode = evidence.get("ci");
 
                                 assertEquals("2", evidence.get("identityFraudScore").asText());
-                                assertEquals("A02", ciNode.get(0).asText());
+                                assertEquals("CI1", ciNode.get(0).asText());
                                 assertEquals("GivenName", nameParts.get(0).get("type").asText());
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
@@ -472,7 +472,7 @@ class CredentialTests {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A02", ciConfig1);
+        ciConfigMap.put("CI1", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
@@ -651,7 +651,7 @@ class CredentialTests {
                                      }
                                  ],
                                  "ci": [
-                                    "A02"
+                                    "CI1"
                                  ],
                                  "txn": "dummyTxn",
                                  "identityFraudScore": 2,
@@ -699,7 +699,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "ts-L4lL6mikHbwwJ-SJrKcDdyMZHWYDFrLDibLSpwbO9M6VuuMIcNVgt4tTY7odKFux5tAUWniVyDexFf85nhg";
+            "Pz6tRajtDjIIpS8pXME2EVWcsMdBAtpJw6vB3VN_MhXLeG1tpVjLQnbN6q-hYS3DdyQpp1E9NQSbtXWhxZIXRA";
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_NO_PEP_BODY =
             """

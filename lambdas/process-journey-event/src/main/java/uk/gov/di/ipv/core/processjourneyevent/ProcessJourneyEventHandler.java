@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -117,14 +118,18 @@ public class ProcessJourneyEventHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            StepResponse stepResponse = executeJourneyEvent(journeyEvent, ipvSessionItem);
+            var auditEventUser =
+                    new AuditEventUser(
+                            clientOAuthSessionItem.getUserId(),
+                            ipvSessionId,
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress);
+
+            StepResponse stepResponse =
+                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser);
 
             if (stepResponse.getMitigationStart() != null) {
-                sendMitigationStartAuditEvent(
-                        ipvSessionId,
-                        ipAddress,
-                        clientOAuthSessionItem,
-                        stepResponse.getMitigationStart());
+                sendMitigationStartAuditEvent(auditEventUser, stepResponse.getMitigationStart());
             }
 
             return stepResponse.value();
@@ -141,8 +146,9 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private StepResponse executeJourneyEvent(String journeyEvent, IpvSessionItem ipvSessionItem)
-            throws JourneyEngineException {
+    private StepResponse executeJourneyEvent(
+            String journeyEvent, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
+            throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(ipvSessionItem.getUserState(), ipvSessionItem);
             journeyEvent = NEXT_EVENT;
@@ -162,6 +168,7 @@ public class ProcessJourneyEventHandler
                                         journeyChangeState.getInitialState()));
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
+                sendSubJourneyStartAuditEvent(auditEventUser, journeyChangeState.getJourneyType());
                 newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
             }
 
@@ -283,18 +290,8 @@ public class ProcessJourneyEventHandler
         return stateMachinesMap;
     }
 
-    private void sendMitigationStartAuditEvent(
-            String ipvSessionId,
-            String ipAddress,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            String mitigationType)
+    private void sendMitigationStartAuditEvent(AuditEventUser auditEventUser, String mitigationType)
             throws SqsException {
-        var auditEventUser =
-                new AuditEventUser(
-                        clientOAuthSessionItem.getUserId(),
-                        ipvSessionId,
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
 
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -302,5 +299,15 @@ public class ProcessJourneyEventHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionMitigationType(mitigationType)));
+    }
+
+    private void sendSubJourneyStartAuditEvent(
+            AuditEventUser auditEventUser, IpvJourneyTypes journeyType) throws SqsException {
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_SUBJOURNEY_START,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionSubjourneyType(journeyType)));
     }
 }

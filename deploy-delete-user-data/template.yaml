@@ -337,7 +337,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-         - !Ref DLQAlarmsSNSTopic
+        - !Ref DLQAlarmsSNSTopic
+      OKActions:
+        - !Ref DLQAlarmsSNSTopic
       AlarmDescription: "Delete Account SNS Topic Dead Letter Queue Alarm"
       AlarmName: !Join
         - "-"
@@ -370,7 +372,9 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-       - !Ref DLQAlarmsSNSTopic
+        - !Ref DLQAlarmsSNSTopic
+      OKActions:
+        - !Ref DLQAlarmsSNSTopic
       AlarmDescription: "Delete Account SNS Topic Dead Letter Queue Alarm"
       AlarmName: !Join
         - "-"
