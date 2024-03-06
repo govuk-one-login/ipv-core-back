@@ -606,9 +606,9 @@ class ContractTest {
             """
             {
               "nbf": 4070908800,
-              "iss": "dummyBavComponentId",
               "iat": 4070908800,
               "jti": "jti",
+              "iss": "dummyBavComponentId",
               "sub": "test-subject",
               "vc": {
                 "@context": [
@@ -661,15 +661,15 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "sDIUCpcphhbBCdBlXD59b5woGz8ZwGY3F445JmoFurJgMXZui0-4xfP_1x_ODarGPRALwXkt5UK4jImz0tbj8A";
+            "Mf2vUI7tchtEhiafnyp7oGFO0n_ngPgDseuZXGcc2aboVSErdJPiPp-6KrlRCxCq4h-1Js1Q9Ic_R8FUSRn3AA";
 
     private static final String FAILED_BAV_VC_BODY =
             """
             {
               "nbf": 4070908800,
-              "iss": "dummyBavComponentId",
               "iat": 4070908800,
               "jti": "jti",
+              "iss": "dummyBavComponentId",
               "sub": "test-subject",
               "vc": {
                 "@context": [
@@ -725,5 +725,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "ia1F5IiW8Rstrm2W_0HIca4n9lRbXVTPiuqDkG39TeMOWkpBRSRr0AO4R0picXX861dz81prMha2O8k2uCzJwA";
+            "jOJKq-pb8-DLvaUFqOzaBHqlTOHNAqJTRSBiSYRZ-8bctZQp77FltOS2oquePfTEQ5hgBKdO61rMGfNXvGuO8Q";
 }
