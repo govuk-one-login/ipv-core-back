@@ -194,7 +194,7 @@ class ContractTest {
                 .given("dummyBavComponentId is a valid issuer")
                 .given("VC evidence failedCheckDetails identityCheckPolicy is none")
                 .given("VC evidence failedCheckDetails checkMethod is data")
-                .given("VC evidence has a CI of D15")
+                .given("VC evidence has a CI of dummyCi")
                 .given("VC evidence validityScore is 0")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence txn is dummyTxn")
@@ -282,7 +282,7 @@ class ContractTest {
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
 
-                                assertEquals("D15", ciNode.get(0).asText());
+                                assertEquals("dummyCi", ciNode.get(0).asText());
 
                                 JsonNode bankAccountNode =
                                         credentialSubject.get("bankAccount").get(0);
@@ -531,7 +531,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D15", ciConfig1);
+        ciConfigMap.put("dummyCi", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
@@ -714,7 +714,7 @@ class ContractTest {
                       }
                     ],
                     "ci": [
-                      "D15"
+                      "dummyCi"
                     ]
                   }
                 ]
@@ -725,5 +725,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "jOJKq-pb8-DLvaUFqOzaBHqlTOHNAqJTRSBiSYRZ-8bctZQp77FltOS2oquePfTEQ5hgBKdO61rMGfNXvGuO8Q";
+            "_sW-3UzTjh0x6n1v0uvuZSOIwQ9GAMCv-HIlWdbaCYCgSjysIQg2e3rBaJAuqg21qm6uldYSYW3O1XFtVFtwJw";
 }
