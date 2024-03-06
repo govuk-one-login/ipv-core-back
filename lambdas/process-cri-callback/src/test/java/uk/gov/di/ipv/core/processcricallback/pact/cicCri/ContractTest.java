@@ -483,8 +483,8 @@ class ContractTest {
             """
             {
               "nbf": 4070908800,
-              "iss": "dummyClaimedIdentityComponentId",
               "iat": 4070908800,
+              "iss": "dummyClaimedIdentityComponentId",
               "jti": "jti",
               "sub": "test-subject",
               "vc": {
@@ -524,5 +524,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "Sv9G7z26In_fkdYIv8aVuWx1X6A0jp_HxV2eXWHYfhimAM6dFRUChKm6deKG4wT3AlMKdwbwxifaWBBPBLniKg";
+            "eEofDmnpJ-KgbNOyZ-E_jXq2rU6XcDVYarKaPJebYdPFpKWJ-abSC8us9ZL7uHkaY8YwCkd6lAHMNDp6jdmy8A";
 }
