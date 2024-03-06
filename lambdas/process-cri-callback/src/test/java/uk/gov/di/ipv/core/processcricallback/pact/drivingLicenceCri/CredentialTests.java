@@ -486,7 +486,7 @@ class CredentialTests {
     }
 
     @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns500(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -500,12 +500,12 @@ class CredentialTests {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(500)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns500")
     void
             fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
                     MockServer mockServer) throws URISyntaxException, CriApiException {
