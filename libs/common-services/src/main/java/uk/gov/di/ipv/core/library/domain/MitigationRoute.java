@@ -1,15 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonRootName(value = "routes")
-public class MitigationRoute {
-    private String event;
-    private String document;
-}
+@ExcludeFromGeneratedCoverageReport
+public record MitigationRoute(String event, String document) {}

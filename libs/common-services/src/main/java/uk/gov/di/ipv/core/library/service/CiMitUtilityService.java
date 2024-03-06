@@ -47,7 +47,7 @@ public class CiMitUtilityService {
                         getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument());
                 return mitigationRoute == null
                         ? Optional.empty()
-                        : Optional.of(new JourneyResponse(mitigationRoute.getEvent()));
+                        : Optional.of(new JourneyResponse(mitigationRoute.event()));
             }
         }
         return Optional.empty();
@@ -57,7 +57,7 @@ public class CiMitUtilityService {
             List<MitigationRoute> mitigationRoute, String document) {
         String documentType = document != null ? document.split("/")[0] : null;
         return mitigationRoute.stream()
-                .filter(mr -> (mr.getDocument() == null || mr.getDocument().equals(documentType)))
+                .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
                 .findFirst()
                 .orElseGet(
                         () -> {

@@ -740,11 +740,21 @@ class ConfigServiceTest {
                         List.of(new MitigationRoute("/journey/do-a-thing", expectedDocument)));
         Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
         assertEquals(
-                expectedCiMitConfig.get("X01").get(0).getEvent(),
-                cimitConfig.get("X01").get(0).getEvent());
+                expectedCiMitConfig.get("X01").get(0).event(),
+                cimitConfig.get("X01").get(0).event());
         assertEquals(
-                expectedCiMitConfig.get("X01").get(0).getDocument(),
-                cimitConfig.get("X01").get(0).getDocument());
+                expectedCiMitConfig.get("X01").get(0).document(),
+                cimitConfig.get("X01").get(0).document());
+    }
+
+    private static Stream<Arguments> provideConfiguredSsmCimitConfig() {
+        return Stream.of(
+                Arguments.of("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}", null),
+                Arguments.of(
+                        "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}",
+                        "drivingPermit"),
+                Arguments.of("{\"X01\":\"/journey/do-a-thing\"}", null) // old cimit-config
+                );
     }
 
     @Test
@@ -772,15 +782,5 @@ class ConfigServiceTest {
         return (featureSet != null && !featureSet.isBlank())
                 ? Collections.singletonList(featureSet)
                 : Collections.emptyList();
-    }
-
-    private static Stream<Arguments> provideConfiguredSsmCimitConfig() {
-        return Stream.of(
-                Arguments.of("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}", null),
-                Arguments.of(
-                        "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}",
-                        "drivingPermit"),
-                Arguments.of("{\"X01\":\"/journey/do-a-thing\"}", null) // old cimit-config
-                );
     }
 }
