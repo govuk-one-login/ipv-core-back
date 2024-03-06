@@ -196,7 +196,8 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
@@ -219,7 +220,8 @@ PYI_ESCAPE:
     next:
       targetState: RESET_IDENTITY
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 PYI_CRI_ESCAPE:
   response:
@@ -242,7 +244,8 @@ PYI_CRI_ESCAPE_NO_F2F:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 EVALUATE_GPG45_SCORES:
   response:
@@ -585,7 +588,8 @@ PYI_ESCAPE_M2B:
     bankAccount:
       targetState: BANK_ACCOUNT_START_PAGE
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 PYI_KBV_DROPOUT_M2B:
   response:
