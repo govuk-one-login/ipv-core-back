@@ -180,14 +180,20 @@ class CiMitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationJourneyResponseShouldThrowExceptionWhenCiCanBeMitigatedWithNoDocumentType()
-            throws Exception {
+    void
+            getMitigationJourneyResponseShouldThrowWhenCiCanBeMitigatedWithNonExistingMitigationRouteForDocumentType()
+                    throws Exception {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
-        String document = "doc_type/213123";
+        String document = "nondoc_type/213123";
         String documentType = "doc_type";
-        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
@@ -243,7 +249,6 @@ class CiMitUtilityServiceTest {
             throws Exception {
         // arrange
         var code = "ci_code";
-        var journey = "some_mitigation";
         var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
         when(mockConfigService.getCimitConfig())
@@ -261,9 +266,8 @@ class CiMitUtilityServiceTest {
     }
 
     @Test
-    void
-            getMitigationJourneyResponseShouldThrowExceptionWhenCiMitigationJourneyConfigNotFoundForDocType()
-                    throws Exception {
+    void getMitigationJourneyResponseShouldThrowWhenCiMitigationJourneyConfigNotFoundForDocType()
+            throws Exception {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
