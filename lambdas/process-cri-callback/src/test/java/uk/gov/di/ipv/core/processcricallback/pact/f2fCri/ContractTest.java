@@ -54,7 +54,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "F2fCriProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;

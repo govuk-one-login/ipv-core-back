@@ -14,13 +14,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 public class CriResponseServiceTest {
@@ -53,7 +53,7 @@ public class CriResponseServiceTest {
         String criId = "criId";
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
-                        USER_ID_1, "ukPassport", VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
+                        USER_ID_1, "ukPassport", PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(criResponseItem);
 
@@ -96,14 +96,14 @@ public class CriResponseServiceTest {
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(
-                        USER_ID_1, F2F_CRI, VC_PASSPORT_NON_DCMAW_SUCCESSFUL, Instant.now());
+                        USER_ID_1, F2F_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
         when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
         CriResponseItem retrievedCredentialItem =
                 criResponseService.getFaceToFaceRequest(USER_ID_1);
 
-        assertTrue(!Objects.isNull(retrievedCredentialItem));
+        assertFalse(Objects.isNull(retrievedCredentialItem));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class CriResponseServiceTest {
                 createCriResponseStoreItem(
                         USER_ID_1,
                         TEST_CREDENTIAL_ISSUER,
-                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         Instant.now());
 
         when(mockDataStore.delete(USER_ID_1, TEST_CREDENTIAL_ISSUER)).thenReturn(criResponseItem);
@@ -128,7 +128,7 @@ public class CriResponseServiceTest {
                 createCriResponseStoreItem(
                         USER_ID_1,
                         TEST_CREDENTIAL_ISSUER,
-                        VC_PASSPORT_NON_DCMAW_SUCCESSFUL,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         Instant.now());
         when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
 

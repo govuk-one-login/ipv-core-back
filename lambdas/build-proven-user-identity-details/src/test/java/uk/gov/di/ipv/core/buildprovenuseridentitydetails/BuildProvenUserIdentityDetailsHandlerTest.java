@@ -44,20 +44,19 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_MISSING_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
-
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
@@ -67,7 +66,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");
     private static final OauthCriConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
             createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
-
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -112,13 +110,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -150,15 +150,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                                        TEST_USER_ID, PASSPORT_CRI, vcPassportMissingName()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                                        TEST_USER_ID, PASSPORT_CRI, vcPassportMissingBirthDate()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -190,13 +190,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, ADDRESS_CRI, M1A_MULTI_ADDRESS_VC),
+                                        TEST_USER_ID, ADDRESS_CRI, vcAddressMultipleAddresses()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -233,15 +235,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID,
                                         ADDRESS_CRI,
-                                        M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD),
+                                        vcAddressMultipleAddressesNoValidFrom()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -258,7 +262,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("S5 6UN", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        assertEquals("CA14 5PH", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -279,7 +283,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -306,11 +310,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -341,13 +347,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_FAILED_PASSPORT_VC),
+                                        TEST_USER_ID, PASSPORT_CRI, vcPassportM1aFailed()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -378,13 +384,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_NAME),
+                                        TEST_USER_ID, PASSPORT_CRI, vcPassportMissingName()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -415,13 +421,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, VC_PASSPORT_MISSING_BIRTH_DATE),
+                                        TEST_USER_ID, PASSPORT_CRI, vcPassportMissingBirthDate()),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -472,7 +478,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         JourneyRequest input = createRequestEvent();
         JourneyErrorResponse errorResponse =
@@ -497,13 +503,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC)));
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a())));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -530,15 +538,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
+                                        TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -570,15 +580,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
+                                        TEST_USER_ID,
+                                        PASSPORT_CRI,
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
                                 TestFixtures.createVcStoreItem(
                                         TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
+                                        TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
                                 TestFixtures.createVcStoreItem(
-                                        TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION)));
+                                        TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration())));
 
         when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
                 .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
@@ -594,7 +606,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 toResponseClass(
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
-        assertEquals("Kenneth Decerqueira", provenUserIdentityDetails.getName());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertNull(provenUserIdentityDetails.getAddresses());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestricted;
 
 import java.time.Instant;
 

@@ -39,8 +39,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ICAO_ISSUER_CODE;
@@ -67,7 +67,7 @@ public class VcHelper {
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
 
-        if (evidenceArray == null) {
+        if (evidenceArray == null || evidenceArray.isEmpty()) {
             String vcIssuer = vc.getJWTClaimsSet().getIssuer();
             if (excludedCredentialIssuers.contains(vcIssuer)) {
                 return true;
@@ -131,9 +131,9 @@ public class VcHelper {
         var jwtClaimsSet = credential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
-        if (credentialSubject != null) {
+        if (credentialSubject != null && !credentialSubject.isEmpty()) {
             var birthDateArr = (JSONArray) credentialSubject.get(VC_BIRTH_DATE);
-            if (birthDateArr != null) {
+            if (birthDateArr != null && !birthDateArr.isEmpty()) {
                 var dobObj = (JSONObject) birthDateArr.get(ONLY);
                 age = getAge(dobObj.getAsString(VC_ATTR_VALUE_NAME));
             }
@@ -157,7 +157,7 @@ public class VcHelper {
                 }
             }
             // If Passport/ResidencePermit not exist then try for DL now
-            var dlField = credentialSubject.get(VC_DRIVING_LICENCE);
+            var dlField = credentialSubject.get(VC_DRIVING_PERMIT);
             if (dlField instanceof JSONArray dlFieldArr) {
                 var issuer =
                         ((JSONObject) dlFieldArr.get(ONLY))

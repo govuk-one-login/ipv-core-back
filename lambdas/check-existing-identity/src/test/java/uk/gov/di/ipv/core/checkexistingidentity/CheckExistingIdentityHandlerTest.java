@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -88,15 +87,14 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_PASSPORT_NON_DCMAW_SUCCESSFUL;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
@@ -119,24 +117,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
-    private static final List<VcStoreItem> VC_STORE_ITEMS =
-            List.of(
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, PASSPORT_CRI, M1A_PASSPORT_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, EXPERIAN_KBV_CRI, M1A_VERIFICATION_VC),
-                    TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
-                    TestFixtures.createVcStoreItem(
-                            TEST_USER_ID, HMRC_MIGRATION_CRI, VC_HMRC_MIGRATION));
-    private static final List<String> CREDENTIALS =
-            List.of(
-                    M1A_PASSPORT_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    M1A_VERIFICATION_VC,
-                    M1B_DCMAW_VC);
+    private static List<VcStoreItem> VC_STORE_ITEMS;
+    private static List<String> CREDENTIALS;
     private static final String TICF_CRI = "ticf";
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<SignedJWT> PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY =
@@ -160,7 +142,6 @@ class CheckExistingIdentityHandlerTest {
     private static ECDSASigner jwtSigner;
     private static SignedJWT pcl200Vc;
     private static SignedJWT pcl250Vc;
-
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -180,15 +161,34 @@ class CheckExistingIdentityHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
+        CREDENTIALS =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a(),
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.addAll(PARSED_CREDENTIALS);
         PARSED_CREDENTIALS_WITH_INHERITED_IDENTITY.add(
-                SignedJWT.parse(VC_INHERITED_IDENTITY_MIGRATION_WITH_NO_EVIDENCE));
+                SignedJWT.parse(vcHmrcMigrationPCL250NoEvidence()));
         jwtSigner = createJwtSigner();
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);
+        VC_STORE_ITEMS =
+                List.of(
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_FRAUD_CRI, M1A_EXPERIAN_FRAUD_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, EXPERIAN_KBV_CRI, vcVerificationM1a()),
+                        TestFixtures.createVcStoreItem(TEST_USER_ID, DCMAW_CRI, M1B_DCMAW_VC),
+                        TestFixtures.createVcStoreItem(
+                                TEST_USER_ID, HMRC_MIGRATION_CRI, vcHmrcMigration()));
     }
 
     @BeforeEach
@@ -490,7 +490,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(false);
@@ -524,7 +524,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         when(userIdentityService.areVCsCorrelated(any())).thenReturn(false);
 
         clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), Vot.PCL200.name(), Vot.P2.name()));
@@ -730,12 +730,11 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException, SqsException {
+    void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -767,7 +766,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -798,7 +797,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -888,7 +887,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
-                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, M1A_F2F_VC)));
+                        List.of(TestFixtures.createVcStoreItem(TEST_USER_ID, F2F_CRI, vcF2fM1a())));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1262,7 +1261,7 @@ class CheckExistingIdentityHandlerTest {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F_CRI);
-        criResponseItem.setIssuerResponse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
+        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         criResponseItem.setDateCreated(Instant.now());
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
         return criResponseItem;
@@ -1272,7 +1271,7 @@ class CheckExistingIdentityHandlerTest {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F_CRI);
-        criResponseItem.setIssuerResponse(VC_PASSPORT_NON_DCMAW_SUCCESSFUL);
+        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
         return criResponseItem;

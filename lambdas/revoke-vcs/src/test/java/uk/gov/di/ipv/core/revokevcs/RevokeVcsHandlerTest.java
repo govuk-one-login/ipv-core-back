@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -28,6 +27,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class RevokeVcsHandlerTest {
@@ -41,7 +41,7 @@ class RevokeVcsHandlerTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
 
     @Test
-    void shouldRevokeVc() throws IOException, SqsException {
+    void shouldRevokeVc() throws Exception {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
@@ -49,7 +49,7 @@ class RevokeVcsHandlerTest {
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        TestFixtures.M1A_PASSPORT_VC,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         Instant.now(),
                         Instant.now());
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
@@ -89,7 +89,7 @@ class RevokeVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleError() throws IOException, SqsException {
+    void shouldHandleError() throws Exception {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
@@ -97,7 +97,7 @@ class RevokeVcsHandlerTest {
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        TestFixtures.M1A_PASSPORT_VC,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         Instant.now(),
                         Instant.now());
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))

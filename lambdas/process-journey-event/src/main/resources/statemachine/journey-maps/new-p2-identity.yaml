@@ -513,6 +513,9 @@ CRI_NINO_WITH_SCOPE_M2B:
   events:
     next:
       targetState: ADDRESS_AND_FRAUD_M2B
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NINO
 
 ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD

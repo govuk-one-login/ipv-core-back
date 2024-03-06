@@ -49,9 +49,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
@@ -61,7 +61,7 @@ class CallTicfCriHandlerTest {
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
-    public static final List<String> VC_IN_STORE =
+    public static List<String> VC_IN_STORE =
             List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
@@ -72,7 +72,6 @@ class CallTicfCriHandlerTest {
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     public static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
-
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -127,14 +126,14 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldOnlySendVcsReceivedInCurrentSession() throws Exception {
-        spyIpvSessionItem.setVcReceivedThisSession(List.of(M1A_ADDRESS_VC));
+        List<String> addressVCs = List.of(M1A_ADDRESS_VC);
+        spyIpvSessionItem.setVcReceivedThisSession(addressVCs);
 
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockUserIdentityService.getIdentityCredentials(any())).thenReturn(VC_IN_STORE);
-        when(mockTicfCriService.getTicfVc(
-                        clientOAuthSessionItem, spyIpvSessionItem, List.of(M1A_ADDRESS_VC)))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, addressVCs))
                 .thenReturn(List.of(mockSignedJwt));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

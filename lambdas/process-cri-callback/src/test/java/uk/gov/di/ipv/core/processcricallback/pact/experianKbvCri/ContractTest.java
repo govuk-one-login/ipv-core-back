@@ -66,7 +66,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "ExperianKbvCriProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final String TEST_USER = "test-subject";
     private static final String TEST_ISSUER = "dummyExperianKbvComponentId";
