@@ -2,6 +2,7 @@ plugins {
 	id "application"
 	id "idea"
 	id "com.diffplug.spotless"
+	id "jacoco"
 }
 
 repositories {
@@ -50,4 +51,16 @@ java {
 
 application {
 	mainClass = 'uk.gov.di.ipv.coreback.App'
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
 }
