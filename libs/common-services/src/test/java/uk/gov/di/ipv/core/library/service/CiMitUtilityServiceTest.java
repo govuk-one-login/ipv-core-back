@@ -11,8 +11,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
@@ -153,9 +156,17 @@ class CiMitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
-        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        String document = "doc_type/213123";
+        String documentType = "doc_type";
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
-        when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -165,7 +176,58 @@ class CiMitUtilityServiceTest {
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 
         // assert
-        assertEquals(result, Optional.of(new JourneyResponse(journey)));
+        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+    }
+
+    @Test
+    void getMitigationJourneyResponseShouldReturnMitigationWhenCiCanBeMitigatedWithNoDocInCi()
+            throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, null))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        // act
+        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+
+        // assert
+        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+    }
+
+    @Test
+    void
+            getMitigationJourneyResponseShouldThrowWhenCiCanBeMitigatedWithNonExistingMitigationRouteForDocumentType()
+                    throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String document = "nondoc_type/213123";
+        String documentType = "doc_type";
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .build();
+        var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        // assert
+        assertThrows(
+                MitigationRouteConfigNotFoundException.class,
+                () -> ciMitUtilityService.getCiMitigationJourneyStep(cis));
     }
 
     @Test
@@ -180,7 +242,7 @@ class CiMitUtilityServiceTest {
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 
         // assert
-        assertEquals(result, Optional.empty());
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
@@ -194,13 +256,14 @@ class CiMitUtilityServiceTest {
                         .mitigation(List.of(Mitigation.builder().build()))
                         .build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
-        when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
 
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 
         // assert
-        assertEquals(result, Optional.empty());
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
@@ -208,10 +271,10 @@ class CiMitUtilityServiceTest {
             throws Exception {
         // arrange
         var code = "ci_code";
-        var journey = "some_mitigation";
         var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
         var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
-        when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, "some_mitigation"));
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -1, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -221,6 +284,27 @@ class CiMitUtilityServiceTest {
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 
         // assert
-        assertEquals(result, Optional.empty());
+        assertEquals(Optional.empty(), result);
+    }
+
+    @Test
+    void getMitigationJourneyResponseShouldThrowWhenCiMitigationJourneyConfigNotFoundForDocType()
+            throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, "documentType"))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        // assert
+        assertThrows(
+                MitigationRouteConfigNotFoundException.class,
+                () -> ciMitUtilityService.getCiMitigationJourneyStep(cis));
     }
 }
