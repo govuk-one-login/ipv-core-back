@@ -17,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nimbusds.jwt.JWTClaimNames.EXPIRATION_TIME;
 import static com.nimbusds.jwt.JWTClaimNames.ISSUER;
 import static com.nimbusds.jwt.JWTClaimNames.JWT_ID;
 import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
@@ -49,7 +48,6 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
         return signTestJWT(claimsSet);
@@ -72,16 +70,14 @@ public class VerifiableCredentialGenerator {
     }
 
     public static String generateVerifiableCredential(TestVc vcClaim) {
-        Instant now = Instant.now();
-        JWTClaimsSet claimsSet =
-                new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980")
-                        .claim(ISSUER, "https://review-p.staging.account.gov.uk")
-                        .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, vcClaim)
-                        .build();
         try {
-            return signTestJWT(claimsSet);
+            return generateVerifiableCredential(
+                    vcClaim,
+                    "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
+                    "https://review-p.staging.account.gov.uk",
+                    null,
+                    null,
+                    null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

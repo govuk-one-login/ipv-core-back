@@ -20,6 +20,10 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 
 public interface VcFixtures {
+    String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
+    String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
+    String TEST_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
+
     List<TestVc.TestEvidence> SUCCESSFUL_EVIDENCE =
             List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(2).build());
     List<TestVc.TestEvidence> UNSUCCESSFUL_EVIDENCE =
@@ -33,7 +37,7 @@ public interface VcFixtures {
                             .ciReasons(List.of(Map.of("ci", "testValue", "reason", "testReason")))
                             .build());
 
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE =
+    List<TestVc.TestEvidence> FRAUD_EVIDENCE_NO_CHECK_DETAILS =
             List.of(
                     TestVc.TestEvidence.builder()
                             .checkDetails(null)
@@ -49,7 +53,7 @@ public interface VcFixtures {
                             .identityFraudScore(0)
                             .build());
 
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_SCORE_ONE =
+    List<TestVc.TestEvidence> FRAUD_EVIDENCE_WITH_CHECK_DETAILS =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("RB000180729610")
@@ -84,7 +88,7 @@ public interface VcFixtures {
                             .identityFraudScore(1)
                             .build());
 
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE =
+    List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("bcd2346")
@@ -104,7 +108,7 @@ public interface VcFixtures {
                                                     3)))
                             .build());
 
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE_2 =
+    List<TestVc.TestEvidence> DCMAW_EVIDENCE_DATA_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("cbf56c46-f33a-49de-8be0-c6318d8eecfc")
@@ -260,7 +264,7 @@ public interface VcFixtures {
                             new NameParts("Mary", VC_GIVEN_NAME),
                             new NameParts("Watson", VC_FAMILY_NAME)));
 
-    Map<String, Object> DRIVING_PERMIT =
+    Map<String, Object> DRIVING_PERMIT_DVA =
             Map.of(
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01",
@@ -268,7 +272,7 @@ public interface VcFixtures {
                     "issueNumber", 123456,
                     "issueDate", "2018-04-19");
 
-    Map<String, Object> DRIVING_PERMIT_2 =
+    Map<String, Object> DRIVING_PERMIT_DVLA =
             Map.of(
                     "personalNumber", "PARKE710112PBFGA",
                     "expiryDate", "2032-02-02",
@@ -376,8 +380,8 @@ public interface VcFixtures {
                                             .build())
                             .evidence(null)
                             .build(),
-                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                    "https://review-a.integration.account.gov.uk",
+                    TEST_SUBJECT,
+                    TEST_ISSUER_INTEGRATION,
                     Instant.ofEpochSecond(1658829720));
 
     static String vcAddressMultipleAddresses() {
@@ -389,8 +393,8 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-a.integration.account.gov.uk",
+                TEST_SUBJECT,
+                TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
     }
 
@@ -403,15 +407,15 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-a.integration.account.gov.uk",
+                TEST_SUBJECT,
+                TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
     }
 
     String M1A_EXPERIAN_FRAUD_VC =
             generateVerifiableCredential(
                     TestVc.builder()
-                            .evidence(FRAUD_EVIDENCE)
+                            .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
@@ -419,7 +423,7 @@ public interface VcFixtures {
                                             .passport(null)
                                             .build())
                             .build(),
-                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                    TEST_SUBJECT,
                     "https://review-f.integration.account.gov.uk",
                     Instant.ofEpochSecond(1658829758));
 
@@ -435,7 +439,7 @@ public interface VcFixtures {
                         .evidence(FRAUD_FAILED_EVIDENCE)
                         .credentialSubject(credentialSubject)
                         .build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                TEST_SUBJECT,
                 "https://review-f.integration.account.gov.uk",
                 Instant.ofEpochSecond(1658829758));
     }
@@ -448,11 +452,11 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_SCORE_ONE)
+                        .evidence(FRAUD_EVIDENCE_WITH_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
@@ -474,7 +478,7 @@ public interface VcFixtures {
                         .credentialSubject(credentialSubject)
                         .build(),
                 "user-id",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1652953380));
     }
 
@@ -491,7 +495,7 @@ public interface VcFixtures {
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
@@ -499,12 +503,12 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of(DRIVING_PERMIT))
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
                         .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE)
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 Instant.ofEpochSecond(1705986521));
@@ -518,7 +522,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE)
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 Instant.ofEpochSecond(1705986521));
@@ -545,12 +549,12 @@ public interface VcFixtures {
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .drivingPermit(List.of(DRIVING_PERMIT_2))
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
                         .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_2)
+                        .evidence(DCMAW_EVIDENCE_DATA_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -699,7 +703,7 @@ public interface VcFixtures {
                                     TestVc.TestCredentialSubject.builder()
                                             .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
                                             .address(List.of(ADDRESS_4))
-                                            .drivingPermit(List.of(DRIVING_PERMIT))
+                                            .drivingPermit(List.of(DRIVING_PERMIT_DVA))
                                             .passport(null)
                                             .build())
                             .build(),
