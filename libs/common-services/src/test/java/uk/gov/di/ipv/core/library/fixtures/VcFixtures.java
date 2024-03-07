@@ -861,6 +861,7 @@ public interface VcFixtures {
     static String vcHmrcMigrationPCL250NoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
                         .build();
         return generateVerifiableCredential(
@@ -878,6 +879,7 @@ public interface VcFixtures {
     static String vcHmrcMigrationPCL200NoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
                         .build();
         return generateVerifiableCredential(
