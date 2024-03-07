@@ -2,9 +2,12 @@ package uk.gov.di.ipv.core.library.service;
 
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
@@ -33,15 +36,31 @@ public class CiMitUtilityService {
     }
 
     public Optional<JourneyResponse> getCiMitigationJourneyStep(ContraIndicators contraIndicators)
-            throws ConfigException {
+            throws ConfigException, MitigationRouteConfigNotFoundException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
-                return Optional.of(new JourneyResponse(cimitConfig.get(ci.getCode())));
+                return Optional.of(
+                        new JourneyResponse(
+                                getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
+                                        .event()));
             }
         }
         return Optional.empty();
+    }
+
+    private MitigationRoute getMitigationRoute(
+            List<MitigationRoute> mitigationRoute, String document)
+            throws MitigationRouteConfigNotFoundException {
+        String documentType = document != null ? document.split("/")[0] : null;
+        return mitigationRoute.stream()
+                .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
+                .findFirst()
+                .orElseThrow(
+                        () ->
+                                new MitigationRouteConfigNotFoundException(
+                                        "No mitigation journey route event found."));
     }
 
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {

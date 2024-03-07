@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
@@ -276,13 +277,26 @@ public class ConfigService {
         }
     }
 
-    public Map<String, String> getCimitConfig() throws ConfigException {
+    public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
         final String cimitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
             return objectMapper.readValue(
-                    cimitConfig, new TypeReference<HashMap<String, String>>() {});
+                    cimitConfig, new TypeReference<HashMap<String, List<MitigationRoute>>>() {});
         } catch (JsonProcessingException e) {
-            throw new ConfigException("Failed to parse CIMit configuration");
+            try {
+                // fall back to try out with old cimit config
+                Map<String, String> oldCimitConfig =
+                        objectMapper.readValue(
+                                cimitConfig, new TypeReference<HashMap<String, String>>() {});
+                Map<String, List<MitigationRoute>> cimitMitigationRoutes = new HashMap<>();
+                oldCimitConfig.forEach(
+                        (key, value) ->
+                                cimitMitigationRoutes.put(
+                                        key, List.of(new MitigationRoute(value, null))));
+                return cimitMitigationRoutes;
+            } catch (JsonProcessingException ex) {
+                throw new ConfigException("Failed to parse CIMit configuration");
+            }
         }
     }
 

@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,6 +28,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
@@ -44,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
@@ -724,13 +728,33 @@ class ConfigServiceTest {
         }
     }
 
-    @Test
-    void shouldFetchCimitConfig() throws ConfigException {
+    @ParameterizedTest
+    @MethodSource("provideConfiguredSsmCimitConfig")
+    void shouldFetchCimitConfig(String cimitSsmConfig, String expectedDocument)
+            throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/cimit/config"))
-                .thenReturn("{\"X01\":\"/journey/do-a-thing\"}");
-        Map<String, String> expectedCiMitConfig = Map.of("X01", "/journey/do-a-thing");
-        assertEquals(expectedCiMitConfig, configService.getCimitConfig());
+        when(ssmProvider.get("/test/core/cimit/config")).thenReturn(cimitSsmConfig);
+        Map<String, List<MitigationRoute>> expectedCiMitConfig =
+                Map.of(
+                        "X01",
+                        List.of(new MitigationRoute("/journey/do-a-thing", expectedDocument)));
+        Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).event(),
+                cimitConfig.get("X01").get(0).event());
+        assertEquals(
+                expectedCiMitConfig.get("X01").get(0).document(),
+                cimitConfig.get("X01").get(0).document());
+    }
+
+    private static Stream<Arguments> provideConfiguredSsmCimitConfig() {
+        return Stream.of(
+                Arguments.of("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}", null),
+                Arguments.of(
+                        "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}",
+                        "drivingPermit"),
+                Arguments.of("{\"X01\":\"/journey/do-a-thing\"}", null) // old cimit-config
+                );
     }
 
     @Test
