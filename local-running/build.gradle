@@ -42,6 +42,10 @@ dependencies {
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
+			"org.mockito:mockito-junit-jupiter:5.10.0"
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
