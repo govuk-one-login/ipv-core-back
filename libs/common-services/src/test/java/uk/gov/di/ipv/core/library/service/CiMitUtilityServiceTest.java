@@ -180,6 +180,28 @@ class CiMitUtilityServiceTest {
     }
 
     @Test
+    void getMitigationJourneyResponseShouldReturnMitigationWhenCiCanBeMitigatedWithNoDocInCi()
+            throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var cis = ContraIndicators.builder().contraIndicatorsMap(Map.of(code, ci)).build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, null))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        // act
+        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+
+        // assert
+        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+    }
+
+    @Test
     void
             getMitigationJourneyResponseShouldThrowWhenCiCanBeMitigatedWithNonExistingMitigationRouteForDocumentType()
                     throws Exception {
