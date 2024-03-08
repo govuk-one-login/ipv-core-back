@@ -184,6 +184,7 @@ class CredentialTests {
                 .given("VC birthDate is 1965-07-08")
                 .given("VC evidence identityFraudScore is 1")
                 .given("VC evidence txn is dummyTxn")
+                .given("VC evidence failed txn is dummyTxnFailed")
                 .given("VC credentialSubject address streetName is HADLEY ROAD")
                 .given("VC credentialSubject address buildingName is LE FLAMBE")
                 .given("VC credentialSubject address addressType is CURRENT")
@@ -771,7 +772,7 @@ class CredentialTests {
                     ],
                     "failedCheckDetails": [
                       {
-                        "txn": "dummyTxn",
+                        "txn": "dummyTxnFailed",
                         "checkMethod": "data",
                         "fraudCheck": "impersonation_risk_check"
                       },
@@ -790,5 +791,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "gYnYjyffTlX4xkfTelWiPaxfztmD4yu0N-Tv89iqcOydLlP0FGAYs4kzIjwS9NeAPMsDGz8Euqw_MAbBOXSZ8Q";
+            "wAh0ij6THvQqCWmBFx5CMC7zR0d52COhm4l2taclMJgJwgt_K-FgXCCjrcqpih6fF4ypocsnGDZQKoLaJ7o37g";
 }
