@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -160,6 +161,46 @@ class ProcessCriCallbackHandlerTest {
         // Act & Assert
         assertThrows(
                 InvalidCriCallbackRequestException.class,
+                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+    }
+
+    @Test
+    void getJourneyResponseShouldThrowWhenCriStoringServiceThrows() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem = buildValidCriOAuthSessionItem();
+        var bearerToken = new BearerAccessToken("value");
+        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId(clientOAuthSessionItem.getUserId())
+                        .verifiableCredentials(List.of(signedJWT))
+                        .credentialStatus(VerifiableCredentialStatus.CREATED)
+                        .build();
+
+        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
+                .thenReturn(bearerToken);
+        when(mockCriApiService.fetchVerifiableCredential(
+                        bearerToken, callbackRequest, criOAuthSessionItem))
+                .thenReturn(vcResponse);
+        when(mockCriCheckingService.checkVcResponse(
+                        vcResponse, callbackRequest, clientOAuthSessionItem))
+                .thenThrow(
+                        new MitigationRouteConfigNotFoundException(
+                                "mitigation route event not found"));
+        // Assert
+        assertThrows(
+                MitigationRouteConfigNotFoundException.class,
                 () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
     }
 

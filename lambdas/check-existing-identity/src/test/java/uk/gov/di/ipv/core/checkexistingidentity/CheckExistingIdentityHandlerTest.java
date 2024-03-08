@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -1027,6 +1028,29 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
         assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToGetMitigationRouteFromCimitConfig() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(ciMitUtilityService.getCiMitigationJourneyStep(any()))
+                .thenThrow(
+                        new MitigationRouteConfigNotFoundException(
+                                "mitigation route event not found"));
+
+        JourneyErrorResponse response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND.getMessage(),
+                response.getMessage());
     }
 
     @Test
