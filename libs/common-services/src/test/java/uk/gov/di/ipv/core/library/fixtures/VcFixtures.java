@@ -284,17 +284,23 @@ public interface VcFixtures {
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01");
 
-    String PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
-            generateVerifiableCredential(
-                    TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
-                    Instant.ofEpochSecond(1705986521));
-
     List<Object> PASSPORT_DETAILS =
             List.of(
                     Map.of(
                             "documentNumber", "321654987",
                             "icaoIssuerCode", "GBR",
                             "expiryDate", "2030-01-01"));
+
+    String PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
+            generateVerifiableCredential(
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .passport(PASSPORT_DETAILS)
+                                            .build())
+                            .evidence(SUCCESSFUL_EVIDENCE)
+                            .build(),
+                    Instant.ofEpochSecond(1705986521));
 
     static String vcPassportM1aFailed() {
         TestVc.TestCredentialSubject credentialSubject =
