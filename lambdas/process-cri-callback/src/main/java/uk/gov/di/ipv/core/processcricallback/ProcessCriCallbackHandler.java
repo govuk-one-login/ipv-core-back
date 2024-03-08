@@ -214,6 +214,11 @@ public class ProcessCriCallbackHandler
                         HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
             }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+        } catch (MitigationRouteConfigNotFoundException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND);
         }
     }
 
@@ -236,7 +241,8 @@ public class ProcessCriCallbackHandler
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
                     CriApiException, VerifiableCredentialException, CiPostMitigationsException,
                     CiPutException, CredentialParseException, InvalidCriCallbackRequestException,
-                    AuditExtensionException, UnrecognisedVotException {
+                    AuditExtensionException, UnrecognisedVotException,
+                    MitigationRouteConfigNotFoundException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processcricallback.pact.bavCri;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -33,7 +34,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
-import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
+import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -66,7 +67,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "BavCriProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -78,7 +79,7 @@ class ContractTest {
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsBavIssuedCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+                .given(VALID_ACCESS_TOKEN + " is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyBavComponentId is a valid issuer")
                 .given("VC evidence checkDetails identityCheckPolicy is none")
@@ -90,16 +91,37 @@ class ContractTest {
                 .given("VC bankAccount accountNumber is 12345678")
                 .given("VC bankAccount sortCode is 103233")
                 .given("VC is for Kenneth Decerqueira")
-                .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid POST request")
                 .path("/userinfo")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer " + VALID_ACCESS_TOKEN)
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_BAV_VC_BODY, VALID_BAV_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            VALID_BAV_VC_BODY,
+                                                            VALID_BAV_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -123,8 +145,8 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        new BearerAccessToken(VALID_ACCESS_TOKEN),
+                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -147,7 +169,6 @@ class ContractTest {
                                         credentialSubject.get("bankAccount").get(0);
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
 
                                 assertEquals(
                                         "12345678", bankAccountNode.get("accountNumber").asText());
@@ -157,8 +178,6 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
                                 assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
-
-                                assertEquals("1962-10-11", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
@@ -170,7 +189,7 @@ class ContractTest {
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsBavResponseWithCi(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
+                .given(VALID_ACCESS_TOKEN_FOR_CI + " is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyBavComponentId is a valid issuer")
                 .given("VC evidence failedCheckDetails identityCheckPolicy is none")
@@ -183,16 +202,37 @@ class ContractTest {
                 .given("VC bankAccount accountNumber is 12345678")
                 .given("VC bankAccount sortCode is 103233")
                 .given("VC is for Kenneth Decerqueira")
-                .given("VC birthDate is 1962-10-11")
                 .uponReceiving("Valid POST request")
                 .path("/userinfo")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer " + VALID_ACCESS_TOKEN_FOR_CI)
                 .willRespondWith()
                 .status(200)
                 .body(
-                        new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, FAILED_BAV_VC_BODY, FAILED_BAV_VC_SIGNATURE))
+                        newJsonBody(
+                                        (body) -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BAV_VC_BODY,
+                                                            FAILED_BAV_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
                 .toPact();
     }
 
@@ -216,8 +256,8 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        new BearerAccessToken(VALID_ACCESS_TOKEN_FOR_CI),
+                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -241,7 +281,6 @@ class ContractTest {
                                 JsonNode ciNode = evidence.get("ci");
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
 
                                 assertEquals("D15", ciNode.get(0).asText());
 
@@ -256,8 +295,6 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
                                 assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
-
-                                assertEquals("1962-10-11", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException
                                     | ParseException
                                     | JsonProcessingException e) {
@@ -267,7 +304,7 @@ class ContractTest {
     }
 
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns401(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -281,12 +318,12 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void fetchVerifiableCredential_whenCalledAgainstBavCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException {
         // Arrange
@@ -309,7 +346,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -321,7 +358,7 @@ class ContractTest {
 
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given(VALID_AUTH_CODE + " is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyBavComponentId is the BAV CRI component ID")
                 .given("BAV CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
@@ -329,7 +366,9 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Dbav&client_assertion="
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code="
+                                + VALID_AUTH_CODE
+                                + "&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Dbav&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -385,7 +424,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
                         CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -394,7 +433,7 @@ class ContractTest {
     }
 
     @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyBavComponentId is the BAV CRI component ID")
@@ -415,12 +454,12 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstBavCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
@@ -526,6 +565,11 @@ class ContractTest {
     private static final String TEST_ISSUER = "dummyBavComponentId";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
+    private static final String VALID_AUTH_CODE = "1e93b714-4838-4ced-9567-6da749f1c616";
+    private static final String VALID_ACCESS_TOKEN =
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJhODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjMxMjU0MjR9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+    private static final String VALID_ACCESS_TOKEN_FOR_CI =
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJiODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJkdW1teUJhdkNvbXBvbmVudElkIiwiaXNzIjoiZHVtbXlCYXZDb21wb25lbnRJZCIsImV4cCI6NDg2MzIyNTIwN30.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
@@ -552,40 +596,30 @@ class ContractTest {
     private static final String VALID_VC_HEADER =
             """
             {
+              "alg": "ES256",
               "typ": "JWT",
-              "alg": "ES256"
+              "kid": "kid"
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_BAV_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyBavComponentId",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "iss": "dummyBavComponentId",
+              "iat": 4070908800,
+              "jti": "jti",
+              "sub": "test-subject",
               "vc": {
-                "evidence": [
-                  {
-                  "checkDetails": [
-                           {
-                             "identityCheckPolicy": "none",
-                             "checkMethod": "data"
-                       }
-                    ],
-                    "validityScore": 2,
-                    "strengthScore": 3,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
-                  }
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
-                  "bankAccount": [
-                    {
-                      "accountNumber": "12345678",
-                      "sortCode": "103233"
-                    }
-                  ],
                   "name": [
                     {
                       "nameParts": [
@@ -600,81 +634,96 @@ class ContractTest {
                       ]
                     }
                   ],
-                  "birthDate": [
+                  "bankAccount": [
                     {
-                      "value": "1962-10-11"
+                      "sortCode": "103233",
+                      "accountNumber": "12345678"
                     }
                   ]
                 },
-                "jti": "dummyJti"
-                }
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "none"
+                      }
+                    ]
+                  }
+                ]
+              }
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "eux8ArXcqYGPoAkQIafcs_DobUI9GfYc4L5eQIl_pMIieHdevWoa2ExxoaaeVgXQ-9SFeLn0Ai01_xrAyJLtOw";
+            "sDIUCpcphhbBCdBlXD59b5woGz8ZwGY3F445JmoFurJgMXZui0-4xfP_1x_ODarGPRALwXkt5UK4jImz0tbj8A";
 
     private static final String FAILED_BAV_VC_BODY =
             """
-                {
-                   "sub": "test-subject",
-                   "iss": "dummyBavComponentId",
-                   "nbf": 4070908800,
-                   "exp": 4070909400,
-                   "vc": {
-                     "evidence": [
-                       {
-                         "failedCheckDetails": [
-                           {
-                             "identityCheckPolicy": "none",
-                             "checkMethod": "data"
-                           }
-                            ],
-                         "validityScore": 0,
-                         "strengthScore": 3,
-                         "ci": [
-                           "D15"
-                            ],
-                         "txn": "dummyTxn",
-                         "type": "IdentityCheck"
-                          }
-                        ],
-                     "credentialSubject": {
-                       "bankAccount": [
-                         {
-                           "accountNumber": "12345678",
-                           "sortCode": "103233"
-                         }
-                       ],
-                       "name": [
-                         {
-                           "nameParts": [
-                             {
-                               "type": "GivenName",
-                               "value": "Kenneth"
-                             },
-                             {
-                               "type": "FamilyName",
-                               "value": "Decerqueira"
-                             }
-                           ]
-                         }
-                       ],
-                       "birthDate": [
-                         {
-                           "value": "1962-10-11"
-                         }
-                       ]
-                     },
-                     "jti": "dummyJti"
-                 }
-             }
+            {
+              "nbf": 4070908800,
+              "iss": "dummyBavComponentId",
+              "iat": 4070908800,
+              "jti": "jti",
+              "sub": "test-subject",
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Kenneth"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Decerqueira"
+                        }
+                      ]
+                    }
+                  ],
+                  "bankAccount": [
+                    {
+                      "sortCode": "103233",
+                      "accountNumber": "12345678"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "none"
+                      }
+                    ],
+                    "ci": [
+                      "D15"
+                    ]
+                  }
+                ]
+              }
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "V9CEL4TCIGFeSJgY9-UePbmm2ot9G3pRTmf4edmHknBfmhL1bum5FeJr69JTVX-CWZ51uXWun9lkHwy1jYuaaQ";
+            "ia1F5IiW8Rstrm2W_0HIca4n9lRbXVTPiuqDkG39TeMOWkpBRSRr0AO4R0picXX861dz81prMha2O8k2uCzJwA";
 }

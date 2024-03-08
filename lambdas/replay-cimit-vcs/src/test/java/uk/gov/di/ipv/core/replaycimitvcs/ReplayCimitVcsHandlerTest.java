@@ -31,19 +31,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 
 @ExtendWith(MockitoExtension.class)
 class ReplayCimitVcsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CRI_ID = "address";
+
     @Mock private CiMitService ciMitService;
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private ReplayCimitVcsHandler replayCimitVcsHandler;
 
     @Test
-    void shouldSubmitVcsToCimit() throws CiPutException {
+    void shouldSubmitVcsToCimit() throws Exception {
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
         when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
@@ -97,7 +98,7 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleICiPutExceptionOnSubmitVcList() throws IOException, CiPutException {
+    void shouldHandleICiPutExceptionOnSubmitVcList() throws Exception {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
@@ -115,8 +116,7 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList()
-            throws IOException, CiPostMitigationsException {
+    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList() throws Exception {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
             when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))

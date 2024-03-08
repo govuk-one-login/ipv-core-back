@@ -38,11 +38,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class CheckGpg45ScoreHandlerTest {
@@ -54,13 +54,7 @@ class CheckGpg45ScoreHandlerTest {
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static final List<String> CREDENTIALS =
-            List.of(
-                    M1A_PASSPORT_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    M1A_VERIFICATION_VC,
-                    M1B_DCMAW_VC);
+    private static List<String> CREDENTIALS;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static ProcessRequest request;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -85,6 +79,13 @@ class CheckGpg45ScoreHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .lambdaInput(new HashMap<>(Map.of("scoreThreshold", 2)))
                         .build();
+        CREDENTIALS =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a(),
+                        M1B_DCMAW_VC);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }

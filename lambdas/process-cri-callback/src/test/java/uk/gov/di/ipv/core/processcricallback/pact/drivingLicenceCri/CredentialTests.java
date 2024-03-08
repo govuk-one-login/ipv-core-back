@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "DrivingLicenceVcProvider")
-@MockServerConfig(hostInterface = "localhost", port = "1234")
+@MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
@@ -65,7 +65,7 @@ class CredentialTests {
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaIssuedCredential(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
@@ -169,7 +169,7 @@ class CredentialTests {
                         });
     }
 
-    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaResponseWithCi(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -276,7 +276,7 @@ class CredentialTests {
                         });
     }
 
-    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvaIssuedCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -378,7 +378,7 @@ class CredentialTests {
                         });
     }
 
-    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvaResponseWithCi(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -485,8 +485,8 @@ class CredentialTests {
                         });
     }
 
-    @Pact(provider = "DrivingLicenceCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
+    @Pact(provider = "DrivingLicenceVcProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAccessTokenReturns500(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
@@ -500,12 +500,12 @@ class CredentialTests {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(500)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns500")
     void
             fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
                     MockServer mockServer) throws URISyntaxException, CriApiException {
@@ -630,32 +630,33 @@ class CredentialTests {
     private static final String VALID_DVLA_VC_BODY =
             """
             {
-              "sub": "test-subject",
               "iss": "dummyDrivingLicenceComponentId",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "evidence": [
-                  {
-                    "activityHistoryScore": 1,
-                    "checkDetails": [
-                      {
-                        "identityCheckPolicy": "published",
-                        "activityFrom": "1982-05-23",
-                        "checkMethod": "data"
-                      }
-                    ],
-                    "validityScore": 2,
-                    "strengthScore": 3,
-                    "txn": "dummyTxn",
-                    "type": "IDENTITY_CHECK"
-                  }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "address": [
                     {
-                      "addressCountry": "GB",
-                      "postalCode": "BS981TL"
+                      "postalCode": "BS981TL",
+                      "addressCountry": "GB"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "PARKE610112PBFGH",
+                      "expiryDate": "2062-12-09",
+                      "issueNumber": "12",
+                      "issuedBy": "DVLA",
+                      "issueDate": "1982-05-23"
                     }
                   ],
                   "name": [
@@ -675,25 +676,23 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "expiryDate": "2062-12-09",
-                      "issueNumber": "12",
-                      "issuedBy": "DVLA",
-                      "personalNumber": "PARKE610112PBFGH",
-                      "issueDate": "1982-05-23"
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1962-10-11"
-                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "activityHistoryScore": 1,
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "1982-05-23"
+                      }
+                    ]
+                  }
                 ]
               }
             }
@@ -702,37 +701,38 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "kZLEZfJU5XI7lEs0J-BZi5he4DBF5SUWauozDHsvvQRfCobVGasX4BWodMA3rBY2V9BeQE9KdQQ7L3Hg_zJhGw";
+            "FTT9lnsnoZ6DIGvrXQyfMGMK8knC7gL7CCcafbmoVg3QHrg3zt6hK-mAV7Nqg-53A6SEJM0VYZ0F0v7qaPpRCg";
 
     private static final String FAILED_DVLA_VC_BODY =
             """
             {
-              "sub": "test-subject",
               "iss": "dummyDrivingLicenceComponentId",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "evidence": [
-                  {
-                    "activityHistoryScore": 0,
-                    "ci": ["D02"],
-                    "failedCheckDetails": [
-                      {
-                        "identityCheckPolicy": "published",
-                        "checkMethod": "data"
-                      }
-                    ],
-                    "validityScore": 0,
-                    "strengthScore": 3,
-                    "txn": "dummyTxn",
-                    "type": "IDENTITY_CHECK"
-                  }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "address": [
                     {
-                      "addressCountry": "GB",
-                      "postalCode": "BS981TL"
+                      "postalCode": "BS981TL",
+                      "addressCountry": "GB"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "PARKE610112PBFGH",
+                      "expiryDate": "2062-12-09",
+                      "issueNumber": "12",
+                      "issuedBy": "DVLA",
+                      "issueDate": "1982-05-23"
                     }
                   ],
                   "name": [
@@ -752,25 +752,26 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "expiryDate": "2062-12-09",
-                      "issueNumber": "12",
-                      "issuedBy": "DVLA",
-                      "personalNumber": "PARKE610112PBFGH",
-                      "issueDate": "1982-05-23"
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1962-10-11"
-                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "activityHistoryScore": 1,
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "ci": [
+                      "D02"
+                    ],
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "1982-05-23"
+                      }
+                    ]
+                  }
                 ]
               }
             }
@@ -779,38 +780,38 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_SIGNATURE =
-            "BtCD3UyqQHhNQLd7RotfC3lGYk0ooGzTCBAAMuT6GHJL_P5Punkml7xWfAxWhmJ9w1p-oZl8Kw-aCv5WUNrTHA";
+            "msA6QuhXy4TIbzez0YduFkXE5kaN-cqjFcR8WU6FQmD9W78V89JJ5sx8uIW3k8_tLhpuWLgaa-qa2R4V29qPYQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_DVA_VC_BODY =
             """
             {
-              "sub": "test-subject",
               "iss": "dummyDrivingLicenceComponentId",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "evidence": [
-                  {
-                    "activityHistoryScore": 1,
-                    "checkDetails": [
-                      {
-                        "identityCheckPolicy": "published",
-                        "activityFrom": "1982-05-23",
-                        "checkMethod": "data"
-                      }
-                    ],
-                    "validityScore": 2,
-                    "strengthScore": 3,
-                    "txn": "dummyTxn",
-                    "type": "IDENTITY_CHECK"
-                  }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "address": [
                     {
-                      "addressCountry": "GB",
-                      "postalCode": "BS981TL"
+                      "postalCode": "BS981TL",
+                      "addressCountry": "GB"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "55667788",
+                      "expiryDate": "2062-12-09",
+                      "issuedBy": "DVA",
+                      "issueDate": "1982-05-23"
                     }
                   ],
                   "name": [
@@ -830,24 +831,23 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "expiryDate": "2062-12-09",
-                      "issuedBy": "DVA",
-                      "personalNumber": "55667788",
-                      "issueDate": "1982-05-23"
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1962-10-11"
-                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "activityHistoryScore": 1,
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "1982-05-23"
+                      }
+                    ]
+                  }
                 ]
               }
             }
@@ -856,37 +856,37 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "OAb52qC_2MO94SbdJVxFvy9vTwrFD3qBAndTe1qDxjATZdTDP6dYZXBDjX4OozRuD2b7sZP8gVzYUPdJ09CWfQ";
+            "COzeWT61WcMJX3QNS-5-gbrtzCOOOs59ic8mQ7eNE-J2FBm5FA4qPv-hHqx55EgChHcFKzpepNjQBOSSZpXNWw";
 
     private static final String FAILED_DVA_VC_BODY =
             """
             {
-              "sub": "test-subject",
               "iss": "dummyDrivingLicenceComponentId",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
-                "evidence": [
-                  {
-                    "activityHistoryScore": 0,
-                    "ci": ["D02"],
-                    "failedCheckDetails": [
-                      {
-                        "identityCheckPolicy": "published",
-                        "checkMethod": "data"
-                      }
-                    ],
-                    "validityScore": 0,
-                    "strengthScore": 3,
-                    "txn": "dummyTxn",
-                    "type": "IDENTITY_CHECK"
-                  }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "address": [
                     {
-                      "addressCountry": "GB",
-                      "postalCode": "BS981TL"
+                      "postalCode": "BS981TL",
+                      "addressCountry": "GB"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1962-10-11"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "55667780",
+                      "expiryDate": "2062-12-09",
+                      "issuedBy": "DVA",
+                      "issueDate": "1982-05-23"
                     }
                   ],
                   "name": [
@@ -906,24 +906,26 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "expiryDate": "2062-12-09",
-                      "issuedBy": "DVA",
-                      "personalNumber": "55667780",
-                      "issueDate": "1982-05-23"
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1962-10-11"
-                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "activityHistoryScore": 1,
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                            "ci": [
+                      "D02"
+                    ],
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": "1982-05-23"
+                      }
+                    ]
+                  }
                 ]
               }
             }
@@ -932,5 +934,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_SIGNATURE =
-            "Olph1tC4Tlbz2aQ2d5kaYjuXtZFowhelxS2rP_KmSNI50ZZMRa1z-ClE-vZDqKD4ETDs4871w_pGb2vh6nepVQ";
+            "kPfCyzksvyxWuUjaQBACJcrdByJ4oxUEGyRvruVLrunVYRFpCNNt-3IH-6p223m9y-lXFsWb5zfGU3thacMIfw";
 }

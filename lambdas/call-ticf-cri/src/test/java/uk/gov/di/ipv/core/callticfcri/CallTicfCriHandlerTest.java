@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -49,9 +50,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
@@ -61,7 +62,7 @@ class CallTicfCriHandlerTest {
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
-    public static final List<String> VC_IN_STORE =
+    public static List<String> VC_IN_STORE =
             List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC);
     private static final ProcessRequest input =
             ProcessRequest.processRequestBuilder()
@@ -72,7 +73,6 @@ class CallTicfCriHandlerTest {
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     public static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
-
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -127,14 +127,14 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldOnlySendVcsReceivedInCurrentSession() throws Exception {
-        spyIpvSessionItem.setVcReceivedThisSession(List.of(M1A_ADDRESS_VC));
+        List<String> addressVCs = List.of(M1A_ADDRESS_VC);
+        spyIpvSessionItem.setVcReceivedThisSession(addressVCs);
 
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockUserIdentityService.getIdentityCredentials(any())).thenReturn(VC_IN_STORE);
-        when(mockTicfCriService.getTicfVc(
-                        clientOAuthSessionItem, spyIpvSessionItem, List.of(M1A_ADDRESS_VC)))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, addressVCs))
                 .thenReturn(List.of(mockSignedJwt));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -252,6 +252,36 @@ class CallTicfCriHandlerTest {
         inOrder.verifyNoMoreInteractions();
 
         assertEquals(JOURNEY_ENHANCED_VERIFICATION, lambdaResult.get("journey"));
+    }
+
+    @Test
+    void handleRequestShouldReturnJourneyErrorResponseIfCimitUtilityServiceThrows()
+            throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockUserIdentityService.getIdentityCredentials(any())).thenReturn(List.of());
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, List.of()))
+                .thenReturn(List.of(mockSignedJwt));
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
+                .thenThrow(new MitigationRouteConfigNotFoundException("Config Error"));
+
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+
+        InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
+        inOrder.verify(spyIpvSessionItem).setVot(Vot.P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        inOrder.verifyNoMoreInteractions();
+
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
+                lambdaResult.get("code"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                lambdaResult.get("message"));
     }
 
     @Test

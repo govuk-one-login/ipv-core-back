@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
@@ -14,6 +16,8 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
+@EqualsAndHashCode
+@ToString
 public class AuditExtensionsVcEvidence implements AuditExtensions {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

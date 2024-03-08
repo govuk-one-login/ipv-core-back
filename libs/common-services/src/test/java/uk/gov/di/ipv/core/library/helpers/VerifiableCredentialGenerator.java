@@ -17,8 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nimbusds.jwt.JWTClaimNames.EXPIRATION_TIME;
 import static com.nimbusds.jwt.JWTClaimNames.ISSUER;
+import static com.nimbusds.jwt.JWTClaimNames.JWT_ID;
 import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
 import static com.nimbusds.jwt.JWTClaimNames.SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.DI_CONTEXT;
@@ -28,6 +28,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VOT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VTM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3_BASE_CONTEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -46,10 +48,74 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)
                         .build();
+        return signTestJWT(claimsSet);
+    }
 
+    public static String generateVerifiableCredential(
+            TestVc vcClaim, String subject, String issuer, Instant nbf) {
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, subject)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, nbf.getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .build();
+        try {
+            return signTestJWT(claimsSet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String generateVerifiableCredential(TestVc vcClaim) {
+        try {
+            return generateVerifiableCredential(
+                    vcClaim,
+                    "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
+                    "https://review-p.staging.account.gov.uk",
+                    null,
+                    null,
+                    null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String generateVerifiableCredential(
+            TestVc vcClaim, String subject, String issuer, String vot, String jti, String vtm)
+            throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, subject)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, now.getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .claim(VC_VOT, vot)
+                        .claim(JWT_ID, jti)
+                        .claim(VC_VTM, vtm)
+                        .build();
+        return signTestJWT(claimsSet);
+    }
+
+    public static String generateVerifiableCredential(TestVc vcClaim, Instant nbf) {
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980")
+                        .claim(ISSUER, "https://review-p.staging.account.gov.uk")
+                        .claim(NOT_BEFORE, nbf.getEpochSecond())
+                        .claim(VC_CLAIM, vcClaim)
+                        .build();
+        try {
+            return signTestJWT(claimsSet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String signTestJWT(JWTClaimsSet claimsSet) throws Exception {
         KeyFactory kf = KeyFactory.getInstance("EC");
         EncodedKeySpec privateKeySpec =
                 new PKCS8EncodedKeySpec(Base64.getDecoder().decode(EC_PRIVATE_KEY));

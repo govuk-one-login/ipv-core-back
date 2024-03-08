@@ -196,7 +196,8 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
@@ -219,7 +220,8 @@ PYI_ESCAPE:
     next:
       targetState: RESET_IDENTITY
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 PYI_CRI_ESCAPE:
   response:
@@ -242,7 +244,8 @@ PYI_CRI_ESCAPE_NO_F2F:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 EVALUATE_GPG45_SCORES:
   response:
@@ -517,6 +520,10 @@ CRI_NINO_WITH_SCOPE_M2B:
       targetState: ADDRESS_AND_FRAUD_M2B
     access-denied:
       targetState: PYI_ESCAPE_ABANDON_M2B
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NINO
+
 
 ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -581,12 +588,13 @@ PYI_ESCAPE_M2B:
     type: page
     pageId: pyi-escape-m2b
   events:
-    end:
-      targetState: RETURN_TO_RP
     next:
       targetState: IDENTITY_START_PAGE
     bankAccount:
       targetState: BANK_ACCOUNT_START_PAGE
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 PYI_ESCAPE_ABANDON_M2B:
   response:
@@ -595,7 +603,8 @@ PYI_ESCAPE_ABANDON_M2B:
     pageId: pyi-escape-m2b
   events:
     end:
-      targetState: RETURN_TO_RP
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
     next:
       targetState: RESET_IDENTITY
 

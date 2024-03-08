@@ -3,26 +3,28 @@ package uk.gov.di.ipv.core.library.auditing.helpers;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import uk.gov.di.ipv.core.library.auditing.AuditRestrictedVc;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EXPIRY_DATE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ID_CARD;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_SOCIAL_SECURITY_RECORD;
 
 public class AuditExtensionsHelper {
-
-    private static final String EVIDENCE = "evidence";
-    private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
-    private static final String VC_NAME = "name";
-    private static final String VC_PASSPORT = "passport";
-    private static final String VC_EXPIRY_DATE = "expiryDate";
-    private static final String VC_DRIVING_PERMIT = "drivingPermit";
-    private static final String VC_BRP = "residencePermit";
-    private static final String VC_NATIONAL_ID = "idCard";
 
     private AuditExtensionsHelper() {}
 
@@ -31,7 +33,7 @@ public class AuditExtensionsHelper {
             throws ParseException, AuditExtensionException, UnrecognisedVotException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var evidence = vc.getAsString(EVIDENCE);
+        var evidence = vc.getAsString(VC_EVIDENCE);
         return new AuditExtensionsVcEvidence(
                 jwtClaimsSet.getIssuer(),
                 evidence,
@@ -41,7 +43,7 @@ public class AuditExtensionsHelper {
                 VcHelper.extractAgeFromCredential(verifiableCredential));
     }
 
-    public static AuditRestrictedVc getRestrictedDataForAuditEvent(SignedJWT verifiableCredential)
+    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(SignedJWT verifiableCredential)
             throws ParseException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
@@ -51,27 +53,38 @@ public class AuditExtensionsHelper {
         var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
         if (passport != null && !passport.isEmpty()) {
             var docExpiryDate = ((JSONObject) passport.get(0)).getAsString(VC_EXPIRY_DATE);
-            return new AuditRestrictedVc(name, docExpiryDate);
+            return new AuditRestrictedF2F(name, docExpiryDate);
         }
 
         var drivingPermit = (JSONArray) credentialSubject.get(VC_DRIVING_PERMIT);
         if (drivingPermit != null && !drivingPermit.isEmpty()) {
             var docExpiryDate = ((JSONObject) drivingPermit.get(0)).getAsString(VC_EXPIRY_DATE);
-            return new AuditRestrictedVc(name, docExpiryDate);
+            return new AuditRestrictedF2F(name, docExpiryDate);
         }
 
-        var brp = (JSONArray) credentialSubject.get(VC_BRP);
+        var brp = (JSONArray) credentialSubject.get(VC_RESIDENCE_PERMIT);
         if (brp != null && !brp.isEmpty()) {
             var docExpiryDate = ((JSONObject) brp.get(0)).getAsString(VC_EXPIRY_DATE);
-            return new AuditRestrictedVc(name, docExpiryDate);
+            return new AuditRestrictedF2F(name, docExpiryDate);
         }
 
-        var idCard = (JSONArray) credentialSubject.get(VC_NATIONAL_ID);
+        var idCard = (JSONArray) credentialSubject.get(VC_ID_CARD);
         if (idCard != null && !idCard.isEmpty()) {
             var docExpiryDate = ((JSONObject) idCard.get(0)).getAsString(VC_EXPIRY_DATE);
-            return new AuditRestrictedVc(name, docExpiryDate);
+            return new AuditRestrictedF2F(name, docExpiryDate);
         }
 
-        return new AuditRestrictedVc(name);
+        return new AuditRestrictedF2F(name);
+    }
+
+    public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
+            SignedJWT inheritedIdentityJwt) throws ParseException {
+        var vc = (JSONObject) inheritedIdentityJwt.getJWTClaimsSet().getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+
+        return new AuditRestrictedInheritedIdentity(
+                (JSONArray) credentialSubject.get(VC_NAME),
+                (JSONArray) credentialSubject.get(VC_BIRTH_DATE),
+                (JSONArray) credentialSubject.get(VC_SOCIAL_SECURITY_RECORD));
     }
 }
