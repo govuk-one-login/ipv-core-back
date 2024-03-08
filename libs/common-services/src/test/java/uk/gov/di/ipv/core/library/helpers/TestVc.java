@@ -51,15 +51,7 @@ public class TestVc {
                                         new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate("1965-07-08"));
-
-        @Builder.Default
-        private List<Object> passport =
-                List.of(
-                        Map.of(
-                                "documentNumber", "321654987",
-                                "icaoIssuerCode", "GBR",
-                                "expiryDate", "2030-01-01"));
-
+        private List<Object> passport;
         private List<Object> address;
         private List<Object> socialSecurityRecord;
         private List<Object> drivingPermit;

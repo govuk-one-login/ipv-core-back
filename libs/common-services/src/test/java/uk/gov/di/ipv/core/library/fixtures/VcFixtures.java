@@ -20,6 +20,10 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 
 public interface VcFixtures {
+    String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
+    String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
+    String TEST_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
+
     List<TestVc.TestEvidence> SUCCESSFUL_EVIDENCE =
             List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(2).build());
     List<TestVc.TestEvidence> UNSUCCESSFUL_EVIDENCE =
@@ -33,7 +37,7 @@ public interface VcFixtures {
                             .ciReasons(List.of(Map.of("ci", "testValue", "reason", "testReason")))
                             .build());
 
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE =
+    List<TestVc.TestEvidence> FRAUD_EVIDENCE_NO_CHECK_DETAILS =
             List.of(
                     TestVc.TestEvidence.builder()
                             .checkDetails(null)
@@ -49,7 +53,7 @@ public interface VcFixtures {
                             .identityFraudScore(0)
                             .build());
 
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_SCORE_ONE =
+    List<TestVc.TestEvidence> FRAUD_EVIDENCE_WITH_CHECK_DETAILS =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("RB000180729610")
@@ -84,7 +88,7 @@ public interface VcFixtures {
                             .identityFraudScore(1)
                             .build());
 
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE =
+    List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("bcd2346")
@@ -104,7 +108,7 @@ public interface VcFixtures {
                                                     3)))
                             .build());
 
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE_2 =
+    List<TestVc.TestEvidence> DCMAW_EVIDENCE_DATA_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
                             .txn("cbf56c46-f33a-49de-8be0-c6318d8eecfc")
@@ -260,7 +264,7 @@ public interface VcFixtures {
                             new NameParts("Mary", VC_GIVEN_NAME),
                             new NameParts("Watson", VC_FAMILY_NAME)));
 
-    Map<String, Object> DRIVING_PERMIT =
+    Map<String, Object> DRIVING_PERMIT_DVA =
             Map.of(
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01",
@@ -268,7 +272,7 @@ public interface VcFixtures {
                     "issueNumber", 123456,
                     "issueDate", "2018-04-19");
 
-    Map<String, Object> DRIVING_PERMIT_2 =
+    Map<String, Object> DRIVING_PERMIT_DVLA =
             Map.of(
                     "personalNumber", "PARKE710112PBFGA",
                     "expiryDate", "2032-02-02",
@@ -280,32 +284,63 @@ public interface VcFixtures {
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01");
 
+    List<Object> PASSPORT_DETAILS =
+            List.of(
+                    Map.of(
+                            "documentNumber", "321654987",
+                            "icaoIssuerCode", "GBR",
+                            "expiryDate", "2030-01-01"));
+
     String PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
             generateVerifiableCredential(
-                    TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .passport(PASSPORT_DETAILS)
+                                            .build())
+                            .evidence(SUCCESSFUL_EVIDENCE)
+                            .build(),
                     Instant.ofEpochSecond(1705986521));
 
     static String vcPassportM1aFailed() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
-                TestVc.builder().evidence(UNSUCCESSFUL_EVIDENCE).build(),
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(UNSUCCESSFUL_EVIDENCE)
+                        .build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
     static String vcPassportM1aWithCI() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
-                TestVc.builder().evidence(TEST_CI_EVIDENCE).build(),
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(TEST_CI_EVIDENCE)
+                        .build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
     static String vcPassportM1aMissingEvidence() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
-                TestVc.builder().evidence(Collections.emptyList()).build(),
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(Collections.emptyList())
+                        .build(),
                 Instant.ofEpochSecond(1705986521));
     }
 
     static String vcPassportMissingName() {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().name(Collections.emptyList()).build();
+                TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
+                        .name(Collections.emptyList())
+                        .build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
@@ -315,7 +350,10 @@ public interface VcFixtures {
 
     static String vcPassportMissingBirthDate() {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().birthDate(Collections.emptyList()).build();
+                TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
+                        .birthDate(Collections.emptyList())
+                        .build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
@@ -326,6 +364,7 @@ public interface VcFixtures {
     static String vcPassportInvalidBirthDate() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
                         .birthDate(List.of(new BirthDate("invalid")))
                         .build();
         return generateVerifiableCredential(
@@ -359,7 +398,6 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(ALICE_PARKER_NAME))
                         .address(List.of(ADDRESS_2))
-                        .passport(Collections.emptyList())
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder().credentialSubject(credentialSubject).build());
@@ -372,12 +410,11 @@ public interface VcFixtures {
                                     TestVc.TestCredentialSubject.builder()
                                             .name(null)
                                             .address(List.of(ADDRESS_3))
-                                            .passport(null)
                                             .build())
                             .evidence(null)
                             .build(),
-                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                    "https://review-a.integration.account.gov.uk",
+                    TEST_SUBJECT,
+                    TEST_ISSUER_INTEGRATION,
                     Instant.ofEpochSecond(1658829720));
 
     static String vcAddressMultipleAddresses() {
@@ -385,12 +422,11 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
                         .address(MULTIPLE_ADDRESSES_VALID)
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-a.integration.account.gov.uk",
+                TEST_SUBJECT,
+                TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
     }
 
@@ -399,27 +435,25 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
                         .address(MULTIPLE_ADDRESSES_NO_VALID_FROM)
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
-                "https://review-a.integration.account.gov.uk",
+                TEST_SUBJECT,
+                TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
     }
 
     String M1A_EXPERIAN_FRAUD_VC =
             generateVerifiableCredential(
                     TestVc.builder()
-                            .evidence(FRAUD_EVIDENCE)
+                            .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
                                             .birthDate(List.of(new BirthDate("1959-08-23")))
-                                            .passport(null)
                                             .build())
                             .build(),
-                    "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                    TEST_SUBJECT,
                     "https://review-f.integration.account.gov.uk",
                     Instant.ofEpochSecond(1658829758));
 
@@ -428,31 +462,27 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
                         .birthDate(List.of(new BirthDate("1959-08-23")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
                         .evidence(FRAUD_FAILED_EVIDENCE)
                         .credentialSubject(credentialSubject)
                         .build(),
-                "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345",
+                TEST_SUBJECT,
                 "https://review-f.integration.account.gov.uk",
                 Instant.ofEpochSecond(1658829758));
     }
 
     static String vcExperianFraudScoreOne() {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .passport(null)
-                        .build();
+                TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_3)).build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_SCORE_ONE)
+                        .evidence(FRAUD_EVIDENCE_WITH_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
@@ -466,7 +496,6 @@ public interface VcFixtures {
                                                 List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
                         .address(List.of(Map.of("type", "PostalAddress", "postalCode", "LE12 9BN")))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -474,7 +503,7 @@ public interface VcFixtures {
                         .credentialSubject(credentialSubject)
                         .build(),
                 "user-id",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1652953380));
     }
 
@@ -483,7 +512,6 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .name(Collections.emptyList())
                         .address(List.of(ADDRESS_3))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -491,7 +519,7 @@ public interface VcFixtures {
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                "https://review-f.staging.account.gov.uk",
+                TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
@@ -499,12 +527,11 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of(DRIVING_PERMIT))
-                        .passport(null)
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE)
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 Instant.ofEpochSecond(1705986521));
@@ -512,13 +539,10 @@ public interface VcFixtures {
 
     static String vcDrivingPermitMissingDrivingPermit() {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_4))
-                        .passport(null)
-                        .build();
+                TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_4)).build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE)
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 Instant.ofEpochSecond(1705986521));
@@ -529,7 +553,6 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
                         .drivingPermit(List.of(INVALID_DRIVING_PERMIT))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -545,12 +568,11 @@ public interface VcFixtures {
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .drivingPermit(List.of(DRIVING_PERMIT_2))
-                        .passport(null)
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_2)
+                        .evidence(DCMAW_EVIDENCE_DATA_CHECK)
                         .credentialSubject(credentialSubject)
                         .build(),
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -565,7 +587,6 @@ public interface VcFixtures {
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -590,7 +611,6 @@ public interface VcFixtures {
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -614,7 +634,6 @@ public interface VcFixtures {
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -653,7 +672,6 @@ public interface VcFixtures {
                         .address(List.of(ADDRESS_4))
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .passport(null)
                         .build();
         return generateVerifiableCredential(
                 TestVc.builder()
@@ -699,8 +717,7 @@ public interface VcFixtures {
                                     TestVc.TestCredentialSubject.builder()
                                             .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
                                             .address(List.of(ADDRESS_4))
-                                            .drivingPermit(List.of(DRIVING_PERMIT))
-                                            .passport(null)
+                                            .drivingPermit(List.of(DRIVING_PERMIT_DVA))
                                             .build())
                             .build(),
                     Instant.ofEpochSecond(1705986521));
@@ -757,7 +774,6 @@ public interface VcFixtures {
                                                 VC_NAME_PARTS,
                                                 List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
-                        .passport(null)
                         .residencePermit(
                                 List.of(
                                         Map.of(
@@ -793,7 +809,6 @@ public interface VcFixtures {
                                                 VC_NAME_PARTS,
                                                 List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
-                        .passport(null)
                         .idCard(
                                 List.of(
                                         Map.of(
@@ -852,6 +867,7 @@ public interface VcFixtures {
     static String vcHmrcMigrationPCL250NoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
                         .build();
         return generateVerifiableCredential(
@@ -869,6 +885,7 @@ public interface VcFixtures {
     static String vcHmrcMigrationPCL200NoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
+                        .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
                         .build();
         return generateVerifiableCredential(
