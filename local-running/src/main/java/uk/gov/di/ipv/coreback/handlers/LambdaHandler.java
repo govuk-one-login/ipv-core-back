@@ -18,21 +18,19 @@ import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
-import uk.gov.di.ipv.coreback.domain.exceptions.UnrecognisedJourneyException;
+import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-@ExcludeFromGeneratedCoverageReport
 public class LambdaHandler {
 
     private static final Gson gson = new Gson();
