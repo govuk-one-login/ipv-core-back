@@ -75,28 +75,15 @@ public class LambdaHandler {
     }
 
     private final Route initialiseSession =
-            (Request request, Response response) -> {
-                APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
-                        new APIGatewayProxyRequestEvent();
-                apiGatewayProxyRequestEvent.setBody(request.body());
-                apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
-
-                APIGatewayProxyResponseEvent responseEvent =
-                        initialiseIpvSessionHandler.handleRequest(
-                                apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
-
-                response.type(APPLICATION_JSON);
-                return responseEvent.getBody();
-            };
+            (Request request, Response response) ->
+                    callLambdaWithProxyEvent(request, response, initialiseIpvSessionHandler);
 
     private final Route journeyEngine =
             (Request request, Response response) -> {
                 String journey = request.pathInfo();
 
-                Map<String, Object> lambdaOutput;
-                Map<String, Object> processJourneyEventOutput;
                 while (true) {
-                    processJourneyEventOutput =
+                    var processJourneyEventOutput =
                             processJourneyEventHandler.handleRequest(
                                     buildProcessJourneyEventLambdaInput(request, journey),
                                     EMPTY_CONTEXT);
@@ -107,55 +94,51 @@ public class LambdaHandler {
                         return gson.toJson(processJourneyEventOutput);
                     }
 
-                    switch (journey) {
-                        case "/journey/check-existing-identity":
-                            lambdaOutput =
-                                    checkExistingIdentityHandler.handleRequest(
-                                            buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                            break;
-                        case "/journey/reset-identity":
-                            lambdaOutput =
-                                    resetIdentityHandler.handleRequest(
-                                            buildProcessRequest(request, processJourneyEventOutput),
-                                            EMPTY_CONTEXT);
-                            break;
-                        case "/journey/build-client-oauth-response":
-                            lambdaOutput =
-                                    buildClientOauthResponseHandler.handleRequest(
-                                            buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                            break;
-                        case "/journey/evaluate-gpg45-scores":
-                            lambdaOutput =
-                                    evaluateGpg45ScoresHandler.handleRequest(
-                                            buildProcessRequest(request, processJourneyEventOutput),
-                                            EMPTY_CONTEXT);
-                            break;
-                        case "/journey/check-gpg45-scores":
-                            lambdaOutput =
-                                    checkGpg45ScoreHandler.handleRequest(
-                                            buildProcessRequest(request, processJourneyEventOutput),
-                                            EMPTY_CONTEXT);
-                            break;
-                        case "/journey/call-ticf-cri":
-                            lambdaOutput =
-                                    callTicfCriHandler.handleRequest(
-                                            buildProcessRequest(request, processJourneyEventOutput),
-                                            EMPTY_CONTEXT);
-                            break;
-                        default:
-                            if (journey.matches("/journey/cri/build-oauth-request/.*")) {
-                                lambdaOutput =
-                                        buildCriOauthRequestHandler.handleRequest(
+                    var lambdaOutput =
+                            switch (journey) {
+                                case "/journey/check-existing-identity" -> checkExistingIdentityHandler
+                                        .handleRequest(
                                                 buildJourneyRequest(request, journey),
                                                 EMPTY_CONTEXT);
-                            } else {
-                                throw new UnrecognisedJourneyException(
-                                        String.format("Journey not configured: %s", journey));
-                            }
-                    }
+                                case "/journey/reset-identity" -> resetIdentityHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
+                                        .handleRequest(
+                                                buildJourneyRequest(request, journey),
+                                                EMPTY_CONTEXT);
+                                case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/check-gpg45-scores" -> checkGpg45ScoreHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
+                                        buildProcessRequest(request, processJourneyEventOutput),
+                                        EMPTY_CONTEXT);
+                                default -> {
+                                    if (journey.matches("/journey/cri/build-oauth-request/.*")) {
+                                        yield buildCriOauthRequestHandler.handleRequest(
+                                                buildJourneyRequest(request, journey),
+                                                EMPTY_CONTEXT);
+                                    } else {
+                                        throw new UnrecognisedJourneyException(
+                                                String.format(
+                                                        "Journey not configured: %s", journey));
+                                    }
+                                }
+                            };
+
                     if (!lambdaOutput.containsKey(JOURNEY)) {
                         return gson.toJson(lambdaOutput);
                     }
+
                     journey = (String) lambdaOutput.get(JOURNEY);
                 }
             };
@@ -171,17 +154,17 @@ public class LambdaHandler {
 
     private final Route criCallBack =
             (Request request, Response response) ->
-                    callExternalApiLambda(request, response, processCriCallbackHandler);
+                    callLambdaWithProxyEvent(request, response, processCriCallbackHandler);
 
     private final Route token =
             (Request request, Response response) ->
-                    callExternalApiLambda(request, response, issueClientAccessTokenHandler);
+                    callLambdaWithProxyEvent(request, response, issueClientAccessTokenHandler);
 
     private final Route userIdentity =
             (Request request, Response response) ->
-                    callExternalApiLambda(request, response, buildUserIdentityHandler);
+                    callLambdaWithProxyEvent(request, response, buildUserIdentityHandler);
 
-    private String callExternalApiLambda(
+    private String callLambdaWithProxyEvent(
             Request request,
             Response response,
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler) {
