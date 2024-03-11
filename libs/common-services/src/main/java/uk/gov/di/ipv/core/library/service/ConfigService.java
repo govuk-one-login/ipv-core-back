@@ -283,20 +283,7 @@ public class ConfigService {
             return objectMapper.readValue(
                     cimitConfig, new TypeReference<HashMap<String, List<MitigationRoute>>>() {});
         } catch (JsonProcessingException e) {
-            try {
-                // fall back to try out with old cimit config
-                Map<String, String> oldCimitConfig =
-                        objectMapper.readValue(
-                                cimitConfig, new TypeReference<HashMap<String, String>>() {});
-                Map<String, List<MitigationRoute>> cimitMitigationRoutes = new HashMap<>();
-                oldCimitConfig.forEach(
-                        (key, value) ->
-                                cimitMitigationRoutes.put(
-                                        key, List.of(new MitigationRoute(value, null))));
-                return cimitMitigationRoutes;
-            } catch (JsonProcessingException ex) {
-                throw new ConfigException("Failed to parse CIMit configuration");
-            }
+            throw new ConfigException("Failed to parse CIMit configuration");
         }
     }
 
