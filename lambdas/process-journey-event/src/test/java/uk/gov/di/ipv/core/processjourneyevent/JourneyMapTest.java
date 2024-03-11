@@ -211,6 +211,12 @@ public class JourneyMapTest {
 
                 if (response instanceof PageStepResponse pageStepResponse) {
                     var pageId = (String) pageStepResponse.value().get("page");
+                    var context = (String) pageStepResponse.value().get("context");
+
+                    if (context != null) {
+                        pageId += context;
+                    }
+
                     var pageEvents = new HashSet<>(basicState.getEvents().keySet());
                     if (basicState.getParent() != null) {
                         pageEvents.addAll(

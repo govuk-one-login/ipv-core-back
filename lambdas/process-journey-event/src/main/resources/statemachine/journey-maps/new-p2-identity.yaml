@@ -503,6 +503,8 @@ CRI_BANK_ACCOUNT_M2B:
   events:
     next:
       targetState: CRI_NINO_WITH_SCOPE_M2B
+    access-denied:
+      targetState: PYI_ESCAPE_ABANDON_M2B
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_BAV
@@ -516,9 +518,12 @@ CRI_NINO_WITH_SCOPE_M2B:
   events:
     next:
       targetState: ADDRESS_AND_FRAUD_M2B
+    access-denied:
+      targetState: PYI_ESCAPE_ABANDON_M2B
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NINO
+
 
 ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -590,6 +595,18 @@ PYI_ESCAPE_M2B:
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_SKIP_MESSAGE
+
+PYI_ESCAPE_ABANDON_M2B:
+  response:
+    type: page
+    context: abandon
+    pageId: pyi-escape-m2b
+  events:
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
+    next:
+      targetState: RESET_IDENTITY
 
 PYI_KBV_DROPOUT_M2B:
   response:
