@@ -19,13 +19,16 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CriConfig;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +37,7 @@ import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
-public class VerifiableCredentialJwtValidator {
+public class VerifiableCredentialValidator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String VC_CLAIM_NAME = "vc";
     private static final Gson gson = new Gson();
@@ -47,46 +50,59 @@ public class VerifiableCredentialJwtValidator {
 
     private IClaimsVerifierFactory claimsVerifierFactory = DefaultJWTClaimsVerifier::new;
 
-    public VerifiableCredentialJwtValidator(ConfigService configService) {
+    public VerifiableCredentialValidator(ConfigService configService) {
         this.configService = configService;
     }
 
     // Constructor for tests where we need to use a fixed time.
-    public VerifiableCredentialJwtValidator(
+    public VerifiableCredentialValidator(
             ConfigService configService, IClaimsVerifierFactory claimsVerifierFactory) {
         this.configService = configService;
         this.claimsVerifierFactory = claimsVerifierFactory;
     }
 
-    public void validate(
-            SignedJWT verifiableCredential, CriConfig credentialIssuerConfig, String userId)
+    public List<VerifiableCredential> parseAndValidate(
+            String userId,
+            String criId,
+            List<String> vcs,
+            String vcType,
+            ECKey signingKey,
+            String componentId)
             throws VerifiableCredentialException {
-        LOGGER.info(LogHelper.buildLogMessage("Validating Verifiable Credential."));
-        ECKey signingKey;
-        try {
-            signingKey = credentialIssuerConfig.getParsedSigningKey();
-        } catch (ParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Error parsing credential issuer public JWK", e));
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
+        var validVcs = new ArrayList<VerifiableCredential>();
+        for (String vc : vcs) {
+            validVcs.add(
+                    parseAndValidate(userId, criId, vc, vcType, signingKey, componentId, false));
         }
-        validate(verifiableCredential, signingKey, credentialIssuerConfig.getComponentId(), userId);
+        return validVcs;
     }
 
-    public void validate(
-            SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
+    public VerifiableCredential parseAndValidate(
+            String userId,
+            String criId,
+            String vcString,
+            String vcType,
+            ECKey signingKey,
+            String componentId,
+            boolean skipSubjectCheck)
             throws VerifiableCredentialException {
-        validateSignatureAndClaims(verifiableCredential, signingKey, componentId, userId);
-        validateCiCodes(verifiableCredential);
-        LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
-    }
+        try {
+            var vcJwt = SignedJWT.parse(vcString);
+            validateSignature(vcJwt, signingKey);
+            validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
-    public void validateSignatureAndClaims(
-            SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
-            throws VerifiableCredentialException {
-        validateSignature(verifiableCredential, signingKey);
-        validateClaimsSet(verifiableCredential, componentId, userId);
+            var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
+            if (VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE.equals(vcType)) {
+                validateCiCodes(vc);
+            }
+            LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
+
+            return vc;
+        } catch (CredentialParseException | ParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error parsing credentials", e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        }
     }
 
     private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey)
@@ -138,15 +154,21 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateClaimsSet(
-            SignedJWT verifiableCredential, String componentId, String userId)
+            SignedJWT verifiableCredential,
+            String componentId,
+            String userId,
+            boolean skipSubjectCheck)
             throws VerifiableCredentialException {
 
-        var exactMatchClaims =
-                new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build();
+        var exactMatchClaimsBuilder = new JWTClaimsSet.Builder().issuer(componentId);
+        if (!skipSubjectCheck) {
+            exactMatchClaimsBuilder.subject(userId);
+        }
         var requiredClaims = new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME));
 
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
-                claimsVerifierFactory.createVerifier(exactMatchClaims, requiredClaims);
+                claimsVerifierFactory.createVerifier(
+                        exactMatchClaimsBuilder.build(), requiredClaims);
 
         try {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
@@ -159,11 +181,9 @@ public class VerifiableCredentialJwtValidator {
         }
     }
 
-    private void validateCiCodes(SignedJWT verifiableCredential)
-            throws VerifiableCredentialException {
+    private void validateCiCodes(VerifiableCredential vc) throws VerifiableCredentialException {
         try {
-            JSONObject vcClaim =
-                    (JSONObject) verifiableCredential.getJWTClaimsSet().getClaim(VC_CLAIM);
+            JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
             JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
             if (evidenceArray != null) {
                 List<CredentialEvidenceItem> credentialEvidenceList =
@@ -197,7 +217,7 @@ public class VerifiableCredentialJwtValidator {
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
-        } catch (ParseException | VerifiableCredentialException e) {
+        } catch (VerifiableCredentialException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Failed to parse verifiable credential claims set", e));

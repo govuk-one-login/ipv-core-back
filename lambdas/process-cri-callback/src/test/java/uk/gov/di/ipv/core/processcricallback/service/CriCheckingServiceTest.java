@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -462,23 +463,23 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnNextWhenAllChecksPass() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
+        var vcs = List.of(M1A_ADDRESS_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(true);
+            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
             // Act
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            vcResponse, callbackRequest, clientOAuthSessionItem);
+                            vcs, callbackRequest, clientOAuthSessionItem);
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-            verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+            verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
         }
     }
 
@@ -486,16 +487,15 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnFailWithCiWhenUserBreachesCiThreshold() throws Exception {
         // Arrange for CI threshold breach
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
+                        List.of(), callbackRequest, clientOAuthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
@@ -505,9 +505,8 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnMitigatedJourneyWhenCiMitigationIsPossible() throws Exception {
         // Arrange for CI mitigation possibility
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCimitUtilityService.getCiMitigationJourneyStep(any()))
@@ -516,7 +515,7 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
+                        List.of(), callbackRequest, clientOAuthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
@@ -528,7 +527,7 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCimitUtilityService.getCiMitigationJourneyStep(any()))
@@ -541,51 +540,50 @@ class CriCheckingServiceTest {
                 MitigationRouteConfigNotFoundException.class,
                 () ->
                         criCheckingService.checkVcResponse(
-                                vcResponse, callbackRequest, clientOAuthSessionItem));
+                                List.of(), callbackRequest, clientOAuthSessionItem));
     }
 
     @Test
     void checkVcResponseShouldReturnVcsNotCorrelatedWhenVcsNotCorrelated() throws Exception {
         // Arrange for VCs not correlated
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(false);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem);
+                        List.of(), callbackRequest, clientOAuthSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
-        verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
     }
 
     @Test
     void checkVcResponseShouldReturnFailWithNoCiWhenVcsNotSuccessful() throws Exception {
         // Arrange for VCs not successful
         var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
+        var vcs = List.of(M1A_ADDRESS_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicatorsVC(any(), any(), any()))
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        when(mockUserIdentityService.areVCsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVcs(any())).thenReturn(false);
+            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
 
             // Act
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            vcResponse, callbackRequest, clientOAuthSessionItem);
+                            vcs, callbackRequest, clientOAuthSessionItem);
 
             // Assert
             assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
-            verify(mockVerifiableCredentialService, times(1)).getVcStoreItems(TEST_USER_ID);
+            verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
         }
     }
 

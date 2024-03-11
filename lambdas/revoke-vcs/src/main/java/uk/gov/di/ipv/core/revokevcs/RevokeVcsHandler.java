@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -19,7 +18,9 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -34,7 +35,6 @@ import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -45,7 +45,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ConfigService configService;
-    private final VerifiableCredentialService verifiableCredentialService;
+    private final DataStore<VcStoreItem> vcDataStore;
     private final DataStore<VcStoreItem> archivedVcDataStore;
     private final AuditService auditService;
 
@@ -53,10 +53,11 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     public RevokeVcsHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
+            DataStore<VcStoreItem> vcDataStore,
             DataStore<VcStoreItem> archivedVcDataStore,
             AuditService auditService) {
         this.configService = configService;
-        this.verifiableCredentialService = verifiableCredentialService;
+        this.vcDataStore = vcDataStore;
         this.archivedVcDataStore = archivedVcDataStore;
         this.auditService = auditService;
     }
@@ -64,8 +65,15 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     @SuppressWarnings("unused") // Used by AWS
     public RevokeVcsHandler() {
         this.configService = new ConfigService();
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         boolean isRunningLocally = this.configService.isRunningLocally();
+        this.vcDataStore =
+                new DataStore<>(
+                        this.configService.getEnvironmentVariable(
+                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                        VcStoreItem.class,
+                        DataStore.getClient(isRunningLocally),
+                        isRunningLocally,
+                        configService);
         this.archivedVcDataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(
@@ -141,12 +149,11 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void revoke(UserIdCriIdPair userIdCriIdPair)
-            throws SqsException, ParseException, RevokeVcException, AuditExtensionException,
-                    UnrecognisedVotException {
+            throws SqsException, RevokeVcException, AuditExtensionException,
+                    UnrecognisedVotException, CredentialParseException {
         // Read VC with userId and CriId
         var vcStoreItem =
-                verifiableCredentialService.getVcStoreItem(
-                        userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
+                vcDataStore.getItem(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
 
         if (vcStoreItem != null) {
             // Archive VC
@@ -156,19 +163,19 @@ public class RevokeVcsHandler implements RequestStreamHandler {
             sendVcRevokedAuditEvent(userIdCriIdPair.getUserId(), vcStoreItem);
 
             // Delete VC from the main table
-            verifiableCredentialService.deleteVcStoreItem(
-                    userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
+            vcDataStore.delete(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
         } else {
             throw new RevokeVcException("VC cannot be found");
         }
     }
 
     private void sendVcRevokedAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws ParseException, SqsException, AuditExtensionException, UnrecognisedVotException {
+            throws SqsException, AuditExtensionException, UnrecognisedVotException,
+                    CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
-        var signedCredential = SignedJWT.parse(vcStoreItem.getCredential());
-        AuditExtensionsVcEvidence auditExtensions = getExtensionsForAudit(signedCredential, null);
+        AuditExtensionsVcEvidence auditExtensions =
+                getExtensionsForAudit(VerifiableCredential.fromVcStoreItem(vcStoreItem), null);
         var auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_REVOKED,

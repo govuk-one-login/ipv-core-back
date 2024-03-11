@@ -264,7 +264,9 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!IpvJourneyTypes.SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
+        // Needed to be compared out-of line to avoid IpvSessionItem can't be cast to List failure
+        var journeyType = ipvSessionItem.getJourneyType();
+        return (!IpvJourneyTypes.SESSION_TIMEOUT.equals(journeyType))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()

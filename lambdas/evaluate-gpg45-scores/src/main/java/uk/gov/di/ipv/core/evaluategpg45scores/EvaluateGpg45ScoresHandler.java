@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +19,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -34,7 +33,6 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -43,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -121,29 +118,18 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<VcStoreItem> vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
-            List<VcStoreItem> gpg45VcStoreItems =
-                    VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45);
+            var vcs = verifiableCredentialService.getVcs(userId);
 
-            List<SignedJWT> credentials =
-                    gpg45ProfileEvaluator.parseCredentials(
-                            userIdentityService.getIdentityCredentials(gpg45VcStoreItems));
-
-            if (!userIdentityService.areVCsCorrelated(gpg45VcStoreItems)) {
+            if (!userIdentityService.areVcsCorrelated(vcs)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
             boolean hasMatchingGpg45Profile =
-                    hasMatchingGpg45Profile(
-                            gpg45VcStoreItems,
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            credentials,
-                            ipAddress);
+                    hasMatchingGpg45Profile(vcs, ipvSessionItem, clientOAuthSessionItem, ipAddress);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
                     && hasMatchingGpg45Profile) {
-                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
             return hasMatchingGpg45Profile
                     ? JOURNEY_MET.toObjectMap()
@@ -153,11 +139,6 @@ public class EvaluateGpg45ScoresHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Unable to parse GPG45 scores from existing credentials", e));
-            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential", e));
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
@@ -179,14 +160,13 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private boolean hasMatchingGpg45Profile(
-            List<VcStoreItem> vcStoreItems,
+            List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            List<SignedJWT> credentials,
             String ipAddress)
-            throws UnknownEvidenceTypeException, ParseException, SqsException {
-        if (!userIdentityService.checkRequiresAdditionalEvidence(vcStoreItems)) {
-            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+            throws UnknownEvidenceTypeException, SqsException {
+        if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
+            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
                             gpg45Scores, Vot.P2.getSupportedGpg45Profiles());
@@ -199,7 +179,7 @@ public class EvaluateGpg45ScoresHandler
                                 clientOAuthSessionItem,
                                 matchedProfile.get(),
                                 gpg45Scores,
-                                credentials,
+                                vcs,
                                 ipAddress));
                 ipvSessionItem.setVot(Vot.P2);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -226,9 +206,8 @@ public class EvaluateGpg45ScoresHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
-            List<SignedJWT> credentials,
-            String ipAddress)
-            throws ParseException {
+            List<VerifiableCredential> credentials,
+            String ipAddress) {
         AuditEventUser auditEventUser =
                 new AuditEventUser(
                         clientOAuthSessionItem.getUserId(),

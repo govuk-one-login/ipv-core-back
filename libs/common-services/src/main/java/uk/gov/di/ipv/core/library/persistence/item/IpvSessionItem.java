@@ -6,6 +6,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
@@ -58,11 +59,11 @@ public class IpvSessionItem implements DynamodbItem {
         return accessToken;
     }
 
-    public void addVcReceivedThisSession(String vc) {
+    public void addVcReceivedThisSession(VerifiableCredential vc) {
         if (vcReceivedThisSession == null) {
             vcReceivedThisSession = new ArrayList<>();
         }
-        vcReceivedThisSession.add(vc);
+        vcReceivedThisSession.add(vc.getVcString());
     }
 
     public List<String> getFeatureSetAsList() {

@@ -13,7 +13,6 @@ import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -21,14 +20,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
-import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,6 +43,7 @@ import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 
 @Disabled("PACT tests should not be run in build pipelines at this time")
@@ -52,7 +52,6 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriRespo
 @PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost")
 public class ContractTest {
-    private final JwtParser jwtParser = new JwtParser();
     @Mock private ConfigService mockConfigService;
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
@@ -109,8 +108,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedPassportCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -118,7 +117,7 @@ public class ContractTest {
                                         requiredClaims,
                                         Date.from(CURRENT_TIME.instant()))));
 
-        var credentialIssuerConfig = getCredentialIssuerConfig(mockServer);
+        var criConfig = getCredentialIssuerConfig(mockServer);
 
         for (Message message : messageList) {
             try {
@@ -126,47 +125,58 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                criConfig.getParsedSigningKey(),
+                                criConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode passportNode =
+                                                credentialSubject.get(PASSPORT).get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode passportNode = credentialSubject.get(PASSPORT).get(0);
+                                        assertEquals(
+                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals(
+                                                "Decerqueira",
+                                                nameParts.get(1).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2030-01-01",
+                                                passportNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "321654987",
+                                                passportNode.get(DOCUMENT_NUMBER).asText());
 
-                                assertEquals("Kenneth", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Decerqueira", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "1965-07-08", birthDateNode.get(VALUE).asText());
 
-                                assertEquals("2030-01-01", passportNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "321654987", passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                assertEquals("1965-07-08", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (VerifiableCredentialException | ParseException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -227,8 +237,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsFailedPassportCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -244,59 +254,71 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode evidence =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get("evidence")
+                                                        .get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode passportNode =
+                                                credentialSubject.get(PASSPORT).get(0);
 
-                                JsonNode evidence =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get("evidence")
-                                                .get(0);
+                                        assertNotNull(evidence.get("failedCheckDetails").get(0));
+                                        assertEquals("0", evidence.get("validityScore").asText());
+                                        assertEquals(
+                                                "3", evidence.get("verificationScore").asText());
+                                        assertEquals("4", evidence.get("strengthScore").asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode passportNode = credentialSubject.get(PASSPORT).get(0);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
 
-                                assertNotNull(evidence.get("failedCheckDetails").get(0));
-                                assertEquals("0", evidence.get("validityScore").asText());
-                                assertEquals("3", evidence.get("verificationScore").asText());
-                                assertEquals("4", evidence.get("strengthScore").asText());
+                                        assertEquals(
+                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals(
+                                                "Decerqueira",
+                                                nameParts.get(1).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2030-01-01",
+                                                passportNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "321654987",
+                                                passportNode.get(DOCUMENT_NUMBER).asText());
 
-                                assertEquals("Kenneth", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Decerqueira", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "1965-07-08", birthDateNode.get(VALUE).asText());
 
-                                assertEquals("2030-01-01", passportNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "321654987", passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                assertEquals("1965-07-08", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -358,8 +380,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsFailedPassportCredentialWithCi(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -378,60 +400,72 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode evidence =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get("evidence")
+                                                        .get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode passportNode =
+                                                credentialSubject.get(PASSPORT).get(0);
 
-                                JsonNode evidence =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get("evidence")
-                                                .get(0);
+                                        assertNotNull(evidence.get("failedCheckDetails").get(0));
+                                        assertEquals("D14", evidence.get("ci").get(0).asText());
+                                        assertEquals("0", evidence.get("validityScore").asText());
+                                        assertEquals(
+                                                "3", evidence.get("verificationScore").asText());
+                                        assertEquals("4", evidence.get("strengthScore").asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode passportNode = credentialSubject.get(PASSPORT).get(0);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
 
-                                assertNotNull(evidence.get("failedCheckDetails").get(0));
-                                assertEquals("D14", evidence.get("ci").get(0).asText());
-                                assertEquals("0", evidence.get("validityScore").asText());
-                                assertEquals("3", evidence.get("verificationScore").asText());
-                                assertEquals("4", evidence.get("strengthScore").asText());
+                                        assertEquals(
+                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals(
+                                                "Decerqueira",
+                                                nameParts.get(1).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2030-01-01",
+                                                passportNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "321654987",
+                                                passportNode.get(DOCUMENT_NUMBER).asText());
 
-                                assertEquals("Kenneth", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Decerqueira", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "1965-07-08", birthDateNode.get(VALUE).asText());
 
-                                assertEquals("2030-01-01", passportNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "321654987", passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                assertEquals("1965-07-08", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -495,8 +529,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedDrivingLicenseCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -512,58 +546,68 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode drivingLicenseNode =
+                                                credentialSubject.get(DRIVING_PERMIT).get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(2).get(NAME_TYPE).asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode drivingLicenseNode =
-                                        credentialSubject.get(DRIVING_PERMIT).get(0);
+                                        assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "Parker", nameParts.get(2).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals("GivenName", nameParts.get(1).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(2).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2032-02-02",
+                                                drivingLicenseNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "2005-02-02",
+                                                drivingLicenseNode.get(ISSUE_DATE).asText());
+                                        assertEquals(
+                                                "dummyTestAddress",
+                                                drivingLicenseNode.get(FULL_ADDRESS).asText());
+                                        assertEquals(
+                                                "DVLA", drivingLicenseNode.get(ISSUED_BY).asText());
+                                        assertEquals(
+                                                "PARKE710112PBFGA",
+                                                drivingLicenseNode.get(PERSONAL_NUMBER).asText());
 
-                                assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
-                                assertEquals("Parker", nameParts.get(2).get(VALUE).asText());
+                                        assertEquals(
+                                                "1970-01-01", birthDateNode.get(VALUE).asText());
 
-                                assertEquals(
-                                        "2032-02-02", drivingLicenseNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "2005-02-02", drivingLicenseNode.get(ISSUE_DATE).asText());
-                                assertEquals(
-                                        "dummyTestAddress",
-                                        drivingLicenseNode.get(FULL_ADDRESS).asText());
-                                assertEquals("DVLA", drivingLicenseNode.get(ISSUED_BY).asText());
-                                assertEquals(
-                                        "PARKE710112PBFGA",
-                                        drivingLicenseNode.get(PERSONAL_NUMBER).asText());
-
-                                assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -627,8 +671,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedEuDrivingLicenseCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -644,56 +688,66 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode drivingLicenseNode =
+                                                credentialSubject.get(DRIVING_PERMIT).get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(2).get(NAME_TYPE).asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode drivingLicenseNode =
-                                        credentialSubject.get(DRIVING_PERMIT).get(0);
+                                        assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "Parker", nameParts.get(2).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals("GivenName", nameParts.get(1).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(2).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2022-02-02",
+                                                drivingLicenseNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "2012-02-02",
+                                                drivingLicenseNode.get(ISSUE_DATE).asText());
+                                        assertEquals(
+                                                "Landratsamt",
+                                                drivingLicenseNode.get(ISSUED_BY).asText());
+                                        assertEquals(
+                                                "DOE99751010AL9OD",
+                                                drivingLicenseNode.get(PERSONAL_NUMBER).asText());
 
-                                assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
-                                assertEquals("Parker", nameParts.get(2).get(VALUE).asText());
+                                        assertEquals(
+                                                "1970-01-01", birthDateNode.get(VALUE).asText());
 
-                                assertEquals(
-                                        "2022-02-02", drivingLicenseNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "2012-02-02", drivingLicenseNode.get(ISSUE_DATE).asText());
-                                assertEquals(
-                                        "Landratsamt", drivingLicenseNode.get(ISSUED_BY).asText());
-                                assertEquals(
-                                        "DOE99751010AL9OD",
-                                        drivingLicenseNode.get(PERSONAL_NUMBER).asText());
-
-                                assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -755,8 +809,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedEeaCardCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -772,47 +826,58 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode idCardNode =
+                                                credentialSubject.get("idCard").get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode idCardNode = credentialSubject.get("idCard").get(0);
+                                        assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals(
+                                                "Goodman", nameParts.get(1).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2031-08-02", idCardNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "2021-08-02", idCardNode.get(ISSUE_DATE).asText());
+                                        assertEquals(
+                                                "NLD", idCardNode.get(ICAO_ISSUER_CODE).asText());
+                                        assertEquals(
+                                                "SPEC12031",
+                                                idCardNode.get(DOCUMENT_NUMBER).asText());
 
-                                assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Goodman", nameParts.get(1).get(VALUE).asText());
-
-                                assertEquals("2031-08-02", idCardNode.get(EXPIRY_DATE).asText());
-                                assertEquals("2021-08-02", idCardNode.get(ISSUE_DATE).asText());
-                                assertEquals("NLD", idCardNode.get(ICAO_ISSUER_CODE).asText());
-                                assertEquals("SPEC12031", idCardNode.get(DOCUMENT_NUMBER).asText());
-
-                                assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException | ParseException e) {
+                                        assertEquals(
+                                                "1970-01-01", birthDateNode.get(VALUE).asText());
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -874,8 +939,8 @@ public class ContractTest {
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedBrpCredential(List<Message> messageList, MockServer mockServer)
             throws URISyntaxException, ParseException {
-        VerifiableCredentialJwtValidator verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+        VerifiableCredentialValidator verifiableCredentialValidator =
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -891,54 +956,62 @@ public class ContractTest {
                         ((SuccessAsyncCriResponse)
                                 getAsyncResponseMessage(message.contentsAsString()));
 
-                List<SignedJWT> parsedJwts =
-                        jwtParser.parseVerifiableCredentialJWTs(
-                                asyncCriResponse.getVerifiableCredentialJWTs());
+                verifiableCredentialValidator
+                        .parseAndValidate(
+                                TEST_USER,
+                                F2F_CRI,
+                                asyncCriResponse.getVerifiableCredentialJWTs(),
+                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getComponentId())
+                        .forEach(
+                                vc -> {
+                                    try {
+                                        JsonNode credentialSubject =
+                                                objectMapper
+                                                        .readTree(vc.getClaimsSet().toString())
+                                                        .get(VC)
+                                                        .get(CREDENTIAL_SUBJECT);
 
-                parsedJwts.forEach(
-                        credential -> {
-                            try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                        JsonNode nameParts =
+                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
+                                        JsonNode birthDateNode =
+                                                credentialSubject.get(BIRTH_DATE).get(0);
+                                        JsonNode residencePermitNode =
+                                                credentialSubject.get(RESIDENCE_PERMIT).get(0);
 
-                                JsonNode credentialSubject =
-                                        objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
-                                                .get(VC)
-                                                .get(CREDENTIAL_SUBJECT);
+                                        assertEquals(
+                                                "GivenName",
+                                                nameParts.get(0).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "FamilyName",
+                                                nameParts.get(1).get(NAME_TYPE).asText());
 
-                                JsonNode nameParts =
-                                        credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                JsonNode birthDateNode = credentialSubject.get(BIRTH_DATE).get(0);
-                                JsonNode residencePermitNode =
-                                        credentialSubject.get(RESIDENCE_PERMIT).get(0);
+                                        assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
+                                        assertEquals(
+                                                "Goodman", nameParts.get(1).get(VALUE).asText());
 
-                                assertEquals("GivenName", nameParts.get(0).get(NAME_TYPE).asText());
-                                assertEquals(
-                                        "FamilyName", nameParts.get(1).get(NAME_TYPE).asText());
+                                        assertEquals(
+                                                "2030-07-13",
+                                                residencePermitNode.get(EXPIRY_DATE).asText());
+                                        assertEquals(
+                                                "AX66K69P2",
+                                                residencePermitNode.get(DOCUMENT_NUMBER).asText());
+                                        assertEquals(
+                                                "UTO",
+                                                residencePermitNode.get(ICAO_ISSUER_CODE).asText());
+                                        assertEquals(
+                                                "CR",
+                                                residencePermitNode.get(DOCUMENT_TYPE).asText());
 
-                                assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
-                                assertEquals("Goodman", nameParts.get(1).get(VALUE).asText());
+                                        assertEquals(
+                                                "1970-01-01", birthDateNode.get(VALUE).asText());
 
-                                assertEquals(
-                                        "2030-07-13",
-                                        residencePermitNode.get(EXPIRY_DATE).asText());
-                                assertEquals(
-                                        "AX66K69P2",
-                                        residencePermitNode.get(DOCUMENT_NUMBER).asText());
-                                assertEquals(
-                                        "UTO", residencePermitNode.get(ICAO_ISSUER_CODE).asText());
-                                assertEquals("CR", residencePermitNode.get(DOCUMENT_TYPE).asText());
-
-                                assertEquals("1970-01-01", birthDateNode.get(VALUE).asText());
-
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (JsonProcessingException e) {
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }

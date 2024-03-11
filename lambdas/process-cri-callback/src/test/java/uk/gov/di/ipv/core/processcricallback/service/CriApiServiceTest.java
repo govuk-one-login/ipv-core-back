@@ -17,6 +17,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
@@ -60,18 +61,18 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class CriApiServiceTest {
-    private static final String TEST_CRI_ID = "test_cri_id";
+    private static final String TEST_CRI_ID = "test-cri-id";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
-    private static final String PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+    private static final VerifiableCredential PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
     private static final Map<String, Object> DCMAW_SUCCESS_RESPONSE =
             Map.of(
                     "sub",
                     "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
                     "https://vocab.account.gov.uk/v1/credentialJWT",
-                    List.of(PASSPORT_VC));
+                    List.of(PASSPORT_VC.getVcString()));
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
     private CriApiService criApiService;
@@ -314,7 +315,7 @@ class CriApiServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/jwt;charset=utf-8")
-                                        .withBody(PASSPORT_VC)));
+                                        .withBody(PASSPORT_VC.getVcString())));
         var accessToken = new BearerAccessToken();
 
         // Act
@@ -324,8 +325,8 @@ class CriApiServiceTest {
 
         // Assert
         assertEquals(
-                PASSPORT_VC,
-                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
+                PASSPORT_VC.getVcString(),
+                verifiableCredentialResponse.getVerifiableCredentials().get(0).trim());
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
@@ -373,7 +374,7 @@ class CriApiServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/jwt;charset=utf-8")
-                                        .withBody(PASSPORT_VC)));
+                                        .withBody(PASSPORT_VC.getVcString())));
         var accessToken = new BearerAccessToken("validToken");
 
         // Act
@@ -383,8 +384,8 @@ class CriApiServiceTest {
 
         // Assert
         assertEquals(
-                PASSPORT_VC,
-                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
+                PASSPORT_VC.getVcString(),
+                verifiableCredentialResponse.getVerifiableCredentials().get(0).trim());
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
@@ -413,8 +414,8 @@ class CriApiServiceTest {
 
         // Assert
         assertEquals(
-                PASSPORT_VC,
-                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
+                PASSPORT_VC.getVcString(),
+                verifiableCredentialResponse.getVerifiableCredentials().get(0));
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
@@ -481,7 +482,7 @@ class CriApiServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withHeader("Content-Type", "application/xml;charset=utf-8")
-                                        .withBody(PASSPORT_VC)));
+                                        .withBody(PASSPORT_VC.getVcString())));
 
         // Act & Assert
         var thrown =

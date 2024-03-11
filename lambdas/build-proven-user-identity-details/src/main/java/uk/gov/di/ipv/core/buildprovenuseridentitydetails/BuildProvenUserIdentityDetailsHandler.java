@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -31,7 +32,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -106,22 +106,19 @@ public class BuildProvenUserIdentityDetailsHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             ProfileType profileType = ipvSessionItem.getVot().getProfileType();
-            List<VcStoreItem> credentials =
+            var vcs =
                     VcHelper.filterVCBasedOnProfileType(
-                            verifiableCredentialService.getVcStoreItems(
-                                    clientOAuthSessionItem.getUserId()),
+                            verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()),
                             profileType);
 
-            List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
+            var currentVcStatuses = generateCurrentVcStatuses(vcs);
 
-            NameAndDateOfBirth nameAndDateOfBirth =
-                    getProvenIdentityNameAndDateOfBirth(credentials);
+            var nameAndDateOfBirth = getProvenIdentityNameAndDateOfBirth(vcs);
             provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.getName());
             provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
             if (profileType.equals(ProfileType.GPG45)) {
-                List<Address> addresses =
-                        getProvenIdentityAddresses(credentials, currentVcStatuses);
+                var addresses = getProvenIdentityAddresses(vcs, currentVcStatuses);
                 provenUserIdentityDetailsBuilder.addresses(addresses);
             }
 
@@ -151,12 +148,11 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Tracing
-    private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
-            List<VcStoreItem> credentialIssuerItems)
+    private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(List<VerifiableCredential> vcs)
             throws ProvenUserIdentityDetailsException, CredentialParseException {
         try {
             final Optional<IdentityClaim> identityClaim =
-                    userIdentityService.findIdentityClaim(credentialIssuerItems);
+                    userIdentityService.findIdentityClaim(vcs);
 
             if (identityClaim.isEmpty()) {
                 LOGGER.error(LogHelper.buildLogMessage("Failed to generate identity claim"));
@@ -179,19 +175,15 @@ public class BuildProvenUserIdentityDetailsHandler
 
     @Tracing
     private List<Address> getProvenIdentityAddresses(
-            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
+            List<VerifiableCredential> vcs, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
-        for (VcStoreItem item : credentialIssuerItems) {
-            if (item.getCredentialIssuer().equals(ADDRESS_CRI)
+        for (var vc : vcs) {
+            if (vc.getCriId().equals(ADDRESS_CRI)
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses,
-                            configService.getComponentId(item.getCredentialIssuer()))) {
+                            currentVcStatuses, configService.getComponentId(vc.getCriId()))) {
                 JsonNode addressNode =
-                        mapper.readTree(
-                                        SignedJWT.parse(item.getCredential())
-                                                .getPayload()
-                                                .toString())
+                        mapper.readTree(SignedJWT.parse(vc.getVcString()).getPayload().toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
                                 .path(ADDRESS_CRI);
@@ -213,15 +205,13 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Tracing
-    private List<VcStatusDto> generateCurrentVcStatuses(List<VcStoreItem> credentials)
-            throws ParseException {
+    private List<VcStatusDto> generateCurrentVcStatuses(List<VerifiableCredential> vcs) {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
-        for (VcStoreItem item : credentials) {
-            SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            boolean isSuccessful = VcHelper.isSuccessfulVc(signedJWT);
+        for (var vc : vcs) {
+            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
+            vcStatuses.add(new VcStatusDto(vc.getClaimsSet().getIssuer(), isSuccessful));
         }
         return vcStatuses;
     }
