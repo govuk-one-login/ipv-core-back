@@ -1160,6 +1160,27 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(testJourneyResponse, journeyResponse.getJourney());
     }
 
+    @Test
+    void shouldReturnJourneyFailedWhenHasBreachedCIAndIsBreachingCi() throws Exception {
+        var testContraIndicators = ContraIndicators.builder().build();
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(ciMitService.getContraIndicatorsVC(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
+
+        //
+        // when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators)).thenReturn(Optional.of(any()));
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, journeyResponse.getJourney());
+    }
+
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
         return Stream.of(
                 Map.of("vtr", List.of(Vot.P2), "operationalCredVot", Optional.empty()),
