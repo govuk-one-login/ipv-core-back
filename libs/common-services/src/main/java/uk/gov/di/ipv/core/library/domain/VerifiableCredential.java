@@ -38,6 +38,10 @@ public class VerifiableCredential {
     public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
             throws CredentialParseException {
         // Vcs from the store are assumed to be valid
+        if (vcStoreItem == null) {
+            return null;
+        }
+
         try {
             var jwt = SignedJWT.parse(vcStoreItem.getCredential());
             return new VerifiableCredential(
