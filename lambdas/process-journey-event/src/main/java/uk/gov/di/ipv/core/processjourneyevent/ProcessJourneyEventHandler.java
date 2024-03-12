@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -150,7 +151,8 @@ public class ProcessJourneyEventHandler
             String journeyEvent, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
-            updateUserSessionForTimeout(ipvSessionItem.getUserState(), ipvSessionItem);
+            updateUserSessionForTimeout(
+                    ipvSessionItem.getUserState(), ipvSessionItem, auditEventUser);
             journeyEvent = NEXT_EVENT;
         }
 
@@ -255,18 +257,19 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private void updateUserSessionForTimeout(String oldState, IpvSessionItem ipvSessionItem) {
+    private void updateUserSessionForTimeout(
+            String oldState, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
+            throws SqsException {
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.SESSION_TIMEOUT);
+        ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         updateUserState(oldState, CORE_SESSION_TIMEOUT_STATE, "timeout", ipvSessionItem);
+        sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT);
     }
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        // Needed to be compared out-of line to avoid IpvSessionItem can't be cast to List failure
-        var journeyType = ipvSessionItem.getJourneyType();
-        return (!IpvJourneyTypes.SESSION_TIMEOUT.equals(journeyType))
+        return (!SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
