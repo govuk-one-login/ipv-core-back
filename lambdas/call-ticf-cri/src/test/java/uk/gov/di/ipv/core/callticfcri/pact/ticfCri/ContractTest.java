@@ -10,9 +10,9 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import com.nimbusds.jwt.SignedJWT;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,12 +46,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
-// @Disabled("PACT tests should not be run in build pipelines at this time")
+@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "TicfCriProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
+    private static final String TEST_USER = "dummyUserId";
     private static final String API_PATH = "/risk-assessment";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final String PRIVATE_TICF_SIGNING_KEY =
@@ -120,15 +121,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(passportVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -188,15 +189,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(passportVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -254,15 +255,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(passportVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -323,15 +324,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(passportVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -382,15 +383,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(dvlaVcJwtHelper.buildJwt(), passportVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -443,12 +444,12 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem(), List.of());
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -509,15 +510,15 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        List<SignedJWT> ticfVcs =
+        var ticfVcs =
                 underTest.getTicfVc(
                         getClientOAuthSessionItem(),
                         getIpvSessionItem(),
                         List.of(dvlaWithCiVcJwtHelper.buildJwt()));
 
         // Assert
-        var claimsSet = ticfVcs.get(0).getJWTClaimsSet();
-        assertThat(claimsSet.getSubject(), is("dummyUserId"));
+        var claimsSet = ticfVcs.get(0).getClaimsSet();
+        assertThat(claimsSet.getSubject(), is(TEST_USER));
         assertThat(claimsSet.getAudience().get(0), is("https://identity.account.gov.uk"));
         assertThat(claimsSet.getIssuer(), is("https://ticf.account.gov.uk"));
         assertThat(claimsSet.getClaim("jti"), is("test-jti"));
@@ -541,7 +542,7 @@ class ContractTest {
     @NotNull
     private TicfCriService getTicfCriService() {
         var verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(
+                new VerifiableCredentialValidator(
                         mockConfigService,
                         ((exactMatchClaims, requiredClaims) ->
                                 new FixedTimeJWTClaimsVerifier<>(
@@ -554,7 +555,7 @@ class ContractTest {
     private DslPart getRequestBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
                         (body) -> {
-                            body.stringType("sub", "dummyUserId");
+                            body.stringType("sub", TEST_USER);
                             body.minArrayLike("vtr", 1, PactDslJsonRootValue.stringType("P2"), 1);
                             body.stringValue("vot", "P2");
                             body.stringValue("vtm", "https://oidc.account.gov.uk/trustmark");
@@ -574,7 +575,7 @@ class ContractTest {
     private DslPart getResponseBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
                         (body) -> {
-                            body.stringValue("sub", "dummyUserId");
+                            body.stringValue("sub", TEST_USER);
                             body.minArrayLike("vtr", 1, PactDslJsonRootValue.stringType("P2"), 1);
                             body.stringValue("vot", "P2");
                             body.stringValue("vtm", "https://oidc.account.gov.uk/trustmark");
@@ -596,7 +597,7 @@ class ContractTest {
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
         return ClientOAuthSessionItem.builder()
-                .userId("dummyUserId")
+                .userId(TEST_USER)
                 .vtr(List.of("P2"))
                 .govukSigninJourneyId("dummyGovukSigninJourneyId")
                 .build();

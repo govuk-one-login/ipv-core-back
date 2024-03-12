@@ -32,8 +32,10 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -49,14 +51,12 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +69,7 @@ import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -96,7 +97,6 @@ public class BuildCriOauthRequestHandler
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final ConfigService configService;
-    private final UserIdentityService userIdentityService;
     private final KmsEs256SignerFactory signerFactory;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
@@ -107,7 +107,6 @@ public class BuildCriOauthRequestHandler
 
     public BuildCriOauthRequestHandler(
             ConfigService configService,
-            UserIdentityService userIdentityService,
             KmsEs256SignerFactory signerFactory,
             AuditService auditService,
             IpvSessionService ipvSessionService,
@@ -117,7 +116,6 @@ public class BuildCriOauthRequestHandler
             VerifiableCredentialService verifiableCredentialService) {
 
         this.configService = configService;
-        this.userIdentityService = userIdentityService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
@@ -131,7 +129,6 @@ public class BuildCriOauthRequestHandler
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
         this.configService = new ConfigService();
-        this.userIdentityService = new UserIdentityService(configService);
         this.signerFactory = new KmsEs256SignerFactory();
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
@@ -248,6 +245,14 @@ public class BuildCriOauthRequestHandler
                             ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
                             e.getMessage())
                     .toObjectMap();
+        } catch (CredentialParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to get credentials to build request.", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_BAD_REQUEST,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (ParseException | JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse encryption public JWK.", e));
             return new JourneyErrorResponse(
@@ -308,16 +313,16 @@ public class BuildCriOauthRequestHandler
             String context,
             String scope)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
-                    UnknownEvidenceTypeException {
+                    UnknownEvidenceTypeException, CredentialParseException {
 
-        List<SignedJWT> credentials = getSignedJWTs(userId);
+        var vcs = getGpg45Vcs(userId);
 
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributesForUser(ipvSessionItem, credentials, criId);
+                getSharedAttributesForUser(ipvSessionItem, vcs, criId);
         EvidenceRequest evidenceRequest = null;
 
         if (criId.equals(F2F_CRI)) {
-            evidenceRequest = getEvidenceRequestForF2F(credentials);
+            evidenceRequest = getEvidenceRequestForF2F(vcs);
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -336,9 +341,9 @@ public class BuildCriOauthRequestHandler
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
-    private EvidenceRequest getEvidenceRequestForF2F(List<SignedJWT> credentials)
-            throws UnknownEvidenceTypeException, ParseException {
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+    private EvidenceRequest getEvidenceRequestForF2F(List<VerifiableCredential> vcs)
+            throws UnknownEvidenceTypeException {
+        var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
                         Vot.P2.getSupportedGpg45Profiles());
@@ -371,24 +376,12 @@ public class BuildCriOauthRequestHandler
         return new EvidenceRequest(minViableStrengthOpt.getAsInt());
     }
 
-    private List<SignedJWT> getSignedJWTs(String userId) throws HttpResponseExceptionWithErrorBody {
-        List<String> credentials =
-                userIdentityService.getIdentityCredentials(
-                        VcHelper.filterVCBasedOnProfileType(
-                                verifiableCredentialService.getVcStoreItems(userId),
-                                ProfileType.GPG45));
-
-        List<SignedJWT> signedJWTs = new ArrayList<>();
-
-        for (String credential : credentials) {
-            try {
-                signedJWTs.add(SignedJWT.parse(credential));
-            } catch (ParseException e) {
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-            }
-        }
-        return signedJWTs;
+    private List<VerifiableCredential> getGpg45Vcs(String userId) throws CredentialParseException {
+        return VcHelper.filterVCBasedOnProfileType(
+                        verifiableCredentialService.getVcs(userId), ProfileType.GPG45)
+                .stream()
+                .filter(vc -> !vc.getCriId().equals(TICF_CRI))
+                .toList();
     }
 
     @Tracing
@@ -402,19 +395,22 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials, String criId)
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, String criId)
             throws HttpResponseExceptionWithErrorBody {
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
         boolean hasAddressVc = false;
-        for (SignedJWT credential : credentials) {
+        for (var vc : vcs) {
             try {
-                String credentialIss = credential.getJWTClaimsSet().getIssuer();
+                String credentialIss = vc.getClaimsSet().getIssuer();
 
-                if (VcHelper.isSuccessfulVc(credential)) {
+                if (VcHelper.isSuccessfulVc(vc)) {
                     JsonNode credentialSubject =
-                            mapper.readTree(credential.getPayload().toString())
+                            mapper.readTree(
+                                            SignedJWT.parse(vc.getVcString())
+                                                    .getPayload()
+                                                    .toString())
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT);
                     if (credentialSubject.isMissingNode()) {

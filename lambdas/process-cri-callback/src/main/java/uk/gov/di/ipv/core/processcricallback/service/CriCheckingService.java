@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -36,7 +37,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -211,14 +211,13 @@ public class CriCheckingService {
     }
 
     public JourneyResponse checkVcResponse(
-            VerifiableCredentialResponse vcResponse,
+            List<VerifiableCredential> vcs,
             CriCallbackRequest callbackRequest,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    ParseException, CredentialParseException,
-                    MitigationRouteConfigNotFoundException {
+                    CredentialParseException, MitigationRouteConfigNotFoundException {
         var cis =
-                ciMitService.getContraIndicatorsVC(
+                ciMitService.getContraIndicators(
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         callbackRequest.getIpAddress());
@@ -227,12 +226,12 @@ public class CriCheckingService {
             return ciMitUtilityService.getCiMitigationJourneyStep(cis).orElse(JOURNEY_FAIL_WITH_CI);
         }
 
-        if (!userIdentityService.areVCsCorrelated(
-                verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId()))) {
+        if (!userIdentityService.areVcsCorrelated(
+                verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        if (!VcHelper.isSuccessfulVcs(vcResponse.getVerifiableCredentials())) {
+        if (!vcs.stream().allMatch(VcHelper::isSuccessfulVc)) {
             return JOURNEY_FAIL_WITH_NO_CI;
         }
 

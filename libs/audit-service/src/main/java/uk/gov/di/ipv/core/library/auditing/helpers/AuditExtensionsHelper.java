@@ -2,15 +2,13 @@ package uk.gov.di.ipv.core.library.auditing.helpers;
 
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-
-import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -29,25 +27,24 @@ public class AuditExtensionsHelper {
     private AuditExtensionsHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            SignedJWT verifiableCredential, Boolean isSuccessful)
-            throws ParseException, AuditExtensionException, UnrecognisedVotException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var evidence = vc.getAsString(VC_EVIDENCE);
+            VerifiableCredential vc, Boolean isSuccessful)
+            throws AuditExtensionException, UnrecognisedVotException {
+        var jwtClaimsSet = vc.getClaimsSet();
+        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var evidence = vcClaim.getAsString(VC_EVIDENCE);
         return new AuditExtensionsVcEvidence(
                 jwtClaimsSet.getIssuer(),
                 evidence,
                 isSuccessful,
-                VcHelper.getVcVot(verifiableCredential),
-                VcHelper.checkIfDocUKIssuedForCredential(verifiableCredential),
-                VcHelper.extractAgeFromCredential(verifiableCredential));
+                VcHelper.getVcVot(vc),
+                VcHelper.checkIfDocUKIssuedForCredential(vc),
+                VcHelper.extractAgeFromCredential(vc));
     }
 
-    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(SignedJWT verifiableCredential)
-            throws ParseException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {
+        var jwtClaimsSet = vc.getClaimsSet();
+        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
         var name = (JSONArray) credentialSubject.get(VC_NAME);
 
         var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
@@ -78,9 +75,9 @@ public class AuditExtensionsHelper {
     }
 
     public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
-            SignedJWT inheritedIdentityJwt) throws ParseException {
-        var vc = (JSONObject) inheritedIdentityJwt.getJWTClaimsSet().getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+            VerifiableCredential vc) {
+        var vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
 
         return new AuditRestrictedInheritedIdentity(
                 (JSONArray) credentialSubject.get(VC_NAME),

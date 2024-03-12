@@ -3,9 +3,11 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.List;
 
+@Getter
 @EqualsAndHashCode
 public class IdentityClaim {
     private final List<Name> name;
@@ -16,14 +18,6 @@ public class IdentityClaim {
             @JsonProperty(value = "birthDate", required = true) List<BirthDate> birthDate) {
         this.name = name;
         this.birthDate = birthDate;
-    }
-
-    public List<Name> getName() {
-        return name;
-    }
-
-    public List<BirthDate> getBirthDate() {
-        return birthDate;
     }
 
     // Return the first name that we have (they should all be the same for now)

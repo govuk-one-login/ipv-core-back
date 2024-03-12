@@ -19,8 +19,6 @@ import java.io.InputStream;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -28,7 +26,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 @ExtendWith(MockitoExtension.class)
 class RestoreVcsHandlerTest {
     @Mock private ConfigService mockConfigService;
-    @Mock private DataStore<VcStoreItem> mockDataStore;
+    @Mock private DataStore<VcStoreItem> mockVcDataStore;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private AuditService mockAuditService;
     @InjectMocks private RestoreVcsHandler restoreVcsHandler;
@@ -44,23 +42,22 @@ class RestoreVcsHandlerTest {
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         Instant.now(),
                         Instant.now());
-        when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVc);
+        when(mockVcDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVc);
 
         // Act
         restoreVcsHandler.handleRequest(inputStream, null, null);
 
         // Assert
-        verify(mockVerifiableCredentialService)
-                .persistUserCredentialsIfNotExists(any(), eq("kbv"), eq(TEST_USER_ID));
+        verify(mockVcDataStore).createIfNotExists(testKbvVc);
         verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         var auditEvent = auditEventArgumentCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_VC_RESTORED, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
 
-        verify(mockDataStore).delete(TEST_USER_ID, "kbv");
+        verify(mockVcDataStore).delete(TEST_USER_ID, "kbv");
     }
 }

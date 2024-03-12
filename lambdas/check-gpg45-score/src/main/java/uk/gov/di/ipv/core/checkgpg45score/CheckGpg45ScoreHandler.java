@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.checkgpg45score;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,9 +13,10 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownScoreTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final IpvSessionService ipvSessionService;
-    private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String FRAUD = "fraud";
@@ -63,7 +61,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ipvSessionService = ipvSessionService;
-        this.userIdentityService = userIdentityService;
         this.verifiableCredentialService = verifiableCredentialService;
     }
 
@@ -74,7 +71,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
@@ -111,7 +107,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (ParseException e) {
+        } catch (CredentialParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Unable to parse GPG45 scores from existing credentials", e));
@@ -138,9 +134,10 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private int getScore(String ipvSessionId, String scoreType)
-            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
-        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+            throws UnknownEvidenceTypeException, UnknownScoreTypeException,
+                    CredentialParseException {
+        var vcs = getParsedCredentials(ipvSessionId);
+        var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         return switch (scoreType) {
             case FRAUD -> gpg45Scores.getFraud();
             case ACTIVITY -> gpg45Scores.getActivity();
@@ -149,18 +146,16 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         };
     }
 
-    private List<SignedJWT> getParsedCredentials(String ipvSessionId) throws ParseException {
+    private List<VerifiableCredential> getParsedCredentials(String ipvSessionId)
+            throws CredentialParseException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
         String userId = clientOAuthSessionItem.getUserId();
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientOAuthSessionItem.getGovukSigninJourneyId());
 
-        String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-        LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
-
-        return gpg45ProfileEvaluator.parseCredentials(
-                userIdentityService.getIdentityCredentials(
-                        verifiableCredentialService.getVcStoreItems(userId)));
+        return verifiableCredentialService.getVcs(userId);
     }
 }

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -27,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -36,7 +38,7 @@ import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
@@ -61,6 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 
 @Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
@@ -135,21 +138,29 @@ class ContractTest {
                 .forEach(
                         credential -> {
                             try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                NINO_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
 
                                 JsonNode credentialSubject =
                                         objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .readTree(vc.getClaimsSet().toString())
                                                 .get("vc")
                                                 .get("credentialSubject");
 
-                                JsonNode vc =
+                                JsonNode vcClaim =
                                         objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 
-                                JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
 
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
@@ -240,16 +251,24 @@ class ContractTest {
                 .forEach(
                         credential -> {
                             try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                NINO_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
 
-                                JsonNode vc =
+                                JsonNode vcClaim =
                                         objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 
-                                JsonNode evidence = vc.get("evidence").get(0);
-                                JsonNode credentialSubject = vc.get("credentialSubject");
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
+                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
 
                                 JsonNode ciNode = evidence.get("ci");
                                 JsonNode nameParts =
@@ -341,12 +360,20 @@ class ContractTest {
                 .forEach(
                         credential -> {
                             try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                NINO_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
 
                                 JsonNode credentialSubject =
                                         objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .readTree(vc.getClaimsSet().toString())
                                                 .get("vc")
                                                 .get("credentialSubject");
 
@@ -433,16 +460,24 @@ class ContractTest {
                 .forEach(
                         credential -> {
                             try {
-                                verifiableCredentialJwtValidator.validate(
-                                        credential, credentialIssuerConfig, TEST_USER);
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                NINO_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
 
-                                JsonNode vc =
+                                JsonNode vcClaim =
                                         objectMapper
-                                                .readTree(credential.getJWTClaimsSet().toString())
+                                                .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 
-                                JsonNode credentialSubject = vc.get("credentialSubject");
-                                JsonNode evidence = vc.get("evidence").get(0);
+                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
 
                                 JsonNode ciNode = evidence.get("ci");
                                 JsonNode nameParts =
@@ -687,8 +722,8 @@ class ContractTest {
     }
 
     @NotNull
-    private VerifiableCredentialJwtValidator getVerifiableCredentialJwtValidator() {
-        return new VerifiableCredentialJwtValidator(
+    private VerifiableCredentialValidator getVerifiableCredentialJwtValidator() {
+        return new VerifiableCredentialValidator(
                 mockConfigService,
                 ((exactMatchClaims, requiredClaims) ->
                         new FixedTimeJWTClaimsVerifier<>(

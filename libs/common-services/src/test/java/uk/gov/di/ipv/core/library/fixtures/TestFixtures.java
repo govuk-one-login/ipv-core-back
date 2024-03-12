@@ -9,6 +9,8 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
@@ -52,6 +54,7 @@ public interface TestFixtures {
 
     // As this is public test data you can generate VC signed JWTs using https://jwt.io/. Use the EC
     // public/private keys above to sign test VCs
+
     Map<String, Object> CREDENTIAL_ATTRIBUTES_1 =
             Map.of(
                     "name",
@@ -219,6 +222,13 @@ public interface TestFixtures {
         } catch (JOSEException e) {
             throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
         }
+    }
+
+    static VerifiableCredential createVerifiableCredential(
+            String userId, String credentialIssuer, String credential)
+            throws CredentialParseException {
+        return VerifiableCredential.fromVcStoreItem(
+                createVcStoreItem(userId, credentialIssuer, credential));
     }
 
     static VcStoreItem createVcStoreItem(

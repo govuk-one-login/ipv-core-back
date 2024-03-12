@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -45,6 +44,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
 import java.util.Map;
@@ -65,7 +65,9 @@ public class BuildUserIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
@@ -73,7 +75,8 @@ public class BuildUserIdentityHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService) {
+            CiMitUtilityService ciMitUtilityService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -81,6 +84,7 @@ public class BuildUserIdentityHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -92,6 +96,7 @@ public class BuildUserIdentityHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
     @Override
@@ -147,16 +152,17 @@ public class BuildUserIdentityHandler
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
-            SignedJWT signedCiMitJwt =
-                    ciMitService.getContraIndicatorsVCJwt(
+            var contraIndicatorsVc =
+                    ciMitService.getContraIndicatorsVc(
                             userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
-            ContraIndicators contraIndicators = ciMitService.getContraIndicators(signedCiMitJwt);
+            var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
+
+            var vcs = verifiableCredentialService.getVcs(userId);
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
-                            userId, userId, ipvSessionItem.getVot(), contraIndicators);
-
-            userIdentity.getVcs().add(signedCiMitJwt.serialize());
+                            vcs, userId, ipvSessionItem.getVot(), contraIndicators);
+            userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
 
             sendIdentityIssuedAuditEvent(
                     ipvSessionItem, auditEventUser, contraIndicators, userIdentity);

@@ -8,12 +8,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,7 +60,11 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForPassportCredential() throws Exception {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(SignedJWT.parse(M1A_PASSPORT_VC)));
+        Gpg45Scores builtScores =
+                evaluator.buildScore(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_PASSPORT_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0);
 
         assertEquals(expectedScores, builtScores);
@@ -71,7 +75,11 @@ class Gpg45ProfileEvaluatorTest {
 
         Gpg45Scores builtScores =
                 evaluator.buildScore(
-                        List.of(SignedJWT.parse(M1A_PASSPORT_VC), SignedJWT.parse(M1A_ADDRESS_VC)));
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_PASSPORT_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_ADDRESS_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0);
 
         assertEquals(expectedScores, builtScores);
@@ -84,9 +92,12 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores builtScores =
                 evaluator.buildScore(
                         List.of(
-                                SignedJWT.parse(M1A_PASSPORT_VC),
-                                SignedJWT.parse(M1A_ADDRESS_VC),
-                                SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC)));
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_PASSPORT_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_ADDRESS_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 0);
 
         assertEquals(expectedScores, builtScores);
@@ -99,9 +110,14 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores builtScores =
                 evaluator.buildScore(
                         List.of(
-                                SignedJWT.parse(M1A_PASSPORT_VC),
-                                SignedJWT.parse(M1A_ADDRESS_VC),
-                                SignedJWT.parse(M1B_EXPERIAN_FRAUD_WITH_ACTIVITY_VC)));
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_PASSPORT_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_ADDRESS_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null,
+                                        null,
+                                        SignedJWT.parse(M1B_EXPERIAN_FRAUD_WITH_ACTIVITY_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 1, 1, 0);
 
         assertEquals(expectedScores, builtScores);
@@ -115,10 +131,14 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores builtScores =
                 evaluator.buildScore(
                         List.of(
-                                SignedJWT.parse(M1A_PASSPORT_VC),
-                                SignedJWT.parse(M1A_ADDRESS_VC),
-                                SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC),
-                                SignedJWT.parse(M1A_EXPERIAN_KBV_VC)));
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_PASSPORT_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_ADDRESS_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_EXPERIAN_FRAUD_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_EXPERIAN_KBV_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2);
 
         assertEquals(expectedScores, builtScores);
@@ -126,7 +146,11 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForDcmawCredential() throws Exception {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(SignedJWT.parse(M1B_DCMAW_VC)));
+        Gpg45Scores builtScores =
+                evaluator.buildScore(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1B_DCMAW_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 2);
 
         assertEquals(expectedScores, builtScores);
@@ -134,7 +158,11 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForF2FCredential() throws Exception {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(SignedJWT.parse(M1A_F2F_VC)));
+        Gpg45Scores builtScores =
+                evaluator.buildScore(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_F2F_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 2);
 
         assertEquals(expectedScores, builtScores);
@@ -143,34 +171,15 @@ class Gpg45ProfileEvaluatorTest {
     @Test
     void buildScoreShouldReturnCorrectScoreForF2FCredentialAndZeroScores() throws Exception {
         Gpg45Scores builtScores =
-                evaluator.buildScore(List.of(SignedJWT.parse(M1A_F2F_VC_VERIFICATION_SCORE_ZERO)));
+                evaluator.buildScore(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null,
+                                        null,
+                                        SignedJWT.parse(M1A_F2F_VC_VERIFICATION_SCORE_ZERO))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_40, 0, 0, 3);
 
         assertEquals(expectedScores, builtScores);
-    }
-
-    @Test
-    void parseCredentialsParsesCredentials() throws Exception {
-        List<String> expected =
-                List.of(
-                        M1A_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        M1A_EXPERIAN_KBV_VC);
-
-        List<SignedJWT> parsedCredentials =
-                evaluator.parseCredentials(
-                        List.of(
-                                M1A_PASSPORT_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                M1A_EXPERIAN_KBV_VC));
-
-        // reserializing for ease of assertions. SignedJWT.equals() checks equality by reference
-        List<String> reserializedCredentials =
-                parsedCredentials.stream().map(SignedJWT::serialize).collect(Collectors.toList());
-
-        assertEquals(expected, reserializedCredentials);
     }
 
     @ParameterizedTest
@@ -178,7 +187,7 @@ class Gpg45ProfileEvaluatorTest {
     void calculateEvidencesRequiredToMeetAProfileShouldReturnCorrectEvidences(
             Gpg45Scores acquiredEvidenceScores,
             List<Gpg45Profile> profiles,
-            List<Gpg45Profile> expectedMissingEvidences,
+            List<Gpg45Scores> expectedMissingEvidences,
             String message) {
         assertEquals(
                 expectedMissingEvidences,

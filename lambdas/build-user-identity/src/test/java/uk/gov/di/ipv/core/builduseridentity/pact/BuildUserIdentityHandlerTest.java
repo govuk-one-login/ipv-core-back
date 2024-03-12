@@ -20,8 +20,10 @@ import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -35,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -65,6 +68,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
+    @Mock private VerifiableCredentialService verifiableCredentialService;
 
     @BeforeAll
     static void setupServer() {
@@ -74,9 +78,9 @@ class BuildUserIdentityHandlerTest {
 
     @BeforeEach
     void pactSetup(PactVerificationContext context)
-            throws IOException, CiRetrievalException, ParseException {
+            throws IOException, CiRetrievalException, ParseException, CredentialParseException {
 
-        var userIdentityService = new UserIdentityService(mockConfigService, mockVcStore);
+        var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockConfigService);
         var clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
@@ -84,8 +88,8 @@ class BuildUserIdentityHandlerTest {
         // Configure CIMIT service to return VC and no CIs
         var jwtBuilder =
                 new PactJwtBuilder(VC_HEADER, CIMIT_VC_NO_CIS_BODY, CIMIT_VC_NO_CIS_SIGNATURE);
-        var cimitVc = jwtBuilder.buildSignedJwt();
-        when(mockCiMitService.getContraIndicatorsVCJwt(
+        var cimitVc = VerifiableCredential.fromValidJwt(null, null, jwtBuilder.buildSignedJwt());
+        when(mockCiMitService.getContraIndicatorsVc(
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
@@ -134,7 +138,8 @@ class BuildUserIdentityHandlerTest {
                         mockAuditService,
                         clientOAuthSessionDetailsService,
                         mockCiMitService,
-                        mockCiMitUtilityService);
+                        mockCiMitUtilityService,
+                        verifiableCredentialService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity", PORT);
         httpServer.startServer();

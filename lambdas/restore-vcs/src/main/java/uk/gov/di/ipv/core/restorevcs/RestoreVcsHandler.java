@@ -3,9 +3,10 @@ package uk.gov.di.ipv.core.restorevcs;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -15,10 +16,13 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -27,13 +31,11 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.restorevcs.exceptions.RestoreVcException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -43,18 +45,18 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 public class RestoreVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
-    private final VerifiableCredentialService verifiableCredentialService;
+    private final DataStore<VcStoreItem> vcDataStore;
     private final DataStore<VcStoreItem> archivedVcDataStore;
     private final AuditService auditService;
 
     @SuppressWarnings("unused") // Used through dependency injection
     public RestoreVcsHandler(
             ConfigService configService,
-            VerifiableCredentialService verifiableCredentialService,
+            DataStore<VcStoreItem> vcDataStore,
             DataStore<VcStoreItem> archivedVcDataStore,
             AuditService auditService) {
         this.configService = configService;
-        this.verifiableCredentialService = verifiableCredentialService;
+        this.vcDataStore = vcDataStore;
         this.archivedVcDataStore = archivedVcDataStore;
         this.auditService = auditService;
     }
@@ -63,6 +65,14 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     public RestoreVcsHandler() {
         this.configService = new ConfigService();
         boolean isRunningLocally = this.configService.isRunningLocally();
+        this.vcDataStore =
+                new DataStore<>(
+                        this.configService.getEnvironmentVariable(
+                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                        VcStoreItem.class,
+                        DataStore.getClient(isRunningLocally),
+                        isRunningLocally,
+                        configService);
         this.archivedVcDataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(
@@ -71,7 +81,6 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
     }
 
@@ -142,9 +151,9 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void restore(UserIdCriIdPair userIdCriIdPair)
-            throws ParseException, VerifiableCredentialException, CredentialAlreadyExistsException,
-                    SqsException, RestoreVcException, AuditExtensionException,
-                    UnrecognisedVotException {
+            throws VerifiableCredentialException, CredentialAlreadyExistsException, SqsException,
+                    RestoreVcException, AuditExtensionException, UnrecognisedVotException,
+                    CredentialParseException {
         // Read VC with userId and CriId
         var archivedVc =
                 archivedVcDataStore.getItem(
@@ -152,9 +161,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
 
         if (archivedVc != null) {
             // Restore VC if empty
-            var signedArchivedVc = SignedJWT.parse(archivedVc.getCredential());
-            verifiableCredentialService.persistUserCredentialsIfNotExists(
-                    signedArchivedVc, userIdCriIdPair.getCriId(), userIdCriIdPair.getUserId());
+            createVcStoreItemIfNotExists(archivedVc);
 
             // Send audit event
             sendVcRestoredAuditEvent(userIdCriIdPair.getUserId(), archivedVc);
@@ -166,12 +173,27 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         }
     }
 
+    public void createVcStoreItemIfNotExists(
+            VcStoreItem vcStoreItem) // moved from verifiableCredentialService
+            throws VerifiableCredentialException, CredentialAlreadyExistsException {
+        try {
+            vcDataStore.createIfNotExists(vcStoreItem);
+        } catch (ConditionalCheckFailedException e) {
+            throw new CredentialAlreadyExistsException();
+        } catch (Exception e) {
+            LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+        }
+    }
+
     private void sendVcRestoredAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws ParseException, SqsException, AuditExtensionException, UnrecognisedVotException {
+            throws SqsException, AuditExtensionException, UnrecognisedVotException,
+                    CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
-        var signedCredential = SignedJWT.parse(vcStoreItem.getCredential());
-        AuditExtensionsVcEvidence auditExtensions = getExtensionsForAudit(signedCredential, null);
+        AuditExtensionsVcEvidence auditExtensions =
+                getExtensionsForAudit(VerifiableCredential.fromVcStoreItem(vcStoreItem), null);
 
         var auditEvent =
                 new AuditEvent(

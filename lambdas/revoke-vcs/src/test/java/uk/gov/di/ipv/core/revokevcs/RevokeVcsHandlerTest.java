@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -45,36 +46,36 @@ class RevokeVcsHandlerTest {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
-        VcStoreItem testKbvVc =
+        var testKbvVcStoreItem =
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         Instant.now(),
                         Instant.now());
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
-                .thenReturn(testKbvVc);
+        when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVcStoreItem);
 
         // Act
         revokeVcsHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
-        verify(mockDataStore).create(testKbvVc);
+        verify(mockDataStore).create(testKbvVcStoreItem);
         verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         var auditEvent = auditEventArgumentCaptor.getValue();
         assertEquals(AuditEventTypes.IPV_VC_REVOKED, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
 
-        verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, "kbv");
+        verify(mockDataStore).delete(TEST_USER_ID, "kbv");
     }
 
     @Test
-    void shouldNotRevokeVcIfDoesNotExist() throws IOException, SqsException {
+    void shouldNotRevokeVcIfDoesNotExist()
+            throws IOException, SqsException, CredentialParseException {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv")).thenReturn(null);
+        when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(null);
 
         // Act
         revokeVcsHandler.handleRequest(inputStream, outputStream, null);
@@ -93,15 +94,14 @@ class RevokeVcsHandlerTest {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");
-        VcStoreItem testKbvVc =
+        VcStoreItem testKbvVcStoreItem =
                 new VcStoreItem(
                         TEST_USER_ID,
                         "kbv",
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         Instant.now(),
                         Instant.now());
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, "kbv"))
-                .thenReturn(testKbvVc);
+        when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVcStoreItem);
         doThrow(new RuntimeException("Some error")).when(mockDataStore).create(any());
 
         // Act

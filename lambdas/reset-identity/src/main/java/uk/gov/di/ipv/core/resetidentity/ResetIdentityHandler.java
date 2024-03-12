@@ -18,6 +18,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -25,7 +27,6 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -114,17 +115,17 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<VcStoreItem> credentials =
-                    verifiableCredentialService.getVcStoreItems(clientOAuthSessionItem.getUserId());
+            List<VerifiableCredential> vcs =
+                    verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId());
 
             if (deleteOnlyGPG45VCs) {
-                credentials = VcHelper.filterVCBasedOnProfileType(credentials, ProfileType.GPG45);
+                vcs = VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45);
             }
 
             // Make sure we do this before deleting the credentials!
-            String userName = getUnconfirmedUserName(credentials);
+            String userName = getUnconfirmedUserName(vcs);
 
-            verifiableCredentialService.deleteVcStoreItems(credentials, isUserInitiated);
+            verifiableCredentialService.deleteVcs(vcs, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             if (isUserInitiated) {
@@ -148,6 +149,15 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             LOGGER.error(LogHelper.buildErrorMessage("HTTP response exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
+        } catch (CredentialParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (SqsException e) {
             LOGGER.error(
@@ -177,10 +187,10 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
     // Try to get the user's name from their VCs. It's not the end of the world if this fails so
     // just return null in that case.
-    private String getUnconfirmedUserName(List<VcStoreItem> credentials) {
+    private String getUnconfirmedUserName(List<VerifiableCredential> vcs) {
         try {
             final Optional<IdentityClaim> identityClaim =
-                    userIdentityService.findIdentityClaim(credentials, false);
+                    userIdentityService.findIdentityClaim(vcs, false);
 
             if (identityClaim.isEmpty()) {
                 LOGGER.warn(LogHelper.buildLogMessage("Failed to find identity claim"));
