@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.D02_MITIGATION_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ALTERNATE_DOC_MITIGATION_ENABLED;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ALTERNATE_DOC_PATH;
 
 public class CiMitUtilityService {
@@ -46,7 +46,7 @@ public class CiMitUtilityService {
                 String journeyEvent =
                         getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument()).event();
                 if (journeyEvent.startsWith(JOURNEY_ALTERNATE_DOC_PATH)
-                        && !configService.enabled(D02_MITIGATION_ENABLED)) {
+                        && !configService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)) {
                     return Optional.empty();
                 }
                 return Optional.of(new JourneyResponse(journeyEvent));

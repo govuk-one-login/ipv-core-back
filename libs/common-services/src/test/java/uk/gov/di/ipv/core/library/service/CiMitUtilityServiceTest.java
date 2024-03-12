@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.D02_MITIGATION_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ALTERNATE_DOC_MITIGATION_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitUtilityServiceTest {
@@ -331,7 +331,7 @@ class CiMitUtilityServiceTest {
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
-        when(mockConfigService.enabled(D02_MITIGATION_ENABLED)).thenReturn(false);
+        when(mockConfigService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)).thenReturn(false);
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 
@@ -361,7 +361,7 @@ class CiMitUtilityServiceTest {
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
-        when(mockConfigService.enabled(D02_MITIGATION_ENABLED)).thenReturn(true);
+        when(mockConfigService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)).thenReturn(true);
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
 

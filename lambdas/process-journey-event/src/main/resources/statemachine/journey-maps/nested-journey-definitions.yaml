@@ -15,8 +15,6 @@ ADDRESS_AND_FRAUD:
           targetState: CRI_FRAUD
         enhanced-verification:
           targetState: CRI_FRAUD
-        alternate-doc-invalid-dl:
-          targetState: CRI_FRAUD
     CRI_FRAUD:
       response:
         type: cri
