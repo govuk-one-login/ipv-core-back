@@ -835,7 +835,7 @@ MITIGATION_03_OPTIONS:
       targetState: MITIGATION_PP_CRI_UK_PASSPORT
     end:
       targetJourney: INELIGIBLE
-      targetState: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 # Mitigation journey (04) separate session - invalid-dl
 MITIGATION_04:
@@ -867,7 +867,7 @@ MITIGATION_04_IDENTITY_START_PAGE:
       targetState: MITIGATION_PP_CRI_UK_PASSPORT
     end:
       targetJourney: INELIGIBLE
-      targetState: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
 
 # Passport journey (MITIGATION)
 MITIGATION_PP_CRI_UK_PASSPORT:
