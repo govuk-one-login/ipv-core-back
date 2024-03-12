@@ -45,7 +45,13 @@ CHECK_EXISTING_IDENTITY:
     enhanced-verification:
       targetJourney: NEW_P2_IDENTITY
       targetState: ENHANCED_VERIFICATION
-
+    alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED
+      checkFeatureFlag:
+        d02MitigationEnabled:
+          targetJourney: NEW_P2_IDENTITY
+          targetState: ALTERNATE_DOC_PASSPORT
 RESET_IDENTITY:
   response:
     type: process

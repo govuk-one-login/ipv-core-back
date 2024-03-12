@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.D02_MITIGATION_ENABLED;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ALTERNATE_DOC_PATH;
 
 public class CiMitUtilityService {
     private final ConfigService configService;
@@ -41,10 +43,13 @@ public class CiMitUtilityService {
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
-                return Optional.of(
-                        new JourneyResponse(
-                                getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
-                                        .event()));
+                String journeyEvent =
+                        getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument()).event();
+                if (journeyEvent.startsWith(JOURNEY_ALTERNATE_DOC_PATH)
+                        && !configService.enabled(D02_MITIGATION_ENABLED)) {
+                    return Optional.empty();
+                }
+                return Optional.of(new JourneyResponse(journeyEvent));
             }
         }
         return Optional.empty();
