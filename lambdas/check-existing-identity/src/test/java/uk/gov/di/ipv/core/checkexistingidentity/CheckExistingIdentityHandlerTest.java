@@ -1173,7 +1173,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitService.getContraIndicatorsVC(
+        when(ciMitService.getContraIndicators(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);

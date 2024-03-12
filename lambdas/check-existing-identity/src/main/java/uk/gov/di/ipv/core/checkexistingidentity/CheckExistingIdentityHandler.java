@@ -212,7 +212,7 @@ public class CheckExistingIdentityHandler
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
             var contraIndicators =
-                    ciMitService.getContraIndicatorsVC(
+                    ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             var ciScoringCheckResponse = checkForCIScoringFailure(contraIndicators);
@@ -379,7 +379,7 @@ public class CheckExistingIdentityHandler
                     .getMitigatedCiJourneyStep(mitigatedCI.get())
                     .orElse(JOURNEY_RESET_GPG45_IDENTITY);
         }
-        if (!VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).isEmpty()) {
+        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
