@@ -398,7 +398,7 @@ CRI_DRIVING_LICENCE_J3:
       targetJourney: FAILED
       targetState: FAILED
       checkFeatureFlag:
-        d02MitigationEnabled:
+        alternateDocMitigationEnabled:
           targetState: MITIGATION_03_OPTIONS
 
 ADDRESS_AND_FRAUD_J3:
