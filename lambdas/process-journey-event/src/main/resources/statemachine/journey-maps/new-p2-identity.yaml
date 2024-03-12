@@ -847,9 +847,9 @@ MITIGATION_04:
       deleteOnlyGPG45VCs: true
   events:
     next:
-      targetState: MITIGATION_04_DL_NO_MATCH
+      targetState: MITIGATION_04_DL_NO_MATCH_PAGE
 
-MITIGATION_04_DL_NO_MATCH:
+MITIGATION_04_DL_NO_MATCH_PAGE:
   response:
     type: page
     pageId: pyi-driving-licence-no-match
