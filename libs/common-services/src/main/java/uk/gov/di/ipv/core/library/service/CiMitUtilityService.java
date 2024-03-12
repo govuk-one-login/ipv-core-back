@@ -71,6 +71,18 @@ public class CiMitUtilityService {
                                         "No mitigation journey route event found."));
     }
 
+    public Optional<JourneyResponse> getMitigatedCiJourneyStep(ContraIndicator ci)
+            throws ConfigException, MitigationRouteConfigNotFoundException {
+        var cimitConfig = configService.getCimitConfig();
+        if (isCiMitigatable(ci)) {
+            return Optional.of(
+                    new JourneyResponse(
+                            getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
+                                    .event()));
+        }
+        return Optional.empty();
+    }
+
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
         return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();

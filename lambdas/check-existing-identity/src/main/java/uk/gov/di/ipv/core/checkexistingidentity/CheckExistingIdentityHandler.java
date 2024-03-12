@@ -376,10 +376,11 @@ public class CheckExistingIdentityHandler
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-            if (ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators).isPresent()) {
+            var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
+            if (mitigatedCI.isPresent()) {
                 return ciMitUtilityService
-                        .getCiMitigationJourneyStep(contraIndicators)
-                        .orElse(JOURNEY_FAIL_WITH_CI);
+                        .getMitigatedCiJourneyStep(mitigatedCI.get())
+                        .orElse(JOURNEY_RESET_GPG45_IDENTITY);
             }
             return JOURNEY_RESET_GPG45_IDENTITY;
         }
