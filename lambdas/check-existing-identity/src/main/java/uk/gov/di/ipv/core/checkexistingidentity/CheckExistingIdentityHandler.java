@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -210,9 +211,11 @@ public class CheckExistingIdentityHandler
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
 
-            var ciScoringCheckResponse =
-                    checkForCIScoringFailure(
-                            ipAddress, clientOAuthSessionItem, govukSigninJourneyId);
+            var contraIndicators =
+                    ciMitService.getContraIndicatorsVC(
+                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+
+            var ciScoringCheckResponse = checkForCIScoringFailure(contraIndicators);
 
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
@@ -248,7 +251,7 @@ public class CheckExistingIdentityHandler
             // No profile match
             return isF2FComplete
                     ? buildF2FNoMatchResponse(areGpg45VcsCorrelated, auditEventUser)
-                    : buildNoMatchResponse(vcs, auditEventUser);
+                    : buildNoMatchResponse(vcs, auditEventUser, contraIndicators);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             return buildErrorResponse(e.getErrorResponse(), e);
@@ -308,14 +311,8 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<JourneyResponse> checkForCIScoringFailure(
-            String ipAddress,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            String govukSigninJourneyId)
-            throws CiRetrievalException, ConfigException, MitigationRouteConfigNotFoundException {
-        var contraIndicators =
-                ciMitService.getContraIndicators(
-                        clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+    private Optional<JourneyResponse> checkForCIScoringFailure(ContraIndicators contraIndicators)
+            throws ConfigException, MitigationRouteConfigNotFoundException {
 
         // CI scoring failure
         if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
@@ -371,13 +368,19 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildNoMatchResponse(
-            List<VerifiableCredential> verifiableCredentials, AuditEventUser auditEventUser)
-            throws SqsException {
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
-                .isEmpty()) {
+            List<VerifiableCredential> verifiableCredentials,
+            AuditEventUser auditEventUser,
+            ContraIndicators contraIndicators)
+            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException {
+        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
+            if (ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators).isPresent()) {
+                return ciMitUtilityService
+                        .getCiMitigationJourneyStep(contraIndicators)
+                        .orElse(JOURNEY_FAIL_WITH_CI);
+            }
             return JOURNEY_RESET_GPG45_IDENTITY;
         }
         LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
