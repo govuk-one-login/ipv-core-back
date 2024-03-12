@@ -379,7 +379,8 @@ public class CheckExistingIdentityHandler
                     .getMitigatedCiJourneyStep(mitigatedCI.get())
                     .orElse(JOURNEY_RESET_GPG45_IDENTITY);
         }
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45).isEmpty()) {
+        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
+                .isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
