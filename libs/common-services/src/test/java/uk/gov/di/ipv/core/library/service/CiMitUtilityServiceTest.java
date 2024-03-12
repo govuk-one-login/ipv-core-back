@@ -368,4 +368,48 @@ class CiMitUtilityServiceTest {
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
     }
+
+    @Test
+    void
+            getCiMitigationJourneyStepShouldReturnEmptyWhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
+                    throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String document = "doc_type/213123";
+        String documentType = "doc_type";
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .build();
+        var mitCi =
+                ContraIndicator.builder()
+                        .code("mit_ci_code")
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .mitigation(List.of(Mitigation.builder().build()))
+                        .build();
+        var cis =
+                ContraIndicators.builder()
+                        .contraIndicatorsMap(Map.of(code, ci, "mit_ci_code", mitCi))
+                        .build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(
+                        code,
+                        new ContraIndicatorConfig(code, 7, -5, "X"),
+                        "mit_ci_code",
+                        new ContraIndicatorConfig("mit_ci_code", 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+
+        // act
+        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+
+        // assert
+        assertEquals(Optional.empty(), result);
+    }
 }

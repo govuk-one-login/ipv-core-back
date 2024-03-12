@@ -372,16 +372,18 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators)
             throws SqsException, MitigationRouteConfigNotFoundException, ConfigException {
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45).isEmpty()) {
+
+        var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
+        if (mitigatedCI.isPresent()) {
+            return ciMitUtilityService
+                    .getMitigatedCiJourneyStep(mitigatedCI.get())
+                    .orElse(JOURNEY_RESET_GPG45_IDENTITY);
+        }
+        if (!VcHelper.filterVCBasedOnProfileType(vcStoreItems, ProfileType.GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-            var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
-            if (mitigatedCI.isPresent()) {
-                return ciMitUtilityService
-                        .getMitigatedCiJourneyStep(mitigatedCI.get())
-                        .orElse(JOURNEY_RESET_GPG45_IDENTITY);
-            }
+
             return JOURNEY_RESET_GPG45_IDENTITY;
         }
         LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));

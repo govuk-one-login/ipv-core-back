@@ -31,6 +31,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -1161,24 +1163,32 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyFailedWhenHasBreachedCIAndIsBreachingCi() throws Exception {
-        var testContraIndicators = ContraIndicators.builder().build();
+    void shouldReturnSameMitigationJourneyWhenCiAlreadyMitigated() throws Exception {
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        var mitigatedCI =
+                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
+        var testContraIndicators =
+                ContraIndicators.builder().contraIndicatorsMap(Map.of(code, mitigatedCI)).build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
+        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
 
-        //
-        // when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators)).thenReturn(Optional.of(any()));
+        when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
+                .thenReturn(Optional.of(mitigatedCI));
+        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+                .thenReturn(Optional.of(new JourneyResponse(journey)));
+
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, journeyResponse.getJourney());
+        assertEquals(journey, journeyResponse.getJourney());
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
