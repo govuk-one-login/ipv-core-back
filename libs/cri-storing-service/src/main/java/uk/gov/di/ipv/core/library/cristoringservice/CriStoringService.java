@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -14,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrie
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -96,10 +95,10 @@ public class CriStoringService {
     public void storeVcs(
             String criId,
             String ipAddress,
-            List<SignedJWT> vcs,
+            List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws SqsException, ParseException, CiPutException, CiPostMitigationsException,
+            throws SqsException, CiPutException, CiPostMitigationsException,
                     VerifiableCredentialException, AuditExtensionException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
@@ -109,7 +108,7 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        for (SignedJWT vc : vcs) {
+        for (var vc : vcs) {
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_VC_RECEIVED,
@@ -118,11 +117,10 @@ public class CriStoringService {
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc))));
 
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-            ciMitService.submitMitigatingVcList(
-                    List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
+            ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
 
-            verifiableCredentialService.persistUserCredentials(vc, criId, userId);
-            ipvSessionItem.addVcReceivedThisSession(vc.serialize());
+            verifiableCredentialService.persistUserCredentials(vc);
+            ipvSessionItem.addVcReceivedThisSession(vc);
         }
 
         sendAuditEventForProcessedVcResponse(

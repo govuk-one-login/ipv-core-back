@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.replaycimitvcs;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -13,10 +12,11 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.ReplayItem;
 import uk.gov.di.ipv.core.library.domain.ReplayRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
 import uk.gov.di.ipv.core.library.helpers.ListHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +72,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
         } catch (IOException e) {
             LOGGER.error("Failed to map request to valid replay event", e);
             throw new FailedVcReplayException(String.format(failureMessage, e));
-        } catch (ParseException e) {
+        } catch (CredentialParseException e) {
             LOGGER.error("Failed to parse VC in replay event", e);
             throw new FailedVcReplayException(String.format(failureMessage, e));
         } catch (CiPutException e) {
@@ -86,16 +85,15 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     }
 
     private void handleBatch(List<ReplayItem> replayItems)
-            throws ParseException, CiPutException, CiPostMitigationsException {
-        List<String> submittedVcs = new ArrayList<>();
+            throws CiPutException, CiPostMitigationsException, CredentialParseException {
+        List<VerifiableCredential> submittedVcs = new ArrayList<>();
         for (ReplayItem item : replayItems) {
-            VcStoreItem vcStoreItem =
-                    this.verifiableCredentialService.getVcStoreItem(
+            var vc =
+                    this.verifiableCredentialService.getVc(
                             item.getUserId().get("S"), item.getCredentialIssuer().get("S"));
-            if (vcStoreItem != null) {
-                SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
+            if (vc != null) {
                 ciMitService.submitVC(vc, null, null);
-                submittedVcs.add(vc.serialize());
+                submittedVcs.add(vc);
             } else {
                 LOGGER.warn("VC not found");
             }

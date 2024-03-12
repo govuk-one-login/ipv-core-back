@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.coreback.handlers;
 
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
@@ -19,15 +20,14 @@ import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
+import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,99 +75,71 @@ public class LambdaHandler {
     }
 
     private final Route initialiseSession =
-            (Request request, Response response) -> {
-                APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
-                        new APIGatewayProxyRequestEvent();
-                apiGatewayProxyRequestEvent.setBody(request.body());
-                apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
-
-                APIGatewayProxyResponseEvent responseEvent =
-                        initialiseIpvSessionHandler.handleRequest(
-                                apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
-
-                response.type(APPLICATION_JSON);
-                return responseEvent.getBody();
-            };
+            (Request request, Response response) ->
+                    callLambdaWithProxyEvent(request, response, initialiseIpvSessionHandler);
 
     private final Route journeyEngine =
             (Request request, Response response) -> {
                 String journey = request.pathInfo();
 
-                Map<String, Object> lambdaOutput;
-                Map<String, Object> processJourneyEventOutput;
                 while (true) {
-                    processJourneyEventOutput =
+                    var processJourneyEventOutput =
                             processJourneyEventHandler.handleRequest(
                                     buildProcessJourneyEventLambdaInput(request, journey),
                                     EMPTY_CONTEXT);
 
                     journey = (String) processJourneyEventOutput.get(JOURNEY);
 
-                    if ("/journey/check-existing-identity".equals(journey)) {
-                        lambdaOutput =
-                                checkExistingIdentityHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/reset-identity".equals(journey)) {
-                        ProcessRequest processRequest =
-                                buildProcessRequest(request, processJourneyEventOutput);
-                        lambdaOutput =
-                                resetIdentityHandler.handleRequest(processRequest, EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if (journey != null
-                            && journey.matches("/journey/cri/build-oauth-request/.*")) {
-                        lambdaOutput =
-                                buildCriOauthRequestHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/build-client-oauth-response".equals(journey)) {
-                        lambdaOutput =
-                                buildClientOauthResponseHandler.handleRequest(
-                                        buildJourneyRequest(request, journey), EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/evaluate-gpg45-scores".equals(journey)) {
-                        ProcessRequest processRequest =
-                                buildProcessRequest(request, processJourneyEventOutput);
-                        lambdaOutput =
-                                evaluateGpg45ScoresHandler.handleRequest(
-                                        processRequest, EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/check-gpg45-scores".equals(journey)) {
-                        ProcessRequest processRequest =
-                                buildProcessRequest(request, processJourneyEventOutput);
-                        lambdaOutput =
-                                checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else if ("/journey/call-ticf-cri".equals(journey)) {
-                        ProcessRequest processRequest =
-                                buildProcessRequest(request, processJourneyEventOutput);
-                        lambdaOutput =
-                                callTicfCriHandler.handleRequest(processRequest, EMPTY_CONTEXT);
-                        if (!lambdaOutput.containsKey(JOURNEY)) {
-                            return gson.toJson(lambdaOutput);
-                        }
-                        journey = (String) lambdaOutput.get(JOURNEY);
-                    } else {
+                    if (journey == null) {
                         return gson.toJson(processJourneyEventOutput);
                     }
+
+                    var lambdaOutput =
+                            switch (journey) {
+                                case "/journey/check-existing-identity" -> checkExistingIdentityHandler
+                                        .handleRequest(
+                                                buildJourneyRequest(request, journey),
+                                                EMPTY_CONTEXT);
+                                case "/journey/reset-identity" -> resetIdentityHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
+                                        .handleRequest(
+                                                buildJourneyRequest(request, journey),
+                                                EMPTY_CONTEXT);
+                                case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/check-gpg45-scores" -> checkGpg45ScoreHandler
+                                        .handleRequest(
+                                                buildProcessRequest(
+                                                        request, processJourneyEventOutput),
+                                                EMPTY_CONTEXT);
+                                case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
+                                        buildProcessRequest(request, processJourneyEventOutput),
+                                        EMPTY_CONTEXT);
+                                default -> {
+                                    if (journey.matches("/journey/cri/build-oauth-request/.*")) {
+                                        yield buildCriOauthRequestHandler.handleRequest(
+                                                buildJourneyRequest(request, journey),
+                                                EMPTY_CONTEXT);
+                                    } else {
+                                        throw new UnrecognisedJourneyException(
+                                                String.format(
+                                                        "Journey not configured: %s", journey));
+                                    }
+                                }
+                            };
+
+                    if (!lambdaOutput.containsKey(JOURNEY)) {
+                        return gson.toJson(lambdaOutput);
+                    }
+
+                    journey = (String) lambdaOutput.get(JOURNEY);
                 }
             };
 
@@ -181,43 +153,31 @@ public class LambdaHandler {
             };
 
     private final Route criCallBack =
-            (Request request, Response response) -> {
-                Map<String, Object> processCriCallbackLambdaOutput =
-                        processCriCallbackHandler
-                                .getJourneyResponse(buildCriCallbackRequest(request))
-                                .toObjectMap();
-                return gson.toJson(processCriCallbackLambdaOutput);
-            };
+            (Request request, Response response) ->
+                    callLambdaWithProxyEvent(request, response, processCriCallbackHandler);
 
     private final Route token =
-            (Request request, Response response) -> {
-                APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
-                        new APIGatewayProxyRequestEvent();
-                apiGatewayProxyRequestEvent.setBody(request.body());
-                apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
-
-                APIGatewayProxyResponseEvent responseEvent =
-                        issueClientAccessTokenHandler.handleRequest(
-                                apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
-
-                response.type(APPLICATION_JSON);
-                return responseEvent.getBody();
-            };
+            (Request request, Response response) ->
+                    callLambdaWithProxyEvent(request, response, issueClientAccessTokenHandler);
 
     private final Route userIdentity =
-            (Request request, Response response) -> {
-                APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
-                        new APIGatewayProxyRequestEvent();
-                apiGatewayProxyRequestEvent.setBody(request.body());
-                apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
+            (Request request, Response response) ->
+                    callLambdaWithProxyEvent(request, response, buildUserIdentityHandler);
 
-                APIGatewayProxyResponseEvent responseEvent =
-                        buildUserIdentityHandler.handleRequest(
-                                apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
+    private String callLambdaWithProxyEvent(
+            Request request,
+            Response response,
+            RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler) {
+        APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent = new APIGatewayProxyRequestEvent();
+        apiGatewayProxyRequestEvent.setBody(request.body());
+        apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
 
-                response.type(APPLICATION_JSON);
-                return responseEvent.getBody();
-            };
+        APIGatewayProxyResponseEvent responseEvent =
+                handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
+
+        response.type(APPLICATION_JSON);
+        return responseEvent.getBody();
+    }
 
     private JourneyRequest buildJourneyRequest(Request request, String journey) {
         return JourneyRequest.builder()
@@ -227,14 +187,6 @@ public class LambdaHandler {
                 .featureSet(request.headers(FEATURE_SET))
                 .journey(journey)
                 .build();
-    }
-
-    private Map<String, String> buildCriReturnLambdaInput(Request request) {
-        HashMap<String, String> nextLambdaInput = new HashMap<>();
-        nextLambdaInput.put("ipvSessionId", request.headers(IPV_SESSION_ID));
-        nextLambdaInput.put("ipAddress", request.headers(IP_ADDRESS));
-        nextLambdaInput.put("featureSet", request.headers(FEATURE_SET));
-        return nextLambdaInput;
     }
 
     private Map<String, String> getHeadersMap(Request request) {
@@ -248,21 +200,6 @@ public class LambdaHandler {
             Request request, String journey) {
         return gson.fromJson(
                 gson.toJson(buildJourneyRequest(request, journey)), MAP_STRING_STRING_TYPE);
-    }
-
-    private CriCallbackRequest buildCriCallbackRequest(Request request) {
-        Map<String, String> requestBody = gson.fromJson(request.body(), MAP_STRING_STRING_TYPE);
-        return CriCallbackRequest.builder()
-                .authorizationCode(requestBody.get("authorizationCode"))
-                .credentialIssuerId(requestBody.get("credentialIssuerId"))
-                .ipvSessionId(request.headers(IPV_SESSION_ID))
-                .redirectUri(requestBody.get("redirectUri"))
-                .state(requestBody.get("state"))
-                .error(requestBody.get("error"))
-                .errorDescription(requestBody.get("errorDescription"))
-                .ipAddress(request.headers(IP_ADDRESS))
-                .featureSet(Arrays.asList(request.headers(FEATURE_SET).split(",")))
-                .build();
     }
 
     private ProcessRequest buildProcessRequest(

@@ -13,6 +13,7 @@ public class VerifiableCredentialConstants {
             "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld";
     public static final String IDENTITY_CHECK_CREDENTIAL_TYPE = "IdentityCheckCredential";
     public static final String IDENTITY_CHECK_EVIDENCE_TYPE = "IdentityCheck";
+    public static final String SECURITY_CHECK_CREDENTIAL_TYPE = "SecurityCheckCredential";
     public static final String RISK_ASSESSMENT_CREDENTIAL_TYPE = "RiskAssessmentCredential";
     public static final String RISK_ASSESSMENT_EVIDENCE_TYPE = "RiskAssessment";
     public static final String VC_ATTR_VALUE_NAME = "value";

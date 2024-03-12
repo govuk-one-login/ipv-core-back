@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
@@ -52,8 +53,7 @@ public class CriResponseServiceTest {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(
-                        USER_ID_1, "ukPassport", PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(criResponseItem);
 
@@ -65,14 +65,6 @@ public class CriResponseServiceTest {
 
     @Test
     void shouldPersistCriResponse() {
-        final Instant testCreatedDate = Instant.now();
-        final CriResponseItem testCriResponseItem =
-                createCriResponseStoreItem(
-                        TEST_USER_ID,
-                        TEST_CREDENTIAL_ISSUER,
-                        TEST_ISSUER_RESPONSE,
-                        testCreatedDate);
-
         criResponseService.persistCriResponse(
                 TEST_USER_ID,
                 TEST_CREDENTIAL_ISSUER,
@@ -95,8 +87,7 @@ public class CriResponseServiceTest {
     @Test
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(
-                        USER_ID_1, F2F_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
         when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
@@ -109,11 +100,7 @@ public class CriResponseServiceTest {
     @Test
     void shouldDeleteExistingWhenUserHasDeleteRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(
-                        USER_ID_1,
-                        TEST_CREDENTIAL_ISSUER,
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        Instant.now());
+                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
         when(mockDataStore.delete(USER_ID_1, TEST_CREDENTIAL_ISSUER)).thenReturn(criResponseItem);
 
@@ -125,11 +112,7 @@ public class CriResponseServiceTest {
     @Test
     void shouldUpdateExistingWhenUserHasUpdateRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(
-                        USER_ID_1,
-                        TEST_CREDENTIAL_ISSUER,
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        Instant.now());
+                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
         when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
 
         criResponseService.updateCriResponseItem(criResponseItem);
@@ -137,11 +120,11 @@ public class CriResponseServiceTest {
     }
 
     private CriResponseItem createCriResponseStoreItem(
-            String userId, String credentialIssuer, String issuerResponse, Instant dateCreated) {
+            VerifiableCredential vc, Instant dateCreated) {
         CriResponseItem criResponseItem = new CriResponseItem();
-        criResponseItem.setUserId(userId);
-        criResponseItem.setCredentialIssuer(credentialIssuer);
-        criResponseItem.setIssuerResponse(issuerResponse);
+        criResponseItem.setUserId(vc.getUserId());
+        criResponseItem.setCredentialIssuer(vc.getCriId());
+        criResponseItem.setIssuerResponse(vc.getVcString());
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
         return criResponseItem;

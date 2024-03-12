@@ -33,6 +33,8 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneySt
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -52,7 +54,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.text.ParseException;
 import java.util.List;
@@ -82,7 +84,7 @@ public class InitialiseIpvSessionHandler
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final UserIdentityService userIdentityService;
-    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final VerifiableCredentialService verifiableCredentialService;
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
@@ -95,7 +97,7 @@ public class InitialiseIpvSessionHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
+        this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
@@ -108,7 +110,7 @@ public class InitialiseIpvSessionHandler
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             UserIdentityService userIdentityService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
+            VerifiableCredentialValidator verifiableCredentialValidator,
             VerifiableCredentialService verifiableCredentialService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
@@ -117,7 +119,7 @@ public class InitialiseIpvSessionHandler
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.userIdentityService = userIdentityService;
-        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
+        this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
@@ -187,7 +189,6 @@ public class InitialiseIpvSessionHandler
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
                 if (inheritedIdentityJwtClaim.isPresent()) {
-
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
                             inheritedIdentityJwtClaim.get(),
@@ -307,14 +308,11 @@ public class InitialiseIpvSessionHandler
             throws RecoverableJarValidationException, ParseException, CredentialParseException,
                     SqsException {
         try {
-
-            var signedInheritedIdentityJWT =
-                    validateHmrcInheritedIdentity(inheritedIdentityJwtClaim);
-            sendInheritedIdentityReceivedAuditEvent(signedInheritedIdentityJWT, auditEventUser);
-            if (!isHmrcInheritedIdentityWithStrongerVotPresent(
-                    signedInheritedIdentityJWT, userId)) {
-                storeHmrcInheritedIdentity(
-                        userId, claimsSet, ipvSessionItem, signedInheritedIdentityJWT);
+            var inheritedIdentityVc =
+                    validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
+            sendInheritedIdentityReceivedAuditEvent(inheritedIdentityVc, auditEventUser);
+            if (!isHmrcInheritedIdentityWithStrongerVotPresent(inheritedIdentityVc, userId)) {
+                storeHmrcInheritedIdentity(claimsSet, ipvSessionItem, inheritedIdentityVc);
             }
         } catch (VerifiableCredentialException
                 | ParseException
@@ -330,8 +328,8 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    private SignedJWT validateHmrcInheritedIdentity(
-            InheritedIdentityJwtClaim inheritedIdentityJwtClaim)
+    private VerifiableCredential validateHmrcInheritedIdentity(
+            String userId, InheritedIdentityJwtClaim inheritedIdentityJwtClaim)
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
@@ -349,31 +347,33 @@ public class InitialiseIpvSessionHandler
                                     inheritedIdentityJwtList.size())));
         }
 
-        // Validate VC in claim is valid
-        var signedInheritedIdentityJWT = SignedJWT.parse(inheritedIdentityJwtList.get(0));
         var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
 
         // The HMRC inherited identity VC will contain an HMRC-specific pairwise identifier
         // rather than our internal user id, so we cannot validate it against the OAuth user id.
         // Instead, SPOT will validate this when generating an identity bundle.
-        var inheritedUserId = signedInheritedIdentityJWT.getJWTClaimsSet().getSubject();
-        verifiableCredentialJwtValidator.validate(
-                signedInheritedIdentityJWT, inheritedIdentityCriConfig, inheritedUserId);
+        var inheritedIdentityVc =
+                verifiableCredentialValidator.parseAndValidate(
+                        userId,
+                        HMRC_MIGRATION_CRI,
+                        inheritedIdentityJwtList.get(0),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        inheritedIdentityCriConfig.getParsedSigningKey(),
+                        inheritedIdentityCriConfig.getComponentId(),
+                        true);
         LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));
 
-        return signedInheritedIdentityJWT;
+        return inheritedIdentityVc;
     }
 
     private void storeHmrcInheritedIdentity(
-            String userId,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
-            SignedJWT signedInheritedIdentityJWT)
+            VerifiableCredential inheritedIdentityVc)
             throws RecoverableJarValidationException, ParseException {
         try {
-            verifiableCredentialService.persistUserCredentials(
-                    signedInheritedIdentityJWT, HMRC_MIGRATION_CRI, userId);
-            ipvSessionItem.addVcReceivedThisSession(signedInheritedIdentityJWT.serialize());
+            verifiableCredentialService.persistUserCredentials(inheritedIdentityVc);
+            ipvSessionItem.addVcReceivedThisSession(inheritedIdentityVc);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully persisted"));
         } catch (VerifiableCredentialException e) {
@@ -386,17 +386,15 @@ public class InitialiseIpvSessionHandler
     }
 
     private boolean isHmrcInheritedIdentityWithStrongerVotPresent(
-            SignedJWT incomingInheritedIdentity, String userId) throws CredentialParseException {
+            VerifiableCredential incomingInheritedIdentity, String userId)
+            throws CredentialParseException {
         try {
-            var vcStoreItem =
-                    verifiableCredentialService.getVcStoreItem(userId, HMRC_MIGRATION_CRI);
-            if (vcStoreItem == null) {
+            var hmrcMigrationVc = verifiableCredentialService.getVc(userId, HMRC_MIGRATION_CRI);
+            if (hmrcMigrationVc == null) {
                 return false;
             }
-            SignedJWT existingInheritedIdentity = SignedJWT.parse(vcStoreItem.getCredential());
 
-            var existingInheritedIdentityVot =
-                    userIdentityService.getVot(existingInheritedIdentity);
+            var existingInheritedIdentityVot = userIdentityService.getVot(hmrcMigrationVc);
             var incomingInheritedIdentityVot =
                     userIdentityService.getVot(incomingInheritedIdentity);
 
@@ -420,8 +418,8 @@ public class InitialiseIpvSessionHandler
     }
 
     private void sendInheritedIdentityReceivedAuditEvent(
-            SignedJWT signedInheritedIdentityJWT, AuditEventUser auditEventUser)
-            throws SqsException, ParseException, AuditExtensionException, CredentialParseException,
+            VerifiableCredential inheritedIdentityVc, AuditEventUser auditEventUser)
+            throws SqsException, AuditExtensionException, CredentialParseException,
                     UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
@@ -429,10 +427,9 @@ public class InitialiseIpvSessionHandler
                             AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            getExtensionsForAudit(signedInheritedIdentityJWT, null),
-                            getRestrictedAuditDataForInheritedIdentity(
-                                    signedInheritedIdentityJWT)));
-        } catch (ParseException | IllegalArgumentException e) {
+                            getExtensionsForAudit(inheritedIdentityVc, null),
+                            getRestrictedAuditDataForInheritedIdentity(inheritedIdentityVc)));
+        } catch (IllegalArgumentException e) {
             throw new CredentialParseException(
                     "Encountered a parsing error while attempting to parse or compare credentials",
                     e);

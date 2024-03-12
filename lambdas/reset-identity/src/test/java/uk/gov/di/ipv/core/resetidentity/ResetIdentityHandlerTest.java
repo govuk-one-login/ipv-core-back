@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -23,7 +24,6 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +67,7 @@ public class ResetIdentityHandlerTest {
     private static final String TEST_JOURNEY = "journey/reset-identity";
 
     @Mock private Context context;
+    @Mock private List<VerifiableCredential> vcs;
     @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private CriResponseService criResponseService;
     @Mock private AuditService mockAuditService;
@@ -123,7 +123,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+        verify(verifiableCredentialService).deleteVcs(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verifyNoInteractions(mockAuditService);
         verifyNoInteractions(emailService);
@@ -153,7 +153,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+        verify(verifiableCredentialService).deleteVcs(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -170,10 +170,7 @@ public class ResetIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                 .thenReturn(new CriResponseItem());
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        vcStoreItems.add(vcStoreItem);
-        when(verifiableCredentialService.getVcStoreItems(TEST_USER_ID)).thenReturn(vcStoreItems);
+        when(verifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
@@ -186,8 +183,7 @@ public class ResetIdentityHandlerTest {
                                                 new NameParts("SecondNamePart1", "dummyType"),
                                                 new NameParts("SecondNamePart2", "dummyType")))),
                         Arrays.asList(new BirthDate()));
-        when(userIdentityService.findIdentityClaim(vcStoreItems, false))
-                .thenReturn(Optional.of(underTest));
+        when(userIdentityService.findIdentityClaim(vcs, false)).thenReturn(Optional.of(underTest));
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
@@ -206,7 +202,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+        verify(verifiableCredentialService).deleteVcs(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -224,12 +220,8 @@ public class ResetIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                 .thenReturn(new CriResponseItem());
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        List<VcStoreItem> vcStoreItems = new ArrayList<>();
-        vcStoreItems.add(vcStoreItem);
-        when(verifiableCredentialService.getVcStoreItems(TEST_USER_ID)).thenReturn(vcStoreItems);
-        when(userIdentityService.findIdentityClaim(vcStoreItems, false))
-                .thenReturn(Optional.empty());
+        when(verifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
+        when(userIdentityService.findIdentityClaim(vcs, false)).thenReturn(Optional.empty());
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
@@ -248,7 +240,7 @@ public class ResetIdentityHandlerTest {
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
-        verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+        verify(verifiableCredentialService).deleteVcs(any(), any());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -282,7 +274,7 @@ public class ResetIdentityHandlerTest {
 
             // Assert
             dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(1));
-            verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+            verify(verifiableCredentialService).deleteVcs(any(), any());
             verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
             assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
         }
@@ -314,7 +306,7 @@ public class ResetIdentityHandlerTest {
 
             // Assert
             dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(0));
-            verify(verifiableCredentialService).deleteVcStoreItems(any(), any());
+            verify(verifiableCredentialService).deleteVcs(any(), any());
             verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
             assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
         }

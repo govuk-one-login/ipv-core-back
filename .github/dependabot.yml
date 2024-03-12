@@ -36,6 +36,7 @@ updates:
       aws:
         patterns:
           - "@aws-*"
+          - "@smithy/*"
       babel:
         patterns:
           - "@babel/*"

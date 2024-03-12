@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.replaycimitvcs;
 
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -9,8 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -30,7 +30,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,13 +46,12 @@ class ReplayCimitVcsHandlerTest {
     void shouldSubmitVcsToCimit() throws Exception {
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                .thenReturn(
-                        TestFixtures.createVcStoreItem(TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID))
+                .thenReturn(M1A_ADDRESS_VC);
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
-        ArgumentCaptor<SignedJWT> postedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
+        var postedVcCaptor = ArgumentCaptor.forClass(VerifiableCredential.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
         verify(ciMitService, times(1))
@@ -62,7 +60,7 @@ class ReplayCimitVcsHandlerTest {
                         govukSigninJourneyIdCaptor.capture(),
                         ipAddressCaptor.capture());
         var postedVc = postedVcCaptor.getValue();
-        assertEquals(M1A_ADDRESS_VC, postedVc.serialize());
+        assertEquals(M1A_ADDRESS_VC, postedVc);
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -72,11 +70,10 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldNotAttemptSubmitOnNullVc() throws CiPutException {
+    void shouldNotAttemptSubmitOnNullVc() throws CiPutException, CredentialParseException {
         InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json");
-        when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                .thenReturn(null);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID)).thenReturn(null);
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
@@ -84,27 +81,12 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleParseException() throws IOException {
+    void shouldHandleICiPutExceptionOnSubmitVcList()
+            throws IOException, CiPutException, CredentialParseException {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
-            when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(
-                            TestFixtures.createInvalidVcStoreItem(
-                                    TEST_USER_ID, ADDRESS_CRI, "invalid-credential"));
-            assertThrows(
-                    FailedVcReplayException.class,
-                    () -> this.replayCimitVcsHandler.handleRequest(inputStream, null, null));
-        }
-    }
-
-    @Test
-    void shouldHandleICiPutExceptionOnSubmitVcList() throws Exception {
-        try (InputStream inputStream =
-                ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
-            when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(
-                            TestFixtures.createVcStoreItem(
-                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+            when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID))
+                    .thenReturn(M1A_ADDRESS_VC);
             doThrow(new CiPutException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitVC(any(), eq(null), eq(null));
@@ -116,13 +98,12 @@ class ReplayCimitVcsHandlerTest {
     }
 
     @Test
-    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList() throws Exception {
+    void shouldHandleICiPostMitigationsExceptionOnSubmitVcList()
+            throws IOException, CiPostMitigationsException, CredentialParseException {
         try (InputStream inputStream =
                 ReplayCimitVcsHandlerTest.class.getResourceAsStream("/testReplayRequest.json")) {
-            when(mockVerifiableCredentialService.getVcStoreItem(TEST_USER_ID, TEST_CRI_ID))
-                    .thenReturn(
-                            TestFixtures.createVcStoreItem(
-                                    TEST_USER_ID, ADDRESS_CRI, M1A_ADDRESS_VC));
+            when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID))
+                    .thenReturn(M1A_ADDRESS_VC);
             doThrow(new CiPostMitigationsException("Lambda execution failed"))
                     .when(ciMitService)
                     .submitMitigatingVcList(anyList(), eq(null), eq(null));

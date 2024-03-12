@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -40,7 +39,6 @@ import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -204,10 +202,10 @@ public class CriApiService {
 
             var responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
-                var vcJwt = (SignedJWT) response.getContentAsJWT();
                 var verifiableCredentialResponse =
                         VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(Collections.singletonList(vcJwt))
+                                .verifiableCredentials(
+                                        Collections.singletonList(response.getContent()))
                                 .build();
                 LOGGER.info(
                         LogHelper.buildLogMessage(
@@ -216,7 +214,8 @@ public class CriApiService {
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
-                        getVerifiableCredentialResponseForApplicationJson(response.getContent());
+                        getVerifiableCredentialResponseForApplicationJson(
+                                response.getContent().trim());
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 "Verifiable Credential retrieved from json response."));
@@ -234,7 +233,7 @@ public class CriApiService {
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
-        } catch (IOException | ParseException | java.text.ParseException e) {
+        } catch (IOException | java.text.ParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error retrieving credential.", e));
             throw new CriApiException(
                     HTTPResponse.SC_SERVER_ERROR,
@@ -268,18 +267,13 @@ public class CriApiService {
     }
 
     private VerifiableCredentialResponse getVerifiableCredentialResponseForApplicationJson(
-            String responseString) throws JsonProcessingException, java.text.ParseException {
+            String responseString) throws JsonProcessingException {
         var vcResponse =
                 OBJECT_MAPPER.readValue(responseString, VerifiableCredentialResponseDto.class);
         var vcResponseBuilder =
-                VerifiableCredentialResponse.builder().userId(vcResponse.getUserId());
-        if (vcResponse.getVerifiableCredentials() != null) {
-            var vcJwts = new ArrayList<SignedJWT>();
-            for (var vc : vcResponse.getVerifiableCredentials()) {
-                vcJwts.add(SignedJWT.parse(vc));
-            }
-            vcResponseBuilder.verifiableCredentials(vcJwts);
-        }
+                VerifiableCredentialResponse.builder()
+                        .userId(vcResponse.getUserId())
+                        .verifiableCredentials(vcResponse.getVerifiableCredentials());
         if (vcResponse.getCredentialStatus() != null) {
             vcResponseBuilder.credentialStatus(
                     VerifiableCredentialStatus.fromStatusString(vcResponse.getCredentialStatus()));

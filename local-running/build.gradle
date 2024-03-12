@@ -51,3 +51,7 @@ java {
 application {
 	mainClass = 'uk.gov.di.ipv.coreback.App'
 }
+
+sonar {
+	skipProject = true
+}
