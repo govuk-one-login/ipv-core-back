@@ -186,6 +186,17 @@ class ProcessJourneyEventHandlerTest {
                 capturedIpvSessionItem.getErrorDescription());
 
         assertEquals(PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE, output.get("page"));
+
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvent = auditEventCaptor.getValue();
+
+        assertEquals(AuditEventTypes.IPV_SUBJOURNEY_START, capturedAuditEvent.getEventName());
+        assertEquals(
+                SESSION_TIMEOUT,
+                ((AuditExtensionSubjourneyType) capturedAuditEvent.getExtensions()).journeyType());
+        assertEquals("core", capturedAuditEvent.getComponentId());
+        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
     @Test
