@@ -18,8 +18,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
+
 public class StateMachineInitializer {
-    private static final ObjectMapper yamlOm = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper yamlOm =
+            new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
     private static final ObjectMapper om = new ObjectMapper();
     private Map<String, State> journeyStates;
     private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
