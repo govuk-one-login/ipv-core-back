@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jca.JWEJCAContext;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -56,7 +58,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.text.ParseException;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -104,6 +108,27 @@ public class BuildCriOauthRequestHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SecureTokenHelper secureTokenHelper;
+    private final Clock clock;
+
+    // This class is used so that JWE encryption is not random
+    public class TestRSAEncrypter extends RSAEncrypter {
+        public TestRSAEncrypter(RSAKey rsaJWK) throws JOSEException {
+            super(rsaJWK);
+        }
+
+        @Override
+        public JWEJCAContext getJCAContext() {
+            return new JWEJCAContext(null, null, null, null, new NotRandom());
+        }
+
+        private class NotRandom extends SecureRandom {
+            @Override
+            public void nextBytes(byte[] data) {
+                Arrays.fill(data, (byte) 0);
+            }
+        }
+    }
 
     public BuildCriOauthRequestHandler(
             ConfigService configService,
@@ -113,8 +138,9 @@ public class BuildCriOauthRequestHandler
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            VerifiableCredentialService verifiableCredentialService) {
-
+            VerifiableCredentialService verifiableCredentialService,
+            SecureTokenHelper secureTokenHelper,
+            Clock clock) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -123,6 +149,8 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.secureTokenHelper = secureTokenHelper;
+        this.clock = clock;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -136,6 +164,8 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.secureTokenHelper = SecureTokenHelper.getInstance();
+        this.clock = Clock.systemDefaultZone();
         VcHelper.setConfigService(configService);
     }
 
@@ -185,7 +215,7 @@ public class BuildCriOauthRequestHandler
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            String oauthState = SecureTokenHelper.getInstance().generate();
+            String oauthState = secureTokenHelper.generate();
             JWEObject jweObject =
                     signEncryptJar(
                             ipvSessionItem,
@@ -335,9 +365,18 @@ public class BuildCriOauthRequestHandler
                         govukSigninJourneyId,
                         evidenceRequest,
                         context,
-                        scope);
+                        scope,
+                        clock.instant());
 
-        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
+        // TODO: This is for PoC only - if we want to keep the PACT test then we will need to work
+        // out a way to
+        // use TestRSAEncrypter for testing and RSAEncrypter for real usage. We can't just pass in
+        // the right one on
+        // construction as they rely on the oAuthConfig which varies by CRI. We could pass in a
+        // RSAEncryptorFactory
+        // instead.
+        RSAEncrypter rsaEncrypter = new TestRSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
+        // RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 

@@ -22,9 +22,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -60,6 +60,9 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -131,6 +134,8 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     public static final String MAIN_CONNECTION = "main";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
 
     @Mock private Context context;
     @Mock private ConfigService configService;
@@ -144,7 +149,8 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
-    @InjectMocks private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
+    @Mock private SecureTokenHelper mockSecureTokenHelper;
+    private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
 
     private OauthCriConfig oauthCriConfig;
     private OauthCriConfig addressOauthCriConfig;
@@ -156,6 +162,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @BeforeEach
     void setUp() throws URISyntaxException {
+        // Fix the secure token value. This is needed in almost all the tests so using lenient is
+        // neater than adding it
+        // to each test.
+        Mockito.lenient()
+                .when(mockSecureTokenHelper.generate())
+                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+
         oauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI(CRI_TOKEN_URL))
@@ -250,6 +263,19 @@ class BuildCriOauthRequestHandlerTest {
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .build();
+
+        buildCriOauthRequestHandler =
+                new BuildCriOauthRequestHandler(
+                        configService,
+                        mockKmsEs256SignerFactory,
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockCriOAuthSessionService,
+                        mockClientOAuthSessionDetailsService,
+                        mockGpg45ProfileEvaluator,
+                        mockVerifiableCredentialService,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
     }
 
     @Test

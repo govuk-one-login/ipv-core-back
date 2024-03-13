@@ -58,8 +58,33 @@ public class AuthorizationRequestHelper {
             String context,
             String scope)
             throws HttpResponseExceptionWithErrorBody {
-        Instant now = Instant.now();
+        return createSignedJWT(
+                sharedClaims,
+                signer,
+                oauthCriConfig,
+                configService,
+                oauthState,
+                userId,
+                govukSigninJourneyId,
+                evidence,
+                context,
+                scope,
+                Instant.now());
+    }
 
+    public static SignedJWT createSignedJWT(
+            SharedClaimsResponse sharedClaims,
+            JWSSigner signer,
+            OauthCriConfig oauthCriConfig,
+            ConfigService configService,
+            String oauthState,
+            String userId,
+            String govukSigninJourneyId,
+            EvidenceRequest evidence,
+            String context,
+            String scope,
+            Instant now)
+            throws HttpResponseExceptionWithErrorBody {
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
 
