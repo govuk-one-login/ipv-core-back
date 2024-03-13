@@ -482,3 +482,5 @@ Outputs:
     Value: !GetAtt IPVSnsKmsKey.Arn
     Export:
       Name: !Sub "IPVCoreDeleteUserSNSTopicKeyArn-${Environment}"
+  DLQAlarmsSNSTopicArn:
+    Value: !Ref DLQAlarmsSNSTopic
