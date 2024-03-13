@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,20 @@ class StateMachineInitializerTest {
                     new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock)
                             .initialize();
                 });
+    }
+
+    @Test
+    void initializeShouldThrowIfJourneyMapHasDuplicateKeys() {
+        var journeyTypeMock = mock(IpvJourneyTypes.class);
+        when(journeyTypeMock.getPath()).thenReturn("journey-map-with-duplicate-keys");
+
+        var stateMachineInitializer =
+                new StateMachineInitializer(journeyTypeMock, StateMachineInitializerMode.TEST);
+
+        var jsonParseException =
+                assertThrows(JsonParseException.class, stateMachineInitializer::initialize);
+
+        assertTrue(jsonParseException.getMessage().contains("Duplicate field 'DUPLICATE_PAGE'"));
     }
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
