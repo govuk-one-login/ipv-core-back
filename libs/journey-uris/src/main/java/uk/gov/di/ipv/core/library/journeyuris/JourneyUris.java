@@ -28,4 +28,7 @@ public class JourneyUris {
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
+    public static final String JOURNEY_ALTERNATE_DOC_PATH = "/journey/alternate-doc";
+    public static final String JOURNEY_ALTERNATE_DOC_INVALID_DL_PATH =
+            JOURNEY_ALTERNATE_DOC_PATH + "-invalid-dl";
 }
