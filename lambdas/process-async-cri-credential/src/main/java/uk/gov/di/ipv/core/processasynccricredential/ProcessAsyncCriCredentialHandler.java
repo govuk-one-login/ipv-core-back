@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -20,7 +19,8 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -33,12 +33,11 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
-import uk.gov.di.ipv.core.processasynccricredential.helpers.JwtParser;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -59,25 +58,23 @@ public class ProcessAsyncCriCredentialHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
-    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final AuditService auditService;
     private final CiMitService ciMitService;
-    private final JwtParser jwtParser;
     private final CriResponseService criResponseService;
 
     public ProcessAsyncCriCredentialHandler(
             ConfigService configService,
             VerifiableCredentialService verifiableCredentialService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
+            VerifiableCredentialValidator verifiableCredentialValidator,
             AuditService auditService,
             CiMitService ciMitService,
             CriResponseService criResponseService) {
         this.configService = configService;
-        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
+        this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.ciMitService = ciMitService;
-        this.jwtParser = new JwtParser();
         this.criResponseService = criResponseService;
         VcHelper.setConfigService(this.configService);
     }
@@ -85,12 +82,11 @@ public class ProcessAsyncCriCredentialHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessAsyncCriCredentialHandler() {
         this.configService = new ConfigService();
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
+        this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
-        this.jwtParser = new JwtParser();
         VcHelper.setConfigService(this.configService);
     }
 
@@ -174,36 +170,33 @@ public class ProcessAsyncCriCredentialHandler
                     AsyncVerifiableCredentialException, CiPostMitigationsException,
                     VerifiableCredentialException, AuditExtensionException,
                     UnrecognisedVotException {
-
         validateOAuthState(successAsyncCriResponse);
 
-        final List<SignedJWT> verifiableCredentials =
-                jwtParser.parseVerifiableCredentialJWTs(
-                        successAsyncCriResponse.getVerifiableCredentialJWTs());
-
-        final OauthCriConfig oauthCriConfig =
+        var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
 
-        for (SignedJWT verifiableCredential : verifiableCredentials) {
-            verifiableCredentialJwtValidator.validate(
-                    verifiableCredential, oauthCriConfig, successAsyncCriResponse.getUserId());
+        var vcs =
+                verifiableCredentialValidator.parseAndValidate(
+                        successAsyncCriResponse.getUserId(),
+                        successAsyncCriResponse.getCredentialIssuer(),
+                        successAsyncCriResponse.getVerifiableCredentialJWTs(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        oauthCriConfig.getParsedSigningKey(),
+                        oauthCriConfig.getComponentId());
 
-            boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential);
+        for (var vc : vcs) {
+            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
-            AuditEventUser auditEventUser =
-                    new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
-            sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential, isSuccessful);
+            AuditEventUser auditEventUser = new AuditEventUser(vc.getUserId(), null, null, null);
+            sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
-            submitVcToCiStorage(verifiableCredential);
-            postMitigatingVc(verifiableCredential);
+            submitVcToCiStorage(vc);
+            postMitigatingVc(vc);
 
-            verifiableCredentialService.persistUserCredentials(
-                    verifiableCredential,
-                    successAsyncCriResponse.getCredentialIssuer(),
-                    successAsyncCriResponse.getUserId());
+            verifiableCredentialService.persistUserCredentials(vc);
 
-            sendIpvVcConsumedAuditEvent(auditEventUser, verifiableCredential);
+            sendIpvVcConsumedAuditEvent(auditEventUser, vc);
         }
     }
 
@@ -230,8 +223,10 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     private void sendIpvVcReceivedAuditEvent(
-            AuditEventUser auditEventUser, SignedJWT verifiableCredential, boolean isSuccessful)
-            throws ParseException, SqsException, AuditExtensionException, UnrecognisedVotException {
+            AuditEventUser auditEventUser,
+            VerifiableCredential verifiableCredential,
+            boolean isSuccessful)
+            throws SqsException, AuditExtensionException, UnrecognisedVotException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
@@ -242,15 +237,15 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     @Tracing
-    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, SignedJWT verifiableCredential)
-            throws ParseException, SqsException {
+    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
+            throws SqsException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
-                        getRestrictedAuditDataForF2F(verifiableCredential));
+                        getRestrictedAuditDataForF2F(vc));
         auditService.sendAuditEvent(auditEvent);
     }
 
@@ -277,12 +272,12 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     @Tracing
-    private void submitVcToCiStorage(SignedJWT vc) throws CiPutException {
+    private void submitVcToCiStorage(VerifiableCredential vc) throws CiPutException {
         ciMitService.submitVC(vc, null, null);
     }
 
     @Tracing
-    private void postMitigatingVc(SignedJWT vc) throws CiPostMitigationsException {
-        ciMitService.submitMitigatingVcList(List.of(vc.serialize()), null, null);
+    private void postMitigatingVc(VerifiableCredential vc) throws CiPostMitigationsException {
+        ciMitService.submitMitigatingVcList(List.of(vc), null, null);
     }
 }

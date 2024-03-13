@@ -74,8 +74,6 @@ paths:
                 #set ($bodyObj = $util.parseJson($input.body))
 
                 #if ($bodyObj.status == "SUCCEEDED")
-                  #set($lambdaOutput = $util.parseJson($bodyObj.output))
-                  #set($context.responseOverride.status = $lambdaOutput.statusCode)
                   $bodyObj.output
 
                 #elseif ($bodyObj.status == "FAILED")
@@ -84,6 +82,7 @@ paths:
                     "cause": "$bodyObj.cause",
                     "error": "$bodyObj.error"
                   }
+
                 #else
                   #set($context.responseOverride.status = 500)
                   $bodyObj

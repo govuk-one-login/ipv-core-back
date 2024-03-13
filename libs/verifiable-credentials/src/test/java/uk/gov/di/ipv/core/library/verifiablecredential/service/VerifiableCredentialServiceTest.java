@@ -12,13 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -29,7 +27,6 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,13 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
@@ -54,7 +50,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
-    private static final String USER_ID_1 = "user-id-1";
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
     private VerifiableCredentialService verifiableCredentialService;
@@ -70,23 +65,20 @@ class VerifiableCredentialServiceTest {
         ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(VcStoreItem.class);
 
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
-        verifiableCredentialService.persistUserCredentials(
-                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC), credentialIssuerId, userId);
+        verifiableCredentialService.persistUserCredentials(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
-        assertEquals(userId, vcStoreItem.getUserId());
-        assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcStoreItem.getCredential());
+
+        assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(), vcStoreItem.getUserId());
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId(), vcStoreItem.getCredentialIssuer());
+        assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vcStoreItem.getCredential());
     }
 
     @Test
     void expectedSuccessWithoutExpWhenSaveCredentials() throws Exception {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
-
         SignedJWT signedJwt =
                 new SignedJWT(
                         new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
@@ -95,11 +87,12 @@ class VerifiableCredentialServiceTest {
                                 .issuer(credentialIssuerId)
                                 .build());
         signedJwt.sign(new ECDSASigner(getPrivateKey()));
+        var vc = VerifiableCredential.fromValidJwt(userId, credentialIssuerId, signedJwt);
 
         ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(VcStoreItem.class);
 
-        verifiableCredentialService.persistUserCredentials(signedJwt, credentialIssuerId, userId);
+        verifiableCredentialService.persistUserCredentials(vc);
 
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
@@ -112,18 +105,14 @@ class VerifiableCredentialServiceTest {
 
     @Test
     void expectedExceptionWhenSaveCredentials() throws Exception {
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any(), any());
 
-        SignedJWT signedJwt = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         VerifiableCredentialException thrown =
                 assertThrows(
                         VerifiableCredentialException.class,
                         () ->
                                 verifiableCredentialService.persistUserCredentials(
-                                        signedJwt, credentialIssuerId, userId));
+                                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
@@ -131,207 +120,90 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void expectedExceptionWithoutAnySignerWhenSaveCredentialsForIllegalStateException() {
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
-        SignedJWT signedJwt =
-                new SignedJWT(
-                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
-                        new JWTClaimsSet.Builder().expirationTime(new Date()).build());
-
-        VerifiableCredentialException thrown =
-                assertThrows(
-                        VerifiableCredentialException.class,
-                        () ->
-                                verifiableCredentialService.persistUserCredentials(
-                                        signedJwt, credentialIssuerId, userId));
-
-        assertNotNull(thrown);
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
-        verify(mockDataStore, Mockito.times(0)).create(any(), any());
-    }
-
-    @Test
-    void expectedExceptionWhenSaveCredentialsForParseException() throws Exception {
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
-        SignedJWT signedJwt = Mockito.mock(SignedJWT.class);
-
-        when(signedJwt.serialize()).thenReturn("credential-serialize");
-        when(signedJwt.getJWTClaimsSet()).thenThrow(java.text.ParseException.class);
-
-        VerifiableCredentialException thrown =
-                assertThrows(
-                        VerifiableCredentialException.class,
-                        () ->
-                                verifiableCredentialService.persistUserCredentials(
-                                        signedJwt, credentialIssuerId, userId));
-
-        assertNotNull(thrown);
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
-        verify(mockDataStore, Mockito.times(0)).create(any(), any());
-    }
-
-    @Test
-    void expectedSuccessWhenSaveCredentialsIfNotExists() throws Exception {
-        // Arrange
-        ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
-                ArgumentCaptor.forClass(VcStoreItem.class);
-
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
-        // Act
-        verifiableCredentialService.persistUserCredentialsIfNotExists(
-                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC), credentialIssuerId, userId);
-
-        // Assert
-        verify(mockDataStore).createIfNotExists(userIssuedCredentialsItemCaptor.capture());
-        VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
-        assertEquals(userId, vcStoreItem.getUserId());
-        assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcStoreItem.getCredential());
-    }
-
-    @Test
-    void expectedCredentialAlreadyExistsExceptionWhenSaveCredentialsIfExists() {
-        // Arrange
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-        doThrow(ConditionalCheckFailedException.builder().build())
-                .when(mockDataStore)
-                .createIfNotExists(any());
-
-        // Act & Assert
-        assertThrows(
-                CredentialAlreadyExistsException.class,
-                () ->
-                        verifiableCredentialService.persistUserCredentialsIfNotExists(
-                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                                credentialIssuerId,
-                                userId));
-    }
-
-    @Test
-    void expectedExceptionWhenSaveCredentialsIfEmptyForParseException() throws Exception {
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
-
-        SignedJWT signedJwt = Mockito.mock(SignedJWT.class);
-
-        when(signedJwt.serialize()).thenReturn("credential-serialize");
-        when(signedJwt.getJWTClaimsSet()).thenThrow(java.text.ParseException.class);
-
-        VerifiableCredentialException thrown =
-                assertThrows(
-                        VerifiableCredentialException.class,
-                        () ->
-                                verifiableCredentialService.persistUserCredentialsIfNotExists(
-                                        signedJwt, credentialIssuerId, userId));
-
-        assertNotNull(thrown);
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
-        verify(mockDataStore, Mockito.times(0)).create(any(), any());
-    }
-
-    @Test
-    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-        String userId = "userId";
-        String testCredentialIssuer = PASSPORT_CRI;
-        List<VcStoreItem> credentialItem =
-                List.of(
-                        TestFixtures.createVcStoreItem(
-                                USER_ID_1, testCredentialIssuer, PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId()
+            throws CredentialParseException {
+        var userId = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId();
+        var testCredentialIssuer = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId();
+        var credentialItem = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toVcStoreItem());
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
-        var vcStoreItems = verifiableCredentialService.getVcStoreItems(userId);
+        var vcs = verifiableCredentialService.getVcs(userId);
 
         assertTrue(
-                vcStoreItems.stream()
-                        .map(VcStoreItem::getCredentialIssuer)
+                vcs.stream()
+                        .map(VerifiableCredential::getCriId)
                         .anyMatch(testCredentialIssuer::equals));
     }
 
     @Test
-    void shouldReturnCredentialFromDataStoreForSpecificCri() {
-        String ipvSessionId = "ipvSessionId";
-        String criId = "criId";
-        VcStoreItem credentialItem =
-                TestFixtures.createVcStoreItem(
-                        USER_ID_1, PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+    void shouldReturnCredentialFromDataStoreForSpecificCri() throws CredentialParseException {
+        var ipvSessionId = "ipvSessionId";
+        var criId = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId();
 
-        when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
+        when(mockDataStore.getItem(ipvSessionId, criId))
+                .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toVcStoreItem());
 
-        VcStoreItem retrievedCredentialItem =
-                verifiableCredentialService.getVcStoreItem(ipvSessionId, criId);
+        var retrievedCredentialItem = verifiableCredentialService.getVc(ipvSessionId, criId);
 
-        assertEquals(credentialItem, retrievedCredentialItem);
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(), retrievedCredentialItem.getUserId());
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId(), retrievedCredentialItem.getCriId());
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                retrievedCredentialItem.getVcString());
     }
 
     @Test
-    void shouldDeleteAllExistingVCs() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", vcExperianFraudScoreTwo()));
+    void shouldDeleteAllExistingVCs() throws CredentialParseException {
+        var experianVc1 = vcExperianFraudScoreOne();
+        var experianVc2 = vcExperianFraudScoreTwo();
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, experianVc1, experianVc2);
 
-        verifiableCredentialService.deleteVcStoreItems(vcStoreItems, true);
+        verifiableCredentialService.deleteVcs(vcs, true);
 
-        verify(mockDataStore).delete("a-users-id", PASSPORT_CRI);
-        verify(mockDataStore).delete("a-users-id", EXPERIAN_FRAUD_CRI);
-        verify(mockDataStore).delete("a-users-id", "sausages");
+        verify(mockDataStore)
+                .delete(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(),
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId());
+        verify(mockDataStore).delete(experianVc1.getUserId(), experianVc1.getCriId());
+        verify(mockDataStore).delete(experianVc2.getUserId(), experianVc2.getCriId());
     }
 
     @Test
     void shouldDeleteInheritedIdentityIfPresent() throws Exception {
         // Arrange
-        List<VcStoreItem> vcStoreItems =
+        var inheritedIdentityVc = vcHmrcMigrationPCL250NoEvidence();
+        var vcs =
                 List.of(
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", vcExperianFraudScoreTwo()),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id",
-                                HMRC_MIGRATION_CRI,
-                                vcHmrcMigrationPCL250NoEvidence()));
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        inheritedIdentityVc);
 
         // Act
-        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
 
         // Assert
-        verify(mockDataStore, times(1)).delete("a-users-id", HMRC_MIGRATION_CRI);
+        verify(mockDataStore, times(1))
+                .delete(inheritedIdentityVc.getUserId(), inheritedIdentityVc.getCriId());
     }
 
     @Test
     void shouldNotDeleteInheritedIdentityIfNotPresent() {
         // Arrange
-        List<VcStoreItem> vcStoreItems =
+        var vcs =
                 List.of(
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", PASSPORT_CRI, PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", EXPERIAN_FRAUD_CRI, vcExperianFraudScoreOne()),
-                        TestFixtures.createVcStoreItem(
-                                "a-users-id", "sausages", vcExperianFraudScoreTwo()));
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo());
 
         // Act
-        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcStoreItems);
+        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
 
         // Assert
-        verify(mockDataStore, times(0)).delete("a-users-id", HMRC_MIGRATION_CRI);
+        verify(mockDataStore, times(0)).delete(any(), eq(HMRC_MIGRATION_CRI));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

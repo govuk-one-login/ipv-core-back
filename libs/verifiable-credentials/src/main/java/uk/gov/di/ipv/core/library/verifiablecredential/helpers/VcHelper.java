@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45NinoValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45TicfValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
@@ -62,13 +61,13 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
-        JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
+    public static boolean isSuccessfulVc(VerifiableCredential vc) {
+        JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
 
         if (evidenceArray == null || evidenceArray.isEmpty()) {
-            String vcIssuer = vc.getJWTClaimsSet().getIssuer();
+            String vcIssuer = vc.getClaimsSet().getIssuer();
             if (excludedCredentialIssuers.contains(vcIssuer)) {
                 return true;
             }
@@ -84,40 +83,26 @@ public class VcHelper {
         return isValidEvidence(credentialEvidenceList);
     }
 
-    public static boolean isSuccessfulVcs(List<SignedJWT> vcs) throws ParseException {
-        if (vcs == null) return true;
-
-        for (SignedJWT vc : vcs) {
-            if (!VcHelper.isSuccessfulVc(vc)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static List<VcStoreItem> filterVCBasedOnProfileType(
-            List<VcStoreItem> vcStoreItems, ProfileType profileType) {
+    public static List<VerifiableCredential> filterVCBasedOnProfileType(
+            List<VerifiableCredential> vcs, ProfileType profileType) {
         if (profileType.equals(ProfileType.GPG45)) {
-            return vcStoreItems.stream()
-                    .filter(vcItem -> !OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer()))
-                    .toList();
+            return vcs.stream().filter(vc -> !OPERATIONAL_CRIS.contains(vc.getCriId())).toList();
         } else {
-            return vcStoreItems.stream()
+            return vcs.stream()
                     .filter(
-                            vcItem ->
-                                    (OPERATIONAL_CRIS.contains(vcItem.getCredentialIssuer())
-                                            || vcItem.getCredentialIssuer().equals(TICF_CRI)))
+                            vc ->
+                                    (OPERATIONAL_CRIS.contains(vc.getCriId())
+                                            || vc.getCriId().equals(TICF_CRI)))
                     .toList();
         }
     }
 
-    public static List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
-            throws ParseException {
+    public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
         List<String> txnIds = new ArrayList<>();
-        for (SignedJWT credential : credentials) {
-            var jwtClaimsSet = credential.getJWTClaimsSet();
-            var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-            var evidences = (JSONArray) vc.get(VC_EVIDENCE);
+        for (var vc : vcs) {
+            var jwtClaimsSet = vc.getClaimsSet();
+            var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+            var evidences = (JSONArray) vcClaim.get(VC_EVIDENCE);
             if (evidences != null) { // not all VCs have an evidence block
                 var evidence = (JSONObject) evidences.get(ONLY);
                 txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
@@ -126,11 +111,11 @@ public class VcHelper {
         return txnIds;
     }
 
-    public static Integer extractAgeFromCredential(SignedJWT credential) throws ParseException {
+    public static Integer extractAgeFromCredential(VerifiableCredential vc) {
         Integer age = null;
-        var jwtClaimsSet = credential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+        var jwtClaimsSet = vc.getClaimsSet();
+        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
         if (credentialSubject != null && !credentialSubject.isEmpty()) {
             var birthDateArr = (JSONArray) credentialSubject.get(VC_BIRTH_DATE);
             if (birthDateArr != null && !birthDateArr.isEmpty()) {
@@ -141,11 +126,10 @@ public class VcHelper {
         return age;
     }
 
-    public static Boolean checkIfDocUKIssuedForCredential(SignedJWT credential)
-            throws ParseException {
-        var jwtClaimsSet = credential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+    public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
+        var jwtClaimsSet = vc.getClaimsSet();
+        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
         if (credentialSubject != null) {
             var passportOrResPermitField = getPassportOrResPermitField(credentialSubject);
             if (passportOrResPermitField instanceof JSONArray passportOrResPermitFieldArr) {
@@ -170,10 +154,10 @@ public class VcHelper {
         return null; // NOSONAR
     }
 
-    public static boolean isOperationalProfileVc(SignedJWT credential) throws ParseException {
-        var credVot = credential.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-        return credVot != null
-                && Vot.valueOf(credVot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC);
+    public static boolean isOperationalProfileVc(VerifiableCredential vc) throws ParseException {
+        var vot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
+        return vot != null
+                && Vot.valueOf(vot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC);
     }
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
@@ -236,9 +220,9 @@ public class VcHelper {
         return docField;
     }
 
-    public static Vot getVcVot(SignedJWT vc) throws UnrecognisedVotException {
+    public static Vot getVcVot(VerifiableCredential vc) throws UnrecognisedVotException {
         try {
-            String vot = vc.getJWTClaimsSet().getStringClaim(VOT_CLAIM_NAME);
+            String vot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
             return vot == null ? null : Vot.valueOf(vot);
         } catch (ParseException | IllegalArgumentException e) {
             throw new UnrecognisedVotException("Invalid VOT found for this VC");

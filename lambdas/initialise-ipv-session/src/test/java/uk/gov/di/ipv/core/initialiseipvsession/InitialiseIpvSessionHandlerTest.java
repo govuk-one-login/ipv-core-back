@@ -12,6 +12,7 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -42,6 +43,8 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -52,7 +55,6 @@ import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -60,7 +62,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -78,8 +80,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
@@ -91,11 +98,12 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
+    public static final String TEST_COMPONENT_ID = "test-component-id";
+    public static final String TEST_SIGNING_KEY =
+            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}";
+    public static final String TEST_USER_ID = "test-user-id";
     private static final CriConfig TEST_CRI_CONFIG =
-            CriConfig.builder()
-                    .componentId("test-component-id")
-                    .signingKey("test-signing-key")
-                    .build();
+            CriConfig.builder().componentId(TEST_COMPONENT_ID).signingKey(TEST_SIGNING_KEY).build();
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
@@ -107,7 +115,6 @@ class InitialiseIpvSessionHandlerTest {
     private static final String CLAIMS = "claims";
     private static final String USER_INFO = "userInfo";
     private static final String VALUES = "values";
-    private static final String TEST_USER_ID = "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -117,10 +124,12 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Mock private VerifiableCredentialJwtValidator mockVerifiableCredentialJwtValidator;
+    @Mock private VerifiableCredentialValidator mockVerifiableCredentialValidator;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
     @Captor private ArgumentCaptor<SignedJWT> signedJWTArgumentCaptor;
+    @Captor private ArgumentCaptor<String> stringArgumentCaptor;
+    @Captor private ArgumentCaptor<VerifiableCredential> verifiableCredentialArgumentCaptor;
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemCaptor;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -133,7 +142,7 @@ class InitialiseIpvSessionHandlerTest {
                     .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                     .issueTime(new Date())
                     .notBeforeTime(new Date())
-                    .subject("test-user-id")
+                    .subject(TEST_USER_ID)
                     .audience("test-audience")
                     .issuer("test-issuer")
                     .claim(RESPONSE_TYPE, "code")
@@ -152,8 +161,9 @@ class InitialiseIpvSessionHandlerTest {
                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                     Map.of(VALUES, List.of()),
                                             PASSPORT_CLAIM_NAME, "test-passport-claim")));
-    private static String PCL250_MIGRATION_VC;
-    private static String PCL200_MIGRATION_VC;
+
+    private static VerifiableCredential PCL250_MIGRATION_VC;
+    private static VerifiableCredential PCL200_MIGRATION_VC;
 
     @BeforeAll
     static void setUpBeforeAll() throws Exception {
@@ -178,7 +188,7 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setClientId("test-client");
         clientOAuthSessionItem.setRedirectUri("https://example.com");
         clientOAuthSessionItem.setState("test-state");
-        clientOAuthSessionItem.setUserId("test-user-id");
+        clientOAuthSessionItem.setUserId(TEST_USER_ID);
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
     }
@@ -420,19 +430,24 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL250_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL250_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
-                .thenReturn(
-                        new VcStoreItem(
-                                "test-user-id",
-                                HMRC_MIGRATION_CRI,
-                                PCL200_MIGRATION_VC,
-                                Instant.now(),
-                                Instant.now()));
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL250_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL250_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
+                .thenReturn(PCL200_MIGRATION_VC);
         when(mockUserIdentityService.getVot(any())).thenReturn(Vot.PCL200).thenReturn(Vot.PCL200);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -445,21 +460,25 @@ class InitialiseIpvSessionHandlerTest {
         initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         // Assert
-        verify(mockVerifiableCredentialJwtValidator, times(1))
-                .validate(signedJWTArgumentCaptor.capture(), eq(TEST_CRI_CONFIG), eq(TEST_USER_ID));
-        assertEquals(PCL250_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+        verify(mockVerifiableCredentialValidator, times(1))
+                .parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(HMRC_MIGRATION_CRI),
+                        stringArgumentCaptor.capture(),
+                        eq(VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE),
+                        eq(ECKey.parse(TEST_SIGNING_KEY)),
+                        eq(TEST_COMPONENT_ID),
+                        eq(true));
+        assertEquals(PCL250_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
 
         verify(mockVerifiableCredentialService, times(1))
-                .persistUserCredentials(
-                        signedJWTArgumentCaptor.capture(),
-                        eq(HMRC_MIGRATION_CRI),
-                        eq("test-user-id"));
-        assertEquals(PCL250_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+                .persistUserCredentials(verifiableCredentialArgumentCaptor.capture());
+        assertEquals(PCL250_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
         assertEquals(
                 ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                List.of(PCL250_MIGRATION_VC));
+                List.of(PCL250_MIGRATION_VC.getVcString()));
     }
 
     @Test
@@ -480,11 +499,22 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
                 .thenReturn(null);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -497,21 +527,25 @@ class InitialiseIpvSessionHandlerTest {
         initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         // Assert
-        verify(mockVerifiableCredentialJwtValidator, times(1))
-                .validate(signedJWTArgumentCaptor.capture(), eq(TEST_CRI_CONFIG), eq(TEST_USER_ID));
-        assertEquals(PCL200_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+        verify(mockVerifiableCredentialValidator, times(1))
+                .parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(HMRC_MIGRATION_CRI),
+                        stringArgumentCaptor.capture(),
+                        eq(VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE),
+                        eq(ECKey.parse(TEST_SIGNING_KEY)),
+                        eq(TEST_COMPONENT_ID),
+                        eq(true));
+        assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
 
         verify(mockVerifiableCredentialService, times(1))
-                .persistUserCredentials(
-                        signedJWTArgumentCaptor.capture(),
-                        eq(HMRC_MIGRATION_CRI),
-                        eq("test-user-id"));
-        assertEquals(PCL200_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+                .persistUserCredentials(verifiableCredentialArgumentCaptor.capture());
+        assertEquals(PCL200_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
         assertEquals(
                 ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                List.of(PCL200_MIGRATION_VC));
+                List.of(PCL200_MIGRATION_VC.getVcString()));
     }
 
     @Test
@@ -532,11 +566,22 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
                 .thenReturn(null);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -599,18 +644,23 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
-                .thenReturn(
-                        new VcStoreItem(
-                                "test-user-id",
-                                HMRC_MIGRATION_CRI,
-                                PCL250_MIGRATION_VC,
-                                Instant.now(),
-                                Instant.now()));
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
+                .thenReturn(PCL250_MIGRATION_VC);
         when(mockUserIdentityService.getVot(any())).thenReturn(Vot.PCL250).thenReturn(Vot.PCL200);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -623,19 +673,27 @@ class InitialiseIpvSessionHandlerTest {
         initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         // Assert
-        verify(mockVerifiableCredentialJwtValidator, times(1))
-                .validate(signedJWTArgumentCaptor.capture(), eq(TEST_CRI_CONFIG), eq(TEST_USER_ID));
-        verify(mockUserIdentityService, times(2)).getVot(signedJWTArgumentCaptor.capture());
+        verify(mockVerifiableCredentialValidator, times(1))
+                .parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(HMRC_MIGRATION_CRI),
+                        stringArgumentCaptor.capture(),
+                        eq(VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE),
+                        eq(ECKey.parse(TEST_SIGNING_KEY)),
+                        eq(TEST_COMPONENT_ID),
+                        eq(true));
+        assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
 
-        List<SignedJWT> capturedArguments = signedJWTArgumentCaptor.getAllValues();
-        assertEquals(3, capturedArguments.size());
-        // Used for comparing vots of inherited identities
-        assertEquals(PCL200_MIGRATION_VC, capturedArguments.get(0).serialize());
-        assertEquals(PCL250_MIGRATION_VC, capturedArguments.get(1).serialize());
-        assertEquals(PCL200_MIGRATION_VC, capturedArguments.get(2).serialize());
+        verify(mockUserIdentityService, times(2))
+                .getVot(verifiableCredentialArgumentCaptor.capture());
 
-        verify(mockVerifiableCredentialService, times(0))
-                .persistUserCredentials(any(), any(), any());
+        List<VerifiableCredential> capturedArguments =
+                verifiableCredentialArgumentCaptor.getAllValues();
+        assertEquals(2, capturedArguments.size());
+        assertEquals(PCL250_MIGRATION_VC, capturedArguments.get(0));
+        assertEquals(PCL200_MIGRATION_VC, capturedArguments.get(1));
+
+        verify(mockVerifiableCredentialService, times(0)).persistUserCredentials(any());
     }
 
     @Test
@@ -656,12 +714,23 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                 .thenReturn(true); // Mock enabled inherited identity feature flag
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
                 .thenReturn(null);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -674,21 +743,25 @@ class InitialiseIpvSessionHandlerTest {
         initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         // Assert
-        verify(mockVerifiableCredentialJwtValidator, times(1))
-                .validate(signedJWTArgumentCaptor.capture(), eq(TEST_CRI_CONFIG), eq(TEST_USER_ID));
-        assertEquals(PCL200_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+        verify(mockVerifiableCredentialValidator, times(1))
+                .parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(HMRC_MIGRATION_CRI),
+                        stringArgumentCaptor.capture(),
+                        eq(VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE),
+                        eq(ECKey.parse(TEST_SIGNING_KEY)),
+                        eq(TEST_COMPONENT_ID),
+                        eq(true));
+        assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
 
         verify(mockVerifiableCredentialService, times(1))
-                .persistUserCredentials(
-                        signedJWTArgumentCaptor.capture(),
-                        eq(HMRC_MIGRATION_CRI),
-                        eq("test-user-id"));
-        assertEquals(PCL200_MIGRATION_VC, signedJWTArgumentCaptor.getValue().serialize());
+                .persistUserCredentials(verifiableCredentialArgumentCaptor.capture());
+        assertEquals(PCL200_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
         assertEquals(
                 ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                List.of(PCL200_MIGRATION_VC));
+                List.of(PCL200_MIGRATION_VC.getVcString()));
     }
 
     @Test
@@ -709,10 +782,21 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -913,7 +997,8 @@ class InitialiseIpvSessionHandlerTest {
                                                 USER_INFO,
                                                 Map.of(
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                        Map.of(VALUES, List.of("🌭")))))
+                                                        "🌭"))) // why did this have to change to
+                                // work?
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
 
@@ -960,7 +1045,9 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(TEST_CRI_CONFIG);
@@ -968,8 +1055,8 @@ class InitialiseIpvSessionHandlerTest {
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
-                .when(mockVerifiableCredentialJwtValidator)
-                .validate(any(SignedJWT.class), eq(TEST_CRI_CONFIG), eq(TEST_USER_ID));
+                .when(mockVerifiableCredentialValidator)
+                .parseAndValidate(any(), any(), any(), any(), any(), any(), anyBoolean());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
@@ -1014,31 +1101,35 @@ class InitialiseIpvSessionHandlerTest {
                                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                         Map.of(
                                                                 VALUES,
-                                                                List.of(PCL200_MIGRATION_VC)))))
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())))))
                                 .build());
         when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         CriConfig testCriConfig =
                 CriConfig.builder()
-                        .componentId("test-component-id")
-                        .signingKey("test-signing-key")
+                        .componentId(TEST_COMPONENT_ID)
+                        .signingKey(TEST_SIGNING_KEY)
                         .build();
         when(mockConfigService.getCriConfig(HMRC_MIGRATION_CRI)).thenReturn(testCriConfig);
-        when(mockVerifiableCredentialService.getVcStoreItem("test-user-id", HMRC_MIGRATION_CRI))
-                .thenReturn(
-                        new VcStoreItem(
-                                "test-user-id",
-                                HMRC_MIGRATION_CRI,
-                                PCL200_MIGRATION_VC,
-                                Instant.now(),
-                                Instant.now()));
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        HMRC_MIGRATION_CRI,
+                        PCL200_MIGRATION_VC.getVcString(),
+                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                        ECKey.parse(TEST_SIGNING_KEY),
+                        TEST_COMPONENT_ID,
+                        true))
+                .thenReturn(PCL200_MIGRATION_VC);
+        when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION_CRI))
+                .thenReturn(PCL200_MIGRATION_VC);
         when(mockUserIdentityService.getVot(any())).thenReturn(Vot.PCL200).thenReturn(Vot.PCL200);
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_SAVE_CREDENTIAL))
                 .when(mockVerifiableCredentialService)
-                .persistUserCredentials(
-                        any(SignedJWT.class), eq("hmrcMigration"), eq("test-user-id"));
+                .persistUserCredentials(any());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =

@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Test;
@@ -23,20 +22,24 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
@@ -63,30 +66,29 @@ class CiMitServiceTest {
 
     @Mock AWSLambda lambdaClient;
     @Mock ConfigService configService;
-    @Mock VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    @Mock VerifiableCredentialValidator verifiableCredentialValidator;
     @InjectMocks CiMitService ciMitService;
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
-        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
-        ciMitService.submitVC(
-                SignedJWT.parse(passportVc), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+        ciMitService.submitVC(passportVc, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc),
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc.getVcString()),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
     @Test
-    void submitVCThrowsIfLambdaExecutionFails() {
+    void submitVCThrowsIfLambdaExecutionFails() throws ParseException, CredentialParseException {
         InvokeResult result = new InvokeResult().withStatusCode(500);
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
@@ -96,13 +98,13 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
 
     @Test
-    void submitVCThrowsIfLambdaThrowsAnError() {
+    void submitVCThrowsIfLambdaThrowsAnError() throws ParseException, CredentialParseException {
         InvokeResult result =
                 new InvokeResult()
                         .withStatusCode(200)
@@ -116,49 +118,51 @@ class CiMitServiceTest {
                 CiPutException.class,
                 () ->
                         ciMitService.submitVC(
-                                SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
     }
 
     @Test
     void submitMitigationVCInvokesTheLambdaClient() throws Exception {
-        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
-        ciMitService.submitMitigatingVcList(
-                List.of(passportVc), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        ciMitService.submitMitigatingVcList(vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc),
+                        GOVUK_SIGNIN_JOURNEY_ID,
+                        CLIENT_SOURCE_IP,
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
     @Test
-    void submitMitigationVCThrowsIfLambdaExecutionFails() {
+    void submitMitigationVCThrowsIfLambdaExecutionFails()
+            throws ParseException, CredentialParseException {
         InvokeResult result = new InvokeResult().withStatusCode(500);
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                                GOVUK_SIGNIN_JOURNEY_ID,
-                                CLIENT_SOURCE_IP));
+                                vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
-    void submitMitigationVCThrowsIfLambdaThrowsAnError() {
+    void submitMitigationVCThrowsIfLambdaThrowsAnError()
+            throws ParseException, CredentialParseException {
         InvokeResult result =
                 new InvokeResult()
                         .withStatusCode(200)
@@ -168,13 +172,12 @@ class CiMitServiceTest {
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
                         ciMitService.submitMitigatingVcList(
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                                GOVUK_SIGNIN_JOURNEY_ID,
-                                CLIENT_SOURCE_IP));
+                                vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -185,6 +188,17 @@ class CiMitServiceTest {
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
+        when(verifiableCredentialValidator.parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(null),
+                        eq(SIGNED_CONTRA_INDICATOR_VC),
+                        eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
+                        any(),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(false)))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         new InvokeResult()
@@ -192,15 +206,8 @@ class CiMitServiceTest {
                                 .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
 
         ContraIndicators contraIndications =
-                ciMitService.getContraIndicatorsVC(
+                ciMitService.getContraIndicators(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
-
-        verify(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
 
         InvokeRequest request = requestCaptor.getValue();
         assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
@@ -225,7 +232,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -243,7 +250,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -260,7 +267,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -275,7 +282,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -296,17 +303,13 @@ class CiMitServiceTest {
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
-                .when(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
+                .when(verifiableCredentialValidator)
+                .parseAndValidate(any(), any(), any(), any(), any(), any(), anyBoolean());
 
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -318,6 +321,13 @@ class CiMitServiceTest {
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
+        when(verifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                null,
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         new InvokeResult()
@@ -327,15 +337,8 @@ class CiMitServiceTest {
                                                 SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
         ContraIndicators contraIndicators =
-                ciMitService.getContraIndicatorsVC(
+                ciMitService.getContraIndicators(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
-
-        verify(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
 
         InvokeRequest request = requestCaptor.getValue();
         assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
@@ -349,7 +352,9 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorCredentialsThrowsErrorIfNoEvidence() throws JsonProcessingException {
+    void getContraIndicatorCredentialsThrowsErrorIfNoEvidence()
+            throws JsonProcessingException, VerifiableCredentialException, ParseException,
+                    CredentialParseException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(lambdaClient.invoke(any()))
@@ -363,19 +368,27 @@ class CiMitServiceTest {
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
+        when(verifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                null,
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE)));
 
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
     void getContraIndicatorsReturnsContraIndicatorsFromSignedJwt() throws Exception {
-        SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC);
-        ContraIndicators contraIndicators =
-                ciMitService.getContraIndicators(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        var vc =
+                VerifiableCredential.fromValidJwt(
+                        TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+        ContraIndicators contraIndicators = ciMitService.getContraIndicators(vc);
 
         assertTrue(contraIndicators.hasMitigations());
     }
@@ -388,21 +401,26 @@ class CiMitServiceTest {
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
+        when(verifiableCredentialValidator.parseAndValidate(
+                        eq(TEST_USER_ID),
+                        eq(null),
+                        eq(SIGNED_CONTRA_INDICATOR_VC),
+                        eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
+                        any(),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(false)))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         new InvokeResult()
                                 .withStatusCode(200)
                                 .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
 
-        SignedJWT contraIndicatorsVCJwt =
-                ciMitService.getContraIndicatorsVCJwt(
+        VerifiableCredential contraIndicatorsVc =
+                ciMitService.getContraIndicatorsVc(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
-        verify(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
 
         InvokeRequest request = requestCaptor.getValue();
         assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
@@ -412,7 +430,7 @@ class CiMitServiceTest {
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
-        assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVCJwt.serialize());
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVc.getVcString());
     }
 
     @Test
@@ -428,7 +446,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVCJwt(
+                        ciMitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -449,12 +467,14 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVCJwt(
+                        ciMitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
-    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock() throws JsonProcessingException {
+    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
+            throws JsonProcessingException, ParseException, CredentialParseException,
+                    VerifiableCredentialException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -466,11 +486,18 @@ class CiMitServiceTest {
                         new InvokeResult()
                                 .withStatusCode(200)
                                 .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC)));
+        when(verifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                null,
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_NO_VC)));
 
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -485,7 +512,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -506,17 +533,13 @@ class CiMitServiceTest {
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
-                .when(verifiableCredentialJwtValidator)
-                .validateSignatureAndClaims(
-                        any(SignedJWT.class),
-                        any(ECKey.class),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(TEST_USER_ID));
+                .when(verifiableCredentialValidator)
+                .parseAndValidate(any(), any(), any(), any(), any(), any(), anyBoolean());
 
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVCJwt(
+                        ciMitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 

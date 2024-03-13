@@ -1,5 +1,4 @@
-import { SQSEvent } from "aws-lambda";
-import { ContextExamples } from "@aws-lambda-powertools/commons";
+import { Context, SQSEvent } from "aws-lambda";
 import { handler } from "../src";
 import { deleteVCs } from "../src/delete-data";
 import { buildMockSQSEvent } from "./mock-sqs-event";
@@ -12,7 +11,7 @@ jest.mock("../src/utils/send-audit-event", () => ({
 }));
 
 describe("handler", () => {
-  const mockContext = ContextExamples.helloworldContext;
+  const mockContext = {} as Context;
   let mockSQSEvent: SQSEvent;
   beforeEach(() => {
     mockSQSEvent = buildMockSQSEvent();

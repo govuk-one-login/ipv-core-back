@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.callticfcri.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -10,20 +9,21 @@ import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
@@ -36,17 +36,16 @@ public class TicfCriService {
 
     private final ConfigService configService;
     private final HttpClient httpClient;
-    private final VerifiableCredentialJwtValidator jwtValidator;
+    private final VerifiableCredentialValidator jwtValidator;
 
     public TicfCriService(ConfigService configService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
-        this.jwtValidator = new VerifiableCredentialJwtValidator(configService);
+        this.jwtValidator = new VerifiableCredentialValidator(configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public TicfCriService(
-            ConfigService configService, VerifiableCredentialJwtValidator jwtValidator) {
+    public TicfCriService(ConfigService configService, VerifiableCredentialValidator jwtValidator) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
         this.jwtValidator = jwtValidator;
@@ -55,16 +54,16 @@ public class TicfCriService {
     protected TicfCriService(
             ConfigService configService,
             HttpClient httpClient,
-            VerifiableCredentialJwtValidator jwtValidator) {
+            VerifiableCredentialValidator jwtValidator) {
         this.configService = configService;
         this.httpClient = httpClient;
         this.jwtValidator = jwtValidator;
     }
 
-    public List<SignedJWT> getTicfVc(
+    public List<VerifiableCredential> getTicfVc(
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
-            List<String> credentials)
+            List<String> vcs)
             throws TicfCriServiceException {
         try {
             RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF_CRI);
@@ -76,7 +75,7 @@ public class TicfCriService {
                             TRUSTMARK,
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            credentials);
+                            vcs);
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -101,15 +100,13 @@ public class TicfCriService {
                 throw new TicfCriServiceException("No credentials in TICF CRI response");
             }
 
-            List<SignedJWT> parsedCredentials = new ArrayList<>();
-            for (String credential : ticfCriResponse.credentials()) {
-                SignedJWT ticfVc = SignedJWT.parse(credential);
-                jwtValidator.validate(ticfVc, ticfCriConfig, clientOAuthSessionItem.getUserId());
-                parsedCredentials.add(ticfVc);
-            }
-
-            return parsedCredentials;
-
+            return jwtValidator.parseAndValidate(
+                    clientOAuthSessionItem.getUserId(),
+                    TICF_CRI,
+                    ticfCriResponse.credentials(),
+                    VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
+                    ticfCriConfig.getParsedSigningKey(),
+                    ticfCriConfig.getComponentId());
         } catch (ParseException | VerifiableCredentialException | JsonProcessingException e) {
             throw new TicfCriServiceException(e);
         } catch (IOException

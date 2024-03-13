@@ -14,13 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,13 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
@@ -55,8 +57,7 @@ class TicfCriServiceTest {
                     .userId("a-user-id")
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
-    private static final List<String> credentials =
-            List.of(M1B_DCMAW_VC, M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
+    private static List<String> vcsReceivedThisSession;
     // the VC in this response is unimportant as we're mocking the
     // validator - we just need something that can be parsed
     private static final TicfCriDto ticfCriResponse =
@@ -66,12 +67,12 @@ class TicfCriServiceTest {
                     TRUSTMARK,
                     "a-user-id",
                     "a-govuk-journey-id",
-                    List.of(VC_ADDRESS));
+                    List.of(VC_ADDRESS.getVcString()));
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
     @Mock private HttpClient mockHttpClient;
-    @Mock private VerifiableCredentialJwtValidator mockVerifiableCredentialJwtValidator;
+    @Mock private VerifiableCredentialValidator mockVerifiableCredentialValidator;
     @Mock private HttpResponse<String> mockHttpResponse;
     @Captor private ArgumentCaptor<HttpRequest> requestCaptor;
     @InjectMocks private TicfCriService ticfCriService;
@@ -83,10 +84,15 @@ class TicfCriServiceTest {
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
-                        .signingKey("singing-key")
+                        .signingKey(EC_PUBLIC_JWK)
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(false)
                         .build();
+        vcsReceivedThisSession =
+                List.of(
+                        M1B_DCMAW_VC.getVcString(),
+                        M1A_ADDRESS_VC.getVcString(),
+                        M1A_EXPERIAN_FRAUD_VC.getVcString());
     }
 
     @Test
@@ -94,7 +100,7 @@ class TicfCriServiceTest {
         RestCriConfig ticfConfigWithApiKeyRequired =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
-                        .signingKey("singing-key")
+                        .signingKey(EC_PUBLIC_JWK)
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(true)
                         .build();
@@ -105,13 +111,16 @@ class TicfCriServiceTest {
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
         when(mockHttpResponse.body()).thenReturn(objectMapper.writeValueAsString(ticfCriResponse));
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of(VC_ADDRESS));
 
         assertEquals(
-                VC_ADDRESS,
+                VC_ADDRESS.getVcString(),
                 ticfCriService
-                        .getTicfVc(clientSessionItem, ipvSessionItem, credentials)
+                        .getTicfVc(clientSessionItem, ipvSessionItem, vcsReceivedThisSession)
                         .get(0)
-                        .serialize());
+                        .getVcString());
 
         verify(mockHttpClient).send(requestCaptor.capture(), any());
         assertEquals(
@@ -126,7 +135,7 @@ class TicfCriServiceTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
         when(mockHttpResponse.body()).thenReturn(objectMapper.writeValueAsString(ticfCriResponse));
 
-        ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials);
+        ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, vcsReceivedThisSession);
 
         verify(mockHttpClient).send(requestCaptor.capture(), any());
 
@@ -143,7 +152,8 @@ class TicfCriServiceTest {
 
         assertEquals(
                 List.of(),
-                ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
+                ticfCriService.getTicfVc(
+                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
     }
 
     @Test
@@ -174,7 +184,8 @@ class TicfCriServiceTest {
 
         assertEquals(
                 List.of(),
-                ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
+                ticfCriService.getTicfVc(
+                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
     }
 
     @Test
@@ -187,7 +198,9 @@ class TicfCriServiceTest {
 
         assertThrows(
                 TicfCriServiceException.class,
-                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
+                () ->
+                        ticfCriService.getTicfVc(
+                                clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
     }
 
     @Test
@@ -213,47 +226,31 @@ class TicfCriServiceTest {
                         TicfCriServiceException.class,
                         () ->
                                 ticfCriService.getTicfVc(
-                                        clientSessionItem, ipvSessionItem, credentials));
+                                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
 
         assertTrue(thrown.getMessage().contains("No credentials in TICF CRI response"));
     }
 
     @Test
     void getTicfVcShouldThrowIfCredentialReturnedCanNotBeParsed() throws Exception {
-        TicfCriDto ticfCriResponseWithoutMangledCred =
-                new TicfCriDto(
-                        List.of("vtr-value"),
-                        Vot.P2,
-                        TRUSTMARK,
-                        "a-user-id",
-                        "a-govuk-journey-id",
-                        List.of("🐛"));
+        var someCredential = "some credential";
+        var ticfResponse = new TicfCriDto(null, null, null, null, null, List.of(someCredential));
 
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockHttpResponse.body())
-                .thenReturn(objectMapper.writeValueAsString(ticfCriResponseWithoutMangledCred));
+        when(mockHttpResponse.body()).thenReturn(objectMapper.writeValueAsString(ticfResponse));
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        any(), any(), eq(List.of(someCredential)), any(), any(), any()))
+                .thenThrow(
+                        new VerifiableCredentialException(
+                                500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS));
 
         assertThrows(
                 TicfCriServiceException.class,
-                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
-    }
-
-    @Test
-    void getTicfVcShouldThrowIfCredentialCanNotBeValidated() throws Exception {
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockHttpResponse.body()).thenReturn(objectMapper.writeValueAsString(ticfCriResponse));
-        doThrow(VerifiableCredentialException.class)
-                .when(mockVerifiableCredentialJwtValidator)
-                .validate(any(), any(), any());
-
-        assertThrows(
-                TicfCriServiceException.class,
-                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, credentials));
+                () ->
+                        ticfCriService.getTicfVc(
+                                clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
     }
 }

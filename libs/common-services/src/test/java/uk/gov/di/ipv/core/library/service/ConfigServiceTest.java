@@ -752,9 +752,7 @@ class ConfigServiceTest {
                 Arguments.of("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}", null),
                 Arguments.of(
                         "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}",
-                        "drivingPermit"),
-                Arguments.of("{\"X01\":\"/journey/do-a-thing\"}", null) // old cimit-config
-                );
+                        "drivingPermit"));
     }
 
     @Test

@@ -4,16 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,9 +51,9 @@ public class Gpg45ProfileEvaluator {
                 .findFirst();
     }
 
-    public Gpg45Scores buildScore(List<SignedJWT> credentials)
-            throws UnknownEvidenceTypeException, ParseException {
-        var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
+    public Gpg45Scores buildScore(List<VerifiableCredential> vcs)
+            throws UnknownEvidenceTypeException {
+        var evidenceMap = parseGpg45ScoresFromCredentials(vcs);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.DCMAW);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.F2F);
         processFraudWithActivityItems(evidenceMap);
@@ -111,15 +110,6 @@ public class Gpg45ProfileEvaluator {
         }
     }
 
-    public List<SignedJWT> parseCredentials(List<String> credentials) throws ParseException {
-        List<SignedJWT> parsedCredentials = new ArrayList<>();
-        for (String credential : credentials) {
-            parsedCredentials.add(SignedJWT.parse(credential));
-        }
-
-        return parsedCredentials;
-    }
-
     private boolean isRelevantEvidence(CredentialEvidenceItem evidenceItem)
             throws UnknownEvidenceTypeException {
         return (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
@@ -169,10 +159,9 @@ public class Gpg45ProfileEvaluator {
         return gpg45CredentialItems;
     }
 
-    private List<CredentialEvidenceItem> parseCredentialEvidence(SignedJWT signedJWT)
-            throws ParseException {
-        JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
-        JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+    private List<CredentialEvidenceItem> getCredentialEvidence(VerifiableCredential vc) {
+        var vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
+        var evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
 
         if (evidenceArray == null) {
             return Collections.emptyList();
@@ -184,8 +173,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     private Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
-            parseGpg45ScoresFromCredentials(List<SignedJWT> credentials)
-                    throws ParseException, UnknownEvidenceTypeException {
+            parseGpg45ScoresFromCredentials(List<VerifiableCredential> vcs)
+                    throws UnknownEvidenceTypeException {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
@@ -198,11 +187,10 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.TICF, new ArrayList<>());
 
-        for (SignedJWT signedJWT : credentials) {
-            List<CredentialEvidenceItem> credentialEvidenceList =
-                    parseCredentialEvidence(signedJWT);
+        for (var vc : vcs) {
+            var credentialEvidenceList = getCredentialEvidence(vc);
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
-                evidenceItem.setCredentialIss(signedJWT.getJWTClaimsSet().getIssuer());
+                evidenceItem.setCredentialIss(vc.getClaimsSet().getIssuer());
                 evidenceMap.get(evidenceItem.getEvidenceType()).add(evidenceItem);
             }
         }

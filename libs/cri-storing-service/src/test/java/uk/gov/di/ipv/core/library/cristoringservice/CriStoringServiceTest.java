@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.cristoringservice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +14,13 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -37,7 +42,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,7 +56,6 @@ class CriStoringServiceTest {
     @Mock private CriResponseService mockCriResponseService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private CiMitService mockCiMitService;
-    @Mock private SignedJWT mockSignedJWT;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
     @Captor private ArgumentCaptor<String> userIdCaptor;
@@ -60,8 +63,8 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<String> vcResponseCaptor;
     @Captor private ArgumentCaptor<String> criOAuthSessionIdCaptor;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
-    @Captor private ArgumentCaptor<SignedJWT> signedJwtCaptor;
-    @Captor private ArgumentCaptor<List<String>> vcListCaptor;
+    @Captor private ArgumentCaptor<VerifiableCredential> vcCaptor;
+    @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
 
     @BeforeEach
     void setUp() {
@@ -75,7 +78,8 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeCriResponseShouldStoreResponseAndSendAuditEvent() throws Exception {
+    void storeCriResponseShouldStoreResponseAndSendAuditEvent()
+            throws SqsException, JsonProcessingException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -112,7 +116,7 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeCriResponseShouldThrowSqsException() throws Exception {
+    void storeCriResponseShouldThrowSqsException() throws SqsException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -125,42 +129,40 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
+    void storeVcsShouldProcessVcsAndSendAuditEvents()
+            throws ParseException, SqsException, VerifiableCredentialException,
+                    CiPostMitigationsException, CiPutException, AuditExtensionException,
+                    UnrecognisedVotException, CredentialParseException {
         // Arrange
-        String passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(passportVc);
+        var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
         criStoringService.storeVcs(
                 callbackRequest.getCredentialIssuerId(),
                 callbackRequest.getIpAddress(),
-                List.of(signedJWT),
+                List.of(vc),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
 
         // Assert
         verify(mockCiMitService)
                 .submitVC(
-                        signedJwtCaptor.capture(),
+                        vcCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
-        assertEquals(signedJWT, signedJwtCaptor.getValue());
+        assertEquals(vc, vcCaptor.getValue());
 
         verify(mockCiMitService)
                 .submitMitigatingVcList(
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
-        assertEquals(List.of(signedJWT.serialize()), vcListCaptor.getValue());
+        assertEquals(List.of(vc), vcListCaptor.getValue());
 
-        verify(mockVerifiableCredentialService)
-                .persistUserCredentials(
-                        signedJwtCaptor.capture(),
-                        eq(callbackRequest.getCredentialIssuerId()),
-                        eq(clientOAuthSessionItem.getUserId()));
-        assertEquals(signedJWT, signedJwtCaptor.getValue());
+        verify(mockVerifiableCredentialService).persistUserCredentials(vcCaptor.capture());
+        assertEquals(vc, vcCaptor.getValue());
 
         verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         var capturedAuditEvents = auditEventCaptor.getAllValues();
@@ -170,11 +172,14 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).addVcReceivedThisSession(passportVc);
+        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
     }
 
     @Test
-    void storeVcsShouldHandleEmptyVcList() throws Exception {
+    void storeVcsShouldHandleEmptyVcList()
+            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
+                    CiPutException, ParseException, AuditExtensionException,
+                    UnrecognisedVotException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -194,35 +199,13 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeVcsShouldThrowParseExceptionWhenVcCannotBeParsed() throws Exception {
-        // Arrange
-        var callbackRequest = buildValidCallbackRequest();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockSignedJWT.getJWTClaimsSet()).thenThrow(new ParseException("Parse exception!", 0));
-
-        // Act & Assert
-        assertThrows(
-                ParseException.class,
-                () ->
-                        criStoringService.storeVcs(
-                                callbackRequest.getCredentialIssuerId(),
-                                callbackRequest.getIpAddress(),
-                                List.of(mockSignedJWT),
-                                clientOAuthSessionItem,
-                                mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
-    }
-
-    @Test
     void storeVcsShouldThrowCiPutExceptionWhenCiSubmissionFails() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPutException(""))
                 .when(mockCiMitService)
-                .submitVC(any(SignedJWT.class), any(), any());
+                .submitVC(any(VerifiableCredential.class), any(), any());
 
         // Act & Assert
         assertThrows(
@@ -231,7 +214,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
-                                List.of(signedJWT),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
 
@@ -240,10 +223,9 @@ class CriStoringServiceTest {
 
     @Test
     void storeVcsShouldThrowCiPostMitigationsExceptionWhenCiMitigationListSubmissionFails()
-            throws Exception {
+            throws CiPostMitigationsException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPostMitigationsException(""))
                 .when(mockCiMitService)
@@ -256,7 +238,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
-                                List.of(signedJWT),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
 
@@ -264,10 +246,9 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeVcsShouldThrowSqsExceptionWhenAuditEventFailsToSend() throws Exception {
+    void storeVcsShouldThrowSqsExceptionWhenAuditEventFailsToSend() throws SqsException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
 
@@ -278,7 +259,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
-                                List.of(signedJWT),
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
 

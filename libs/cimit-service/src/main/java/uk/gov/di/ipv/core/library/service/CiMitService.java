@@ -8,7 +8,6 @@ import com.amazonaws.services.lambda.model.InvokeResult;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,13 +24,15 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +40,6 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -58,26 +58,25 @@ public class CiMitService {
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private final AWSLambda lambdaClient;
     private final ConfigService configService;
-    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    private final VerifiableCredentialValidator verifiableCredentialValidator;
 
     @ExcludeFromGeneratedCoverageReport
     public CiMitService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configService = configService;
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
+        this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
     }
 
     public CiMitService(
             AWSLambda lambdaClient,
             ConfigService configService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
+            VerifiableCredentialValidator verifiableCredentialValidator) {
         this.lambdaClient = lambdaClient;
         this.configService = configService;
-        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
+        this.verifiableCredentialValidator = verifiableCredentialValidator;
     }
 
-    public void submitVC(
-            SignedJWT verifiableCredential, String govukSigninJourneyId, String ipAddress)
+    public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
         InvokeRequest request =
                 new InvokeRequest()
@@ -88,7 +87,7 @@ public class CiMitService {
                                         new PutCiRequest(
                                                 govukSigninJourneyId,
                                                 ipAddress,
-                                                verifiableCredential.serialize())));
+                                                vc.getVcString())));
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
@@ -100,7 +99,7 @@ public class CiMitService {
     }
 
     public void submitMitigatingVcList(
-            List<String> verifiableCredentialList, String govukSigninJourneyId, String ipAddress)
+            List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
         InvokeRequest request =
                 new InvokeRequest()
@@ -112,7 +111,9 @@ public class CiMitService {
                                         new PostCiMitigationRequest(
                                                 govukSigninJourneyId,
                                                 ipAddress,
-                                                verifiableCredentialList)));
+                                                vcs.stream()
+                                                        .map(VerifiableCredential::getVcString)
+                                                        .toList())));
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         InvokeResult result = lambdaClient.invoke(request);
@@ -123,20 +124,20 @@ public class CiMitService {
         }
     }
 
-    public ContraIndicators getContraIndicatorsVC(
+    public ContraIndicators getContraIndicators(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
-        SignedJWT ciSignedJWT = getContraIndicatorsVCJwt(userId, govukSigninJourneyId, ipAddress);
+        var vc = getContraIndicatorsVc(userId, govukSigninJourneyId, ipAddress);
 
-        return getContraIndicators(ciSignedJWT);
+        return getContraIndicators(vc);
     }
 
-    public ContraIndicators getContraIndicators(SignedJWT contraIndicatorsVc)
+    public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
-        return mapToContraIndicators(parseContraIndicatorEvidence(contraIndicatorsVc));
+        return mapToContraIndicators(parseContraIndicatorEvidence(vc));
     }
 
-    public SignedJWT getContraIndicatorsVCJwt(
+    public VerifiableCredential getContraIndicatorsVc(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         InvokeResult result =
@@ -184,25 +185,24 @@ public class CiMitService {
         return result;
     }
 
-    private SignedJWT extractAndValidateContraIndicatorsJwt(
+    private VerifiableCredential extractAndValidateContraIndicatorsJwt(
             String contraIndicatorsVC, String userId) throws CiRetrievalException {
-        SignedJWT contraIndicatorsJwt;
-        try {
-            contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC);
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse ContraIndicators JWT.", e));
-            throw new CiRetrievalException("Failed to parse JWT");
-        }
-
         final String cimitComponentId =
                 configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
         final String cimitSigningKey =
                 configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
         try {
-            verifiableCredentialJwtValidator.validateSignatureAndClaims(
-                    contraIndicatorsJwt, ECKey.parse(cimitSigningKey), cimitComponentId, userId);
             LOGGER.info(
-                    LogHelper.buildLogMessage("ContraIndicators Verifiable Credential validated."));
+                    LogHelper.buildLogMessage(
+                            "Validating ContraIndicators Verifiable Credential."));
+            return verifiableCredentialValidator.parseAndValidate(
+                    userId,
+                    null,
+                    contraIndicatorsVC,
+                    VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
+                    ECKey.parse(cimitSigningKey),
+                    cimitComponentId,
+                    false);
         } catch (ParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error parsing CIMIT signing key", e));
             throw new CiRetrievalException(
@@ -211,21 +211,12 @@ public class CiMitService {
             LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
             throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
         }
-
-        return contraIndicatorsJwt;
     }
 
-    private EvidenceItem parseContraIndicatorEvidence(SignedJWT signedJWT)
+    private EvidenceItem parseContraIndicatorEvidence(VerifiableCredential vc)
             throws CiRetrievalException {
 
-        Map<String, Object> claimSetJsonObject;
-        try {
-            claimSetJsonObject = signedJWT.getJWTClaimsSet().toJSONObject();
-        } catch (ParseException e) {
-            String message = "Failed to parse ContraIndicators response json";
-            LOGGER.error(LogHelper.buildErrorMessage(message, e));
-            throw new CiRetrievalException(message);
-        }
+        var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
 
         CiMitJwt ciMitJwt =
                 gson.fromJson(

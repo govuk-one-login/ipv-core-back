@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.processcricallback;
 
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,7 +12,9 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -22,7 +24,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
@@ -52,12 +54,26 @@ class ProcessCriCallbackHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
-    @Mock private VerifiableCredentialJwtValidator mockVerifiableCredentialJwtValidator;
+    @Mock private VerifiableCredentialValidator mockVerifiableCredentialValidator;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private CriApiService mockCriApiService;
     @Mock private CriStoringService mockCriStoringService;
     @Mock private CriCheckingService mockCriCheckingService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
+
+    @BeforeEach
+    void setUp() {
+        processCriCallbackHandler =
+                new ProcessCriCallbackHandler(
+                        mockConfigService,
+                        mockIpvSessionService,
+                        mockCriOAuthSessionService,
+                        mockVerifiableCredentialValidator,
+                        mockClientOAuthSessionDetailsService,
+                        mockCriApiService,
+                        mockCriStoringService,
+                        mockCriCheckingService);
+    }
 
     @Test
     void getJourneyResponseShouldReturnNextWhenAllChecksPassForCreatedVcs() throws Exception {
@@ -67,13 +83,14 @@ class ProcessCriCallbackHandlerTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
         var bearerToken = new BearerAccessToken("value");
-        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())
-                        .verifiableCredentials(List.of(signedJWT))
+                        .verifiableCredentials(
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()))
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
 
         when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
                 .thenReturn(ipvSessionItem);
@@ -88,9 +105,15 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchVerifiableCredential(
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
+        when(mockVerifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any()))
+                .thenReturn(vcs);
         when(mockCriCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem))
+                        any(), eq(callbackRequest), eq(clientOAuthSessionItem)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
+        when(mockConfigService.getOauthCriConfig(any()))
+                .thenReturn(
+                        OauthCriConfig.builder().signingKey(TestFixtures.EC_PUBLIC_JWK).build());
 
         // Act
         var result = processCriCallbackHandler.getJourneyResponse(callbackRequest);
@@ -104,7 +127,7 @@ class ProcessCriCallbackHandlerTest {
                 .storeVcs(
                         callbackRequest.getCredentialIssuerId(),
                         callbackRequest.getIpAddress(),
-                        vcResponse.getVerifiableCredentials(),
+                        vcs,
                         clientOAuthSessionItem,
                         ipvSessionItem);
     }
@@ -137,7 +160,7 @@ class ProcessCriCallbackHandlerTest {
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem))
+                        List.of(), callbackRequest, clientOAuthSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -172,11 +195,11 @@ class ProcessCriCallbackHandlerTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
         var bearerToken = new BearerAccessToken("value");
-        var signedJWT = SignedJWT.parse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())
-                        .verifiableCredentials(List.of(signedJWT))
+                        .verifiableCredentials(
+                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()))
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
 
@@ -193,8 +216,11 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchVerifiableCredential(
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
+        when(mockConfigService.getOauthCriConfig(any()))
+                .thenReturn(
+                        OauthCriConfig.builder().signingKey(TestFixtures.EC_PUBLIC_JWK).build());
         when(mockCriCheckingService.checkVcResponse(
-                        vcResponse, callbackRequest, clientOAuthSessionItem))
+                        any(), eq(callbackRequest), eq(clientOAuthSessionItem)))
                 .thenThrow(
                         new MitigationRouteConfigNotFoundException(
                                 "mitigation route event not found"));

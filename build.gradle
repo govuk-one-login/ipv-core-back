@@ -8,7 +8,7 @@ repositories {
 	mavenCentral()
 }
 
-sonarqube {
+sonar {
 	properties {
 		property "sonar.projectKey", "ipv-core-back"
 		property "sonar.organization", "govuk-one-login"

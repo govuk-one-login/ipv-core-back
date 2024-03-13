@@ -51,6 +51,7 @@ const featureFlagInput = document.getElementById('featureFlagInput')
 const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
+const stateSearch = document.getElementById('state-search');
 
 let svgPanZoomInstance = null;
 let journeyMaps = {};
@@ -88,7 +89,7 @@ const setupHeader = () => {
             e.preventDefault();
             await switchJourney(id);
         }
-        headerBar.appendChild(link);
+        headerBar.insertBefore(link,  stateSearch);
     });
 
     // Handle user navigating back/forwards
@@ -227,6 +228,33 @@ const setupHeaderToggleClickHandlers = () => {
     });
 }
 
+const setupSearchHandler = () => {
+    stateSearch.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') {
+            return;
+        }
+        const searchTerm = stateSearch.value.toUpperCase();
+        const stateElement = document.querySelector(`g[data-id="${searchTerm}"]`);
+        if (!stateElement) {
+            console.log(`No state found with selector: g[data-id="${searchTerm}"]`)
+            return;
+        }
+        stateElement.querySelector('span').click(); // Cause the state to be highlighted
+
+        const position = stateElement.getAttribute('transform').split("translate(")[1].split(")")[0].split(",");
+        const posX = position[0];
+        const posY = position[1];
+
+        const currentZoom = svgPanZoomInstance.getZoom();
+        const realZoom = svgPanZoomInstance.getSizes().realZoom;
+        svgPanZoomInstance.pan({
+            x: -(posX*realZoom) + (svgPanZoomInstance.getSizes().width/2),
+            y: -(posY*realZoom) + (svgPanZoomInstance.getSizes().height/2) + (headerContent.offsetHeight/2)
+        });
+        svgPanZoomInstance.zoom(currentZoom);
+    })
+}
+
 const initialize = async () => {
     setupHeader();
     await loadJourneyMaps();
@@ -239,6 +267,7 @@ const initialize = async () => {
         event.preventDefault();
         await renderSvg();
     });
+    setupSearchHandler();
     await renderSvg();
 }
 
