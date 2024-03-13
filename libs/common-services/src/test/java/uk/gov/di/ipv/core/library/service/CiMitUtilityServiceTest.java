@@ -311,7 +311,7 @@ class CiMitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationJourneyResponseShouldReturnEmptyWhenCiCanBeMitigatedWithDisableD02Mitigation()
+    void getMitigationJourneyResponseShouldReturnEmptyWhenCiCanBeMitigatedWithDisableMitigation()
             throws Exception {
         // arrange
         var code = "ci_code";
@@ -341,7 +341,7 @@ class CiMitUtilityServiceTest {
 
     @Test
     void
-            getMitigationJourneyResponseShouldReturnMitigationWhenCiCanBeMitigatedWithEableD02Mitigation()
+            getMitigationJourneyResponseShouldReturnMitigationWhenCiCanBeMitigatedWithEnableMitigation()
                     throws Exception {
         // arrange
         var code = "ci_code";
