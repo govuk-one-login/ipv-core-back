@@ -280,9 +280,9 @@ Resources:
       AlarmDescription: "Trigger an alarm when the age of the oldest message in the DeleteAccountSQSQueue is 5 or more minutes"
       ActionsEnabled: true
       # AlarmActions:
-      #   - !ImportValue alarm-alerts-topic
+      #   - !Ref DLQAlarmsSNSTopic
       # OKActions:
-      #   - !ImportValue alarm-alerts-topic
+      #   - !Ref DLQAlarmsSNSTopic
       MetricName: ApproximateAgeOfOldestMessage
       Namespace: AWS/SQS
       Statistic: Maximum
@@ -482,3 +482,5 @@ Outputs:
     Value: !GetAtt IPVSnsKmsKey.Arn
     Export:
       Name: !Sub "IPVCoreDeleteUserSNSTopicKeyArn-${Environment}"
+  DLQAlarmsSNSTopicArn:
+    Value: !Ref DLQAlarmsSNSTopic
