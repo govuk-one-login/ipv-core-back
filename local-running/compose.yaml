@@ -154,10 +154,10 @@ services:
       <<: *cri-config
       CREDENTIAL_ISSUER_NAME: Driving Licence (Stub)
       CREDENTIAL_ISSUER_TYPE: EVIDENCE_DRIVING_LICENCE
-      CLIENT_AUDIENCE: https://driving-license-cri.stubs.account.gov.uk
+      CLIENT_AUDIENCE: https://driving-licence-cri.stubs.account.gov.uk
       CREDENTIAL_ISSUER_PORT: 3006
       MITIGATION_ENABLED: false
-      VC_ISSUER: https://driving-license-cri.stubs.account.gov.uk
+      VC_ISSUER: https://driving-licence-cri.stubs.account.gov.uk
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
     ports:
       - "3006:3006"
@@ -175,7 +175,7 @@ services:
       CREDENTIAL_ISSUER_TYPE: EVIDENCE
       CLIENT_AUDIENCE: https://passport-cri.stubs.account.gov.uk
       CREDENTIAL_ISSUER_PORT: 3007
-      MITIGATION_ENABLED: false
+      MITIGATION_ENABLED: true
       VC_ISSUER: https://passport-cri.stubs.account.gov.uk
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
     ports:
