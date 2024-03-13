@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.checkexistingidentity.exceptions.UnsupportedMitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -67,6 +68,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
@@ -95,6 +98,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
+            new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_RESET_GPG45_IDENTITY =
@@ -250,7 +255,8 @@ public class CheckExistingIdentityHandler
 
             // No profile match
             return isF2FComplete
-                    ? buildF2FNoMatchResponse(areGpg45VcsCorrelated, auditEventUser)
+                    ? buildF2FNoMatchResponse(
+                            areGpg45VcsCorrelated, auditEventUser, contraIndicators)
                     : buildNoMatchResponse(vcs, auditEventUser, contraIndicators);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -271,6 +277,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         } catch (MitigationRouteConfigNotFoundException e) {
             return buildErrorResponse(ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND, e);
+        } catch (UnsupportedMitigationRouteException e) {
+            return buildErrorResponse(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE, e);
         }
     }
 
@@ -357,13 +365,30 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
-            boolean areGpg45VcsCorrelated, AuditEventUser auditEventUser) throws SqsException {
+            boolean areGpg45VcsCorrelated,
+            AuditEventUser auditEventUser,
+            ContraIndicators contraIndicators)
+            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException,
+                    UnsupportedMitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
                         : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                 auditEventUser);
+        var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
+        if (mitigatedCI.isPresent()) {
+            var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
+            if (mitigationRoute.isPresent()) {
+                if (mitigationRoute.get().getJourney().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)) {
+                    return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
+                }
+                throw new UnsupportedMitigationRouteException(
+                        String.format(
+                                "Unsupported mitigation route: %s",
+                                mitigationRoute.get().getJourney()));
+            }
+        }
         return JOURNEY_F2F_FAIL;
     }
 
