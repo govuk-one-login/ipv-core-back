@@ -205,7 +205,7 @@ class ContractTest {
                 .given("dummyBavComponentId is a valid issuer")
                 .given("VC evidence failedCheckDetails identityCheckPolicy is none")
                 .given("VC evidence failedCheckDetails checkMethod is data")
-                .given("VC evidence has a CI of D15")
+                .given("VC evidence has a CI of dummyCi")
                 .given("VC evidence validityScore is 0")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence txn is dummyTxn")
@@ -301,7 +301,7 @@ class ContractTest {
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
 
-                                assertEquals("D15", ciNode.get(0).asText());
+                                assertEquals("dummyCi", ciNode.get(0).asText());
 
                                 JsonNode bankAccountNode =
                                         credentialSubject.get("bankAccount").get(0);
@@ -550,7 +550,7 @@ class ContractTest {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D15", ciConfig1);
+        ciConfigMap.put("dummyCi", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(PRIVATE_API_KEY);
@@ -625,9 +625,9 @@ class ContractTest {
             """
             {
               "nbf": 4070908800,
-              "iss": "dummyBavComponentId",
               "iat": 4070908800,
               "jti": "jti",
+              "iss": "dummyBavComponentId",
               "sub": "test-subject",
               "vc": {
                 "@context": [
@@ -680,15 +680,15 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "sDIUCpcphhbBCdBlXD59b5woGz8ZwGY3F445JmoFurJgMXZui0-4xfP_1x_ODarGPRALwXkt5UK4jImz0tbj8A";
+            "Mf2vUI7tchtEhiafnyp7oGFO0n_ngPgDseuZXGcc2aboVSErdJPiPp-6KrlRCxCq4h-1Js1Q9Ic_R8FUSRn3AA";
 
     private static final String FAILED_BAV_VC_BODY =
             """
             {
               "nbf": 4070908800,
-              "iss": "dummyBavComponentId",
               "iat": 4070908800,
               "jti": "jti",
+              "iss": "dummyBavComponentId",
               "sub": "test-subject",
               "vc": {
                 "@context": [
@@ -733,7 +733,7 @@ class ContractTest {
                       }
                     ],
                     "ci": [
-                      "D15"
+                      "dummyCi"
                     ]
                   }
                 ]
@@ -744,5 +744,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "ia1F5IiW8Rstrm2W_0HIca4n9lRbXVTPiuqDkG39TeMOWkpBRSRr0AO4R0picXX861dz81prMha2O8k2uCzJwA";
+            "_sW-3UzTjh0x6n1v0uvuZSOIwQ9GAMCv-HIlWdbaCYCgSjysIQg2e3rBaJAuqg21qm6uldYSYW3O1XFtVFtwJw";
 }
