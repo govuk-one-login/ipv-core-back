@@ -729,14 +729,15 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "FTT9lnsnoZ6DIGvrXQyfMGMK8knC7gL7CCcafbmoVg3QHrg3zt6hK-mAV7Nqg-53A6SEJM0VYZ0F0v7qaPpRCg";
+            "sCeBi6_FUnX3XGFxvAaqXoI6BKSHfBrOa4y-4j5iQ_--JJ4A4_PRbgnPNAFtR6-IN-JD7gxhcY-4yDN38W856Q";
 
     private static final String FAILED_DVLA_VC_BODY =
             """
@@ -808,14 +809,15 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_SIGNATURE =
-            "msA6QuhXy4TIbzez0YduFkXE5kaN-cqjFcR8WU6FQmD9W78V89JJ5sx8uIW3k8_tLhpuWLgaa-qa2R4V29qPYQ";
+            "fHewGtTy8WRNH9ZZtSSWN5jTLb8W28TYuaRn76-WI6KELGp2Y_geAHqSVTcNdbebCNDOqSiKx7vscRv-u6GuQg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_DVA_VC_BODY =
@@ -884,14 +886,15 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "COzeWT61WcMJX3QNS-5-gbrtzCOOOs59ic8mQ7eNE-J2FBm5FA4qPv-hHqx55EgChHcFKzpepNjQBOSSZpXNWw";
+            "3PckWPMtOyJ5YttPZlWZw0xXTUNuD4ogIyIzQiTmUuBZqaH_OOU6tvPDJXVtU9PvfDr8C3YDEhDOWnFFTG6P6g";
 
     private static final String FAILED_DVA_VC_BODY =
             """
@@ -962,12 +965,13 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_SIGNATURE =
-            "kPfCyzksvyxWuUjaQBACJcrdByJ4oxUEGyRvruVLrunVYRFpCNNt-3IH-6p223m9y-lXFsWb5zfGU3thacMIfw";
+            "p49qdMqCGQsb8EOp0UecFSAqeIQ3pJPcOfsGsjxwdH9TMVE_7pYDHCdKrA329TNqXMyvKIqPkDM1r_iT-QB7WA";
 }
