@@ -424,10 +424,10 @@ class ProcessJourneyEventHandlerTest {
                         "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
                         "testWithScope",
-                        "/journey/cri/build-oauth-request/aCriId?scope=test_scope"),
+                        "/journey/cri/build-oauth-request/aCriId?evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D"),
                 Arguments.of(
                         "testWithContextAndScope",
-                        "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context&evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D"));
     }
 
     @Test

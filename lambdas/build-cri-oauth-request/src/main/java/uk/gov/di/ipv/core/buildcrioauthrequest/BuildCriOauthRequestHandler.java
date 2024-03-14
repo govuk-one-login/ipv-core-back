@@ -95,7 +95,7 @@ public class BuildCriOauthRequestHandler
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
     public static final String CONTEXT = "context";
-    public static final String SCOPE = "scope";
+    public static final String EVIDENCE_REQUESTED = "evidenceRequest";
 
     private final ConfigService configService;
     private final KmsEs256SignerFactory signerFactory;
@@ -106,6 +106,7 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
             ConfigService configService,
             KmsEs256SignerFactory signerFactory,
@@ -160,7 +161,8 @@ public class BuildCriOauthRequestHandler
             LogHelper.attachCriIdToLogs(criId);
 
             String criContext = getJourneyParameter(input, CONTEXT);
-            String criScope = getJourneyParameter(input, SCOPE);
+            EvidenceRequest criEvidenceRequest =
+                    EvidenceRequest.fromBase64(getJourneyParameter(journeyUri, EVIDENCE_REQUESTED));
             String connection = configService.getActiveConnection(criId);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, criId);
@@ -194,7 +196,7 @@ public class BuildCriOauthRequestHandler
                             govukSigninJourneyId,
                             criId,
                             criContext,
-                            criScope);
+                            criEvidenceRequest);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
@@ -255,6 +257,13 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+        } catch (JsonProcessingException e) {
+          return buildJourneyErrorResponse(
+                    "Failed to parse evidenceRequest.", 
+                    e,
+                    JOURNEY_ERROR_PATH,
+                    SC_INTERNAL_SERVER_ERROR,
+                    FAILED_TO_PARSE_EVIDENCE_REQUESTED);
         }
     }
 
@@ -287,6 +296,7 @@ public class BuildCriOauthRequestHandler
         return new CriResponse(new CriDetails(criId, redirectUri.build().toString()));
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private JWEObject signEncryptJar(
             IpvSessionItem ipvSessionItem,
             OauthCriConfig oauthCriConfig,
@@ -295,7 +305,7 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId,
             String criId,
             String context,
-            String scope)
+            EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     UnknownEvidenceTypeException, CredentialParseException,
                     VerifiableCredentialException {
@@ -305,7 +315,6 @@ public class BuildCriOauthRequestHandler
 
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributesForUser(ipvSessionItem, vcs, criId);
-        EvidenceRequest evidenceRequest = null;
 
         if (criId.equals(F2F_CRI)) {
             evidenceRequest = getEvidenceRequestForF2F(vcs);
@@ -320,8 +329,7 @@ public class BuildCriOauthRequestHandler
                         userId,
                         govukSigninJourneyId,
                         evidenceRequest,
-                        context,
-                        scope);
+                        context);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
@@ -359,7 +367,7 @@ public class BuildCriOauthRequestHandler
             return null;
         }
 
-        return new EvidenceRequest(minViableStrengthOpt.getAsInt());
+        return new EvidenceRequest(null, minViableStrengthOpt.getAsInt());
     }
 
     @Tracing

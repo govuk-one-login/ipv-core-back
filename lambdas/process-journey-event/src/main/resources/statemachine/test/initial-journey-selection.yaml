@@ -29,10 +29,10 @@ states:
         targetState: NESTED_JOURNEY_INVOKE_STATE
       testWithContext:
         targetState: CRI_STATE_WITH_CONTEXT
-      testWithScope:
-        targetState: CRI_STATE_WITH_SCOPE
-      testWithContextAndScope:
-        targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
+      testWithEvidenceRequest:
+        targetState: CRI_STATE_WITH_EVIDENCE_REQUEST
+      testWithContextAndEvidenceRequest:
+        targetState: CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST
       testWithMitigationStart:
         targetState: PAGE_STATE_AT_START_OF_MITIGATION
       testJourneyStep:
@@ -48,24 +48,28 @@ states:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
 
-  CRI_STATE_WITH_SCOPE:
-    response:
-      type: cri
-      criId: aCriId
-      scope: test_scope
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
+CRI_STATE_WITH_EVIDENCE_REQUEST:
+  response:
+    type: cri
+    criId: aCriId
+    evidenceRequest:
+      scoringPolicy: gpg45
+      strengthScore: 2
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
 
-  CRI_STATE_WITH_CONTEXT_AND_SCOPE:
-    response:
-      type: cri
-      criId: aCriId
-      context: test_context
-      scope: test_scope
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
+CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST:
+  response:
+    type: cri
+    criId: aCriId
+    context: test_context
+    evidenceRequest:
+      scoringPolicy: gpg45
+      strengthScore: 2
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
 
   PAGE_STATE_AT_START_OF_MITIGATION:
     response:
