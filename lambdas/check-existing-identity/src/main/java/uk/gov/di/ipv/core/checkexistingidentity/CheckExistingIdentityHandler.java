@@ -381,7 +381,7 @@ public class CheckExistingIdentityHandler
             var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
             if (mitigationRoute.isPresent()) {
                 JourneyResponse journeyResponse = mitigationRoute.get();
-                if (!journeyResponse.getJourney().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)) {
+                if (!JOURNEY_ENHANCED_VERIFICATION_PATH.equals(journeyResponse.getJourney())) {
                     throw new UnsupportedMitigationRouteException(
                             String.format(
                                     "Unsupported mitigation route: %s",
