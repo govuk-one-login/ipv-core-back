@@ -582,14 +582,15 @@ class CredentialTests {
                             "ciReasons": []
                         }
                     ]
-                }
+                },
+                "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "qqRxw3jYdhlirU86WNur3IN-SXwXTULRDNTwlhJOQQB1z2lErfwOiY-cI2HH7mLrUkYGyf_MDGV0uPU1BpuL0Q";
+            "ZmeS-B5HQkQBEOnRogwGVuYORA28YiriPbdeKeGUtwVJ4bmvOAZD5ePNVOKO6788N8TAuYCC1uofV0J1gr_e9g";
 
     private static final String FAILED_VC_BODY =
             """
@@ -653,14 +654,15 @@ class CredentialTests {
                             ]
                         }
                     ]
-                }
+                },
+                "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "CE2iR-txy0niAgSE_Huzn5J7Kg9MEmR9FHH8V7loSEjM6-YkHnUqRGbncZRGupoISDMAOhSPpHYlK1DoBNiZ4Q";
+            "BqDbzSgjr-kMUEMgtaMJ1Cr3zypulFXwXL6wPsz8rvlqL32Y_I_KyEnyf1oKnSuQAfEQIOtgHazi1kMO5ZElNg";
 
     private static final String FAILED_VC_SCENARIO_2_BODY =
             """
@@ -734,12 +736,13 @@ class CredentialTests {
                             ]
                         }
                     ]
-                }
+                },
+                "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SCENARIO_2_SIGNATURE =
-            "Ybc2oCiLSWA_Fi1mCrl5W9PHsjqpOOVlW_G507657EApUQIApb1wl1hG-v8Sip8TUwKCuhDBU-W4q3NW56tW8g";
+            "Nhtx_3xy_cjZCCA_rpdVTSg6WjutpPdZ0_BxBQrAx_hAy6Wr86H22iKL4O-B0dQ4z9-hzJOq3Y90IKp5pQNqLg";
 }

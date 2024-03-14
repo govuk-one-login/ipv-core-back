@@ -634,14 +634,15 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "gWVpjvQjxxkngZmsD5edlPJYgaqiv4kmsMZcWZmL4v9vHxRx4l8rtRWoe13P8CWOQXSH36nwb3e4XIJnkCc29Q";
+            "tv8Dm1d6xzt7NZzc6rNi4vdy8Nolp5_pUuw29HU3TsQqaxBvbTOOU8-RGtx-lE3n2HGXHeCiHQsHRL3f6qofFg";
 
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_BODY =
             """
@@ -720,14 +721,15 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "gpEHsEiBOqCAZGu6uM7JMBVxt6wl7dXQq202ZWlpkwRCJCpUcs_TUmW87k2f03tZbIF3nfmtPJibPllqcBLpVA";
+            "yACRsUiWnx8YcXSHSEGScsJmsIfn0ToTnWl0hDYmYaPFa4wdHEUBc1oACfbHZLP5lTzbzen3rh8hLs71avj6Lw";
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_BODY =
             """
@@ -811,12 +813,13 @@ class CredentialTests {
                     ]
                   }
                 ]
-              }
+              },
+              "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "wAh0ij6THvQqCWmBFx5CMC7zR0d52COhm4l2taclMJgJwgt_K-FgXCCjrcqpih6fF4ypocsnGDZQKoLaJ7o37g";
+            "2Lj5WwVPdC_7AkD24TJ4H62ofG_Wxdek4mx4bIdg-Ci8mYvtqkyrHhMD-1wrMjUIMOiPVhSyFEpM92tp1MGncA";
 }
