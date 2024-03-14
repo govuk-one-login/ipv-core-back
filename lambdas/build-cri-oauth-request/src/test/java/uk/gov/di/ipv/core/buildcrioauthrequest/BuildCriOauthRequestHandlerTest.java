@@ -11,10 +11,12 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
@@ -109,7 +112,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
-    private static final String TEST_EVIDENCE_REQUESTED = "evidence_requested";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
@@ -117,14 +119,11 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_CONTEXT = "test_context";
     private static final String CRI_WITH_CONTEXT =
             String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT);
-    private static final String SCOPE = "scope";
-    private static final String TEST_SCOPE = "test_scope";
-    private static final String CRI_WITH_SCOPE =
-            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, SCOPE, TEST_SCOPE);
-    private static final String CRI_WITH_CONTEXT_AND_SCOPE =
-            String.format(
-                    "%s?%s=%s&%s=%s",
-                    CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE);
+    private static final String EVIDENCE_REQUEST = "evidenceRequest";
+    private static final String EVIDENCE_REQUESTED = "evidence_requested";
+    private static final EvidenceRequest TEST_EVIDENCE_REQUESTED = new EvidenceRequest("gpg45", 2);
+    private static String CRI_WITH_EVIDENCE_REQUEST;
+    private static String CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -153,6 +152,22 @@ class BuildCriOauthRequestHandlerTest {
     private OauthCriConfig claimedIdentityOauthCriConfig;
     private OauthCriConfig hmrcKbvOauthCriConfig;
     private ClientOAuthSessionItem clientOAuthSessionItem;
+
+    @BeforeAll
+    static void setUpAll() throws JsonProcessingException {
+        CRI_WITH_EVIDENCE_REQUEST =
+                String.format(
+                        "%s?%s=%s",
+                        CLAIMED_IDENTITY_CRI, EVIDENCE_REQUEST, TEST_EVIDENCE_REQUESTED.toBase64());
+        CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST =
+                String.format(
+                        "%s?%s=%s&%s=%s",
+                        CLAIMED_IDENTITY_CRI,
+                        CONTEXT,
+                        TEST_CONTEXT,
+                        EVIDENCE_REQUEST,
+                        TEST_EVIDENCE_REQUESTED.toBase64());
+    }
 
     @BeforeEach
     void setUp() throws URISyntaxException {
@@ -1230,7 +1245,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("address").size());
         assertFalse(sharedClaims.has("emailAddress"));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertNull(evidenceRequested);
     }
 
@@ -1306,7 +1321,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
         assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
-        JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertEquals(3, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
@@ -1419,7 +1434,7 @@ class BuildCriOauthRequestHandlerTest {
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
-            String journeyUri, Map<String, String> expectedClaims) throws Exception {
+            String journeyUri, Map<String, Object> expectedClaims) throws Exception {
         // Arrange
         when(configService.getActiveConnection(CLAIMED_IDENTITY_CRI)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY_CRI))
@@ -1456,28 +1471,35 @@ class BuildCriOauthRequestHandlerTest {
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
 
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
-        for (Map.Entry<String, String> entry : expectedClaims.entrySet()) {
+        for (var entry : expectedClaims.entrySet()) {
+            String expectedClaim = objectMapper.writeValueAsString(entry.getValue());
+            String actualClaim =
+                    objectMapper.writeValueAsString(claimsSet.getClaim(entry.getKey()));
             assertEquals(
-                    entry.getValue(),
-                    claimsSet.get(entry.getKey()).asText(),
+                    expectedClaim,
+                    actualClaim,
                     () ->
                             String.format(
                                     "Expected claim for key=%s to be %s, but found %s",
-                                    entry.getKey(),
-                                    entry.getValue(),
-                                    claimsSet.get(entry.getKey()).asText()));
+                                    entry.getKey(), expectedClaim, actualClaim));
         }
     }
 
     private static Stream<Arguments> journeyUriParameters() {
         return Stream.of(
                 Arguments.of(CRI_WITH_CONTEXT, Map.of(CONTEXT, TEST_CONTEXT)),
-                Arguments.of(CRI_WITH_SCOPE, Map.of(SCOPE, TEST_SCOPE)),
                 Arguments.of(
-                        CRI_WITH_CONTEXT_AND_SCOPE,
-                        Map.of(CONTEXT, TEST_CONTEXT, SCOPE, TEST_SCOPE)));
+                        CRI_WITH_EVIDENCE_REQUEST,
+                        Map.of(EVIDENCE_REQUESTED, TEST_EVIDENCE_REQUESTED)),
+                Arguments.of(
+                        CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST,
+                        Map.of(
+                                CONTEXT,
+                                TEST_CONTEXT,
+                                EVIDENCE_REQUESTED,
+                                TEST_EVIDENCE_REQUESTED)));
     }
 
     private void assertErrorResponse(
