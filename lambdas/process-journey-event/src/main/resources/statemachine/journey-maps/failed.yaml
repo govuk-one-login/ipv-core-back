@@ -40,6 +40,8 @@ CRI_TICF_BEFORE_NO_MATCH:
       targetState: NO_MATCH_PAGE
     enhanced-verification:
       targetState: NO_MATCH_PAGE
+    alternate-doc-invalid-dl:
+      targetState: NO_MATCH_PAGE
     fail-with-ci:
       targetState: NO_MATCH_PAGE
     error:
@@ -55,6 +57,8 @@ CRI_TICF_BEFORE_NO_MATCH_BAV:
       targetState: NO_MATCH_PAGE_BAV
     enhanced-verification:
       targetState: NO_MATCH_PAGE_BAV
+    alternate-doc-invalid-dl:
+      targetState: NO_MATCH_PAGE_BAV
     fail-with-ci:
       targetState: NO_MATCH_PAGE_BAV
     error:
@@ -69,6 +73,8 @@ CRI_TICF_BEFORE_NO_MATCH_NINO:
     next:
       targetState: NO_MATCH_PAGE_NINO
     enhanced-verification:
+      targetState: NO_MATCH_PAGE_NINO
+    alternate-doc-invalid-dl:
       targetState: NO_MATCH_PAGE_NINO
     fail-with-ci:
       targetState: NO_MATCH_PAGE_NINO

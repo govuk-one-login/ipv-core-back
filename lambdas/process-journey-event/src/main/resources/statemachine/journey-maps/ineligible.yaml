@@ -32,6 +32,8 @@ CRI_TICF_BEFORE_ANOTHER_WAY:
       targetState: ANOTHER_WAY_PAGE
     enhanced-verification:
       targetState: ANOTHER_WAY_PAGE
+    alternate-doc-invalid-dl:
+      targetState: ANOTHER_WAY_PAGE
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
@@ -47,6 +49,9 @@ CRI_TICF_BEFORE_RETURN_TO_RP:
     next:
       targetState: RETURN_TO_RP
     enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    alternate-doc-invalid-dl:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
     fail-with-ci:

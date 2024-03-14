@@ -10,6 +10,11 @@ ENHANCED_VERIFICATION:
     next:
       targetState: MITIGATION_01
 
+ALTERNATE_DOC_PASSPORT:
+  events:
+    next:
+      targetState: MITIGATION_04
+
 # Parent states
 
 CRI_STATE:
@@ -36,6 +41,9 @@ CRI_STATE:
       targetJourney: FAILED
       targetState: FAILED
     vcs-not-correlated:
+      targetJourney: FAILED
+      targetState: FAILED
+    alternate-doc-invalid-dl:
       targetJourney: FAILED
       targetState: FAILED
 
@@ -386,6 +394,12 @@ CRI_DRIVING_LICENCE_J3:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+    alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED
+      checkFeatureFlag:
+        alternateDocMitigationEnabled:
+          targetState: MITIGATION_03_OPTIONS
 
 ADDRESS_AND_FRAUD_J3:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -525,7 +539,6 @@ CRI_NINO_WITH_SCOPE_M2B:
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NINO
-
 
 ADDRESS_AND_FRAUD_M2B:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -812,3 +825,122 @@ PYI_POST_OFFICE:
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
+
+# Mitigation journey (03) same session - invalid-dl
+MITIGATION_03_OPTIONS:
+  response:
+    type: page
+    pageId: pyi-driving-licence-no-match-another-way
+    mitigationStart: invalid-dl
+  events:
+    next:
+      targetState: MITIGATION_PP_CRI_UK_PASSPORT
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
+
+# Mitigation journey (04) separate session - invalid-dl
+MITIGATION_04:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
+  events:
+    next:
+      targetState: MITIGATION_04_DL_NO_MATCH_PAGE
+
+MITIGATION_04_DL_NO_MATCH_PAGE:
+  response:
+    type: page
+    pageId: pyi-driving-licence-no-match
+  events:
+    next:
+      targetState: MITIGATION_04_IDENTITY_START_PAGE
+
+MITIGATION_04_IDENTITY_START_PAGE:
+  response:
+    type: page
+    pageId: pyi-continue-with-passport
+    mitigationStart: invalid-dl
+  events:
+    next:
+      targetState: MITIGATION_PP_CRI_UK_PASSPORT
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
+
+# Passport journey (MITIGATION)
+MITIGATION_PP_CRI_UK_PASSPORT:
+  response:
+    type: cri
+    criId: ukPassport
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
+    access-denied:
+      targetJourney: FAILED
+      targetState: FAILED
+
+# Address and Fraud journey (MITIGATION)
+MITIGATION_PP_ADDRESS_AND_FRAUD:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: MITIGATION_PP_CRI_NINO
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED
+
+MITIGATION_PP_CRI_NINO:
+  response:
+    type: cri
+    criId: nino
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: MITIGATION_CRI_HMRC_KBV
+    fail-with-no-ci:
+      targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+  response:
+    type: page
+    pageId: page-pre-experian-kbv-transition
+  events:
+    next:
+      targetState: MITIGATION_CRI_EXPERIAN_KBV
+
+MITIGATION_CRI_EXPERIAN_KBV:
+  response:
+    type: cri
+    criId: kbv
+  parent: CRI_STATE
+  events:
+    fail-with-no-ci:
+      targetJourney: FAILED
+      targetState: FAILED
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED
+
+MITIGATION_CRI_HMRC_KBV:
+  response:
+    type: cri
+    criId: hmrcKbv
+  parent: CRI_STATE
+  events:
+    fail-with-no-ci:
+      targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED
