@@ -380,13 +380,14 @@ public class CheckExistingIdentityHandler
         if (mitigatedCI.isPresent()) {
             var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
             if (mitigationRoute.isPresent()) {
-                if (mitigationRoute.get().getJourney().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)) {
-                    return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
+                JourneyResponse journeyResponse = mitigationRoute.get();
+                if (!journeyResponse.getJourney().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)) {
+                    throw new UnsupportedMitigationRouteException(
+                            String.format(
+                                    "Unsupported mitigation route: %s",
+                                    journeyResponse.getJourney()));
                 }
-                throw new UnsupportedMitigationRouteException(
-                        String.format(
-                                "Unsupported mitigation route: %s",
-                                mitigationRoute.get().getJourney()));
+                return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
             }
         }
         return JOURNEY_F2F_FAIL;
@@ -396,13 +397,17 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> verifiableCredentials,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators)
-            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException {
+            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException, UnsupportedMitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
-            return ciMitUtilityService
-                    .getMitigatedCiJourneyStep(mitigatedCI.get())
-                    .orElse(JOURNEY_RESET_GPG45_IDENTITY);
+            var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
+            if (mitigationRoute.isEmpty()) {
+                throw new UnsupportedMitigationRouteException(
+                        String.format(
+                                "Empty mitigation route for mitigated CI: %s", mitigatedCI.get()));
+            }
+            return mitigationRoute.get();
         }
         if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
                 .isEmpty()) {

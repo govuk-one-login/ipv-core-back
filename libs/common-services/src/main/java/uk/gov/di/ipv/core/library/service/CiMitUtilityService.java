@@ -43,6 +43,7 @@ public class CiMitUtilityService {
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
+                // Prevent new mitigation journey if there is already a mitigated CI
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
                     return Optional.empty();
                 }
@@ -90,11 +91,8 @@ public class CiMitUtilityService {
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
             ContraIndicators contraIndicators) {
-        for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
-            if (ci.isMitigated()) {
-                return Optional.of(ci);
-            }
-        }
-        return Optional.empty();
+        return contraIndicators.getContraIndicatorsMap().values().stream()
+                .filter(ContraIndicator::isMitigated)
+                .findFirst();
     }
 }
