@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.checkexistingidentity.exceptions.UnsupportedMitigationRouteException;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -67,7 +66,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -90,6 +88,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
@@ -102,7 +101,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -456,7 +454,6 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.P2, ipvSessionItem.getVot());
         }
-
     }
 
     @Test
@@ -1226,8 +1223,9 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldThrowUnsupportedMitigationRouteExceptionWhenCiMitigationJourneyStepPresentButNotSupported()
-            throws Exception {
+    void
+            shouldThrowUnsupportedMitigationRouteExceptionWhenCiMitigationJourneyStepPresentButNotSupported()
+                    throws Exception {
         var code = "ci_code";
         var journey = "unsupported_mitigation";
         var mitigatedCI =
@@ -1256,8 +1254,8 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getCode(), response.getCode());
-        assertEquals(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getMessage(), response.getMessage());
-
+        assertEquals(
+                ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getMessage(), response.getMessage());
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
