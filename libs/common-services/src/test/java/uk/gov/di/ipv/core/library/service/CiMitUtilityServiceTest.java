@@ -412,4 +412,41 @@ class CiMitUtilityServiceTest {
         // assert
         assertEquals(Optional.empty(), result);
     }
+
+    @Test
+    void getMitigatedCiJourneyStepShouldReturnMitigationWhenCiCanBeMitigated() throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String document = "doc_type/213123";
+        String documentType = "doc_type";
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .build();
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+
+        // act
+        var result = ciMitUtilityService.getMitigatedCiJourneyStep(ci);
+
+        // assert
+        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+    }
+
+    @Test
+    void getMitigatedCiJourneyStepShouldReturnEmptyWhenCiIsNotMitigatable() throws Exception {
+        // arrange
+        var code = "ci_code";
+        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
+
+        // act
+        var result = ciMitUtilityService.getMitigatedCiJourneyStep(ci);
+
+        // assert
+        assertEquals(Optional.empty(), result);
+    }
 }
