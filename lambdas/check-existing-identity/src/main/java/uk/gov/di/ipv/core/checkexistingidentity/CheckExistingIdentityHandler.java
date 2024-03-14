@@ -397,7 +397,8 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> verifiableCredentials,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators)
-            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException, UnsupportedMitigationRouteException {
+            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException,
+                    UnsupportedMitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
