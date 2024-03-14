@@ -42,10 +42,9 @@ public class AuthorizationRequestHelper {
 
     private static final String CONTEXT = "context";
 
-    private static final String SCOPE = "scope";
-
     private AuthorizationRequestHelper() {}
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static SignedJWT createSignedJWT(
             SharedClaimsResponse sharedClaims,
             JWSSigner signer,
@@ -54,9 +53,8 @@ public class AuthorizationRequestHelper {
             String oauthState,
             String userId,
             String govukSigninJourneyId,
-            EvidenceRequest evidence,
-            String context,
-            String scope)
+            EvidenceRequest evidenceRequest,
+            String context)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
@@ -108,16 +106,12 @@ public class AuthorizationRequestHelper {
             }
         }
 
-        if (Objects.nonNull(evidence)) {
-            claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidence);
+        if (Objects.nonNull(evidenceRequest)) {
+            claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidenceRequest);
         }
 
         if (Objects.nonNull(context)) {
             claimsSetBuilder.claim(CONTEXT, context);
-        }
-
-        if (Objects.nonNull(scope)) {
-            claimsSetBuilder.claim(SCOPE, scope);
         }
 
         SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());

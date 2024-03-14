@@ -3,8 +3,10 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@Getter
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @ExcludeFromGeneratedCoverageReport
 public enum ErrorResponse {
@@ -79,7 +81,8 @@ public enum ErrorResponse {
     ERROR_PROCESSING_TICF_CRI_RESPONSE(1067, "Error processing response from the TICF CRI"),
     MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER(1068, "Missing deleteOnlyGPG45VCs in request"),
     MITIGATION_ROUTE_CONFIG_NOT_FOUND(
-            1069, "No mitigation journey route event found in cimit config");
+            1069, "No mitigation journey route event found in cimit config"),
+    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1070, "Error parsing evidenceRequest for cri oauth request");
 
     @JsonProperty("code")
     private final int code;
@@ -92,18 +95,6 @@ public enum ErrorResponse {
             @JsonProperty(required = true, value = "message") String message) {
         this.code = code;
         this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String toJsonString() {
-        return String.format("{\"code\":%d,\"message\":\"%s\"}", code, message);
-    }
-
-    public String getMessage() {
-        return message;
     }
 
     @JsonCreator

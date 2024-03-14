@@ -513,7 +513,9 @@ CRI_NINO_WITH_SCOPE_M2B:
   response:
     type: cri
     criId: nino
-    scope: identityCheck
+    evidenceRequest:
+      scoringPolicy: gpg45
+      strengthScore: 2
   parent: CRI_STATE
   events:
     next:

@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
@@ -68,7 +69,7 @@ class AuthorizationRequestHelperTest {
     private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
-    private static final String TEST_SCOPE = "test_scope";
+    private static final EvidenceRequest TEST_EVIDENCE_REQUEST = new EvidenceRequest("gpg45", 2);
     private static final String IPV_TOKEN_TTL = "900";
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -123,7 +124,6 @@ class AuthorizationRequestHelperTest {
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
                         null,
-                        null,
                         null);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
@@ -133,7 +133,7 @@ class AuthorizationRequestHelperTest {
                 result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
-        assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
+        assertEquals(OAUTH_STATE, result.getJWTClaimsSet().getClaim("state"));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(TEST_REDIRECT_URI, result.getJWTClaimsSet().getClaims().get("redirect_uri"));
@@ -143,7 +143,7 @@ class AuthorizationRequestHelperTest {
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void shouldCreateSignedJWTWithGivenParameters(
-            String context, String scope, Map<String, String> expectedClaims)
+            String context, EvidenceRequest evidenceRequest, Map<String, Object> expectedClaims)
             throws ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
@@ -159,12 +159,11 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        null,
-                        context,
-                        scope);
+                        evidenceRequest,
+                        context);
 
-        for (Map.Entry<String, String> entry : expectedClaims.entrySet()) {
-            var actual = result.getJWTClaimsSet().getStringClaim(entry.getKey());
+        for (Map.Entry<String, Object> entry : expectedClaims.entrySet()) {
+            var actual = result.getJWTClaimsSet().getClaim(entry.getKey());
             assertEquals(
                     entry.getValue(),
                     actual,
@@ -178,11 +177,18 @@ class AuthorizationRequestHelperTest {
     private static Stream<Arguments> journeyUriParameters() {
         return Stream.of(
                 Arguments.of(TEST_CONTEXT, null, Map.of("context", TEST_CONTEXT)),
-                Arguments.of(null, TEST_SCOPE, Map.of("scope", TEST_SCOPE)),
+                Arguments.of(
+                        null,
+                        TEST_EVIDENCE_REQUEST,
+                        Map.of("evidence_requested", TEST_EVIDENCE_REQUEST)),
                 Arguments.of(
                         TEST_CONTEXT,
-                        TEST_SCOPE,
-                        Map.of("context", TEST_CONTEXT, "scope", TEST_SCOPE)));
+                        TEST_EVIDENCE_REQUEST,
+                        Map.of(
+                                "context",
+                                TEST_CONTEXT,
+                                "evidence_requested",
+                                TEST_EVIDENCE_REQUEST)));
     }
 
     @Test
@@ -200,7 +206,6 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        null,
                         null,
                         null);
         assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
@@ -223,7 +228,6 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID,
-                                        null,
                                         null,
                                         null));
         assertEquals(500, exception.getResponseCode());

@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StepResponseException;
 
 import java.net.URI;
@@ -29,7 +32,7 @@ public class CriStepResponse implements StepResponse {
     public static final String CRI_JOURNEY_TEMPLATE = "/journey/cri/build-oauth-request/%s";
     private String criId;
     private String context;
-    private String scope;
+    private EvidenceRequest evidenceRequest;
     private String mitigationStart;
 
     public Map<String, Object> value() {
@@ -38,8 +41,8 @@ public class CriStepResponse implements StepResponse {
             if (Objects.nonNull(context)) {
                 uriBuilder.addParameter("context", context);
             }
-            if (Objects.nonNull(scope)) {
-                uriBuilder.addParameter("scope", scope);
+            if (Objects.nonNull(evidenceRequest)) {
+                uriBuilder.addParameter("evidenceRequest", evidenceRequest.toBase64());
             }
             URI journeyUri = uriBuilder.build();
 
@@ -50,7 +53,10 @@ public class CriStepResponse implements StepResponse {
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
                             .with(LOG_CRI_ID.getFieldName(), criId)
                             .with(LOG_CONTEXT.getFieldName(), context)
-                            .with(LOG_SCOPE.getFieldName(), scope));
+                            .with(LOG_SCOPE.getFieldName(), evidenceRequest));
+            throw new StepResponseException(e);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to serialise evidenceRequest", e));
             throw new StepResponseException(e);
         }
     }

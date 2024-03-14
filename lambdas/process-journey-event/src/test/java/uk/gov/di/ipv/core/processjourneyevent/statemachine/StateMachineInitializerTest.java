@@ -32,7 +32,7 @@ class StateMachineInitializerTest {
     @SystemStub private static EnvironmentVariables environmentVariables;
 
     @BeforeAll
-    private static void beforeAll() {
+    public static void beforeAll() {
         environmentVariables.set("IS_LOCAL", "true");
     }
 
@@ -46,12 +46,9 @@ class StateMachineInitializerTest {
     void initializeShouldThrowIfJourneyMapNotFound() {
         StateMachineInitializerMode modeMock = mock(StateMachineInitializerMode.class);
         when(modeMock.getPathPart()).thenReturn("some-rubbish");
-        assertThrows(
-                JourneyMapDeserializationException.class,
-                () -> {
-                    new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock)
-                            .initialize();
-                });
+        StateMachineInitializer initializer =
+                new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock);
+        assertThrows(JourneyMapDeserializationException.class, initializer::initialize);
     }
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions
@@ -68,9 +65,10 @@ class StateMachineInitializerTest {
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
         BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
-        BasicState criWithScopeState = (BasicState) journeyMap.get("CRI_STATE_WITH_SCOPE");
-        BasicState criWithContextAndScopeState =
-                (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT_AND_SCOPE");
+        BasicState criWithEvidenceRequest =
+                (BasicState) journeyMap.get("CRI_STATE_WITH_EVIDENCE_REQUEST");
+        BasicState criWithContextAndEvidenceRequest =
+                (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
         BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
@@ -108,13 +106,13 @@ class StateMachineInitializerTest {
 
         // cri state with scope assertion
         assertEquals(
-                "/journey/cri/build-oauth-request/aCriId?scope=test_scope",
-                criWithScopeState.getResponse().value().get("journey"));
+                "/journey/cri/build-oauth-request/aCriId?evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D",
+                criWithEvidenceRequest.getResponse().value().get("journey"));
 
         // cri state with context and scope assertion
         assertEquals(
-                "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope",
-                criWithContextAndScopeState.getResponse().value().get("journey"));
+                "/journey/cri/build-oauth-request/aCriId?context=test_context&evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D",
+                criWithContextAndEvidenceRequest.getResponse().value().get("journey"));
 
         // error state assertions
         assertEquals(

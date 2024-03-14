@@ -3,26 +3,27 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CriStepResponseTest {
+class CriStepResponseTest {
 
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void valueReturnsExpectedJourneyResponse(
-            String criId, String context, String scope, String expectedJourney) {
-        CriStepResponse response = new CriStepResponse(criId, context, scope, null);
+            String criId, String context, EvidenceRequest evidenceRequest, String expectedJourney) {
+        CriStepResponse response = new CriStepResponse(criId, context, evidenceRequest, null);
         assertEquals(
                 Map.of("journey", expectedJourney),
                 response.value(),
                 () ->
                         String.format(
-                                "Expected journey for criId=%s, context=%s, scope=%s was not as expected",
-                                criId, context, scope));
+                                "Expected journey for criId=%s, context=%s, evidenceRequest=%s was not as expected",
+                                criId, context, evidenceRequest));
     }
 
     private static Stream<Arguments> journeyUriParameters() {
@@ -36,12 +37,12 @@ public class CriStepResponseTest {
                 Arguments.of(
                         "aCriId",
                         null,
-                        "test_scope",
-                        "/journey/cri/build-oauth-request/aCriId?scope=test_scope"),
+                        new EvidenceRequest("gpg45", 2),
+                        "/journey/cri/build-oauth-request/aCriId?evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D"),
                 Arguments.of(
                         "aCriId",
                         "test_context",
-                        "test_scope",
-                        "/journey/cri/build-oauth-request/aCriId?context=test_context&scope=test_scope"));
+                        new EvidenceRequest("gpg45", 2),
+                        "/journey/cri/build-oauth-request/aCriId?context=test_context&evidenceRequest=eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ%3D%3D"));
     }
 }
