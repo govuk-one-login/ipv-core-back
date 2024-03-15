@@ -28,9 +28,9 @@ CRI_STATE:
       targetState: NESTED_JOURNEY_INVOKE_STATE
     testWithContext:
       targetState: CRI_STATE_WITH_CONTEXT
-    testWithScope:
+    testWithEvidenceRequest:
       targetState: CRI_STATE_WITH_EVIDENCE_REQUEST
-    testWithContextAndScope:
+    testWithContextAndEvidenceRequest:
       targetState: CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST
     testWithMitigationStart:
       targetState: PAGE_STATE_AT_START_OF_MITIGATION
