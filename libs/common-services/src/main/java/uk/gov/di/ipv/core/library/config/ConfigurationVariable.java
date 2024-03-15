@@ -10,6 +10,7 @@ public enum ConfigurationVariable {
     JAR_KMS_ENCRYPTION_KEY_ID("self/jarKmsEncryptionKeyId"),
     JWT_TTL_SECONDS("self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
+    FRAUD_CHECK_EXPIRY_PERIOD_HOURS("self/fraudCheckExpiryPeriodHours"),
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
