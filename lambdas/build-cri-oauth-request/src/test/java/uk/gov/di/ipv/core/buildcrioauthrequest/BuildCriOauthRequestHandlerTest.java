@@ -1456,9 +1456,9 @@ class BuildCriOauthRequestHandlerTest {
         JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
         for (var entry : expectedClaims.entrySet()) {
-            String expectedClaim = objectMapper.writeValueAsString(entry.getValue());
+            String expectedClaim = OBJECT_MAPPER.writeValueAsString(entry.getValue());
             String actualClaim =
-                    objectMapper.writeValueAsString(claimsSet.getClaim(entry.getKey()));
+                    OBJECT_MAPPER.writeValueAsString(claimsSet.getClaim(entry.getKey()));
             assertEquals(
                     expectedClaim,
                     actualClaim,

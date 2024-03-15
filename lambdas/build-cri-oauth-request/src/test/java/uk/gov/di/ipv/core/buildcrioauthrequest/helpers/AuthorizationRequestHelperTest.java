@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.buildcrioauthrequest.helpers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSSigner;
@@ -63,7 +65,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_JWT;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorizationRequestHelperTest {
-
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CLIENT_ID_FIELD = "client_id";
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
     private static final String IPV_ISSUER = "http://example.com/issuer";
@@ -189,6 +191,56 @@ class AuthorizationRequestHelperTest {
                                 TEST_CONTEXT,
                                 "evidence_requested",
                                 TEST_EVIDENCE_REQUEST)));
+    }
+
+    @Test
+    void shouldCreateSignedJWTWithCorrectEvidenceRequest()
+            throws ParseException, HttpResponseExceptionWithErrorBody, JsonProcessingException {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+        when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
+
+        var result =
+                AuthorizationRequestHelper.createSignedJWT(
+                        sharedClaims,
+                        signer,
+                        oauthCriConfig,
+                        configService,
+                        OAUTH_STATE,
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID,
+                        new EvidenceRequest("gpg45", 2),
+                        null);
+
+        var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
+        var evidenceRequestedJson = objectMapper.writeValueAsString(evidenceRequested);
+        assertEquals("{\"scoringPolicy\":\"gpg45\",\"strengthScore\":2}", evidenceRequestedJson);
+    }
+
+    @Test
+    void shouldCreateSignedJWTWithCorrectPartialEvidenceRequest()
+            throws ParseException, HttpResponseExceptionWithErrorBody, JsonProcessingException {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+        when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
+
+        var result =
+                AuthorizationRequestHelper.createSignedJWT(
+                        sharedClaims,
+                        signer,
+                        oauthCriConfig,
+                        configService,
+                        OAUTH_STATE,
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID,
+                        new EvidenceRequest(null, 2),
+                        null);
+
+        var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
+        var evidenceRequestedJson = objectMapper.writeValueAsString(evidenceRequested);
+        assertEquals("{\"strengthScore\":2}", evidenceRequestedJson);
     }
 
     @Test

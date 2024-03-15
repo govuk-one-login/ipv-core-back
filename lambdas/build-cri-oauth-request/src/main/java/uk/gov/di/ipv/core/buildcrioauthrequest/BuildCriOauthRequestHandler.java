@@ -69,6 +69,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -162,7 +163,7 @@ public class BuildCriOauthRequestHandler
 
             String criContext = getJourneyParameter(input, CONTEXT);
             EvidenceRequest criEvidenceRequest =
-                    EvidenceRequest.fromBase64(getJourneyParameter(journeyUri, EVIDENCE_REQUESTED));
+                    EvidenceRequest.fromBase64(getJourneyParameter(input, EVIDENCE_REQUESTED));
             String connection = configService.getActiveConnection(criId);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, criId);
@@ -258,10 +259,9 @@ public class BuildCriOauthRequestHandler
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (JsonProcessingException e) {
-          return buildJourneyErrorResponse(
-                    "Failed to parse evidenceRequest.", 
+            return buildJourneyErrorResponse(
+                    "Failed to parse evidenceRequest.",
                     e,
-                    JOURNEY_ERROR_PATH,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_EVIDENCE_REQUESTED);
         }

@@ -591,23 +591,6 @@ states:
       enhanced-verification:
         targetState: CHECK_FRAUD_SCORE_J3
 
-CRI_NINO_WITH_SCOPE_M2B:
-  response:
-    type: cri
-    criId: nino
-    evidenceRequest:
-      scoringPolicy: gpg45
-      strengthScore: 2
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: ADDRESS_AND_FRAUD_M2B
-    access-denied:
-      targetState: PYI_ESCAPE_ABANDON_M2B
-    fail-with-ci:
-      targetJourney: FAILED
-      targetState: FAILED_NINO
-
   CHECK_FRAUD_SCORE_J3:
     response:
       type: process
@@ -726,7 +709,9 @@ CRI_NINO_WITH_SCOPE_M2B:
     response:
       type: cri
       criId: nino
-      scope: identityCheck
+      evidenceRequest:
+        scoringPolicy: gpg45
+        strengthScore: 2
     parent: CRI_STATE
     events:
       next:
