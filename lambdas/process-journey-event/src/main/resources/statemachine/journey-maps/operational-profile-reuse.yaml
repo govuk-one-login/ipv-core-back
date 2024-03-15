@@ -3,7 +3,7 @@
 START:
   events:
     next:
-      targetState: REUSE_PAGE
+      targetState: RETURN_TO_RP
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_REUSE
