@@ -43,6 +43,10 @@ public class CiMitUtilityService {
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getContraIndicatorsMap().values()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
+                // Prevent new mitigation journey if there is already a mitigated CI
+                if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
+                    return Optional.empty();
+                }
                 String journeyEvent =
                         getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument()).event();
                 if (journeyEvent.startsWith(JOURNEY_ALTERNATE_DOC_PATH)
@@ -68,8 +72,27 @@ public class CiMitUtilityService {
                                         "No mitigation journey route event found."));
     }
 
+    public Optional<JourneyResponse> getMitigatedCiJourneyStep(ContraIndicator ci)
+            throws ConfigException, MitigationRouteConfigNotFoundException {
+        var cimitConfig = configService.getCimitConfig();
+        if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {
+            return Optional.of(
+                    new JourneyResponse(
+                            getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
+                                    .event()));
+        }
+        return Optional.empty();
+    }
+
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
         return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
+    }
+
+    public Optional<ContraIndicator> hasMitigatedContraIndicator(
+            ContraIndicators contraIndicators) {
+        return contraIndicators.getContraIndicatorsMap().values().stream()
+                .filter(ContraIndicator::isMitigated)
+                .findFirst();
     }
 }

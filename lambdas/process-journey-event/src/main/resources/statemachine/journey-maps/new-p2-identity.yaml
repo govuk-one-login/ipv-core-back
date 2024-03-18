@@ -15,6 +15,11 @@ ALTERNATE_DOC_PASSPORT:
     next:
       targetState: MITIGATION_04
 
+ENHANCED_VERIFICATION_F2F_FAIL:
+  events:
+    next:
+      targetState: F2F_FAILED_MITIGATION_PAGE
+
 # Parent states
 
 CRI_STATE:
@@ -942,3 +947,13 @@ MITIGATION_CRI_HMRC_KBV:
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED
+
+F2F_FAILED_MITIGATION_PAGE:
+  response:
+    type: page
+    pageId: pyi-f2f-technical
+  events:
+    next:
+      targetState: MITIGATION_01
+    end:
+      targetState: RETURN_TO_RP
