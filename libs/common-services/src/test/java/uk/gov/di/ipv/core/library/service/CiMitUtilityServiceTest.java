@@ -425,6 +425,7 @@ class CiMitUtilityServiceTest {
                         .code(code)
                         .document(document)
                         .issuanceDate("some_date")
+                        .mitigation(List.of(Mitigation.builder().build()))
                         .build();
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
