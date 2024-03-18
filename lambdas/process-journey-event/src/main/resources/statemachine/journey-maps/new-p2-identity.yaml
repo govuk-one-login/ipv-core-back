@@ -15,6 +15,11 @@ ALTERNATE_DOC_PASSPORT:
     next:
       targetState: MITIGATION_04
 
+ALTERNATE_DOC_DL:
+  events:
+    next:
+      targetState: MITIGATION_06
+
 # Parent states
 
 CRI_STATE:
@@ -44,6 +49,9 @@ CRI_STATE:
       targetJourney: FAILED
       targetState: FAILED
     alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED
+    alternate-doc-invalid-passport:
       targetJourney: FAILED
       targetState: FAILED
 
@@ -365,6 +373,12 @@ CRI_UK_PASSPORT_J2:
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
+    alternate-doc-invalid-passport:
+      targetJourney: FAILED
+      targetState: FAILED
+      checkFeatureFlag:
+        alternateDocMitigationEnabled:
+          targetState: MITIGATION_05_OPTIONS
 
 ADDRESS_AND_FRAUD_J2:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -895,6 +909,89 @@ MITIGATION_PP_ADDRESS_AND_FRAUD:
       targetJourney: FAILED
       targetState: FAILED
 
+# Mitigation journey (05) same session - invalid-passport
+MITIGATION_05_OPTIONS:
+  response:
+    type: page
+    pageId: pyi-passport-no-match-another-way
+    mitigationStart: invalid-passport
+  events:
+    next:
+      targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
+
+# Mitigation journey (06) separate session - invalid-passport
+MITIGATION_06:
+  response:
+    type: process
+    lambda: reset-identity
+    lambdaInput:
+      isUserInitiated: false
+      deleteOnlyGPG45VCs: true
+  events:
+    next:
+      targetState: MITIGATION_06_PASSPORT_NO_MATCH_PAGE
+
+MITIGATION_06_PASSPORT_NO_MATCH_PAGE:
+  response:
+    type: page
+    pageId: pyi-passport-no-match
+  events:
+    next:
+      targetState: MITIGATION_06_IDENTITY_START_PAGE
+
+MITIGATION_06_IDENTITY_START_PAGE:
+  response:
+    type: page
+    pageId: pyi-continue-with-driving_licence
+    mitigationStart: invalid-passport
+  events:
+    next:
+      targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+    end:
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE_SKIP_MESSAGE
+
+MITIGATION_DL_CRI_DRIVING_LICENCE:
+  response:
+    type: cri
+    criId: drivingLicence
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
+    access-denied:
+      targetJourney: FAILED
+      targetState: FAILED
+
+MITIGATION_DL_ADDRESS_AND_FRAUD:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: MITIGATION_CHECK_FRAUD_SCORE
+    enhanced-verification:
+      targetState: MITIGATION_CHECK_FRAUD_SCORE
+
+MITIGATION_CHECK_FRAUD_SCORE:
+  response:
+    type: process
+    lambda: check-gpg45-score
+    lambdaInput:
+      scoreType: fraud
+      scoreThreshold: 2
+  events:
+    met:
+      targetState: MITIGATION_PP_CRI_NINO
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+    unmet:
+      targetJourney: FAILED
+      targetState: FAILED
+
+# Common Mitigation states - invalid-dl/invalid-passport
 MITIGATION_PP_CRI_NINO:
   response:
     type: cri
