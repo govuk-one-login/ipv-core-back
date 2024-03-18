@@ -110,6 +110,10 @@ Parameters:
     Description: |
       The IP address that requests to AWS from a local core-front will come from.
     Default: ""
+  LambdaConcurrencyThreshold:
+    Description: "Threshold for Reserved concurrency running in non-DEV environments"
+    Type: Number
+    Default: 16  #80% of Lambda concurrency
 
 Conditions:
   IsDevelopment: !Or
@@ -3009,6 +3013,157 @@ Resources:
                   Value: !Sub IPV Core External API Gateway ${Environment}
             Period: 300
             Stat: Sum
+
+  LatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-apiGWLatencyAlarm"
+      AlarmDescription: "There has been increased latency on backend api-gateway"
+      # ActionsEnabled: true
+      # AlarmActions:
+      #   - !ImportValue alarm-alerts-topic
+      # OKActions:
+      #   - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 2500
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: safeLatency
+          Label: safeLatency
+          ReturnData: true
+          Expression: IF(invocations<10,0,maxLatency)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "${AWS::StackName} - Core API"
+            Period: 60
+            Stat: Sum
+        - Id: maxLatency
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Latency
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "${AWS::StackName} - Core API"
+            Period: 60
+            Stat: Maximum
+
+  FatalErrorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: /aws/lambda/*
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: FatalErrorLogMessages
+          MetricName: !Sub "${AWS::StackName}/FatalError"
+
+  FatalErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-FatalErrorAlarm"
+      AlarmDescription: "Trigger an alarm when Fatal Error occurs"
+      # ActionsEnabled: true
+      # AlarmActions:
+      #   - !ImportValue alarm-alerts-topic
+      # OKActions:
+      #   - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: [ ]
+      MetricName: !Sub "${AWS::StackName}/FatalError"
+      Namespace: FatalErrorLogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  LambdaTimeOutMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: /aws/lambda/*
+      FilterPattern: "Task timed out"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: LambdaTimeOutLogMessages
+          MetricName: !Sub "${AWS::StackName}/LambdaTimeOut"
+
+# Lambda alarms
+  LambdaTimeoutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # ActionsEnabled: true
+      # AlarmActions:
+      #   - !ImportValue alarm-alerts-topic
+      # OKActions:
+      #   - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: []
+      AlarmDescription: Trigger the alarm if any lambda in the account timesout 5 times within 5 minutes.
+      AlarmName: !Sub "${AWS::StackName}-LambdaTimeoutAlarm"
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 5
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      MetricName: !Sub "${AWS::StackName}/LambdaTimeOut"
+      Statistic: Sum
+      Period: 60
+
+  LambdaThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # ActionsEnabled: true
+      # AlarmActions:
+      #   - !ImportValue alarm-alerts-topic
+      # OKActions:
+      #   - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: []
+      AlarmDescription: "Trigger the alarm if any lambda in the account throttles"
+      AlarmName: !Sub "${AWS::StackName}-LambdaThrottleAlarm"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+
+# Concurrency Alarms (for Lambda functions triggered by external APIGW endpoints)
+  LambdaConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # ActionsEnabled: true
+      # AlarmActions:
+      #   - !ImportValue alarm-alerts-topic
+      # OKActions:
+      #   - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: []
+      AlarmDescription: "Trigger the alarm if over 80% of reserved concurrency is used"
+      AlarmName: !Sub "${AWS::StackName}-LambdaConcurrencyThrottleAlarm"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
