@@ -402,13 +402,14 @@ public class CheckExistingIdentityHandler
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
-            var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
-            if (mitigationRoute.isEmpty()) {
-                throw new UnsupportedMitigationRouteException(
-                        String.format(
-                                "Empty mitigation route for mitigated CI: %s", mitigatedCI.get()));
-            }
-            return mitigationRoute.get();
+            return ciMitUtilityService
+                    .getMitigatedCiJourneyStep(mitigatedCI.get())
+                    .orElseThrow(
+                            () ->
+                                    new UnsupportedMitigationRouteException(
+                                            String.format(
+                                                    "Empty mitigation route for mitigated CI: %s",
+                                                    mitigatedCI.get())));
         }
         if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
                 .isEmpty()) {

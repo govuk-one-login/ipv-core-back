@@ -75,7 +75,7 @@ public class CiMitUtilityService {
     public Optional<JourneyResponse> getMitigatedCiJourneyStep(ContraIndicator ci)
             throws ConfigException, MitigationRouteConfigNotFoundException {
         var cimitConfig = configService.getCimitConfig();
-        if (isCiMitigatable(ci)) {
+        if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {
             return Optional.of(
                     new JourneyResponse(
                             getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
