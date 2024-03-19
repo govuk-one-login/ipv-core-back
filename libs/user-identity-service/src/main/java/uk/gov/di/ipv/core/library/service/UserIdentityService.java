@@ -388,7 +388,7 @@ public class UserIdentityService {
 
     private List<ReturnCode> mapCisToReturnCodes(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
-        return contraIndicators.getContraIndicatorsMap().values().stream()
+        return contraIndicators.getUsersContraIndicators().stream()
                 .map(ContraIndicator::getCode)
                 .map(
                         ciCode ->

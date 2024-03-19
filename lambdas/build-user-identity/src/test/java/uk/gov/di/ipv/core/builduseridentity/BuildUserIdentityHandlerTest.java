@@ -101,9 +101,8 @@ class BuildUserIdentityHandlerTest {
 
     private static final ContraIndicators contraIndicators =
             ContraIndicators.builder()
-                    .contraIndicatorsMap(
-                            Map.of(
-                                    "X01",
+                    .usersContraIndicators(
+                            List.of(
                                     ContraIndicator.builder()
                                             .code("X01")
                                             .issuers(
@@ -111,7 +110,6 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-d.account.gov.uk",
                                                             "https://review-f.account.gov.uk"))
                                             .build(),
-                                    "X02",
                                     ContraIndicator.builder()
                                             .code("X02")
                                             .issuers(
@@ -119,7 +117,6 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-q.account.gov.uk",
                                                             "https://review-f.account.gov.uk"))
                                             .build(),
-                                    "Z03",
                                     ContraIndicator.builder()
                                             .code("Z03")
                                             .issuers(
@@ -340,9 +337,8 @@ class BuildUserIdentityHandlerTest {
                     throws Exception {
         ContraIndicators contraIndicators =
                 ContraIndicators.builder()
-                        .contraIndicatorsMap(
-                                Map.of(
-                                        "X01",
+                        .usersContraIndicators(
+                                List.of(
                                         ContraIndicator.builder()
                                                 .code("X01")
                                                 .issuers(
@@ -350,7 +346,6 @@ class BuildUserIdentityHandlerTest {
                                                                 "https://review-d.account.gov.uk",
                                                                 "https://review-f.account.gov.uk"))
                                                 .build(),
-                                        "X02",
                                         ContraIndicator.builder()
                                                 .code("X02")
                                                 .issuers(
@@ -358,7 +353,6 @@ class BuildUserIdentityHandlerTest {
                                                                 "https://review-d.account.gov.uk",
                                                                 "https://review-f.account.gov.uk"))
                                                 .build(),
-                                        "Z03",
                                         ContraIndicator.builder()
                                                 .code("Z03")
                                                 .issuers(

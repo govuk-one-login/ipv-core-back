@@ -1166,12 +1166,11 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnSameMitigationJourneyWhenCiAlreadyMitigated() throws Exception {
-        var code = "ci_code";
         var journey = "some_mitigation";
         var mitigatedCI =
                 ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
         var testContraIndicators =
-                ContraIndicators.builder().contraIndicatorsMap(Map.of(code, mitigatedCI)).build();
+                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1194,11 +1193,10 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnSameJourneyMitigationWhenCiAlreadyMitigatedF2F() throws Exception {
-        var code = "ci_code";
         var mitigatedCI =
                 ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
         var testContraIndicators =
-                ContraIndicators.builder().contraIndicatorsMap(Map.of(code, mitigatedCI)).build();
+                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1226,12 +1224,11 @@ class CheckExistingIdentityHandlerTest {
     void
             shouldThrowUnsupportedMitigationRouteExceptionWhenCiMitigationJourneyStepPresentButNotSupported()
                     throws Exception {
-        var code = "ci_code";
         var journey = "unsupported_mitigation";
         var mitigatedCI =
                 ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
         var testContraIndicators =
-                ContraIndicators.builder().contraIndicatorsMap(Map.of(code, mitigatedCI)).build();
+                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
