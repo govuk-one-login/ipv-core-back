@@ -29,6 +29,11 @@ FAILED_NO_TICF:
     next:
       targetState: NO_MATCH_PAGE
 
+FAILED_6MFC:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_6MFC
+
 # Journey states
 
 CRI_TICF_BEFORE_NO_MATCH:
@@ -86,6 +91,15 @@ NO_MATCH_PAGE:
   response:
     type: page
     pageId: pyi-no-match
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+NO_MATCH_PAGE_6MFC:
+  response:
+    type: page
+    pageId: pyi-no-match
+    context: sixMonthFraudCheck
   events:
     next:
       targetState: RETURN_TO_RP

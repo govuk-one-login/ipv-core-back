@@ -9,6 +9,9 @@ START:
           targetState: CRI_TICF_BEFORE_REUSE
         deleteDetailsEnabled:
           targetState: IDENTITY_REUSE_PAGE_TEST
+        sixMonthFraudCheckEnabled:
+          targetJourney: SIX_MONTH_FRAUD_CHECK
+          targetState: START
 
 # Journey states
 

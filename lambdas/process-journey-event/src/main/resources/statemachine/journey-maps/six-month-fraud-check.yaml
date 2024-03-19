@@ -1,0 +1,133 @@
+# Entry points
+
+START:
+  events:
+    next:
+      targetState: CONFIRM_NAME_DOB
+
+CONFIRM_NAME_DOB:
+  response:
+    type: page
+    pageId: pyi-confirm-name-dob
+  events:
+    next:
+      targetState: CONFIRM_ADDRESS
+    end:
+      targetState: UPDATE_NAME_DOB
+
+CONFIRM_ADDRESS:
+  response:
+    type: page
+    pageId: pyi-confirm-address
+  events:
+    fraud:
+      targetState: SIX_MONTH_FRAUD_CHECK
+    next:
+      targetState: ADDRESS_AND_FRAUD_6MFC
+
+UPDATE_NAME_DOB:
+  response:
+    type: page
+    pageId: pyi-update-name-dob
+  events:
+    end:
+      targetState: CONFIRM_NAME_DOB
+
+SIX_MONTH_FRAUD_CHECK:
+  response:
+    type: cri
+    criId: fraud
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    end:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+
+ADDRESS_AND_FRAUD_6MFC:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
+    next:
+      targetState: EVALUATE_GPG45_SCORES
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+
+EVALUATE_GPG45_SCORES:
+  response:
+    type: process
+    lambda: evaluate-gpg45-scores
+  events:
+    met:
+      targetState: IPV_SUCCESS_PAGE_6MFC
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_SUCCESS
+    unmet:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    vcs-not-correlated:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+
+CRI_TICF_BEFORE_SUCCESS_6MFC:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  parent: CRI_TICF_STATE_6MFC
+  events:
+    next:
+      targetState: IPV_SUCCESS_PAGE_6MFC
+
+CRI_TICF_STATE_6MFC:
+  events:
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
+
+IPV_SUCCESS_PAGE_6MFC:
+  response:
+    type: page
+    pageId: page-ipv-success
+    context: sixMonthFraudCheck
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+RETURN_TO_RP:
+  response:
+    type: process
+    lambda: build-client-oauth-response
+
+CRI_STATE:
+  events:
+    next:
+      targetState: ERROR
+    not-found:
+      targetState: ERROR
+    fail-with-no-ci:
+      targetState: ERROR
+    error:
+      targetState: ERROR
+    access-denied:
+      targetState: PYI_NO_MATCH
+    enhanced-verification:
+      targetState: ERROR
+    temporarily-unavailable:
+      targetState: PYI_NO_MATCH
+    end:
+      targetState: IPV_SUCCESS_PAGE
+    pyi-no-match:
+      targetState: PYI_NO_MATCH
+    pyi-kbv-fail:
+      targetState: PYI_KBV_FAIL
