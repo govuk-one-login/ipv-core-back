@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -80,6 +81,8 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
+    private static final ErrorObject INVALID_INHERITED_IDENTITY_ERROR_OBJECT =
+            new ErrorObject("invalid_inherited_identity");
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
@@ -319,7 +322,7 @@ public class InitialiseIpvSessionHandler
                 | UnrecognisedVotException
                 | AuditExtensionException e) {
             throw new RecoverableJarValidationException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
                             "Inherited identity JWT failed to validate"),
                     claimsSet,
                     e);
@@ -337,11 +340,12 @@ public class InitialiseIpvSessionHandler
                         .orElseThrow(
                                 () ->
                                         new JarValidationException(
-                                                OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
-                                                        "Inherited identity jwt claim received but value is null")));
+                                                INVALID_INHERITED_IDENTITY_ERROR_OBJECT
+                                                        .setDescription(
+                                                                "Inherited identity jwt claim received but value is null")));
         if (inheritedIdentityJwtList.size() != 1) {
             throw new JarValidationException(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
+                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
                             String.format(
                                     "%d inherited identity jwts received - one expected",
                                     inheritedIdentityJwtList.size())));
