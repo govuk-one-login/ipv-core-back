@@ -977,7 +977,8 @@ MITIGATION_DL_ADDRESS_AND_FRAUD:
     next:
       targetState: MITIGATION_CHECK_FRAUD_SCORE
     enhanced-verification:
-      targetState: MITIGATION_CHECK_FRAUD_SCORE
+      targetJourney: FAILED
+      targetState: FAILED
 
 MITIGATION_CHECK_FRAUD_SCORE:
   response:
