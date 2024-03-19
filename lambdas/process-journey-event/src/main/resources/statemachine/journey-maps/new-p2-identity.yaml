@@ -1023,8 +1023,8 @@ MITIGATION_CRI_EXPERIAN_KBV:
   parent: CRI_STATE
   events:
     fail-with-no-ci:
-      targetJourney: FAILED
-      targetState: FAILED
+      targetJourney: INELIGIBLE
+      targetState: INELIGIBLE
     next:
       targetState: EVALUATE_GPG45_SCORES
     enhanced-verification:
