@@ -21,7 +21,7 @@ CONFIRM_ADDRESS:
     pageId: pyi-confirm-address
   events:
     fraud:
-      targetState: SIX_MONTH_FRAUD_CHECK
+      targetState: FRAUD_CHECK_6MFC
     next:
       targetState: ADDRESS_AND_FRAUD_6MFC
 
@@ -33,7 +33,7 @@ UPDATE_NAME_DOB:
     end:
       targetState: CONFIRM_NAME_DOB
 
-SIX_MONTH_FRAUD_CHECK:
+FRAUD_CHECK_6MFC:
   response:
     type: cri
     criId: fraud
@@ -52,12 +52,12 @@ ADDRESS_AND_FRAUD_6MFC:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES_6MFC
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_6MFC
 
-EVALUATE_GPG45_SCORES:
+EVALUATE_GPG45_SCORES_6MFC:
   response:
     type: process
     lambda: evaluate-gpg45-scores
@@ -112,22 +112,30 @@ RETURN_TO_RP:
 CRI_STATE:
   events:
     next:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     not-found:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     fail-with-no-ci:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     error:
+      targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     access-denied:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
     enhanced-verification:
-      targetState: ERROR
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
     temporarily-unavailable:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
     end:
-      targetState: IPV_SUCCESS_PAGE
+      targetState: IPV_SUCCESS_PAGE_6MFC
     pyi-no-match:
-      targetState: PYI_NO_MATCH
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
     pyi-kbv-fail:
       targetState: PYI_KBV_FAIL
