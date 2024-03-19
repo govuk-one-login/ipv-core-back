@@ -40,7 +40,7 @@ FRAUD_CHECK_6MFC:
   parent: CRI_STATE
   events:
     next:
-      targetState: EVALUATE_GPG45_SCORES
+      targetState: EVALUATE_GPG45_SCORES_6MFC
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_6MFC
