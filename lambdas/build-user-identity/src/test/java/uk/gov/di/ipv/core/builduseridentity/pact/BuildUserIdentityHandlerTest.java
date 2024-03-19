@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -93,8 +92,7 @@ class BuildUserIdentityHandlerTest {
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
-        var contraIndicators =
-                ContraIndicators.builder().contraIndicatorsMap(new HashMap<>()).build();
+        var contraIndicators = ContraIndicators.builder().usersContraIndicators(List.of()).build();
         when(mockCiMitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
 
         // Configure the config service

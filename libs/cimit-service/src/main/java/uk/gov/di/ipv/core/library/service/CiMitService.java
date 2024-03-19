@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -41,8 +40,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
@@ -134,7 +131,13 @@ public class CiMitService {
 
     public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
-        return mapToContraIndicators(parseContraIndicatorEvidence(vc));
+        var evidenceItem = parseContraIndicatorEvidence(vc);
+        return ContraIndicators.builder()
+                .usersContraIndicators(
+                        evidenceItem.getContraIndicator() != null
+                                ? evidenceItem.getContraIndicator()
+                                : Collections.emptyList())
+                .build();
     }
 
     public VerifiableCredential getContraIndicatorsVc(
@@ -242,20 +245,6 @@ public class CiMitService {
         }
 
         return evidenceList.get(0);
-    }
-
-    private ContraIndicators mapToContraIndicators(EvidenceItem evidenceItem) {
-        List<ContraIndicator> contraIndicators =
-                evidenceItem.getContraIndicator() != null
-                        ? evidenceItem.getContraIndicator()
-                        : Collections.emptyList();
-        return ContraIndicators.builder()
-                .contraIndicatorsMap(
-                        contraIndicators.stream()
-                                .collect(
-                                        Collectors.toMap(
-                                                ContraIndicator::getCode, Function.identity())))
-                .build();
     }
 
     private boolean lambdaExecutionFailed(InvokeResult result) {

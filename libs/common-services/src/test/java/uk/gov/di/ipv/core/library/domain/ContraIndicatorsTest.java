@@ -7,11 +7,10 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,12 +36,7 @@ class ContraIndicatorsTest {
 
     @BeforeEach
     void setup() {
-        contraIndicators = ContraIndicators.builder().contraIndicatorsMap(Map.of()).build();
-    }
-
-    @Test
-    void shouldReturnEmptyOptionalWhenNoContraIndicatorExistInContraIndications() {
-        assertFalse(contraIndicators.getLatestContraIndicator().isPresent());
+        contraIndicators = ContraIndicators.builder().usersContraIndicators(List.of()).build();
     }
 
     @Test
@@ -54,50 +48,35 @@ class ContraIndicatorsTest {
     @Test
     void shouldCalculateContraIndicatorScoreIncludeMitigation() throws UnrecognisedCiException {
         addContraIndicators(
-                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
+                TEST_CI1,
+                BASE_TIME.minusSeconds(1),
+                List.of(Mitigation.builder().build()),
+                "passport");
+        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(3), List.of(), "drivingLicence");
         addContraIndicators(
-                TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
-        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
+                TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()), null);
+        assertEquals(5, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
     }
 
     @Test
     void shouldCalculateContraIndicatorScoreIncludeMitigationAndSomeEmptyMitigations()
             throws UnrecognisedCiException {
         addContraIndicators(
-                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
-        addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
+                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()), null);
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList(), null);
+        addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null, null);
         assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
-    }
-
-    @Test
-    void shouldFindLatestContraIndicator() {
-        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1), null);
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
-        addContraIndicators(TEST_CI3, BASE_TIME.plusSeconds(3), null);
-        Optional<ContraIndicator> latestContraIndicator =
-                contraIndicators.getLatestContraIndicator();
-        assertTrue(latestContraIndicator.isPresent());
-        assertEquals(TEST_CI3, latestContraIndicator.get().getCode());
-    }
-
-    @Test
-    void shouldFindLatestContraIndicatorWhenMultipleIndicatorsAtSameTime() {
-        addContraIndicators(TEST_CI1, BASE_TIME, null);
-        addContraIndicators(TEST_CI2, BASE_TIME, null);
-        addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(3), null);
-        Optional<ContraIndicator> latestContraIndicator =
-                contraIndicators.getLatestContraIndicator();
-        assertTrue(latestContraIndicator.isPresent());
-        assertEquals(TEST_CI2, latestContraIndicator.get().getCode());
     }
 
     @Test
     void shouldRaiseExceptionIfScoringUnrecognisedContraIndicator() {
         addContraIndicators(
-                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
+                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()), null);
         addContraIndicators(
-                TEST_CI4_UNKNOWN, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
+                TEST_CI4_UNKNOWN,
+                BASE_TIME.minusSeconds(2),
+                List.of(Mitigation.builder().build()),
+                null);
         assertThrows(
                 UnrecognisedCiException.class,
                 () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_CONFIG_MAP));
@@ -105,32 +84,35 @@ class ContraIndicatorsTest {
 
     @Test
     void hasMitigationsShouldReturnTrueIfMitigationsExist() {
-        addContraIndicators(TEST_CI1, BASE_TIME, null);
-        addContraIndicators(TEST_CI2, BASE_TIME, null);
-        addContraIndicators(TEST_CI3, BASE_TIME, List.of(Mitigation.builder().build()));
+        addContraIndicators(TEST_CI1, BASE_TIME, null, null);
+        addContraIndicators(TEST_CI2, BASE_TIME, null, null);
+        addContraIndicators(TEST_CI3, BASE_TIME, List.of(Mitigation.builder().build()), null);
         assertTrue(contraIndicators.hasMitigations());
     }
 
     @Test
     void hasMitigationsShouldReturnFalseIfNoMitigationsExist() {
-        addContraIndicators(TEST_CI1, BASE_TIME, null);
-        addContraIndicators(TEST_CI2, BASE_TIME, null);
-        addContraIndicators(TEST_CI3, BASE_TIME, null);
+        addContraIndicators(TEST_CI1, BASE_TIME, null, null);
+        addContraIndicators(TEST_CI2, BASE_TIME, null, null);
+        addContraIndicators(TEST_CI3, BASE_TIME, null, null);
         assertFalse(contraIndicators.hasMitigations());
     }
 
     private void addContraIndicators(
-            final String code, Instant issuanceDate, List<Mitigation> mitigations) {
+            final String code,
+            Instant issuanceDate,
+            List<Mitigation> mitigations,
+            String document) {
         ContraIndicator contraIndicator =
                 ContraIndicator.builder()
                         .code(code)
                         .issuanceDate(issuanceDate.toString())
                         .mitigation(mitigations)
+                        .document(document)
                         .build();
-        Map<String, ContraIndicator> updatedContraIndicators =
-                new HashMap<>(contraIndicators.getContraIndicatorsMap());
-        updatedContraIndicators.put(code, contraIndicator);
+        var updatedContraIndicators = new ArrayList<>(contraIndicators.getUsersContraIndicators());
+        updatedContraIndicators.add(contraIndicator);
         contraIndicators =
-                contraIndicators.toBuilder().contraIndicatorsMap(updatedContraIndicators).build();
+                contraIndicators.toBuilder().usersContraIndicators(updatedContraIndicators).build();
     }
 }
