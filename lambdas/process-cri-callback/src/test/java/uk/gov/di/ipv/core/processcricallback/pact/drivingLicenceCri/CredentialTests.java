@@ -794,7 +794,7 @@ class CredentialTests {
                   {
                     "type": "IdentityCheck",
                     "txn": "dummyTxn",
-                    "activityHistoryScore": 1,
+                    "activityHistoryScore": 0,
                     "strengthScore": 3,
                     "validityScore": 0,
                     "ci": [
@@ -817,7 +817,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_SIGNATURE =
-            "fHewGtTy8WRNH9ZZtSSWN5jTLb8W28TYuaRn76-WI6KELGp2Y_geAHqSVTcNdbebCNDOqSiKx7vscRv-u6GuQg";
+            "4l-CAl_X8XvPJku1zv_JnXfnTfow1KKeQsa7AUIVSe1pUdIlyugoIybrJp5SMu7Sxp1R02ACUkH361m1FSQwkg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_DVA_VC_BODY =
@@ -950,7 +950,7 @@ class CredentialTests {
                   {
                     "type": "IdentityCheck",
                     "txn": "dummyTxn",
-                    "activityHistoryScore": 1,
+                    "activityHistoryScore": 0,
                     "strengthScore": 3,
                     "validityScore": 0,
                             "ci": [
@@ -973,5 +973,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_SIGNATURE =
-            "p49qdMqCGQsb8EOp0UecFSAqeIQ3pJPcOfsGsjxwdH9TMVE_7pYDHCdKrA329TNqXMyvKIqPkDM1r_iT-QB7WA";
+            "hTrCCVEc7eFZX2wniTw1pu1Pzi07cRysXV5PHxUo87K8b3EDR7a756t5ipjFY9hmNf1xo-6Tdd3UerXkVPmOnw";
 }
