@@ -51,6 +51,10 @@ CHECK_EXISTING_IDENTITY:
     alternate-doc-invalid-passport:
       targetJourney: NEW_P2_IDENTITY
       targetState: ALTERNATE_DOC_DL
+    enhanced-verification-f2f-fail:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: ENHANCED_VERIFICATION_F2F_FAIL
+
 RESET_IDENTITY:
   response:
     type: process

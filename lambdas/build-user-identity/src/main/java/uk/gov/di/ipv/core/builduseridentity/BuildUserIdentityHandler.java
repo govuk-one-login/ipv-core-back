@@ -236,7 +236,7 @@ public class BuildUserIdentityHandler
             ContraIndicators contraIndicators,
             Map<String, ContraIndicatorConfig> ciConfig) {
         var issuers =
-                contraIndicators.getContraIndicatorsMap().values().stream()
+                contraIndicators.getUsersContraIndicators().stream()
                         .filter(
                                 ci ->
                                         ciConfig.get(ci.getCode())

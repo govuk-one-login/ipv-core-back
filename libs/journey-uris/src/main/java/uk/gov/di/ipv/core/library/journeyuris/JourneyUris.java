@@ -9,6 +9,10 @@ public class JourneyUris {
     public static final String JOURNEY_ACCESS_DENIED_PATH = "/journey/access-denied";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
+    public static final String JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH =
+            "/journey/enhanced-verification-f2f-fail";
+    public static final String JOURNEY_ENHANCED_VERIFICATION_PATH =
+            "/journey/enhanced-verification";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH =
             "/journey/fail-with-ci-and-forced-reset";
