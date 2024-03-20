@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -73,9 +72,8 @@ class CriCheckingServiceTest {
     private static final String TEST_CI_CODE = "test_ci_code";
     private static final ContraIndicators TEST_CONTRA_INDICATORS =
             ContraIndicators.builder()
-                    .contraIndicatorsMap(
-                            Map.of(
-                                    TEST_CI_CODE,
+                    .usersContraIndicators(
+                            List.of(
                                     ContraIndicator.builder()
                                             .code(TEST_CI_CODE)
                                             .mitigation(List.of(Mitigation.builder().build()))
