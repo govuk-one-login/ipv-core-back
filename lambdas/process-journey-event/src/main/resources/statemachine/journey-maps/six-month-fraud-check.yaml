@@ -5,6 +5,40 @@ START:
     next:
       targetState: CONFIRM_NAME_DOB
 
+# Parent States
+
+CRI_STATE:
+  events:
+    not-found:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    fail-with-no-ci:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    access-denied:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    vcs-not-correlated:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+    alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED_6MFC
+
+# Journey States
+
 CONFIRM_NAME_DOB:
   response:
     type: page
@@ -44,9 +78,6 @@ FRAUD_CHECK_6MFC:
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_6MFC
-    end:
-      targetJourney: FAILED
-      targetState: FAILED_6MFC
 
 ADDRESS_AND_FRAUD_6MFC:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -82,9 +113,6 @@ CRI_TICF_BEFORE_SUCCESS_6MFC:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE_6MFC
-
-CRI_TICF_STATE_6MFC:
-  events:
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
@@ -108,34 +136,3 @@ RETURN_TO_RP:
   response:
     type: process
     lambda: build-client-oauth-response
-
-CRI_STATE:
-  events:
-    next:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
-    not-found:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
-    fail-with-no-ci:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
-    access-denied:
-      targetJourney: FAILED
-      targetState: FAILED_6MFC
-    enhanced-verification:
-      targetJourney: FAILED
-      targetState: FAILED_6MFC
-    temporarily-unavailable:
-      targetJourney: FAILED
-      targetState: FAILED_6MFC
-    end:
-      targetState: IPV_SUCCESS_PAGE_6MFC
-    pyi-no-match:
-      targetJourney: FAILED
-      targetState: FAILED_6MFC
-    pyi-kbv-fail:
-      targetState: PYI_KBV_FAIL
