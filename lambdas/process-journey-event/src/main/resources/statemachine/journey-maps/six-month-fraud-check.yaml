@@ -54,7 +54,7 @@ CONFIRM_ADDRESS:
     type: page
     pageId: pyi-confirm-address
   events:
-    fraud:
+    addressCurrent:
       targetState: FRAUD_CHECK_6MFC
     next:
       targetState: ADDRESS_AND_FRAUD_6MFC
