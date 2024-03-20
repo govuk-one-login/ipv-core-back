@@ -950,7 +950,7 @@ MITIGATION_06_PASSPORT_NO_MATCH_PAGE:
 MITIGATION_06_IDENTITY_START_PAGE:
   response:
     type: page
-    pageId: pyi-continue-with-driving_licence
+    pageId: pyi-continue-with-driving-licence
     mitigationStart: invalid-passport
   events:
     next:
