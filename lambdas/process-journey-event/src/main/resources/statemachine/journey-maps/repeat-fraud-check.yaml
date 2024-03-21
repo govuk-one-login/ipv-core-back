@@ -42,7 +42,7 @@ CRI_STATE:
 CONFIRM_NAME_DOB:
   response:
     type: page
-    pageId: pyi-confirm-name-dob
+    pageId: confirm-name-date-birth
   events:
     next:
       targetState: CONFIRM_ADDRESS
@@ -52,7 +52,7 @@ CONFIRM_NAME_DOB:
 CONFIRM_ADDRESS:
   response:
     type: page
-    pageId: pyi-confirm-address
+    pageId: confirm-address
   events:
     address-current:
       targetState: FRAUD_CHECK_RFC
@@ -62,7 +62,7 @@ CONFIRM_ADDRESS:
 UPDATE_NAME_DOB:
   response:
     type: page
-    pageId: pyi-update-name-dob
+    pageId: update-name-date-birth
   events:
     end:
       targetState: CONFIRM_NAME_DOB
