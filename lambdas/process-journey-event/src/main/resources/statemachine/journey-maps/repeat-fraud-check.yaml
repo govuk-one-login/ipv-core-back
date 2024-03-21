@@ -54,7 +54,7 @@ CONFIRM_ADDRESS:
     type: page
     pageId: pyi-confirm-address
   events:
-    addressCurrent:
+    address-current:
       targetState: FRAUD_CHECK_RFC
     next:
       targetState: ADDRESS_AND_FRAUD_RFC
