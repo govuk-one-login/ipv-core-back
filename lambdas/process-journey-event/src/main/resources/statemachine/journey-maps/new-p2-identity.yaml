@@ -677,6 +677,10 @@ MITIGATION_01_IDENTITY_START_PAGE:
   events:
     next:
       targetState: MITIGATION_01_CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR_NO_TICF
     end:
       targetState: MITIGATION_01_F2F_START_PAGE
       checkIfDisabled:
@@ -756,6 +760,10 @@ MITIGATION_02_OPTIONS:
     mitigationStart: enhanced-verification
   events:
     next:
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR_NO_TICF
       targetState: CRI_DCMAW_PYI_ESCAPE
     end:
       targetJourney: INELIGIBLE
