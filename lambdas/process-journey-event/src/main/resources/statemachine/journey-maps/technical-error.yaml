@@ -26,6 +26,8 @@ CRI_TICF_BEFORE_ERROR:
       targetState: ERROR_PAGE
     alternate-doc-invalid-dl:
       targetState: ERROR_PAGE
+    alternate-doc-invalid-passport:
+      targetState: ERROR_PAGE
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF

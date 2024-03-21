@@ -23,6 +23,9 @@ CRI_TICF_BEFORE_RETURN_TO_RP:
     alternate-doc-invalid-dl:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
+    alternate-doc-invalid-passport:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
