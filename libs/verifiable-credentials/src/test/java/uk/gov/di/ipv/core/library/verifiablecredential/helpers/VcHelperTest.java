@@ -191,6 +191,35 @@ class VcHelperTest {
         assertNull(VcHelper.getVcVot(vcNullVot()));
     }
 
+    @Test
+    void shouldReturnEmptyListIfInvalidEvidenceTypeForFiltering() {
+        var vcs = List.of(vcPassportM1aFailed());
+        // Call the method under test
+        List<VerifiableCredential> result =
+                VcHelper.filterVCBasedOnEvidenceType(vcs, "INVALID_EVIDENCE_TYPE");
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyListIfEvidenceTypeIsNullForFiltering() {
+        var vcs = List.of(vcPassportM1aFailed());
+        // Call the method under test
+        List<VerifiableCredential> result = VcHelper.filterVCBasedOnEvidenceType(vcs, null);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldReturnListIfEvidenceTypeIsValidAndPresentForFiltering() {
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne(), vcTicf());
+        // Call the method under test
+        List<VerifiableCredential> result =
+                VcHelper.filterVCBasedOnEvidenceType(vcs, "IDENTITY_FRAUD");
+
+        // Assert Result
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+    }
+
     private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
