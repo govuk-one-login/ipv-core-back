@@ -97,6 +97,45 @@ public class VcHelper {
         }
     }
 
+    public static List<VerifiableCredential> filterVCBasedOnEvidenceType(
+            List<VerifiableCredential> vcs, String evidenceType) {
+
+        // Validate evidenceType matches with one of the evidence types in EvidenceType enum
+        boolean isValidEvidenceType =
+                Arrays.stream(CredentialEvidenceItem.EvidenceType.values())
+                        .anyMatch(evidence -> evidence.name().equals(evidenceType));
+        if (!isValidEvidenceType) {
+            LOGGER.error("Invalid evidence type: {}", evidenceType);
+            return new ArrayList<>();
+        }
+
+        return vcs.stream()
+                .filter(
+                        vc -> {
+                            JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
+                            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+                            if (evidenceArray == null || evidenceArray.isEmpty()) {
+                                return false;
+                            }
+                            List<CredentialEvidenceItem> credentialEvidenceList =
+                                    gson.fromJson(
+                                            evidenceArray.toJSONString(),
+                                            new TypeToken<
+                                                    List<CredentialEvidenceItem>>() {}.getType());
+                            try {
+                                for (CredentialEvidenceItem item : credentialEvidenceList) {
+                                    if (item.getEvidenceType().name().equals(evidenceType)) {
+                                        return true;
+                                    }
+                                }
+                            } catch (UnknownEvidenceTypeException e) {
+                                return false;
+                            }
+                            return false;
+                        })
+                .toList();
+    }
+
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
         List<String> txnIds = new ArrayList<>();
         for (var vc : vcs) {
