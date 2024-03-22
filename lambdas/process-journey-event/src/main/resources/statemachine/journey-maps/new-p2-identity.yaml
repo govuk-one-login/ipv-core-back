@@ -251,6 +251,10 @@ PYI_CRI_ESCAPE:
   events:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     f2f:
       targetState: CRI_F2F
       checkFeatureFlag:
@@ -264,6 +268,10 @@ PYI_CRI_ESCAPE_NO_F2F:
   events:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_SKIP_MESSAGE
@@ -611,6 +619,10 @@ MITIGATION_KBV_FAIL_M2B:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -653,6 +665,10 @@ PYI_KBV_DROPOUT_M2B:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -677,6 +693,10 @@ MITIGATION_01_IDENTITY_START_PAGE:
   events:
     next:
       targetState: MITIGATION_01_CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetState: MITIGATION_01_F2F_START_PAGE
       checkIfDisabled:
@@ -757,6 +777,10 @@ MITIGATION_02_OPTIONS:
   events:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -813,6 +837,10 @@ MITIGATION_02_OPTIONS_WITH_F2F:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
 
 MITIGATION_02_OPTIONS_WITH_F2F_M2B:
   response:
@@ -828,6 +856,10 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
           targetState: CRI_TICF_BEFORE_F2F
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
 
 PYI_POST_OFFICE:
   response:
