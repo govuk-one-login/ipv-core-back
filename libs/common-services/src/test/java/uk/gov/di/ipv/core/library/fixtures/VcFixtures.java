@@ -522,6 +522,23 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704290386));
     }
 
+    static VerifiableCredential vcFraudExpired() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_3))
+                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_KBV_CRI,
+                TestVc.builder()
+                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://review-f.integration.account.gov.uk",
+                Instant.ofEpochSecond(1658829758));
+    }
+
     static VerifiableCredential vcExperianFraudScoreTwo() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
