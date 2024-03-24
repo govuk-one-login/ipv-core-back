@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
@@ -195,19 +196,11 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnEmptyListIfInvalidEvidenceTypeForFiltering() {
+    void shouldReturnEmptyListIfEvidenceTypeIsValidAndNotPresent() {
         var vcs = List.of(vcPassportM1aFailed());
         // Call the method under test
         List<VerifiableCredential> result =
-                VcHelper.filterVCBasedOnEvidenceType(vcs, "INVALID_EVIDENCE_TYPE");
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void shouldReturnEmptyListIfEvidenceTypeIsNullForFiltering() {
-        var vcs = List.of(vcPassportM1aFailed());
-        // Call the method under test
-        List<VerifiableCredential> result = VcHelper.filterVCBasedOnEvidenceType(vcs, null);
+                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
         assertTrue(result.isEmpty());
     }
 
@@ -216,7 +209,7 @@ class VcHelperTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne(), vcTicf());
         // Call the method under test
         List<VerifiableCredential> result =
-                VcHelper.filterVCBasedOnEvidenceType(vcs, "IDENTITY_FRAUD");
+                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
 
         // Assert Result
         assertFalse(result.isEmpty());
