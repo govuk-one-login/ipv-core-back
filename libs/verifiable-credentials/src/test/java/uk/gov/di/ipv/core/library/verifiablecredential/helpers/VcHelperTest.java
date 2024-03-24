@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
@@ -40,6 +41,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
@@ -218,6 +221,34 @@ class VcHelperTest {
         // Assert Result
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldReturnTrueWhenVcIsExpired() throws Exception {
+        VcHelper.setConfigService(configService);
+        // Arrange
+        VerifiableCredential vc = vcFraudExpired();
+        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+
+        // Act
+        boolean result = VcHelper.checkIfExpiredVC(vc);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void shouldReturnFalseWhenVcIsNotExpired() throws Exception {
+        VcHelper.setConfigService(configService);
+        // Arrange
+        VerifiableCredential vc = vcFraudNotExpired();
+        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+
+        // Act
+        boolean result = VcHelper.checkIfExpiredVC(vc);
+
+        // Assert
+        assertFalse(result);
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {
