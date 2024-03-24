@@ -7,6 +7,8 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -537,6 +539,26 @@ public interface VcFixtures {
                         .build(),
                 "https://review-f.integration.account.gov.uk",
                 Instant.ofEpochSecond(1658829758));
+    }
+
+    static VerifiableCredential vcFraudNotExpired() {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime sixMonthsLater = now.plusMonths(6);
+        Instant futureInstant = sixMonthsLater.toInstant();
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_3))
+                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_KBV_CRI,
+                TestVc.builder()
+                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://review-f.integration.account.gov.uk",
+                futureInstant);
     }
 
     static VerifiableCredential vcExperianFraudScoreTwo() {
