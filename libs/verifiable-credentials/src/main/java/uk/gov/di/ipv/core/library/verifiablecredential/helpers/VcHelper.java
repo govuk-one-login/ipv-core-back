@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
@@ -105,27 +106,12 @@ public class VcHelper {
     }
 
     public static List<VerifiableCredential> filterVCBasedOnEvidenceType(
-            List<VerifiableCredential> vcs, String evidenceType) {
+            List<VerifiableCredential> vcs, EvidenceType evidenceType) {
 
-        if (!isValidEvidenceType(evidenceType)) {
-            LOGGER.error("Invalid evidence type: {}", evidenceType);
-            return new ArrayList<>();
-        }
-
-        return filterVerifiableCredentials(vcs, evidenceType);
-    }
-
-    private static boolean isValidEvidenceType(String evidenceType) {
-        return Arrays.stream(CredentialEvidenceItem.EvidenceType.values())
-                .anyMatch(evidence -> evidence.name().equals(evidenceType));
-    }
-
-    private static List<VerifiableCredential> filterVerifiableCredentials(
-            List<VerifiableCredential> vcs, String evidenceType) {
         return vcs.stream().filter(vc -> matchesEvidenceType(vc, evidenceType)).toList();
     }
 
-    private static boolean matchesEvidenceType(VerifiableCredential vc, String evidenceType) {
+    private static boolean matchesEvidenceType(VerifiableCredential vc, EvidenceType evidenceType) {
         JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         if (evidenceArray == null || evidenceArray.isEmpty()) {
@@ -137,7 +123,7 @@ public class VcHelper {
                         new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
-                if (item.getEvidenceType().name().equals(evidenceType)) {
+                if (item.getEvidenceType().name().equals(evidenceType.toString())) {
                     return true;
                 }
             }
@@ -295,7 +281,7 @@ public class VcHelper {
                 DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(nbfValue, formatter);
         Instant instant = zonedDateTime.toInstant();
-        var expiryTime = instant.plusSeconds((long)expiryPeriod * 3600);
+        var expiryTime = instant.plusSeconds((long) expiryPeriod * 3600);
         var currentTime = Instant.now();
         return expiryTime.isBefore(currentTime);
     }
