@@ -106,12 +106,15 @@ public class VcHelper {
     }
 
     public static List<VerifiableCredential> filterVCBasedOnEvidenceType(
-            List<VerifiableCredential> vcs, EvidenceType evidenceType) {
+            List<VerifiableCredential> vcs, EvidenceType... evidenceType) {
 
-        return vcs.stream().filter(vc -> matchesEvidenceType(vc, evidenceType)).toList();
+        return vcs.stream()
+                .filter(vc -> matchesEvidenceType(vc, Arrays.asList(evidenceType)))
+                .toList();
     }
 
-    private static boolean matchesEvidenceType(VerifiableCredential vc, EvidenceType evidenceType) {
+    private static boolean matchesEvidenceType(
+            VerifiableCredential vc, List<EvidenceType> evidenceTypes) {
         JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         if (evidenceArray == null || evidenceArray.isEmpty()) {
@@ -123,7 +126,7 @@ public class VcHelper {
                         new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
-                if (item.getEvidenceType().name().equals(evidenceType.toString())) {
+                if (evidenceTypes.contains(item.getEvidenceType())) {
                     return true;
                 }
             }

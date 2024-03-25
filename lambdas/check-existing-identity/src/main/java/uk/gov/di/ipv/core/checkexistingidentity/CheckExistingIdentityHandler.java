@@ -458,7 +458,9 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean checkIfExpiredFraudVc(List<VerifiableCredential> vcs) {
-        var fraudVCs = VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
+        var fraudVCs =
+                VcHelper.filterVCBasedOnEvidenceType(
+                        vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
         // validate that it is not empty returns one and only one fraud VC
         var fraudVC = fraudVCs.stream().findFirst();
         if (fraudVC.isPresent()) {
