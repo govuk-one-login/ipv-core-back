@@ -5,8 +5,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     RESET_IDENTITY("resetIdentity"),
     INHERITED_IDENTITY("inheritedIdentity"),
     REPROVE_IDENTITY_ENABLED("reproveIdentityEnabled"),
-    ALTERNATE_DOC_MITIGATION_ENABLED("alternateDocMitigationEnabled");
-
+    ALTERNATE_DOC_MITIGATION_ENABLED("alternateDocMitigationEnabled"),
+    REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled");
     private final String name;
 
     CoreFeatureFlag(String name) {
