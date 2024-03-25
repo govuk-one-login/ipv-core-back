@@ -40,9 +40,9 @@ public class IpvSessionItem implements DynamodbItem {
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
-
     private String featureSet;
     private List<String> vcReceivedThisSession;
+    private String riskAssessmentCredential;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
