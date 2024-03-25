@@ -121,6 +121,7 @@ public class CriStoringService {
 
             verifiableCredentialService.persistUserCredentials(vc);
             ipvSessionItem.addVcReceivedThisSession(vc);
+            ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
         }
 
         sendAuditEventForProcessedVcResponse(

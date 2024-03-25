@@ -161,7 +161,6 @@ class CriStoringServiceTest {
                         eq(callbackRequest.getIpAddress()));
         assertEquals(List.of(vc), vcListCaptor.getValue());
 
-        verify(mockVerifiableCredentialService).persistUserCredentials(vcCaptor.capture());
         assertEquals(vc, vcCaptor.getValue());
 
         verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
@@ -173,6 +172,7 @@ class CriStoringServiceTest {
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
     @Test
