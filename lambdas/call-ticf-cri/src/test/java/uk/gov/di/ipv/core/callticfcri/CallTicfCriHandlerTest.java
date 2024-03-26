@@ -103,8 +103,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(
-                        clientOAuthSessionItem, spyIpvSessionItem, VCS_RECEIVED_THIS_SESSION))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -132,7 +131,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of());
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -152,7 +151,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
@@ -171,7 +170,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
@@ -193,7 +192,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
@@ -235,7 +234,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
-        when(mockTicfCriService.getTicfVc(any(), any(), any()))
+        when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenThrow(new TicfCriServiceException("Oh dear"));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -264,7 +263,7 @@ class CallTicfCriHandlerTest {
             when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(new ClientOAuthSessionItem());
-            when(mockTicfCriService.getTicfVc(any(), any(), any()))
+            when(mockTicfCriService.getTicfVc(any(), any()))
                     .thenReturn(List.of(mockVerifiableCredential));
             doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any());
 
@@ -307,7 +306,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
-        when(mockTicfCriService.getTicfVc(any(), any(), any()))
+        when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Oh dear"));
