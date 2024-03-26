@@ -338,7 +338,7 @@ public class ConfigService {
     private String getApiKeyFromSecretManager(String criId, String connection) {
         String secretId =
                 String.format(
-                        "%s/credential-issuers/%s/connections/%s/api-key",
+                        "/%s/credential-issuers/%s/connections/%s/api-key",
                         getEnvironmentVariable(ENVIRONMENT), criId, connection);
         try {
             String secretValue = getSecretValue(secretId);
