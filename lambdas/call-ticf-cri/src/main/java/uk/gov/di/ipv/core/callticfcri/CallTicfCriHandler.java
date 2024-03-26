@@ -151,11 +151,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
-        var ticfVcs =
-                ticfCriService.getTicfVc(
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        ipvSessionItem.getVcReceivedThisSession());
+        var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         if (ticfVcs.isEmpty()) {
             LOGGER.warn(LogHelper.buildLogMessage("No TICF VC to process - returning next"));

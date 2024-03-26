@@ -61,9 +61,7 @@ public class TicfCriService {
     }
 
     public List<VerifiableCredential> getTicfVc(
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem,
-            List<String> vcs)
+            ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
         try {
             RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF_CRI);
@@ -75,7 +73,7 @@ public class TicfCriService {
                             TRUSTMARK,
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            vcs);
+                            ipvSessionItem.getVcReceivedThisSession());
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
