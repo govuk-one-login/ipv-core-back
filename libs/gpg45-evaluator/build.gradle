@@ -10,20 +10,21 @@ repositories {
 }
 
 dependencies {
-	implementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
-			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
-			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
-			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+	implementation libs.gson,
+			libs.nimbusdsOauth2OidcSdk,
+			libs.dynamodbEnhanced,
+			libs.powertoolsLogging,
+			libs.powertoolsParameters,
 			project(":libs:common-services")
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.11.0",
-			project(path: ':libs:common-services', configuration: 'tests')
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
-	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
-	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests')
+
+	testRuntimeOnly libs.junitPlatform
 }
 
 java {
