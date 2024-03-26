@@ -2,11 +2,14 @@ package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,14 +23,13 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -43,16 +45,14 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildProvenUserIdentityDetailsHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
@@ -89,7 +89,8 @@ public class BuildProvenUserIdentityDetailsHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentId(configService);
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
@@ -125,11 +126,10 @@ public class BuildProvenUserIdentityDetailsHandler
             LOGGER.info(
                     LogHelper.buildLogMessage("Successfully retrieved proven identity response."));
 
-            return provenUserIdentityDetailsBuilder.build().toObjectMap();
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HTTPResponse.SC_OK, provenUserIdentityDetailsBuilder.build());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(e.getErrorResponse(), e.getResponseCode());
         } catch (ParseException | JsonProcessingException | CredentialParseException e) {
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (ProvenUserIdentityDetailsException e) {
@@ -140,11 +140,14 @@ public class BuildProvenUserIdentityDetailsHandler
         }
     }
 
-    private Map<String, Object> buildJourneyErrorResponse(ErrorResponse errorResponse) {
+    private APIGatewayProxyResponseEvent buildJourneyErrorResponse(ErrorResponse errorResponse) {
+        return buildJourneyErrorResponse(errorResponse, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    private APIGatewayProxyResponseEvent buildJourneyErrorResponse(
+            ErrorResponse errorResponse, int statusCode) {
         LOGGER.error(LogHelper.buildLogMessage(errorResponse.getMessage()));
-        return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
-                .toObjectMap();
+        return ApiGatewayResponseGenerator.proxyJsonResponse(statusCode, errorResponse);
     }
 
     @Tracing
