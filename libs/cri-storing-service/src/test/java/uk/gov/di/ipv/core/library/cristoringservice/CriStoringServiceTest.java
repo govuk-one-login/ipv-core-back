@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -31,7 +30,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +40,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
@@ -130,9 +130,8 @@ class CriStoringServiceTest {
 
     @Test
     void storeVcsShouldProcessVcsAndSendAuditEvents()
-            throws ParseException, SqsException, VerifiableCredentialException,
-                    CiPostMitigationsException, CiPutException, AuditExtensionException,
-                    UnrecognisedVotException, CredentialParseException {
+            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
+                    CiPutException, AuditExtensionException, UnrecognisedVotException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -161,7 +160,6 @@ class CriStoringServiceTest {
                         eq(callbackRequest.getIpAddress()));
         assertEquals(List.of(vc), vcListCaptor.getValue());
 
-        verify(mockVerifiableCredentialService).persistUserCredentials(vcCaptor.capture());
         assertEquals(vc, vcCaptor.getValue());
 
         verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
@@ -173,13 +171,59 @@ class CriStoringServiceTest {
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
+    }
+
+    @Test
+    void storeTicfVcsShouldProcessVcsAndSendAuditEvents()
+            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
+                    CiPutException, AuditExtensionException, UnrecognisedVotException {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var vc = vcTicf();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        // Act
+        criStoringService.storeVcs(
+                TICF_CRI,
+                callbackRequest.getIpAddress(),
+                List.of(vc),
+                clientOAuthSessionItem,
+                mockIpvSessionItem);
+
+        // Assert
+        verify(mockCiMitService)
+                .submitVC(
+                        vcCaptor.capture(),
+                        eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
+                        eq(callbackRequest.getIpAddress()));
+        assertEquals(vc, vcCaptor.getValue());
+
+        verify(mockCiMitService)
+                .submitMitigatingVcList(
+                        vcListCaptor.capture(),
+                        eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
+                        eq(callbackRequest.getIpAddress()));
+        assertEquals(List.of(vc), vcListCaptor.getValue());
+
+        assertEquals(vc, vcCaptor.getValue());
+
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvents = auditEventCaptor.getAllValues();
+        var firstAuditEvent = capturedAuditEvents.get(0);
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, firstAuditEvent.getEventName());
+        var secondAuditEvent = capturedAuditEvents.get(1);
+        assertEquals(
+                AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
+
+        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
     @Test
     void storeVcsShouldHandleEmptyVcList()
             throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, ParseException, AuditExtensionException,
-                    UnrecognisedVotException {
+                    CiPutException, AuditExtensionException, UnrecognisedVotException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();

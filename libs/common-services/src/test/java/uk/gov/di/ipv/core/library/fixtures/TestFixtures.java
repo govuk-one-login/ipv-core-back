@@ -242,9 +242,4 @@ public interface TestFixtures {
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;
     }
-
-    static VcStoreItem createInvalidVcStoreItem(
-            String userId, String credentialIssuer, String credential) {
-        return createVcStoreItem(userId, credentialIssuer, credential);
-    }
 }
