@@ -120,10 +120,11 @@ public class CriStoringService {
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
 
-            verifiableCredentialService.persistUserCredentials(vc);
-            ipvSessionItem.addVcReceivedThisSession(vc);
             if (criId.equals(TICF_CRI)) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
+            } else {
+                verifiableCredentialService.persistUserCredentials(vc);
+                ipvSessionItem.addVcReceivedThisSession(vc);
             }
         }
 

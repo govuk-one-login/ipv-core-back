@@ -170,6 +170,7 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
+        verify(mockVerifiableCredentialService).persistUserCredentials(vc);
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
@@ -216,7 +217,8 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockVerifiableCredentialService, times(0)).persistUserCredentials(vc);
+        verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
