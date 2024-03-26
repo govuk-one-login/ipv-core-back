@@ -65,6 +65,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -75,6 +76,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -98,6 +101,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGR
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
@@ -129,6 +133,8 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
+            new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static ECDSASigner jwtSigner;
     private static VerifiableCredential pcl200Vc;
@@ -1071,7 +1077,10 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(anyString())).thenReturn(false).thenReturn(true);
+        when(configService.enabled(anyString()))
+                .thenReturn(false)
+                .thenReturn(true)
+                .thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1081,7 +1090,7 @@ class CheckExistingIdentityHandlerTest {
         verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
 
         ArgumentCaptor<String> configServiceArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(configService, times(2)).enabled(configServiceArgumentCaptor.capture());
+        verify(configService, times(3)).enabled(configServiceArgumentCaptor.capture());
         assertEquals(RESET_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(0));
         assertEquals(
                 INHERITED_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(1));
@@ -1253,6 +1262,60 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getCode(), response.getCode());
         assertEquals(
                 ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getMessage(), response.getMessage());
+    }
+
+    @Test
+    void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_FROM_STORE);
+
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(anyString()))
+                .thenReturn(false)
+                .thenReturn(false)
+                .thenReturn(true);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+        assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+    }
+
+    @Test
+    void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_FROM_STORE);
+
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(anyString()))
+                .thenReturn(false)
+                .thenReturn(false)
+                .thenReturn(true);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
+                .thenReturn("100000000"); // not the best way to test this
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+        assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {

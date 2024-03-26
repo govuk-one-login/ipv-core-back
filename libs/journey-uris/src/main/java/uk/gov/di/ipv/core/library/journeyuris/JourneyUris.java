@@ -35,4 +35,5 @@ public class JourneyUris {
     public static final String JOURNEY_ALTERNATE_DOC_PATH = "/journey/alternate-doc";
     public static final String JOURNEY_ALTERNATE_DOC_INVALID_DL_PATH =
             JOURNEY_ALTERNATE_DOC_PATH + "-invalid-dl";
+    public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
 }
