@@ -415,7 +415,7 @@ class ConfigServiceTest {
     void getCriPrivateApiKeyForActiveConnectionShouldReturnApiKeySecret() {
         environmentVariables.set("ENVIRONMENT", "test");
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
-        when(secretsProvider.get("test/credential-issuers/ukPassport/connections/stub/api-key"))
+        when(secretsProvider.get("/test/credential-issuers/ukPassport/connections/stub/api-key"))
                 .thenReturn(gson.toJson(apiKeySecret));
         when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                 .thenReturn("stub");

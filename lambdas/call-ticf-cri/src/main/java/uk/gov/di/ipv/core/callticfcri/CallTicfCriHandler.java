@@ -46,11 +46,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
-/* For developers, this lambda requires manual configuration of the following secret in SecretsManager
-A secret will be created automatically with a "/" character
-This secret needs to be manually recreated without the leading "/"
-Example: dev-<account>/credential-issuers/ticf/connections/stub/api-key
- */
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
