@@ -818,14 +818,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/build-oauth-request/{criId}
-            Method: POST
       AutoPublishAlias: live
 
   BuildCriOauthRequestFunctionLogGroup:
