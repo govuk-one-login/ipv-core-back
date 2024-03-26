@@ -65,11 +65,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
 class BuildUserIdentityHandlerTest {
@@ -209,6 +211,7 @@ class BuildUserIdentityHandlerTest {
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -220,7 +223,7 @@ class BuildUserIdentityHandlerTest {
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(4, responseBody.getVcs().size());
         assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
@@ -291,7 +294,7 @@ class BuildUserIdentityHandlerTest {
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(4, responseBody.getVcs().size());
         assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
@@ -329,6 +332,60 @@ class BuildUserIdentityHandlerTest {
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+    }
+
+    @Test
+    void shouldReturnRiskAssessmentCredentialsWhenTicfIsEnabled() throws Exception {
+        // Arrange
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(
+                        Map.of(
+                                "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
+                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        ipvSessionItem.setVot(Vot.P0);
+        ipvSessionItem.setRiskAssessmentCredential(vcTicf().getVcString());
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                "test-user-id",
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(5, responseBody.getVcs().size());
+        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
     }
 
     @Test
@@ -393,6 +450,7 @@ class BuildUserIdentityHandlerTest {
                                 "test-user-id",
                                 "test-cri-id",
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(event, mockContext);
@@ -403,7 +461,7 @@ class BuildUserIdentityHandlerTest {
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
+        assertEquals(4, responseBody.getVcs().size());
         assertEquals(userIdentity.getVcs(), responseBody.getVcs());
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
