@@ -3,10 +3,14 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @ExcludeFromGeneratedCoverageReport
+@AllArgsConstructor
+@Getter
 public enum ErrorResponse {
     MISSING_QUERY_PARAMETERS(1000, "Missing query parameters for auth request"),
     MISSING_AUTHORIZATION_CODE(1003, "Missing authorization code"),
@@ -82,33 +86,11 @@ public enum ErrorResponse {
             1069, "No mitigation journey route event found in cimit config"),
     UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route");
 
-    @JsonProperty("code")
     private final int code;
-
-    @JsonProperty("message")
     private final String message;
 
-    ErrorResponse(
-            @JsonProperty(required = true, value = "code") int code,
-            @JsonProperty(required = true, value = "message") String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String toJsonString() {
-        return String.format("{\"code\":%d,\"message\":\"%s\"}", code, message);
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
     @JsonCreator
-    public static ErrorResponse forCode(int code) {
+    public static ErrorResponse forCode(@JsonProperty("code") int code) {
         for (ErrorResponse element : values()) {
             if (element.getCode() == code) {
                 return element;

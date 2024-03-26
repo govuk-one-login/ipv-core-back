@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +19,8 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
@@ -64,10 +65,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final OauthCriConfig ISSUER_CONFIG_ADDRESS =
-            createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");
-    private static final OauthCriConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
-            createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
+
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -121,7 +119,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -152,7 +150,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -182,7 +180,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -217,7 +215,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -240,18 +238,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var output = handler.handleRequest(input, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
+                toResponseClass(output, ErrorResponse.class));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -269,17 +263,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
+                toResponseClass(output, ErrorResponse.class));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -298,17 +289,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
+                toResponseClass(output, ErrorResponse.class));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -327,17 +315,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
+                toResponseClass(output, ErrorResponse.class));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -356,52 +341,46 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
+                toResponseClass(output, ErrorResponse.class));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     @MockitoSettings(strictness = Strictness.LENIENT)
-    void shouldReceive400ResponseCodeIfMissingSessionId() {
-        JourneyRequest input =
-                JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+    void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
+        var input =
+                new APIGatewayProxyRequestEvent().withHeaders(Map.of(IP_ADDRESS_HEADER, "1.2.3.4"));
 
-        assertEquals(400, errorResponse.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), errorResponse.getMessage());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(400, output.getStatusCode());
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID, toResponseClass(output, ErrorResponse.class));
     }
 
     @Test
-    void shouldReceive500ResponseCodeWhenFailedToParseVc() throws CredentialParseException {
+    void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
                 .thenThrow(new CredentialParseException("Invalid credentials!"));
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS,
+                toResponseClass(output, ErrorResponse.class));
     }
 
     @Test
@@ -422,17 +401,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
-        JourneyErrorResponse errorResponse =
-                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
+        var input = createRequestEvent();
 
-        assertEquals(500, errorResponse.getStatusCode());
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(500, output.getStatusCode());
         assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(),
-                errorResponse.getCode());
-        assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
-                errorResponse.getMessage());
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER,
+                toResponseClass(output, ErrorResponse.class));
     }
 
     @Test
@@ -453,7 +429,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -484,7 +460,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = createRequestEvent();
+        var input = createRequestEvent();
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 toResponseClass(
@@ -496,23 +472,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    private JourneyRequest createRequestEvent() {
-        return JourneyRequest.builder().ipvSessionId(SESSION_ID).ipAddress("10.10.10.1").build();
-    }
-
-    private static OauthCriConfig createCredentialIssuerConfig(String componentId) {
-        return OauthCriConfig.builder()
-                .tokenUrl(URI.create("https://example.com/token"))
-                .credentialUrl(URI.create("https://example.com/credential"))
-                .authorizeUrl(URI.create("https://example.com/authorize"))
-                .clientId("ipv-core")
-                .signingKey("test-jwk")
-                .encryptionKey("test-jwk")
-                .componentId(componentId)
-                .clientCallbackUrl(URI.create("https://example.com/callback"))
-                .requiresApiKey(true)
-                .requiresAdditionalEvidence(false)
-                .build();
+    private APIGatewayProxyRequestEvent createRequestEvent() {
+        return new APIGatewayProxyRequestEvent()
+                .withHeaders(
+                        Map.of(IPV_SESSION_ID_HEADER, SESSION_ID, IP_ADDRESS_HEADER, "10.10.10.1"));
     }
 
     private Optional<IdentityClaim> createIdentityClaim() {
@@ -526,7 +489,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return Optional.of(new IdentityClaim(names, birthDates));
     }
 
-    private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
-        return objectMapper.convertValue(handlerOutput, responseClass);
+    private <T> T toResponseClass(
+            APIGatewayProxyResponseEvent handlerOutput, Class<T> responseClass)
+            throws JsonProcessingException {
+        return objectMapper.readValue(handlerOutput.getBody(), responseClass);
     }
 }
