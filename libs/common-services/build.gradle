@@ -10,27 +10,29 @@ repositories {
 }
 
 dependencies {
-	implementation "com.amazonaws:aws-java-sdk-dynamodb:$rootProject.ext.dependencyVersions.awsJavaSdkDynamodb",
-			"com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
-			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
-			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
-			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
-			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
-			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+	implementation libs.awsJavaSdkDynamodb,
+			libs.awsJavaSdkLambda,
+			libs.awsLambdaJavaEvents,
+			libs.gson,
+			libs.nimbusdsOauth2OidcSdk,
+			libs.dynamodbEnhanced,
+			libs.powertoolsLogging,
+			libs.powertoolsParameters,
 			project(":libs:journey-uris")
 
-	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1",
-			"org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.11.0",
-			"uk.org.webcompere:system-stubs-jupiter:2.1.3",
-			"org.hamcrest:hamcrest:2.2"
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	testCompileOnly("org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok")
-	testAnnotationProcessor("org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok")
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
-	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
-	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	testImplementation libs.wiremock,
+			libs.junitJupiter,
+			libs.mockitoJunit,
+			libs.systemStubs,
+			libs.hamcrest
+
+	testRuntimeOnly libs.junitPlatform
+
+	testCompileOnly libs.lombok
+	testAnnotationProcessor libs.lombok
 }
 
 java {

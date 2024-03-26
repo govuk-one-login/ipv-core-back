@@ -2,7 +2,7 @@ plugins {
 	id "java"
 	id "idea"
 	id "jacoco"
-	id 'io.freefair.aspectj.post-compile-weaving' version '8.6'
+	alias libs.plugins.postCompileWeaving
 }
 
 repositories {
@@ -11,30 +11,26 @@ repositories {
 
 dependencies {
 
-	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
-			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
-			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
+	implementation libs.awsLambdaJavaCore,
+			libs.awsLambdaJavaEvents,
+			libs.nimbusdsOauth2OidcSdk,
+			libs.dynamodbEnhanced,
 			project(":libs:common-services")
 
-	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
-			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
-	aspect('org.aspectj:aspectjrt') {
-		version {
-			strictly '1.9.8'
-		}
-	}
+	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
+			libs.aspectj
 
-	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
-	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
-
-	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.11.0",
-			"au.com.dius.pact.provider:junit5:4.6.5",
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit,
+			libs.pactProviderJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:pact-test-helpers')
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	testRuntimeOnly libs.junitPlatform
 }
 
 java {
