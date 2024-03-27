@@ -41,7 +41,7 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessCriCallbackFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
-  /journey/{journeyStep}:
+  /journey/{journeyStep+}:
     post:
       description: Called when the user selects a journey event. Triggers an express step function
       responses:
