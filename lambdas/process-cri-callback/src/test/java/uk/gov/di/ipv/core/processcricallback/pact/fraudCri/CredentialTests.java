@@ -804,11 +804,6 @@ class CredentialTests {
                         "txn": "dummyTxnFailed",
                         "checkMethod": "data",
                         "fraudCheck": "impersonation_risk_check"
-                      },
-                      {
-                        "checkMethod": "data",
-                        "activityFrom": "2013-12-01",
-                        "identityCheckPolicy": "none"
                       }
                     ]
                   }
@@ -821,5 +816,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "2Lj5WwVPdC_7AkD24TJ4H62ofG_Wxdek4mx4bIdg-Ci8mYvtqkyrHhMD-1wrMjUIMOiPVhSyFEpM92tp1MGncA";
+            "U0xZDzMygdiOc9oII4CXYfjb71K15dsGFlMMfnv3cwOb_gn8HFsFaLbV7UMID4IbgLRqjZf12ie8F5IDIvcJkA";
 }
