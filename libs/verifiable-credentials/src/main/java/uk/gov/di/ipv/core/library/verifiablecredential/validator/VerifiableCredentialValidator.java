@@ -1,14 +1,13 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.validator;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -39,8 +38,12 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class VerifiableCredentialValidator {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final CollectionType CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE =
+            OBJECT_MAPPER
+                    .getTypeFactory()
+                    .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static final String VC_CLAIM_NAME = "vc";
-    private static final Gson gson = new Gson();
     private final ConfigService configService;
 
     public interface IClaimsVerifierFactory {
@@ -183,14 +186,14 @@ public class VerifiableCredentialValidator {
 
     private void validateCiCodes(VerifiableCredential vc) throws VerifiableCredentialException {
         try {
-            JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
-            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
-            if (evidenceArray != null) {
+            var evidenceArray =
+                    OBJECT_MAPPER
+                            .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
+                            .path(VC_EVIDENCE);
+            if (evidenceArray.isArray()) {
                 List<CredentialEvidenceItem> credentialEvidenceList =
-                        gson.fromJson(
-                                evidenceArray.toJSONString(),
-                                new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
-
+                        OBJECT_MAPPER.treeToValue(
+                                evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
                 boolean anyUnrecognisedCiCodes = false;
                 for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
                     List<String> cis = evidenceItem.getCi();
@@ -217,7 +220,7 @@ public class VerifiableCredentialValidator {
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
-        } catch (VerifiableCredentialException e) {
+        } catch (VerifiableCredentialException | JsonProcessingException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Failed to parse verifiable credential claims set", e));

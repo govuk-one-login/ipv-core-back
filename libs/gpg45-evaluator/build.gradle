@@ -10,8 +10,7 @@ repositories {
 }
 
 dependencies {
-	implementation libs.gson,
-			libs.nimbusdsOauth2OidcSdk,
+	implementation libs.nimbusdsOauth2OidcSdk,
 			libs.dynamodbEnhanced,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,

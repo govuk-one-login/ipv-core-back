@@ -313,7 +313,8 @@ public class ProcessCriCallbackHandler
             IpvSessionItem ipvSessionItem)
             throws VerifiableCredentialException, JsonProcessingException, SqsException,
                     InvalidCriCallbackRequestException, ParseException, CiPutException,
-                    CiPostMitigationsException, AuditExtensionException, UnrecognisedVotException {
+                    CiPostMitigationsException, AuditExtensionException, UnrecognisedVotException,
+                    CredentialParseException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);

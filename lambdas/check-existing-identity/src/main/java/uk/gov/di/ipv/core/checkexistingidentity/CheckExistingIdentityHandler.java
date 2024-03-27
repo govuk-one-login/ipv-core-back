@@ -339,7 +339,8 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
-            throws ParseException, UnknownEvidenceTypeException, SqsException {
+            throws ParseException, UnknownEvidenceTypeException, SqsException,
+                    CredentialParseException {
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -461,7 +462,8 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             boolean areGpg45VcsCorrelated)
-            throws UnknownEvidenceTypeException, ParseException, SqsException {
+            throws UnknownEvidenceTypeException, ParseException, SqsException,
+                    CredentialParseException {
 
         var requestedVotsByStrength =
                 SUPPORTED_VOTS_BY_STRENGTH.stream()
@@ -488,7 +490,8 @@ public class CheckExistingIdentityHandler
 
     private boolean achievedWithGpg45Profile(
             Vot requestedVot, List<VerifiableCredential> vcs, AuditEventUser auditEventUser)
-            throws UnknownEvidenceTypeException, ParseException, SqsException {
+            throws UnknownEvidenceTypeException, ParseException, SqsException,
+                    CredentialParseException {
 
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =

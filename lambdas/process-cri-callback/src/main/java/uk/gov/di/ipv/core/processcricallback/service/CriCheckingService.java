@@ -231,8 +231,10 @@ public class CriCheckingService {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        if (!vcs.stream().allMatch(VcHelper::isSuccessfulVc)) {
-            return JOURNEY_FAIL_WITH_NO_CI;
+        for (var vc : vcs) {
+            if (!VcHelper.isSuccessfulVc(vc)) {
+                return JOURNEY_FAIL_WITH_NO_CI;
+            }
         }
 
         return JOURNEY_NEXT;

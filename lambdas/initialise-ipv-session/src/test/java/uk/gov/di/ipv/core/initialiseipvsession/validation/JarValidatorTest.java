@@ -81,7 +81,7 @@ class JarValidatorTest {
     @Test
     void decryptJWEShouldReturnSignedJwtOnSuccessfulDecryption() throws Exception {
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
-        when(kmsRsaDecrypter.decrypt(any(), any(), any(), any(), any()))
+        when(kmsRsaDecrypter.decrypt(any(), any(), any(), any(), any(), any()))
                 .thenReturn(signedJWT.serialize().getBytes(StandardCharsets.UTF_8));
 
         String jweObjectString =
