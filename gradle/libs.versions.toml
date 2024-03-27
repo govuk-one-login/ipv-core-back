@@ -13,7 +13,7 @@ awsJavaSdkLambda = { module = "com.amazonaws:aws-java-sdk-lambda", version.ref =
 awsJavaSdkSqs = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "awsSdk" }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
-dynamodbEnhanced = "software.amazon.awssdk:dynamodb-enhanced:2.24.9"
+dynamodbEnhanced = "software.amazon.awssdk:dynamodb-enhanced:2.25.18"
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = "com.fasterxml.jackson.core:jackson-databind:2.15.3"
