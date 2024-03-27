@@ -26,6 +26,8 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -48,6 +50,16 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyEventHandlerTest {
     private static final String JOURNEY_NEXT = "/journey/next";
+    private static final String JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE =
+            "/journey/eventOne?currentPage=testCurrentPage";
+    private static final String JOURNEY_TEST_WITH_CONTEXT_WITH_MISSING_CURRENT_PAGE =
+            "/journey/testWithContext";
+    private static final String JOURNEY_TEST_WITH_CONTEXT_WITH_EMPTY_CURRENT_PAGE =
+            "/journey/testWithContext?currentPage=";
+    private static final String JOURNEY_TEST_WITH_CONTEXT_WITH_A_CRI_ID =
+            "/journey/testWithContext?currentPage=aCriId";
+    private static final String JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE =
+            "/journey/eventTwo?currentPage=page-id-for-some-page";
     private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
     private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
     private static final String CODE = "code";
@@ -141,6 +153,229 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(),
                         StateMachineInitializerMode.STANDARD);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
+    }
+
+    @Test
+    void shouldReturnCurrentStateIfPageOutOfSync() throws IOException {
+        Map<String, String> input =
+                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-some-page", output.get("page"));
+    }
+
+    @Test
+    void shouldReturnNextStateIfInSync()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(
+                        JOURNEY,
+                        JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE,
+                        IPV_SESSION_ID,
+                        "1234");
+
+        when(mockConfigService.isEnabled("aCriId")).thenReturn(true);
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnCurrentStateIfCriOutOfSync()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnNextCriStateIfNoCurrentPage()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(
+                        JOURNEY,
+                        JOURNEY_TEST_WITH_CONTEXT_WITH_MISSING_CURRENT_PAGE,
+                        IPV_SESSION_ID,
+                        "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnNextCriStateIfEmptyCurrentPage()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(
+                        JOURNEY,
+                        JOURNEY_TEST_WITH_CONTEXT_WITH_EMPTY_CURRENT_PAGE,
+                        IPV_SESSION_ID,
+                        "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnNextCriStateIfInSyncCurrentPage()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(
+                        JOURNEY,
+                        JOURNEY_TEST_WITH_CONTEXT_WITH_EMPTY_CURRENT_PAGE,
+                        IPV_SESSION_ID,
+                        "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnCurrentCriStateIfCurrentPageOutOfSync()
+            throws IOException, UnknownStateException, UnknownEventException {
+        Map<String, String> input =
+                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
+    }
+
+    @Test
+    void shouldTransitionCriStateIfCurrentPageMatchesCriId() throws IOException {
+        Map<String, String> input =
+                Map.of(JOURNEY, JOURNEY_TEST_WITH_CONTEXT_WITH_A_CRI_ID, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId?context=test_context",
+                output.get("journey"));
+    }
+
+    @Test
+    void shouldThrowErrorIfJourneyEventDuringProcess() throws IOException {
+        Map<String, String> input =
+                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout("PROCESS_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
