@@ -21,7 +21,7 @@ jacksonDataformatYaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yam
 jacksonDatatypeJsr = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
-kms = "software.amazon.awssdk:kms:2.24.9"
+kms = "software.amazon.awssdk:kms:2.25.18"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4jApi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
