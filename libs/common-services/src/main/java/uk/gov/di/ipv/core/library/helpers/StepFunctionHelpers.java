@@ -4,6 +4,9 @@ import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,16 +56,35 @@ public class StepFunctionHelpers {
     }
 
     public static String getJourneyEvent(Map<String, String> input)
-            throws HttpResponseExceptionWithErrorBody {
-        String[] parts =
+            throws HttpResponseExceptionWithErrorBody, UnsupportedEncodingException {
+        String journeyEvent =
                 Optional.ofNullable(input.get(JOURNEY))
                         .orElseThrow(
                                 () ->
                                         new HttpResponseExceptionWithErrorBody(
                                                 HttpStatus.SC_BAD_REQUEST,
-                                                ErrorResponse.MISSING_JOURNEY_EVENT))
-                        .split("/");
-        return parts[parts.length - 1];
+                                                ErrorResponse.MISSING_JOURNEY_EVENT));
+
+        String[] decodedParts = URLDecoder.decode(journeyEvent, StandardCharsets.UTF_8).split("/");
+
+        return decodedParts[decodedParts.length - 1];
+    }
+
+    public static Optional<String> getCurrentPage(Map<String, String> input)
+            throws HttpResponseExceptionWithErrorBody {
+        String journeyEvent =
+                Optional.ofNullable(input.get(JOURNEY))
+                        .orElseThrow(
+                                () ->
+                                        new HttpResponseExceptionWithErrorBody(
+                                                HttpStatus.SC_BAD_REQUEST,
+                                                ErrorResponse.MISSING_JOURNEY_EVENT));
+
+        String[] decodedParts = URLDecoder.decode(journeyEvent, StandardCharsets.UTF_8).split("/");
+
+        return Optional.ofNullable(
+                decodedParts.length == 4  ? decodedParts[2] : null
+        );
     }
 
     public static Map<String, Object> generateErrorOutputMap(

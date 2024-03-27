@@ -46,6 +46,13 @@ class StepFunctionHelpersTest {
     }
 
     @Test
+    void getCurrentPageShouldReturnCurrentPage() throws Exception {
+        Map<String, String> input = Map.of("journey", "/testJourney/testCurrentPage/next");
+
+        assertEquals("testJourney", StepFunctionHelpers.getCurrentPage(input));
+    }
+
+    @Test
     void getJourneyEventShouldThrowIfJourneyMissing() {
         Map<String, String> input = Map.of();
 

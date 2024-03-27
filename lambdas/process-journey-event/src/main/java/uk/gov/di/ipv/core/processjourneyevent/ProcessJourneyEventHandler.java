@@ -42,10 +42,12 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
@@ -102,6 +104,8 @@ public class ProcessJourneyEventHandler
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
+            Optional<String> currentPage = StepFunctionHelpers.getCurrentPage(input);
+
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
             // Get/ set session items/ config
@@ -127,7 +131,7 @@ public class ProcessJourneyEventHandler
                             ipAddress);
 
             StepResponse stepResponse =
-                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser);
+                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser, currentPage);
 
             if (stepResponse.getMitigationStart() != null) {
                 sendMitigationStartAuditEvent(auditEventUser, stepResponse.getMitigationStart());
@@ -143,12 +147,18 @@ public class ProcessJourneyEventHandler
         } catch (SqsException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } catch (UnsupportedEncodingException e) {
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.valueOf(e.getMessage()));
         }
     }
 
     @Tracing
     private StepResponse executeJourneyEvent(
-            String journeyEvent, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
+            String journeyEvent,
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser,
+            Optional<String> currentPage)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(
@@ -157,7 +167,7 @@ public class ProcessJourneyEventHandler
         }
 
         try {
-            var newState = executeStateTransition(ipvSessionItem, journeyEvent);
+            var newState = executeStateTransition(ipvSessionItem, journeyEvent, currentPage);
 
             while (newState instanceof JourneyChangeState journeyChangeState) {
                 LOGGER.info(
@@ -171,7 +181,7 @@ public class ProcessJourneyEventHandler
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
                 sendSubJourneyStartAuditEvent(auditEventUser, journeyChangeState.getJourneyType());
-                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
+                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, Optional.empty());
             }
 
             var basicState = (BasicState) newState;
@@ -215,7 +225,8 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private State executeStateTransition(IpvSessionItem ipvSessionItem, String journeyEvent)
+    private State executeStateTransition(
+            IpvSessionItem ipvSessionItem, String journeyEvent, Optional<String> currentPage)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
         StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
         if (stateMachine == null) {
@@ -233,7 +244,8 @@ public class ProcessJourneyEventHandler
         return stateMachine.transition(
                 ipvSessionItem.getUserState(),
                 journeyEvent,
-                JourneyContext.withFeatureSet(configService.getFeatureSet()));
+                JourneyContext.withFeatureSet(configService.getFeatureSet()),
+                currentPage);
     }
 
     @Tracing
