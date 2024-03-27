@@ -1,5 +1,5 @@
 [versions]
-awsSdk = "2.24.9"
+awsSdk = "2.25.18"
 awsJavaSdk = "1.12.665"
 log4j = "2.23.0"
 mockito = "5.11.0"
