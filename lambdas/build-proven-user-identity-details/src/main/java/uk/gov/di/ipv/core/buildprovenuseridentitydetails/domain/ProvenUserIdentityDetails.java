@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 @Data
 @Builder
-public class ProvenUserIdentityDetails extends BaseResponse {
+public class ProvenUserIdentityDetails {
     @JsonProperty private final String name;
     @JsonProperty private final String dateOfBirth;
     @JsonProperty private final List<Address> addresses;

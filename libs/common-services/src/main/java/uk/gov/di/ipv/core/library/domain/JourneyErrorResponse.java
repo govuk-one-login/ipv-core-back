@@ -14,17 +14,19 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
         value = {"message"},
         allowGetters = true)
 public class JourneyErrorResponse extends JourneyResponse {
-    @JsonProperty private int statusCode;
-
-    @JsonProperty private ErrorResponse code;
-
-    private String message;
+    private final int statusCode;
+    private final ErrorResponse code;
+    private final String message;
 
     @JsonCreator
     public JourneyErrorResponse(
             @JsonProperty(value = "journey", required = true) String journey,
             @JsonProperty(value = "statusCode") int statusCode,
-            @JsonProperty(value = "code") ErrorResponse code) {
+            @JsonProperty(value = "code") int code) {
+        this(journey, statusCode, ErrorResponse.forCode(code));
+    }
+
+    public JourneyErrorResponse(String journey, int statusCode, ErrorResponse code) {
         this(journey, statusCode, code, null);
     }
 
@@ -47,10 +49,12 @@ public class JourneyErrorResponse extends JourneyResponse {
         return null;
     }
 
+    @JsonProperty("statusCode")
     public int getStatusCode() {
         return this.statusCode;
     }
 
+    @JsonProperty("code")
     public int getCode() {
         return this.code != null ? this.code.getCode() : 0;
     }
