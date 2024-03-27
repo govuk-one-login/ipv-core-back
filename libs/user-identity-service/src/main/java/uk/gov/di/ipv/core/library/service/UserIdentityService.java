@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.HttpStatus;
@@ -82,7 +81,7 @@ public class UserIdentityService {
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
 
@@ -191,10 +190,12 @@ public class UserIdentityService {
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        var successfulVcs =
-                VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45).stream()
-                        .filter(VcHelper::isSuccessfulVc)
-                        .toList();
+        var successfulVcs = new ArrayList<VerifiableCredential>();
+        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
+            if (VcHelper.isSuccessfulVc(vc)) {
+                successfulVcs.add(vc);
+            }
+        }
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
             LOGGER.error(
                     new StringMapMessage()
@@ -230,7 +231,12 @@ public class UserIdentityService {
             List<VerifiableCredential> vcs,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
+        var successfulVcs = new ArrayList<VerifiableCredential>();
+        for (var vc : vcs) {
+            if (VcHelper.isSuccessfulVc(vc)) {
+                successfulVcs.add(vc);
+            }
+        }
         if (Vot.P0.equals(vot)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
         } else {
@@ -410,7 +416,7 @@ public class UserIdentityService {
     private JsonNode getVcClaimNode(String credential, String node)
             throws CredentialParseException {
         try {
-            return objectMapper
+            return OBJECT_MAPPER
                     .readTree(SignedJWT.parse(credential).getPayload().toString())
                     .path(VC_CLAIM)
                     .path(node);
@@ -425,16 +431,10 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         JsonNode propertyNode = jsonNode.path(propertyName);
         if (propertyNode.isMissingNode()) {
-            try {
-                return objectMapper.readValue(new JSONArray().toJSONString(), valueType);
-            } catch (JsonProcessingException e) {
-                LOGGER.error(LogHelper.buildErrorMessage("Failed to generate empty list", e));
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-            }
+            return OBJECT_MAPPER.convertValue(List.of(), valueType);
         }
         try {
-            return objectMapper.treeToValue(propertyNode, valueType);
+            return OBJECT_MAPPER.treeToValue(propertyNode, valueType);
         } catch (JsonProcessingException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse VC JWT", e));
             throw new HttpResponseExceptionWithErrorBody(
@@ -449,14 +449,14 @@ public class UserIdentityService {
                 getJsonProperty(
                         vcClaimNode,
                         NAME_PROPERTY_NAME,
-                        objectMapper
+                        OBJECT_MAPPER
                                 .getTypeFactory()
                                 .constructCollectionType(List.class, Name.class));
         List<BirthDate> birthDates =
                 getJsonProperty(
                         vcClaimNode,
                         BIRTH_DATE_PROPERTY_NAME,
-                        objectMapper
+                        OBJECT_MAPPER
                                 .getTypeFactory()
                                 .constructCollectionType(List.class, BirthDate.class));
 

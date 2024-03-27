@@ -50,7 +50,7 @@ class AuditExtensionsHelperTest {
     void shouldGetPassportRestrictedDataForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -58,7 +58,7 @@ class AuditExtensionsHelperTest {
     void shouldGetDLRestrictedDataForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(vcDrivingPermitNonDcmaw());
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"Alice\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Parker\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -66,7 +66,7 @@ class AuditExtensionsHelperTest {
     void shouldGetRestrictedDataWithoutDocForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(vcAddressTwo());
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":null}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"Alice\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Parker\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":null}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -99,11 +99,13 @@ class AuditExtensionsHelperTest {
         var restricted = getRestrictedAuditDataForInheritedIdentity(vcHmrcMigration());
 
         assertEquals(
-                "[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}]",
-                restricted.name().toString());
-        assertEquals("[{\"value\":\"1965-07-08\"}]", restricted.birthDate().toString());
+                "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
+                OBJECT_MAPPER.writeValueAsString(restricted.name()));
+        assertEquals(
+                "[{\"value\":\"1965-07-08\"}]",
+                OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
         assertEquals(
                 "[{\"personalNumber\":\"AB123456C\"}]",
-                restricted.socialSecurityRecord().toString());
+                OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
     }
 }

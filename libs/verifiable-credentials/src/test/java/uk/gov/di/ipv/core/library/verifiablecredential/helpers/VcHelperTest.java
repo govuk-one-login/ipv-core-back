@@ -87,7 +87,7 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
-    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) {
+    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) throws Exception {
         mockCredentialIssuerConfig();
 
         assertTrue(VcHelper.isSuccessfulVc(vc), name);
@@ -95,7 +95,7 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("UnsuccessfulTestCases")
-    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) {
+    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) throws Exception {
         mockCredentialIssuerConfig();
 
         assertFalse(VcHelper.isSuccessfulVc(vc), name);

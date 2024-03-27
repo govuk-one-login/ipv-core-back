@@ -1,14 +1,15 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
@@ -30,7 +31,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -53,9 +53,13 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Gson gson = new Gson();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
-    public static final String UK_ICAO_ISSUER_CODE = "GBR";
+    private static final String UK_ICAO_ISSUER_CODE = "GBR";
+    private static final CollectionType CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE =
+            OBJECT_MAPPER
+                    .getTypeFactory()
+                    .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static ConfigService configService;
     private static final int ONLY = 0;
 
@@ -65,12 +69,13 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    public static boolean isSuccessfulVc(VerifiableCredential vc) {
-        JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
-        JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+    public static boolean isSuccessfulVc(VerifiableCredential vc) throws CredentialParseException {
+        var evidenceArray =
+                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
+
         var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
 
-        if (evidenceArray == null || evidenceArray.isEmpty()) {
+        if (evidenceArray.isMissingNode() || evidenceArray.isEmpty()) {
             String vcIssuer = vc.getClaimsSet().getIssuer();
             if (excludedCredentialIssuers.contains(vcIssuer)) {
                 return true;
@@ -79,12 +84,12 @@ public class VcHelper {
             return false;
         }
 
-        List<CredentialEvidenceItem> credentialEvidenceList =
-                gson.fromJson(
-                        evidenceArray.toJSONString(),
-                        new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
-
-        return isValidEvidence(credentialEvidenceList);
+        try {
+            return isValidEvidence(
+                    OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE));
+        } catch (JsonProcessingException e) {
+            throw new CredentialParseException("Unable to create credential evidence list", e);
+        }
     }
 
     public static List<VerifiableCredential> filterVCBasedOnProfileType(
@@ -136,55 +141,51 @@ public class VcHelper {
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
         List<String> txnIds = new ArrayList<>();
         for (var vc : vcs) {
-            var jwtClaimsSet = vc.getClaimsSet();
-            var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-            var evidences = (JSONArray) vcClaim.get(VC_EVIDENCE);
-            if (evidences != null) { // not all VCs have an evidence block
-                var evidence = (JSONObject) evidences.get(ONLY);
-                txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
+            var evidenceArray =
+                    OBJECT_MAPPER
+                            .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
+                            .path(VC_EVIDENCE);
+            if (evidenceArray.isArray()
+                    && !evidenceArray.isEmpty()) { // not all VCs have an evidence block
+                txnIds.add(evidenceArray.get(ONLY).path(VC_EVIDENCE_TXN).asText());
             }
         }
         return txnIds;
     }
 
     public static Integer extractAgeFromCredential(VerifiableCredential vc) {
-        Integer age = null;
-        var jwtClaimsSet = vc.getClaimsSet();
-        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
-        if (credentialSubject != null && !credentialSubject.isEmpty()) {
-            var birthDateArr = (JSONArray) credentialSubject.get(VC_BIRTH_DATE);
-            if (birthDateArr != null && !birthDateArr.isEmpty()) {
-                var dobObj = (JSONObject) birthDateArr.get(ONLY);
-                age = getAge(dobObj.getAsString(VC_ATTR_VALUE_NAME));
-            }
+        var birthDateArr =
+                OBJECT_MAPPER
+                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
+                        .path(VC_CREDENTIAL_SUBJECT)
+                        .path(VC_BIRTH_DATE);
+        if (birthDateArr.isMissingNode() || birthDateArr.isEmpty()) {
+            return null;
         }
-        return age;
+        return getAge(birthDateArr.get(ONLY).path(VC_ATTR_VALUE_NAME).asText());
     }
 
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
-        var jwtClaimsSet = vc.getClaimsSet();
-        var vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vcClaim.get(VC_CREDENTIAL_SUBJECT);
-        if (credentialSubject != null) {
+        var credentialSubject =
+                OBJECT_MAPPER
+                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
+                        .path(VC_CREDENTIAL_SUBJECT);
+        if (!credentialSubject.isMissingNode()) {
             var passportOrResPermitField = getPassportOrResPermitField(credentialSubject);
-            if (passportOrResPermitField instanceof JSONArray passportOrResPermitFieldArr) {
-                var icaoCode =
-                        ((JSONObject) passportOrResPermitFieldArr.get(ONLY))
-                                .getAsString(VC_ICAO_ISSUER_CODE);
-                if (icaoCode != null) {
-                    return UK_ICAO_ISSUER_CODE.equals(icaoCode);
+            if (passportOrResPermitField.isArray()) {
+                var icaoCode = passportOrResPermitField.path(ONLY).path(VC_ICAO_ISSUER_CODE);
+                if (!icaoCode.isMissingNode()) {
+                    return UK_ICAO_ISSUER_CODE.equals(icaoCode.asText());
                 }
             }
             // If Passport/ResidencePermit not exist then try for DL now
-            var dlField = credentialSubject.get(VC_DRIVING_PERMIT);
-            if (dlField instanceof JSONArray dlFieldArr) {
-                var issuer =
-                        ((JSONObject) dlFieldArr.get(ONLY))
-                                .getAsString(VC_DRIVING_LICENCE_ISSUED_BY);
-                if (issuer != null) {
-                    return DL_UK_ISSUER_LIST.contains(issuer);
-                }
+            var issuer =
+                    credentialSubject
+                            .path(VC_DRIVING_PERMIT)
+                            .path(ONLY)
+                            .path(VC_DRIVING_LICENCE_ISSUED_BY);
+            if (!issuer.isMissingNode()) {
+                return DL_UK_ISSUER_LIST.contains(issuer.asText());
             }
         }
         return null; // NOSONAR
@@ -247,13 +248,10 @@ public class VcHelper {
         }
     }
 
-    private static Object getPassportOrResPermitField(JSONObject credentialSubject) {
+    private static JsonNode getPassportOrResPermitField(JsonNode credentialSubject) {
         // If Passport not exist then try for ResidencePermit (BRP/BRC/FWP)
-        Object docField = credentialSubject.get(VC_PASSPORT);
-        if (Objects.isNull(docField)) {
-            docField = credentialSubject.get(VC_RESIDENCE_PERMIT);
-        }
-        return docField;
+        var passport = credentialSubject.path(VC_PASSPORT);
+        return passport.isMissingNode() ? credentialSubject.path(VC_RESIDENCE_PERMIT) : passport;
     }
 
     public static Vot getVcVot(VerifiableCredential vc) throws UnrecognisedVotException {

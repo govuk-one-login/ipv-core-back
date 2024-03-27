@@ -136,7 +136,7 @@ class TokenRequestValidatorTest {
                 exception
                         .getMessage()
                         .contains(
-                                "Issuer and subject in client JWT assertion must designate the same client identifier"));
+                                "Bad / expired JWT claims: Issuer and subject JWT claims don't match"));
     }
 
     @Test
@@ -159,7 +159,7 @@ class TokenRequestValidatorTest {
                 exception
                         .getMessage()
                         .contains(
-                                "Invalid JWT audience claim, expected [https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token]"));
+                                "Bad / expired JWT claims: JWT audience rejected: [NOT_THE_AUDIENCE_YOU_ARE_LOOKING_FOR]"));
     }
 
     @Test

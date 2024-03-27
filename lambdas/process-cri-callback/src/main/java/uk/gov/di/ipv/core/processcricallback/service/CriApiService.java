@@ -205,7 +205,7 @@ public class CriApiService {
                 var verifiableCredentialResponse =
                         VerifiableCredentialResponse.builder()
                                 .verifiableCredentials(
-                                        Collections.singletonList(response.getContent()))
+                                        Collections.singletonList(response.getBody()))
                                 .build();
                 LOGGER.info(
                         LogHelper.buildLogMessage(
@@ -215,7 +215,7 @@ public class CriApiService {
                     ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
                         getVerifiableCredentialResponseForApplicationJson(
-                                response.getContent().trim());
+                                response.getBody().trim());
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 "Verifiable Credential retrieved from json response."));
