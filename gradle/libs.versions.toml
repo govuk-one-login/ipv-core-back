@@ -1,5 +1,6 @@
 [versions]
-awsSdk = "1.12.665"
+awsSdk = "2.24.9"
+awsJavaSdk = "1.12.665"
 log4j = "2.23.0"
 mockito = "5.11.0"
 pact = "4.6.5"
@@ -7,13 +8,13 @@ powertools = "1.18.0"
 
 [libraries]
 aspectj = { module = "org.aspectj:aspectjrt", version = { strictly = "1.9.8" } }
-awsJavaSdkDynamodb = { module = "com.amazonaws:aws-java-sdk-dynamodb", version.ref = "awsSdk" }
-awsJavaSdkKms = { module = "com.amazonaws:aws-java-sdk-kms", version.ref = "awsSdk" }
-awsJavaSdkLambda = { module = "com.amazonaws:aws-java-sdk-lambda", version.ref = "awsSdk" }
-awsJavaSdkSqs = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "awsSdk" }
+awsJavaSdkDynamodb = { module = "com.amazonaws:aws-java-sdk-dynamodb", version.ref = "awsJavaSdk" }
+awsJavaSdkKms = { module = "com.amazonaws:aws-java-sdk-kms", version.ref = "awsJavaSdk" }
+awsJavaSdkLambda = { module = "com.amazonaws:aws-java-sdk-lambda", version.ref = "awsJavaSdk" }
+awsJavaSdkSqs = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "awsJavaSdk" }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
-dynamodbEnhanced = "software.amazon.awssdk:dynamodb-enhanced:2.24.9"
+dynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "awsSdk" }
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = "com.fasterxml.jackson.core:jackson-databind:2.15.3"
@@ -21,7 +22,7 @@ jacksonDataformatYaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yam
 jacksonDatatypeJsr = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
-kms = "software.amazon.awssdk:kms:2.24.9"
+kms = { module = "software.amazon.awssdk:kms", version.ref = "awsSdk" }
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4jApi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
