@@ -27,19 +27,19 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
-        assertFalse(auditExtensions.getSuccessful());
-        assertTrue(auditExtensions.getIsUkIssued());
-        assertEquals(58, auditExtensions.getAge());
-        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
-        assertEquals(2, auditExtensions.getEvidence().get(0).get("validityScore").asInt());
-        assertEquals(4, auditExtensions.getEvidence().get(0).get("strengthScore").asInt());
+        assertFalse(auditExtensions.successful());
+        assertTrue(auditExtensions.isUkIssued());
+        assertEquals(58, auditExtensions.age());
+        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.iss());
+        assertEquals(2, auditExtensions.evidence().get(0).get("validityScore").asInt());
+        assertEquals(4, auditExtensions.evidence().get(0).get("strengthScore").asInt());
         assertEquals(
                 "1c04edf0-a205-4585-8877-be6bd1776a39",
-                auditExtensions.getEvidence().get(0).get("txn").asText());
+                auditExtensions.evidence().get(0).get("txn").asText());
         assertEquals(
                 2,
                 auditExtensions
-                        .getEvidence()
+                        .evidence()
                         .get(0)
                         .get("checkDetails")
                         .findValues("dataCheck")

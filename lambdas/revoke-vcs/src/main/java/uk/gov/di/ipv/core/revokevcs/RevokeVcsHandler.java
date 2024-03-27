@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -149,8 +148,8 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void revoke(UserIdCriIdPair userIdCriIdPair)
-            throws SqsException, RevokeVcException, AuditExtensionException,
-                    UnrecognisedVotException, CredentialParseException {
+            throws SqsException, RevokeVcException, UnrecognisedVotException,
+                    CredentialParseException {
         // Read VC with userId and CriId
         var vcStoreItem =
                 vcDataStore.getItem(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
@@ -170,8 +169,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void sendVcRevokedAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws SqsException, AuditExtensionException, UnrecognisedVotException,
-                    CredentialParseException {
+            throws SqsException, UnrecognisedVotException, CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         AuditExtensionsVcEvidence auditExtensions =

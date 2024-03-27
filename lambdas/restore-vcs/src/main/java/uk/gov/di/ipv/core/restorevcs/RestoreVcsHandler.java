@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -152,8 +151,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
 
     private void restore(UserIdCriIdPair userIdCriIdPair)
             throws VerifiableCredentialException, CredentialAlreadyExistsException, SqsException,
-                    RestoreVcException, AuditExtensionException, UnrecognisedVotException,
-                    CredentialParseException {
+                    RestoreVcException, UnrecognisedVotException, CredentialParseException {
         // Read VC with userId and CriId
         var archivedVc =
                 archivedVcDataStore.getItem(
@@ -188,8 +186,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void sendVcRestoredAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws SqsException, AuditExtensionException, UnrecognisedVotException,
-                    CredentialParseException {
+            throws SqsException, UnrecognisedVotException, CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         AuditExtensionsVcEvidence auditExtensions =

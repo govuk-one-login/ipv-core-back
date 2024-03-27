@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
@@ -135,7 +134,10 @@ public class VcHelper {
                         .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
                         .path(VC_CREDENTIAL_SUBJECT);
         if (!credentialSubject.isMissingNode()) {
-            var passportOrResPermitField = getPassportOrResPermitField(credentialSubject);
+            var passportOrResPermitField =
+                    credentialSubject.hasNonNull(VC_PASSPORT)
+                            ? credentialSubject.path(VC_PASSPORT)
+                            : credentialSubject.path(VC_RESIDENCE_PERMIT);
             if (passportOrResPermitField.isArray()) {
                 var icaoCode = passportOrResPermitField.path(ONLY).path(VC_ICAO_ISSUER_CODE);
                 if (!icaoCode.isMissingNode()) {
@@ -210,12 +212,6 @@ public class VcHelper {
             LOGGER.info("Failed to parse dob value for the vc.");
             return null;
         }
-    }
-
-    private static JsonNode getPassportOrResPermitField(JsonNode credentialSubject) {
-        // If Passport not exist then try for ResidencePermit (BRP/BRC/FWP)
-        var passport = credentialSubject.path(VC_PASSPORT);
-        return passport.isMissingNode() ? credentialSubject.path(VC_RESIDENCE_PERMIT) : passport;
     }
 
     public static Vot getVcVot(VerifiableCredential vc) throws UnrecognisedVotException {

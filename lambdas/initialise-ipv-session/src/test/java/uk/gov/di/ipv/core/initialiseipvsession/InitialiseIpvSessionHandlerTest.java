@@ -582,7 +582,7 @@ class InitialiseIpvSessionHandlerTest {
             var expectedExtension =
                     new AuditExtensionsVcEvidence(
                             "https://orch.stubs.account.gov.uk/migration/v1",
-                            "[]",
+                            OBJECT_MAPPER.valueToTree(List.of()),
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,

@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -46,15 +45,12 @@ public class AuditExtensionsHelper {
     private AuditExtensionsHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            VerifiableCredential vc, Boolean isSuccessful)
-            throws AuditExtensionException, UnrecognisedVotException {
+            VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
         var jwtClaimsSet = vc.getClaimsSet();
-        var evidenceArray =
-                OBJECT_MAPPER.valueToTree(jwtClaimsSet.getClaim(VC_CLAIM)).path(VC_EVIDENCE);
 
         return new AuditExtensionsVcEvidence(
                 jwtClaimsSet.getIssuer(),
-                evidenceArray.toString(),
+                OBJECT_MAPPER.valueToTree(jwtClaimsSet.getClaim(VC_CLAIM)).path(VC_EVIDENCE),
                 isSuccessful,
                 VcHelper.getVcVot(vc),
                 VcHelper.checkIfDocUKIssuedForCredential(vc),
