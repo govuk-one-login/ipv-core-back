@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,25 +39,23 @@ public class StateMachine {
                     String.format("Unknown state provided to state machine: %s", startState));
         }
 
-        if (currentPage.isPresent() && !currentPage.get().equals("oauth")) {
-            if (state instanceof BasicState) {
+        if (state instanceof BasicState && currentPage.isPresent()) {
 
-                if (((BasicState) state).getResponse() instanceof PageStepResponse) {
+            if (((BasicState) state).getResponse() instanceof PageStepResponse) {
 
-                    String pageId =
-                            ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
+                String pageId = ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
 
-                    if (!currentPage.get().equals(pageId)) {
-                        return state;
-                    }
-                } else if (((BasicState) state).getResponse() instanceof CriStepResponse) {
+                if (!currentPage.get().equals(pageId)) {
                     return state;
-                } else {
-                    throw new UnknownStateException(
-                            String.format(
-                                    "Incompatible journey event (%s) found for user state (%s)",
-                                    event, startState));
                 }
+            } else if (((BasicState) state).getResponse() instanceof CriStepResponse) {
+                String criId = ((CriStepResponse) ((BasicState) state).getResponse()).getCriId();
+
+                if (!currentPage.get().equals(criId)) {
+                    return state;
+                }
+            } else if (((BasicState) state).getResponse() instanceof ProcessStepResponse) {
+                return state;
             }
         }
 
