@@ -33,7 +33,9 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionedState = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT);
+        State transitionedState =
+
+                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
     }
@@ -48,7 +50,7 @@ class StateMachineTest {
 
         assertThrows(
                 UnknownStateException.class,
-                () -> stateMachine.transition("UNKNOWN_STATE", "event", JOURNEY_CONTEXT));
+                () -> stateMachine.transition("UNKNOWN_STATE", "event", JOURNEY_CONTEXT, null));
     }
 
     @Test
@@ -68,7 +70,8 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionState = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT);
+        State transitionState =
+                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedNestedEndState, transitionState);
     }
@@ -88,7 +91,9 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         State transitionedState =
-                stateMachine.transition("START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT);
+                stateMachine.transition(
+
+                        "START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
     }

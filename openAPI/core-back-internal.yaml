@@ -67,7 +67,7 @@ paths:
             Fn::Sub: >
               {
               "input": "{
-              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))\",
+              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))?currentPage=$util.escapeJavaScript($input.params().querystring.get('currentPage'))\",
               \"ipAddress\":\"$util.escapeJavaScript($input.params('ip-address'))\",
               \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",
               \"ipvSessionId\":\"$util.escapeJavaScript($input.params('ipv-session-id'))\",
