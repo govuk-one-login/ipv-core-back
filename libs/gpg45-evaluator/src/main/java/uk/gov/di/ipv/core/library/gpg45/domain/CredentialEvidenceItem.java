@@ -1,8 +1,10 @@
 package uk.gov.di.ipv.core.library.gpg45.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 
@@ -11,8 +13,10 @@ import java.util.List;
 import java.util.function.Function;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CredentialEvidenceItem {
     public static final String TICF_EVIDENCE_TYPE = "RiskAssessment";
     private String credentialIss;
@@ -23,7 +27,7 @@ public class CredentialEvidenceItem {
     private Integer verificationScore;
     private List<CheckDetail> checkDetails;
     private List<CheckDetail> failedCheckDetails;
-    private final List<String> ci;
+    private List<String> ci;
     private String type;
 
     public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {

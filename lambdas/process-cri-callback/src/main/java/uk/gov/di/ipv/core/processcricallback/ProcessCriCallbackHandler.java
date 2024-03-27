@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -190,7 +189,7 @@ public class ProcessCriCallbackHandler
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (HttpResponseExceptionWithErrorBody e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
-        } catch (JsonProcessingException | SqsException | AuditExtensionException e) {
+        } catch (JsonProcessingException | SqsException e) {
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -255,8 +254,7 @@ public class ProcessCriCallbackHandler
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
                     CriApiException, VerifiableCredentialException, CiPostMitigationsException,
                     CiPutException, CredentialParseException, InvalidCriCallbackRequestException,
-                    AuditExtensionException, UnrecognisedVotException,
-                    MitigationRouteConfigNotFoundException {
+                    UnrecognisedVotException, MitigationRouteConfigNotFoundException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -313,7 +311,7 @@ public class ProcessCriCallbackHandler
             IpvSessionItem ipvSessionItem)
             throws VerifiableCredentialException, JsonProcessingException, SqsException,
                     InvalidCriCallbackRequestException, ParseException, CiPutException,
-                    CiPostMitigationsException, AuditExtensionException, UnrecognisedVotException {
+                    CiPostMitigationsException, UnrecognisedVotException, CredentialParseException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);

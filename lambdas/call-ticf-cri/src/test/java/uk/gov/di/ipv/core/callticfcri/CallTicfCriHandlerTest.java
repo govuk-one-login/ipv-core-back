@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -254,7 +253,6 @@ class CallTicfCriHandlerTest {
         List<Exception> exceptionsToThrow =
                 List.of(
                         new SqsException("Oops"),
-                        new AuditExtensionException(""),
                         new CiPutException("Oops"),
                         new CiPostMitigationsException("Oops"),
                         new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));

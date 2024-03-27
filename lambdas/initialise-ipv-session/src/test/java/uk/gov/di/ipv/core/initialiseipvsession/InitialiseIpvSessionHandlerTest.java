@@ -582,7 +582,7 @@ class InitialiseIpvSessionHandlerTest {
             var expectedExtension =
                     new AuditExtensionsVcEvidence(
                             "https://orch.stubs.account.gov.uk/migration/v1",
-                            "[]",
+                            OBJECT_MAPPER.valueToTree(List.of()),
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,
@@ -591,12 +591,14 @@ class InitialiseIpvSessionHandlerTest {
             var restricted =
                     (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
             assertEquals(
-                    "[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}]",
-                    restricted.name().toString());
-            assertEquals("[{\"value\":\"1965-07-08\"}]", restricted.birthDate().toString());
+                    "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
+                    OBJECT_MAPPER.writeValueAsString(restricted.name()));
+            assertEquals(
+                    "[{\"value\":\"1965-07-08\"}]",
+                    OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
             assertEquals(
                     "[{\"personalNumber\":\"AB123456C\"}]",
-                    restricted.socialSecurityRecord().toString());
+                    OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
 
             assertEquals(
                     AuditEventTypes.IPV_JOURNEY_START,

@@ -342,7 +342,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(List<VerifiableCredential> vcs)
-            throws UnknownEvidenceTypeException {
+            throws UnknownEvidenceTypeException, CredentialParseException {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
@@ -437,7 +437,7 @@ public class BuildCriOauthRequestHandler
                 LOGGER.error(LogHelper.buildErrorMessage("Failed to get Shared Attributes.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
-            } catch (ParseException e) {
+            } catch (ParseException | CredentialParseException e) {
                 LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);

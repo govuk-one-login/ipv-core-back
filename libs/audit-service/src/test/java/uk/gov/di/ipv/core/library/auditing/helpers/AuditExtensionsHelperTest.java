@@ -27,19 +27,19 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
-        assertFalse(auditExtensions.getSuccessful());
-        assertTrue(auditExtensions.getIsUkIssued());
-        assertEquals(58, auditExtensions.getAge());
-        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.getIss());
-        assertEquals(2, auditExtensions.getEvidence().get(0).get("validityScore").asInt());
-        assertEquals(4, auditExtensions.getEvidence().get(0).get("strengthScore").asInt());
+        assertFalse(auditExtensions.successful());
+        assertTrue(auditExtensions.isUkIssued());
+        assertEquals(58, auditExtensions.age());
+        assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.iss());
+        assertEquals(2, auditExtensions.evidence().get(0).get("validityScore").asInt());
+        assertEquals(4, auditExtensions.evidence().get(0).get("strengthScore").asInt());
         assertEquals(
                 "1c04edf0-a205-4585-8877-be6bd1776a39",
-                auditExtensions.getEvidence().get(0).get("txn").asText());
+                auditExtensions.evidence().get(0).get("txn").asText());
         assertEquals(
                 2,
                 auditExtensions
-                        .getEvidence()
+                        .evidence()
                         .get(0)
                         .get("checkDetails")
                         .findValues("dataCheck")
@@ -50,7 +50,7 @@ class AuditExtensionsHelperTest {
     void shouldGetPassportRestrictedDataForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":\"2030-01-01\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -58,7 +58,7 @@ class AuditExtensionsHelperTest {
     void shouldGetDLRestrictedDataForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(vcDrivingPermitNonDcmaw());
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"Alice\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Parker\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":\"2032-02-02\"}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -66,7 +66,7 @@ class AuditExtensionsHelperTest {
     void shouldGetRestrictedDataWithoutDocForAudit() throws Exception {
         var restrictedData = getRestrictedAuditDataForF2F(vcAddressTwo());
         assertEquals(
-                "{\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Alice\"},{\"type\":\"GivenName\",\"value\":\"Jane\"},{\"type\":\"FamilyName\",\"value\":\"Parker\"}]}],\"docExpiryDate\":null}",
+                "{\"name\":[{\"nameParts\":[{\"value\":\"Alice\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Parker\",\"type\":\"FamilyName\"}]}],\"docExpiryDate\":null}",
                 OBJECT_MAPPER.writeValueAsString(restrictedData));
     }
 
@@ -99,11 +99,13 @@ class AuditExtensionsHelperTest {
         var restricted = getRestrictedAuditDataForInheritedIdentity(vcHmrcMigration());
 
         assertEquals(
-                "[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"KENNETH\"},{\"type\":\"FamilyName\",\"value\":\"DECERQUEIRA\"}]}]",
-                restricted.name().toString());
-        assertEquals("[{\"value\":\"1965-07-08\"}]", restricted.birthDate().toString());
+                "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
+                OBJECT_MAPPER.writeValueAsString(restricted.name()));
+        assertEquals(
+                "[{\"value\":\"1965-07-08\"}]",
+                OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
         assertEquals(
                 "[{\"personalNumber\":\"AB123456C\"}]",
-                restricted.socialSecurityRecord().toString());
+                OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
     }
 }

@@ -164,7 +164,7 @@ public class EvaluateGpg45ScoresHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress)
-            throws UnknownEvidenceTypeException, SqsException {
+            throws UnknownEvidenceTypeException, SqsException, CredentialParseException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
             Optional<Gpg45Profile> matchedProfile =

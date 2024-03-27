@@ -19,8 +19,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -123,8 +123,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiRetrievalException
                 | ConfigException
                 | UnrecognisedVotException
-                | AuditExtensionException
-                | MitigationRouteConfigNotFoundException e) {
+                | MitigationRouteConfigNotFoundException
+                | CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -142,8 +142,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    ConfigException, AuditExtensionException, UnrecognisedVotException,
-                    MitigationRouteConfigNotFoundException {
+                    ConfigException, UnrecognisedVotException,
+                    MitigationRouteConfigNotFoundException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(

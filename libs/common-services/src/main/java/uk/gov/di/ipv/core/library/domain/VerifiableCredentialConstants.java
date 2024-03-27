@@ -8,21 +8,22 @@ public class VerifiableCredentialConstants {
         throw new IllegalStateException("Utility class");
     }
 
+    public static final String CLAIMS_CLAIM = "claims";
     public static final String CRI_STUB_CHECK_EVIDENCE_TYPE = "CriStubCheck";
     public static final String DI_CONTEXT =
             "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld";
     public static final String IDENTITY_CHECK_CREDENTIAL_TYPE = "IdentityCheckCredential";
     public static final String IDENTITY_CHECK_EVIDENCE_TYPE = "IdentityCheck";
-    public static final String SECURITY_CHECK_CREDENTIAL_TYPE = "SecurityCheckCredential";
     public static final String RISK_ASSESSMENT_CREDENTIAL_TYPE = "RiskAssessmentCredential";
     public static final String RISK_ASSESSMENT_EVIDENCE_TYPE = "RiskAssessment";
+    public static final String SECURITY_CHECK_CREDENTIAL_TYPE = "SecurityCheckCredential";
     public static final String VC_ATTR_VALUE_NAME = "value";
     public static final String VC_BIRTH_DATE = "birthDate";
     public static final String VC_CLAIM = "vc";
     public static final String VC_CONTEXT = "@context";
     public static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
-    public static final String VC_DRIVING_PERMIT = "drivingPermit";
     public static final String VC_DRIVING_LICENCE_ISSUED_BY = "issuedBy";
+    public static final String VC_DRIVING_PERMIT = "drivingPermit";
     public static final String VC_EVIDENCE = "evidence";
     public static final String VC_EVIDENCE_STRENGTH = "strengthScore";
     public static final String VC_EVIDENCE_TXN = "txn";

@@ -48,7 +48,8 @@ public class KmsRsaDecrypter implements JWEDecrypter {
             Base64URL encryptedKey,
             Base64URL iv,
             Base64URL cipherText,
-            Base64URL authTag)
+            Base64URL authTag,
+            byte[] aad)
             throws JOSEException {
         if (Objects.isNull(encryptedKey)) {
             throw new JOSEException("Missing JWE encrypted key");

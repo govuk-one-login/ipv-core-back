@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -317,10 +316,7 @@ public class InitialiseIpvSessionHandler
             if (!isHmrcInheritedIdentityWithStrongerVotPresent(inheritedIdentityVc, userId)) {
                 storeHmrcInheritedIdentity(claimsSet, ipvSessionItem, inheritedIdentityVc);
             }
-        } catch (VerifiableCredentialException
-                | ParseException
-                | UnrecognisedVotException
-                | AuditExtensionException e) {
+        } catch (VerifiableCredentialException | ParseException | UnrecognisedVotException e) {
             throw new RecoverableJarValidationException(
                     INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
                             "Inherited identity JWT failed to validate"),
@@ -423,8 +419,7 @@ public class InitialiseIpvSessionHandler
 
     private void sendInheritedIdentityReceivedAuditEvent(
             VerifiableCredential inheritedIdentityVc, AuditEventUser auditEventUser)
-            throws SqsException, AuditExtensionException, CredentialParseException,
-                    UnrecognisedVotException {
+            throws SqsException, CredentialParseException, UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
                     new AuditEvent(
