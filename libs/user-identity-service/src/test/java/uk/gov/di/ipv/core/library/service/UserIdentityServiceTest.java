@@ -1471,32 +1471,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialsWithTicfFromDataStoreForOperationalProfile() throws Exception {
-        var ticfVc = vcTicf();
-        var hmrcMigrationVc = vcHmrcMigration();
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcExperianFraudScoreOne(),
-                        ticfVc,
-                        hmrcMigrationVc);
-
-        var credentials =
-                userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.PCL200, emptyContraIndicators);
-
-        assertEquals(2, credentials.getVcs().size());
-        assertEquals(ticfVc.getVcString(), credentials.getVcs().get(0));
-        assertEquals(hmrcMigrationVc.getVcString(), credentials.getVcs().get(1));
-        assertEquals("test-sub", credentials.getSub());
-
-        IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
-        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
-    }
-
-    @Test
     void shouldReturnCredentialsFromDataStoreForOperationalProfile() throws Exception {
         var hmrcVc = vcHmrcMigration();
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne(), hmrcVc);

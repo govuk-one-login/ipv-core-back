@@ -118,10 +118,9 @@ class VcHelperTest {
                 List.of(
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
-                        vcTicf(),
                         vcHmrcMigration());
         assertEquals(
-                2, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
+                1, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
     }
 
     @Test
