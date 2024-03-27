@@ -1,6 +1,7 @@
 [versions]
 awsSdk = "2.25.18"
 awsJavaSdk = "1.12.665"
+jackson = "2.15.3"
 log4j = "2.23.0"
 mockito = "5.11.0"
 pact = "4.6.5"
@@ -17,9 +18,9 @@ awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
 dynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "awsSdk" }
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
-jacksonDatabind = "com.fasterxml.jackson.core:jackson-databind:2.15.3"
-jacksonDataformatYaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3"
-jacksonDatatypeJsr = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3"
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
 kms = { module = "software.amazon.awssdk:kms", version.ref = "awsSdk" }
