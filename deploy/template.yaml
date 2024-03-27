@@ -1209,7 +1209,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCorePrivateAPI
-            Path: /journey/{journeyStep}
+            Path: /journey/{journeyStep+}
             Method: POST
       Logging:
         Destinations:
