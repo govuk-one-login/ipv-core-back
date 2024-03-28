@@ -172,8 +172,7 @@ public class CredentialEvidenceItem {
         DCMAW(null, null),
         F2F(null, null),
         NINO(null, null),
-        FRAUD_WITH_ACTIVITY(null, null),
-        TICF(null, null);
+        FRAUD_WITH_ACTIVITY(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;
