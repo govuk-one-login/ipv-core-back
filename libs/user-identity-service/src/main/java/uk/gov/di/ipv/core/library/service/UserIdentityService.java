@@ -53,7 +53,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -73,9 +72,9 @@ public class UserIdentityService {
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
 
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION =
-            List.of(ADDRESS_CRI, TICF_CRI);
+            List.of(ADDRESS_CRI);
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
-            List.of(ADDRESS_CRI, BAV_CRI, TICF_CRI);
+            List.of(ADDRESS_CRI, BAV_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String ADDRESS_PROPERTY_NAME = "address";
