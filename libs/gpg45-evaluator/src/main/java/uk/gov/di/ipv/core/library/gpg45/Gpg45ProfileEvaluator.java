@@ -191,8 +191,7 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.FRAUD_WITH_ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.TICF, new ArrayList<>());
+                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>());
 
         for (var vc : vcs) {
             var credentialEvidenceList = getCredentialEvidence(vc);
