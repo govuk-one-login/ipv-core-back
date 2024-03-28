@@ -9,7 +9,6 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -61,7 +60,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -150,18 +148,19 @@ public class BuildCriOauthRequestHandler
             configService.setFeatureSet(getFeatureSet(input));
 
             URI journeyUri = URI.create(input.getJourney());
-            String journeyPath = journeyUri.getPath();
-            String criContext = getJourneyParameter(journeyUri, CONTEXT);
-            String criScope = getJourneyParameter(journeyUri, SCOPE);
 
-            var errorResponse = validate(journeyPath);
-            if (errorResponse.isPresent()) {
+            var criId = getCriIdFromJourney(journeyUri.getPath());
+            if (criId == null) {
                 return new JourneyErrorResponse(
-                                JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get())
+                                JOURNEY_ERROR_PATH,
+                                HttpStatus.SC_BAD_REQUEST,
+                                ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
+            LogHelper.attachCriIdToLogs(criId);
 
-            String criId = getCriIdFromJourney(journeyPath);
+            String criContext = getJourneyParameter(journeyUri, CONTEXT);
+            String criScope = getJourneyParameter(journeyUri, SCOPE);
             String connection = configService.getActiveConnection(criId);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, criId);
@@ -279,12 +278,9 @@ public class BuildCriOauthRequestHandler
         }
     }
 
-    private String getCriIdFromJourney(String journey) {
-        Matcher matcher = LAST_SEGMENT_PATTERN.matcher(journey);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return journey;
+    private String getCriIdFromJourney(String journeyPath) {
+        Matcher matcher = LAST_SEGMENT_PATTERN.matcher(journeyPath);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     private CriResponse getCriResponse(
@@ -382,15 +378,6 @@ public class BuildCriOauthRequestHandler
                 .stream()
                 .filter(vc -> !vc.getCriId().equals(TICF_CRI))
                 .toList();
-    }
-
-    @Tracing
-    private Optional<ErrorResponse> validate(String journey) {
-        if (StringUtils.isBlank(journey)) {
-            return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-        }
-        LogHelper.attachCriIdToLogs(journey);
-        return Optional.empty();
     }
 
     @Tracing
