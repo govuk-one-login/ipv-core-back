@@ -18,7 +18,6 @@ import java.util.function.Function;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CredentialEvidenceItem {
-    public static final String TICF_EVIDENCE_TYPE = "RiskAssessment";
     private String credentialIss;
     private Integer activityHistoryScore;
     private Integer identityFraudScore;
@@ -83,8 +82,6 @@ public class CredentialEvidenceItem {
             return EvidenceType.FRAUD_WITH_ACTIVITY;
         } else if (isNino()) {
             return EvidenceType.NINO;
-        } else if (isTicf()) {
-            return EvidenceType.TICF;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -162,10 +159,6 @@ public class CredentialEvidenceItem {
                 && identityFraudScore == null
                 && verificationScore == null
                 && (checkDetails != null || failedCheckDetails != null);
-    }
-
-    private boolean isTicf() {
-        return type != null && type.equals(TICF_EVIDENCE_TYPE);
     }
 
     @Getter

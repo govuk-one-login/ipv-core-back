@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.TICF_EVIDENCE_TYPE;
 
 class CredentialEvidenceItemTest {
     @ParameterizedTest
@@ -370,16 +369,6 @@ class CredentialEvidenceItemTest {
         } catch (UnknownEvidenceTypeException exception) {
             assertThrows(UnknownEvidenceTypeException.class, item::getEvidenceType);
         }
-    }
-
-    @Test
-    void shouldGetTypeTicf() throws UnknownEvidenceTypeException {
-        CredentialEvidenceItem credentialEvidenceItem1 = CredentialEvidenceItem.builder().build();
-        assertThrows(UnknownEvidenceTypeException.class, credentialEvidenceItem1::getEvidenceType);
-
-        CredentialEvidenceItem credentialEvidenceItem2 =
-                CredentialEvidenceItem.builder().type(TICF_EVIDENCE_TYPE).build();
-        assertEquals(EvidenceType.TICF, credentialEvidenceItem2.getEvidenceType());
     }
 
     @Test

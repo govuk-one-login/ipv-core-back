@@ -37,8 +37,6 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
-import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -88,7 +86,6 @@ class UserIdentityServiceTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static ECDSASigner jwtSigner;
     @Mock private ConfigService mockConfigService;
-    @Mock private DataStore<VcStoreItem> mockDataStore;
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().usersContraIndicators(List.of()).build();
     private UserIdentityService userIdentityService;
@@ -191,8 +188,7 @@ class UserIdentityServiceTest {
                                 USER_ID_1,
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        vcTicf());
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -218,8 +214,7 @@ class UserIdentityServiceTest {
                                 USER_ID_1,
                                 EXPERIAN_FRAUD_CRI,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        vcTicf());
+                                        "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
 
         // Act & Assert
@@ -724,7 +719,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingNameProperty() throws CredentialParseException {
+    void shouldThrowExceptionWhenMissingNameProperty() {
         // Arrange
         var vcs =
                 List.of(
@@ -753,7 +748,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingBirthDateProperty() throws CredentialParseException {
+    void shouldThrowExceptionWhenMissingBirthDateProperty() {
         // Arrange
         var vcs =
                 List.of(
@@ -1386,8 +1381,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence()
-            throws CredentialParseException {
+    void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
         var vcs = List.of(M1B_DCMAW_VC);
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
@@ -1400,8 +1394,7 @@ class UserIdentityServiceTest {
 
     @Test
     void
-            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse()
-                    throws CredentialParseException {
+            getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
         var vcs = List.of(M1B_DCMAW_VC);
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
@@ -1413,8 +1406,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllValidEvidence()
-            throws CredentialParseException {
+    void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
         var vcs = List.of(M1B_DCMAW_VC, vcF2fM1a());
 
@@ -1423,8 +1415,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence()
-            throws CredentialParseException {
+    void getCredentialsWithMultipleCredentialsAndAllInValidEvidence() {
         // Arrange
         var vcs = List.of(vcExperianFraudScoreOne(), vcExperianFraudScoreTwo());
 
@@ -1433,8 +1424,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence()
-            throws CredentialParseException {
+    void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         // Arrange
         var vcs = List.of(M1B_DCMAW_VC, vcExperianFraudScoreTwo());
 
@@ -1509,7 +1499,6 @@ class UserIdentityServiceTest {
                                 BAV_CRI,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        vcTicf(),
                         vcHmrcMigration());
         mockCredentialIssuerConfig();
 
@@ -1534,8 +1523,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent()
-            throws CredentialParseException {
+    void findIdentityThrowsHttpResponseExceptionWithErrorBodyWhenNoNamePresent() {
         var vcs = List.of(vcExperianFraudMissingName());
         assertThrows(
                 HttpResponseExceptionWithErrorBody.class,
