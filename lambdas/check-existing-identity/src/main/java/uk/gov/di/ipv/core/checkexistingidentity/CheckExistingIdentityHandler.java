@@ -228,7 +228,7 @@ public class CheckExistingIdentityHandler
 
             if (reproveIdentity.orElse(false)) {
                 return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
-            } else if (configService.enabled(RESET_IDENTITY.getName())) {
+            } else if (configService.enabled(RESET_IDENTITY)) {
                 return buildForceGpg45ResetResponse(ciScoringCheckResponse.orElse(null));
             }
 
