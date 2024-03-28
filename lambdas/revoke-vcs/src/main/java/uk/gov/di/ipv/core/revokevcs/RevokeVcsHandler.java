@@ -64,22 +64,19 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     @SuppressWarnings("unused") // Used by AWS
     public RevokeVcsHandler() {
         this.configService = new ConfigService();
-        boolean isRunningLocally = this.configService.isRunningLocally();
         this.vcDataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
         this.archivedVcDataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
     }

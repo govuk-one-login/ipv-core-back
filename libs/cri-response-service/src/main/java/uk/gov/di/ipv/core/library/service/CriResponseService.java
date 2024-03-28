@@ -13,24 +13,19 @@ public class CriResponseService {
 
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ERROR = "error";
-    private final ConfigService configService;
     private final DataStore<CriResponseItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
     public CriResponseService(ConfigService configService) {
-        this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(CRI_RESPONSE_TABLE_NAME),
+                        configService.getEnvironmentVariable(CRI_RESPONSE_TABLE_NAME),
                         CriResponseItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
     }
 
-    public CriResponseService(ConfigService configService, DataStore<CriResponseItem> dataStore) {
-        this.configService = configService;
+    public CriResponseService(DataStore<CriResponseItem> dataStore) {
         this.dataStore = dataStore;
     }
 
