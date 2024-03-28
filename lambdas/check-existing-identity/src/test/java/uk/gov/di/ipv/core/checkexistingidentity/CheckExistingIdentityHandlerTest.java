@@ -113,7 +113,6 @@ class CheckExistingIdentityHandlerTest {
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static List<VerifiableCredential> VCS_FROM_STORE;
-    private static final String TICF_CRI = "ticf";
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
@@ -257,7 +256,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
             ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                     ArgumentCaptor.forClass(AuditEvent.class);
             verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
@@ -1113,7 +1111,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
         assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
         InOrder inOrder = inOrder(mockVerifiableCredentialService);
-        inOrder.verify(mockVerifiableCredentialService).deleteVcStoreItem(TEST_USER_ID, TICF_CRI);
         inOrder.verify(mockVerifiableCredentialService, never())
                 .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
     }

@@ -67,7 +67,6 @@ import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -376,7 +375,6 @@ public class BuildCriOauthRequestHandler
         return VcHelper.filterVCBasedOnProfileType(
                         verifiableCredentialService.getVcs(userId), ProfileType.GPG45)
                 .stream()
-                .filter(vc -> !vc.getCriId().equals(TICF_CRI))
                 .toList();
     }
 

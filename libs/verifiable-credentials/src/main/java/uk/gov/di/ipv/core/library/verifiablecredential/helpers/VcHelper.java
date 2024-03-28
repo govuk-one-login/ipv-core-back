@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45F2fValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45NinoValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45TicfValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -92,12 +90,7 @@ public class VcHelper {
         if (profileType.equals(ProfileType.GPG45)) {
             return vcs.stream().filter(vc -> !OPERATIONAL_CRIS.contains(vc.getCriId())).toList();
         } else {
-            return vcs.stream()
-                    .filter(
-                            vc ->
-                                    (OPERATIONAL_CRIS.contains(vc.getCriId())
-                                            || vc.getCriId().equals(TICF_CRI)))
-                    .toList();
+            return vcs.stream().filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCriId()))).toList();
         }
     }
 
@@ -190,9 +183,6 @@ public class VcHelper {
                     }
                     case NINO -> {
                         return Gpg45NinoValidator.isSuccessful(item);
-                    }
-                    case TICF -> {
-                        return Gpg45TicfValidator.isSuccessful(item);
                     }
                     default -> LOGGER.info("Unexpected evidence type: {}", item.getEvidenceType());
                 }
