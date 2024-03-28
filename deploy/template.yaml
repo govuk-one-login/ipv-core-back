@@ -2543,6 +2543,34 @@ Resources:
         SSEType: KMS
         KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
+  SessionCredentialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table
+      TableName: !Sub "session-credentials-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
+      AttributeDefinitions:
+        - AttributeName: "ipvSessionId"
+          AttributeType: "S"
+        - AttributeName: "sortKey"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ipvSessionId"
+          KeyType: "HASH"
+        - AttributeName: "sortKey"
+          KeyType: "RANGE"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+
   RevokedUserCredentialsTable:
     Type: AWS::DynamoDB::Table
     Properties:
