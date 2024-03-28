@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(SystemStubsExtension.class)
 class BasicEventTest {
     @Mock private ConfigService mockConfigService;
 

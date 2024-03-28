@@ -18,7 +18,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 @ExtendWith(MockitoExtension.class)
 class CriOAuthSessionServiceTest {
     @Mock private DataStore<CriOAuthSessionItem> mockDataStore;
-
     @InjectMocks private CriOAuthSessionService criOauthSessionService;
 
     @Test

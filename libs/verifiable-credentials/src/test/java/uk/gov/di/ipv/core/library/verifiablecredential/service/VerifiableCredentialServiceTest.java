@@ -7,10 +7,10 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -51,14 +50,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
     @Mock private DataStore<VcStoreItem> mockDataStore;
-    @Mock private ConfigService mockConfigService;
-    private VerifiableCredentialService verifiableCredentialService;
-
-    @BeforeEach
-    void setUp() {
-        verifiableCredentialService =
-                new VerifiableCredentialService(mockDataStore, mockConfigService);
-    }
+    @InjectMocks private VerifiableCredentialService verifiableCredentialService;
 
     @Test
     void expectedSuccessWhenSaveCredentials() throws Exception {

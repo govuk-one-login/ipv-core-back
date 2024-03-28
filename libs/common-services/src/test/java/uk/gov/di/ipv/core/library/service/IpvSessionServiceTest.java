@@ -31,9 +31,6 @@ class IpvSessionServiceTest {
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
     @Mock private DataStore<IpvSessionItem> mockDataStore;
-
-    @Mock private ConfigService mockConfigService;
-
     @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test

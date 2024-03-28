@@ -12,26 +12,20 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_AUTH_
 
 public class ClientAuthJwtIdService {
     private final DataStore<ClientAuthJwtIdItem> dataStore;
-    private final ConfigService configService;
+
+    // For tests
+    public ClientAuthJwtIdService(DataStore<ClientAuthJwtIdItem> dataStore) {
+        this.dataStore = dataStore;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public ClientAuthJwtIdService(ConfigService configService) {
-        this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(CLIENT_AUTH_JWT_IDS_TABLE_NAME),
+                        configService.getEnvironmentVariable(CLIENT_AUTH_JWT_IDS_TABLE_NAME),
                         ClientAuthJwtIdItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
-    }
-
-    // For tests
-    public ClientAuthJwtIdService(
-            ConfigService configService, DataStore<ClientAuthJwtIdItem> dataStore) {
-        this.configService = configService;
-        this.dataStore = dataStore;
     }
 
     public ClientAuthJwtIdItem getClientAuthJwtIdItem(String jwtId) {
