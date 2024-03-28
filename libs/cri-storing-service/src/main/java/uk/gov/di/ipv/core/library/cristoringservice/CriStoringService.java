@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class CriStoringService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final CriResponseService criResponseService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
     private final AuditService auditService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
@@ -53,11 +55,13 @@ public class CriStoringService {
             AuditService auditService,
             CriResponseService criResponseService,
             VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService,
             CiMitService ciMitService) {
         this.configService = configService;
         this.auditService = auditService;
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         this.ciMitService = ciMitService;
         VcHelper.setConfigService(configService);
     }
@@ -124,6 +128,8 @@ public class CriStoringService {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
             } else {
                 verifiableCredentialService.persistUserCredentials(vc);
+                sessionCredentialsService.persistCredential(
+                        vc, ipvSessionItem.getIpvSessionId(), true);
                 ipvSessionItem.addVcReceivedThisSession(vc);
             }
         }
