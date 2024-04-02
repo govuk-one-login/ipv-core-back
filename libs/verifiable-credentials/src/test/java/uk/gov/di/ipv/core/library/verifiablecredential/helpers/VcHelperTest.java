@@ -224,7 +224,7 @@ class VcHelperTest {
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
-        boolean result = VcHelper.checkIfExpiredVC(vc);
+        boolean result = VcHelper.isExpiredFraudVc(vc);
 
         // Assert
         assertTrue(result);
@@ -238,7 +238,7 @@ class VcHelperTest {
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
-        boolean result = VcHelper.checkIfExpiredVC(vc);
+        boolean result = VcHelper.isExpiredFraudVc(vc);
 
         // Assert
         assertFalse(result);
