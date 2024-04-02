@@ -1681,6 +1681,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1719,6 +1720,8 @@ Resources:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
