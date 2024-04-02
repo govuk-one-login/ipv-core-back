@@ -56,7 +56,7 @@ CHECK_EXISTING_IDENTITY:
       targetState: ENHANCED_VERIFICATION_F2F_FAIL
     repeat-fraud-check:
       targetJourney: REPEAT_FRAUD_CHECK
-      targetState: CONFIRM_NAME_DOB
+      targetState: START
 
 RESET_IDENTITY:
   response:
