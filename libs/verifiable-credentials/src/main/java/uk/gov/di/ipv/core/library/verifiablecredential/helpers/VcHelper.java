@@ -108,25 +108,32 @@ public class VcHelper {
 
     private static boolean matchesEvidenceType(
             VerifiableCredential vc, List<EvidenceType> evidenceTypes) {
-        JSONObject vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
-        JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+        var evidenceArray =
+                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
         if (evidenceArray == null || evidenceArray.isEmpty()) {
             return false;
         }
-        List<CredentialEvidenceItem> credentialEvidenceList =
-                gson.fromJson(
-                        evidenceArray.toJSONString(),
-                        new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+
         try {
-            for (CredentialEvidenceItem item : credentialEvidenceList) {
-                if (evidenceTypes.contains(item.getEvidenceType())) {
-                    return true;
-                }
-            }
-        } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error("Unknown evidence type encountered: {}", e.getMessage());
-            return false;
+            List<CredentialEvidenceItem> credentialEvidenceList =
+                    OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
+            return credentialEvidenceList.stream()
+                    .anyMatch(
+                            credentialEvidenceItem -> {
+                                try {
+                                    return evidenceTypes.contains(
+                                            credentialEvidenceItem.getEvidenceType());
+                                } catch (UnknownEvidenceTypeException e) {
+                                    LOGGER.error(
+                                            "Unknown evidence type found in VC: {}",
+                                            vc.getVcString());
+                                    return false;
+                                }
+                            });
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to parse evidence array for VC: {}", vc.getVcString());
         }
+
         return false;
     }
 
