@@ -458,12 +458,10 @@ public class CheckExistingIdentityHandler
         var fraudVCs =
                 VcHelper.filterVCBasedOnEvidenceType(
                         vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
-        var fraudVC = fraudVCs.stream().findFirst();
-        if (fraudVC.isPresent()) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Fraud VC found, checking if it is valid for GPG45 evaluation."));
-            return VcHelper.isExpiredFraudVc(fraudVC.get());
+        for (var vc : fraudVCs) {
+            if (VcHelper.isExpiredFraudVc(vc)) {
+                return true;
+            }
         }
         return false;
     }
