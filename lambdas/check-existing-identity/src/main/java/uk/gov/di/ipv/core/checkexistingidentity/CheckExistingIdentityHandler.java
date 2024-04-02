@@ -447,7 +447,7 @@ public class CheckExistingIdentityHandler
         }
 
         // check the result of 6MFC and return the appropriate journey
-        if (configService.enabled(REPEAT_FRAUD_CHECK.getName()) && checkIfExpiredFraudVc(vcs)) {
+        if (configService.enabled(REPEAT_FRAUD_CHECK.getName()) && hasExpiredFraudVc(vcs)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
@@ -457,17 +457,16 @@ public class CheckExistingIdentityHandler
         return JOURNEY_REUSE;
     }
 
-    private boolean checkIfExpiredFraudVc(List<VerifiableCredential> vcs) {
+    private boolean hasExpiredFraudVc(List<VerifiableCredential> vcs) {
         var fraudVCs =
                 VcHelper.filterVCBasedOnEvidenceType(
                         vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
-        // validate that it is not empty returns one and only one fraud VC
         var fraudVC = fraudVCs.stream().findFirst();
         if (fraudVC.isPresent()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Fraud VC found, checking if it is valid for GPG45 evaluation."));
-            return VcHelper.checkIfExpiredVC(fraudVC.get());
+            return VcHelper.isExpiredFraudVc(fraudVC.get());
         }
         return false;
     }

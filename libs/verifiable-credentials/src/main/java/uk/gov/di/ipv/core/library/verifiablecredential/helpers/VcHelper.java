@@ -26,18 +26,14 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
@@ -269,23 +265,17 @@ public class VcHelper {
         }
     }
 
-    public static boolean checkIfExpiredVC(VerifiableCredential vc) {
+    public static boolean isExpiredFraudVc(VerifiableCredential vc) {
         var jwtClaimsSet = vc.getClaimsSet();
-        var nbf = Optional.ofNullable(jwtClaimsSet.getClaim(NOT_BEFORE));
-        if (nbf.isEmpty()) {
+        var nbfClaim = jwtClaimsSet.getNotBeforeTime();
+        var nbf = nbfClaim.toInstant();
+        if (nbf == null) {
             LOGGER.error("VC does not have a nbf claim");
-            return false;
+            return true;
         }
-
         var expiryPeriod =
                 Integer.parseInt(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
-        var nbfValue = nbf.get().toString();
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(nbfValue, formatter);
-        Instant instant = zonedDateTime.toInstant();
-        var expiryTime = instant.plusSeconds((long) expiryPeriod * 3600);
-        var currentTime = Instant.now();
-        return expiryTime.isBefore(currentTime);
+        var now = Instant.now();
+        return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }
 }
