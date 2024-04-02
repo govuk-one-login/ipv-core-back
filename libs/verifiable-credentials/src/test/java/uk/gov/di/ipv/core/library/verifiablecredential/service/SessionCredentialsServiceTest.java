@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +26,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -36,6 +39,7 @@ class SessionCredentialsServiceTest {
     private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
     private static final VerifiableCredential CREDENTIAL_3 = vcNinoSuccessful();
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
+    @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
     @InjectMocks private SessionCredentialsService sessionCredentialService;
 
@@ -88,5 +92,28 @@ class SessionCredentialsServiceTest {
                                     createdItems.get(i).getCredential());
                             assertFalse(createdItems.get(i).isReceivedThisSession());
                         });
+    }
+
+    @Test
+    void deleteSessionCredentialsShouldClearAllCredentialsForCurrentSession() throws Exception {
+        sessionCredentialService.deleteSessionCredentials(SESSION_ID);
+
+        verify(mockDataStore).delete(ipvSessionIdArgumentCaptor.capture());
+
+        assertEquals(SESSION_ID, ipvSessionIdArgumentCaptor.getValue());
+    }
+
+    @Test
+    void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting() {
+        when(mockDataStore.delete(SESSION_ID)).thenThrow(new IllegalStateException());
+
+        var verifiableCredentialException =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> sessionCredentialService.deleteSessionCredentials(SESSION_ID));
+
+        assertEquals(
+                HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getHttpStatusCode());
+        assertEquals(FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
     }
 }
