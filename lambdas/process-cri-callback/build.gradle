@@ -52,6 +52,13 @@ test {
 	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	exclude 'uk/gov/di/ipv/core/process-cri-callback/pact/**'
+}
+
+task contractTests (type: Test) {
+	useJUnitPlatform()
+	include 'uk/gov/di/ipv/core/processcricallback/pact/**'
+	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
 }
 
 jacocoTestReport {
