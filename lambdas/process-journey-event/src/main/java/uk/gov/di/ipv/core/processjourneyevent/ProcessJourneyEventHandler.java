@@ -39,6 +39,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
@@ -59,6 +60,9 @@ public class ProcessJourneyEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
+    private static final String END_SESSION_EVENT = "build-client-oauth-response";
+    private static final StepResponse END_SESSION_RESPONSE =
+            new ProcessStepResponse("build-client-oauth-response", null, null);
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -103,6 +107,12 @@ public class ProcessJourneyEventHandler
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
+
+            // Handle route direct back to RP (used for recoverable timeouts)
+            if (journeyEvent.equals(END_SESSION_EVENT)) {
+                LOGGER.warn(LogHelper.buildLogMessage("Returning end session response directly"));
+                return END_SESSION_RESPONSE.value();
+            }
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
