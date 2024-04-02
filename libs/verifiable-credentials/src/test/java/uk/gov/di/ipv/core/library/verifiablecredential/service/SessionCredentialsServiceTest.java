@@ -13,26 +13,35 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 
 @ExtendWith(MockitoExtension.class)
 class SessionCredentialsServiceTest {
-    public static final String SESSION_ID = "ipv-session-id";
-    public static final VerifiableCredential CREDENTIAL = vcDrivingPermit();
+    private static final String SESSION_ID = "ipv-session-id";
+    private static final VerifiableCredential CREDENTIAL_1 = vcDrivingPermit();
+    private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
+    private static final VerifiableCredential CREDENTIAL_3 = vcNinoSuccessful();
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
     @InjectMocks private SessionCredentialsService sessionCredentialService;
 
     @Test
     void persistCredentialShouldCreateItemInDataStore() throws Exception {
-        sessionCredentialService.persistCredential(CREDENTIAL, SESSION_ID, true);
+        sessionCredentialService.persistCredential(CREDENTIAL_1, SESSION_ID, true);
 
         verify(mockDataStore)
                 .create(
@@ -42,9 +51,9 @@ class SessionCredentialsServiceTest {
 
         assertEquals(SESSION_ID, capturedSessionCredentialItem.getIpvSessionId());
         assertEquals(
-                String.format("drivingLicence#%s", CREDENTIAL.getSignedJwt().getSignature()),
+                String.format("drivingLicence#%s", CREDENTIAL_1.getSignedJwt().getSignature()),
                 capturedSessionCredentialItem.getSortKey());
-        assertEquals(CREDENTIAL.getVcString(), capturedSessionCredentialItem.getCredential());
+        assertEquals(CREDENTIAL_1.getVcString(), capturedSessionCredentialItem.getCredential());
         assertTrue(capturedSessionCredentialItem.isReceivedThisSession());
     }
 
@@ -54,6 +63,30 @@ class SessionCredentialsServiceTest {
 
         assertThrows(
                 VerifiableCredentialException.class,
-                () -> sessionCredentialService.persistCredential(CREDENTIAL, SESSION_ID, false));
+                () -> sessionCredentialService.persistCredential(CREDENTIAL_1, SESSION_ID, false));
+    }
+
+    @Test
+    void persistCredentialsShouldStoreAllCredentials() throws Exception {
+        List<VerifiableCredential> credentialsToStore =
+                List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
+        sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID);
+
+        verify(mockDataStore, times(3))
+                .create(
+                        sessionCredentialItemArgumentCaptor.capture(),
+                        eq(ConfigurationVariable.SESSION_CREDENTIALS_TTL));
+        List<SessionCredentialItem> createdItems =
+                sessionCredentialItemArgumentCaptor.getAllValues();
+
+        IntStream.range(0, 3)
+                .forEach(
+                        i -> {
+                            assertEquals(SESSION_ID, createdItems.get(i).getIpvSessionId());
+                            assertEquals(
+                                    credentialsToStore.get(i).getVcString(),
+                                    createdItems.get(i).getCredential());
+                            assertFalse(createdItems.get(i).isReceivedThisSession());
+                        });
     }
 }

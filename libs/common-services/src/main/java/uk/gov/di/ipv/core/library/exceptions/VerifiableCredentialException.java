@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.exceptions;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 
-public class VerifiableCredentialException extends Exception {
+public class VerifiableCredentialException extends Exception implements ErrorResponseException {
 
     private final ErrorResponse errorResponse;
 
