@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
@@ -50,6 +51,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
@@ -125,6 +127,7 @@ public class CheckExistingIdentityHandler
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings({
         "unused",
@@ -140,7 +143,8 @@ public class CheckExistingIdentityHandler
             CriResponseService criResponseService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -151,6 +155,7 @@ public class CheckExistingIdentityHandler
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -167,6 +172,7 @@ public class CheckExistingIdentityHandler
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -225,7 +231,7 @@ public class CheckExistingIdentityHandler
 
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY.getName())) {
+            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
                 return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
             }
             if (ciScoringCheckResponse.isPresent()) {
@@ -260,7 +266,7 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated, auditEventUser, contraIndicators)
                     : buildNoMatchResponse(vcs, auditEventUser, contraIndicators);
 
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -341,7 +347,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException {
+                    CredentialParseException, VerifiableCredentialException {
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -354,6 +360,12 @@ public class CheckExistingIdentityHandler
         if (strongestAttainedVotFromVtr.isPresent()) {
             // Profile matched
             Vot attainedVot = strongestAttainedVotFromVtr.get();
+
+            // Store relevant VCs in the session credentials table
+            sessionCredentialsService.persistCredentials(
+                    VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
+                    ipvSessionItem.getIpvSessionId());
+
             ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
@@ -444,7 +456,7 @@ public class CheckExistingIdentityHandler
         }
 
         // check the result of 6MFC and return the appropriate journey
-        if (configService.enabled(REPEAT_FRAUD_CHECK.getName()) && !hasCurrentFraudVc(vcs)) {
+        if (configService.enabled(REPEAT_FRAUD_CHECK) && !hasCurrentFraudVc(vcs)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
@@ -528,8 +540,7 @@ public class CheckExistingIdentityHandler
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY.getName())
-                    && requestedVot.equals(Vot.P2)) {
+            if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
 
