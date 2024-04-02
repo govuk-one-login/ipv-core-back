@@ -106,6 +106,7 @@ public class ProcessJourneyEventHandler
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             Optional<String> currentPage = StepFunctionHelpers.getCurrentPage(input);
 
+
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
             // Get/ set session items/ config
