@@ -6,7 +6,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     INHERITED_IDENTITY("inheritedIdentity"),
     REPROVE_IDENTITY_ENABLED("reproveIdentityEnabled"),
     ALTERNATE_DOC_MITIGATION_ENABLED("alternateDocMitigationEnabled"),
-    REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled");
+    REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
     TICF_CRI_BETA("ticfCriBeta");
     private final String name;
 
