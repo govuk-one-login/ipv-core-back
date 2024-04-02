@@ -117,10 +117,7 @@ class TicfCriServiceTest {
 
         assertEquals(
                 VC_ADDRESS.getVcString(),
-                ticfCriService
-                        .getTicfVc(clientSessionItem, ipvSessionItem, vcsReceivedThisSession)
-                        .get(0)
-                        .getVcString());
+                ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem).get(0).getVcString());
 
         verify(mockHttpClient).send(requestCaptor.capture(), any());
         assertEquals(
@@ -135,7 +132,7 @@ class TicfCriServiceTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
         when(mockHttpResponse.body()).thenReturn(objectMapper.writeValueAsString(ticfCriResponse));
 
-        ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem, vcsReceivedThisSession);
+        ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem);
 
         verify(mockHttpClient).send(requestCaptor.capture(), any());
 
@@ -150,22 +147,17 @@ class TicfCriServiceTest {
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
 
-        assertEquals(
-                List.of(),
-                ticfCriService.getTicfVc(
-                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
+        assertEquals(List.of(), ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
     }
 
     @Test
     void getTicfVcShouldThrowIfCanNotSerializeRequest() {
+        ipvSessionItem.setVcReceivedThisSession(mock(List.class));
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
-
         // Jackson can't serialize mocks
         assertThrows(
                 TicfCriServiceException.class,
-                () ->
-                        ticfCriService.getTicfVc(
-                                clientSessionItem, ipvSessionItem, mock(List.class)));
+                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
     }
 
     @ParameterizedTest
@@ -182,10 +174,7 @@ class TicfCriServiceTest {
         when(mockHttpClient.send(any(), any()))
                 .thenThrow((Throwable) exceptionToThrow.getConstructor().newInstance());
 
-        assertEquals(
-                List.of(),
-                ticfCriService.getTicfVc(
-                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
+        assertEquals(List.of(), ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
     }
 
     @Test
@@ -198,9 +187,7 @@ class TicfCriServiceTest {
 
         assertThrows(
                 TicfCriServiceException.class,
-                () ->
-                        ticfCriService.getTicfVc(
-                                clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
+                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
     }
 
     @Test
@@ -224,9 +211,7 @@ class TicfCriServiceTest {
         TicfCriServiceException thrown =
                 assertThrows(
                         TicfCriServiceException.class,
-                        () ->
-                                ticfCriService.getTicfVc(
-                                        clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
+                        () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
 
         assertTrue(thrown.getMessage().contains("No credentials in TICF CRI response"));
     }
@@ -249,8 +234,6 @@ class TicfCriServiceTest {
 
         assertThrows(
                 TicfCriServiceException.class,
-                () ->
-                        ticfCriService.getTicfVc(
-                                clientSessionItem, ipvSessionItem, vcsReceivedThisSession));
+                () -> ticfCriService.getTicfVc(clientSessionItem, ipvSessionItem));
     }
 }

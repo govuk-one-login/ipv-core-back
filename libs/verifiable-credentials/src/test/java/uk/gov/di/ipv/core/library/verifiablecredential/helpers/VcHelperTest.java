@@ -87,7 +87,7 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
-    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) {
+    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) throws Exception {
         mockCredentialIssuerConfig();
 
         assertTrue(VcHelper.isSuccessfulVc(vc), name);
@@ -95,7 +95,7 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("UnsuccessfulTestCases")
-    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) {
+    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) throws Exception {
         mockCredentialIssuerConfig();
 
         assertFalse(VcHelper.isSuccessfulVc(vc), name);
@@ -118,10 +118,9 @@ class VcHelperTest {
                 List.of(
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
-                        vcTicf(),
                         vcHmrcMigration());
         assertEquals(
-                2, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
+                1, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
     }
 
     @Test

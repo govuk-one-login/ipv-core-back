@@ -19,8 +19,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -46,11 +46,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
-/* For developers, this lambda requires manual configuration of the following secret in SecretsManager
-A secret will be created automatically with a "/" character
-This secret needs to be manually recreated without the leading "/"
-Example: dev-<account>/credential-issuers/ticf/connections/stub/api-key
- */
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
@@ -128,8 +123,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiRetrievalException
                 | ConfigException
                 | UnrecognisedVotException
-                | AuditExtensionException
-                | MitigationRouteConfigNotFoundException e) {
+                | MitigationRouteConfigNotFoundException
+                | CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -147,8 +142,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    ConfigException, AuditExtensionException, UnrecognisedVotException,
-                    MitigationRouteConfigNotFoundException {
+                    ConfigException, UnrecognisedVotException,
+                    MitigationRouteConfigNotFoundException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -156,11 +151,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
-        var ticfVcs =
-                ticfCriService.getTicfVc(
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        ipvSessionItem.getVcReceivedThisSession());
+        var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         if (ticfVcs.isEmpty()) {
             LOGGER.warn(LogHelper.buildLogMessage("No TICF VC to process - returning next"));

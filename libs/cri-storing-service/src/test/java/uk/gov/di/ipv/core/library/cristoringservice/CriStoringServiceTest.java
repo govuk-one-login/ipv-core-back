@@ -16,10 +16,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -129,9 +126,7 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeVcsShouldProcessVcsAndSendAuditEvents()
-            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, AuditExtensionException, UnrecognisedVotException {
+    void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -170,14 +165,13 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
+        verify(mockVerifiableCredentialService).persistUserCredentials(vc);
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
     @Test
-    void storeTicfVcsShouldProcessVcsAndSendAuditEvents()
-            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, AuditExtensionException, UnrecognisedVotException {
+    void storeTicfVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vc = vcTicf();
@@ -216,14 +210,13 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockVerifiableCredentialService, times(0)).persistUserCredentials(vc);
+        verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
     @Test
-    void storeVcsShouldHandleEmptyVcList()
-            throws SqsException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, AuditExtensionException, UnrecognisedVotException {
+    void storeVcsShouldHandleEmptyVcList() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();

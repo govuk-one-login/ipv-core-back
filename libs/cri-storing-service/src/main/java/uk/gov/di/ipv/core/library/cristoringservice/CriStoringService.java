@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -100,8 +100,8 @@ public class CriStoringService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws SqsException, CiPutException, CiPostMitigationsException,
-                    VerifiableCredentialException, AuditExtensionException,
-                    UnrecognisedVotException {
+                    VerifiableCredentialException, UnrecognisedVotException,
+                    CredentialParseException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
@@ -120,10 +120,11 @@ public class CriStoringService {
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
 
-            verifiableCredentialService.persistUserCredentials(vc);
-            ipvSessionItem.addVcReceivedThisSession(vc);
             if (criId.equals(TICF_CRI)) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
+            } else {
+                verifiableCredentialService.persistUserCredentials(vc);
+                ipvSessionItem.addVcReceivedThisSession(vc);
             }
         }
 

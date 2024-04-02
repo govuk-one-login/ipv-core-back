@@ -110,7 +110,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String TEST_EVIDENCE_REQUESTED = "evidence_requested";
-    private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
+    private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/%s";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
     private static final String CONTEXT = "context";
@@ -259,7 +259,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId("aSessionId")
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey("nope")
                         .build();
 
         // Act
@@ -267,7 +267,7 @@ class BuildCriOauthRequestHandlerTest {
 
         // Assert
         assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -278,7 +278,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId("aSessionId")
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey("MissingCriId")
+                        .journey(String.format(JOURNEY_BASE_URL, "bad"))
                         .build();
 
         // Act
@@ -325,7 +325,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -407,7 +407,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -490,7 +490,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(JOURNEY_BASE_URL + CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -576,7 +576,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -661,7 +661,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(DCMAW_CRI)
+                        .journey(String.format(JOURNEY_BASE_URL, DCMAW_CRI))
                         .build();
 
         // Act
@@ -836,7 +836,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -903,7 +903,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -968,7 +968,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -1057,7 +1057,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -1124,7 +1124,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -1202,7 +1202,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(CRI_ID)
+                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
                         .build();
 
         // Act
@@ -1279,7 +1279,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(F2F_CRI)
+                        .journey(String.format(JOURNEY_BASE_URL, F2F_CRI))
                         .build();
 
         // Act
@@ -1354,7 +1354,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(HMRC_KBV_CRI)
+                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV_CRI))
                         .build();
 
         // Act
@@ -1403,7 +1403,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(F2F_CRI)
+                        .journey(String.format(JOURNEY_BASE_URL, F2F_CRI))
                         .build();
 
         // Act
@@ -1436,7 +1436,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(JOURNEY_BASE_URL + journeyUri)
+                        .journey(String.format(JOURNEY_BASE_URL, journeyUri))
                         .build();
 
         // Act

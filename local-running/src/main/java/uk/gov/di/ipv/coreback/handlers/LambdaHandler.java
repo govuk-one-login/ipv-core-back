@@ -44,39 +44,27 @@ public class LambdaHandler {
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
 
-    private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
     private ProcessJourneyEventHandler processJourneyEventHandler;
     private CheckExistingIdentityHandler checkExistingIdentityHandler;
     private ResetIdentityHandler resetIdentityHandler;
     private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private BuildClientOauthResponseHandler buildClientOauthResponseHandler;
     private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
-    private BuildProvenUserIdentityDetailsHandler buildProvenUserIdentityDetailsHandler;
-    private ProcessCriCallbackHandler processCriCallbackHandler;
     private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
-    private IssueClientAccessTokenHandler issueClientAccessTokenHandler;
-    private BuildUserIdentityHandler buildUserIdentityHandler;
     private CallTicfCriHandler callTicfCriHandler;
 
     public LambdaHandler() throws IOException {
-        this.initialiseIpvSessionHandler = new InitialiseIpvSessionHandler();
         this.processJourneyEventHandler = new ProcessJourneyEventHandler();
         this.checkExistingIdentityHandler = new CheckExistingIdentityHandler();
         this.resetIdentityHandler = new ResetIdentityHandler();
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler();
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler();
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
-        this.buildProvenUserIdentityDetailsHandler = new BuildProvenUserIdentityDetailsHandler();
-        this.processCriCallbackHandler = new ProcessCriCallbackHandler();
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
-        this.issueClientAccessTokenHandler = new IssueClientAccessTokenHandler();
-        this.buildUserIdentityHandler = new BuildUserIdentityHandler();
         this.callTicfCriHandler = new CallTicfCriHandler();
     }
 
-    private final Route initialiseSession =
-            (Request request, Response response) ->
-                    callLambdaWithProxyEvent(request, response, initialiseIpvSessionHandler);
+    private final Route initialiseSession = apiGatewayProxyRoute(new InitialiseIpvSessionHandler());
 
     private final Route journeyEngine =
             (Request request, Response response) -> {
@@ -144,39 +132,28 @@ public class LambdaHandler {
             };
 
     private final Route buildProvenUserIdentityDetails =
-            (Request request, Response response) -> {
-                Map<String, Object> lambdaOutput =
-                        buildProvenUserIdentityDetailsHandler.handleRequest(
-                                buildJourneyRequest(request, null), EMPTY_CONTEXT);
+            apiGatewayProxyRoute(new BuildProvenUserIdentityDetailsHandler());
 
-                return gson.toJson(lambdaOutput);
-            };
+    private final Route criCallBack = apiGatewayProxyRoute(new ProcessCriCallbackHandler());
 
-    private final Route criCallBack =
-            (Request request, Response response) ->
-                    callLambdaWithProxyEvent(request, response, processCriCallbackHandler);
+    private final Route token = apiGatewayProxyRoute(new IssueClientAccessTokenHandler());
 
-    private final Route token =
-            (Request request, Response response) ->
-                    callLambdaWithProxyEvent(request, response, issueClientAccessTokenHandler);
+    private final Route userIdentity = apiGatewayProxyRoute(new BuildUserIdentityHandler());
 
-    private final Route userIdentity =
-            (Request request, Response response) ->
-                    callLambdaWithProxyEvent(request, response, buildUserIdentityHandler);
-
-    private String callLambdaWithProxyEvent(
-            Request request,
-            Response response,
+    private Route apiGatewayProxyRoute(
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler) {
-        APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent = new APIGatewayProxyRequestEvent();
-        apiGatewayProxyRequestEvent.setBody(request.body());
-        apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
+        return (Request request, Response response) -> {
+            APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
+                    new APIGatewayProxyRequestEvent();
+            apiGatewayProxyRequestEvent.setBody(request.body());
+            apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
 
-        APIGatewayProxyResponseEvent responseEvent =
-                handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
+            APIGatewayProxyResponseEvent responseEvent =
+                    handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
 
-        response.type(APPLICATION_JSON);
-        return responseEvent.getBody();
+            response.type(APPLICATION_JSON);
+            return responseEvent.getBody();
+        };
     }
 
     private JourneyRequest buildJourneyRequest(Request request, String journey) {

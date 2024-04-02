@@ -255,9 +255,18 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorVCThrowsErrorForInvalidJWT() throws JsonProcessingException {
+    void getContraIndicatorVCThrowsErrorForInvalidJWT() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(verifiableCredentialValidator.parseAndValidate(
+                        any(), any(), any(), any(), any(), any(), eq(false)))
+                .thenThrow(
+                        new VerifiableCredentialException(
+                                500, ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL));
         when(lambdaClient.invoke(any()))
                 .thenReturn(
                         new InvokeResult()
@@ -431,23 +440,6 @@ class CiMitServiceTest {
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
         assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVc.getVcString());
-    }
-
-    @Test
-    void getContraIndicatorsVCJwtWhenInvalidJWT() throws JsonProcessingException {
-        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        when(lambdaClient.invoke(any()))
-                .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload("NOT_A_JWT")));
-
-        assertThrows(
-                CiRetrievalException.class,
-                () ->
-                        ciMitService.getContraIndicatorsVc(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test

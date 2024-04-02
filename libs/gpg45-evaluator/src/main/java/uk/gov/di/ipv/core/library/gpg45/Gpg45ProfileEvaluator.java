@@ -1,13 +1,13 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -26,7 +26,11 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 
 public class Gpg45ProfileEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Gson gson = new Gson();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final CollectionType CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE =
+            OBJECT_MAPPER
+                    .getTypeFactory()
+                    .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static final int NO_SCORE = 0;
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
@@ -52,7 +56,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Gpg45Scores buildScore(List<VerifiableCredential> vcs)
-            throws UnknownEvidenceTypeException {
+            throws UnknownEvidenceTypeException, CredentialParseException {
         var evidenceMap = parseGpg45ScoresFromCredentials(vcs);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.DCMAW);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.F2F);
@@ -159,22 +163,25 @@ public class Gpg45ProfileEvaluator {
         return gpg45CredentialItems;
     }
 
-    private List<CredentialEvidenceItem> getCredentialEvidence(VerifiableCredential vc) {
-        var vcClaim = (JSONObject) vc.getClaimsSet().getClaim(VC_CLAIM);
-        var evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+    private List<CredentialEvidenceItem> getCredentialEvidence(VerifiableCredential vc)
+            throws CredentialParseException {
+        var evidenceArray =
+                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
 
-        if (evidenceArray == null) {
+        if (evidenceArray.isMissingNode()) {
             return Collections.emptyList();
         }
 
-        return gson.fromJson(
-                evidenceArray.toJSONString(),
-                new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+        try {
+            return OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
+        } catch (JsonProcessingException e) {
+            throw new CredentialParseException("Unable to create credential evidence list", e);
+        }
     }
 
     private Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
             parseGpg45ScoresFromCredentials(List<VerifiableCredential> vcs)
-                    throws UnknownEvidenceTypeException {
+                    throws UnknownEvidenceTypeException, CredentialParseException {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
@@ -184,8 +191,7 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.FRAUD_WITH_ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.TICF, new ArrayList<>());
+                        CredentialEvidenceItem.EvidenceType.NINO, new ArrayList<>());
 
         for (var vc : vcs) {
             var credentialEvidenceList = getCredentialEvidence(vc);

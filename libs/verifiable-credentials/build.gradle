@@ -10,23 +10,23 @@ repositories {
 }
 
 dependencies {
-	implementation "com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
-			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
-			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
-			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
-			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+	implementation libs.awsJavaSdkLambda,
+			libs.nimbusdsOauth2OidcSdk,
+			libs.dynamodbEnhanced,
+			libs.powertoolsLogging,
+			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator")
 
-	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1",
-			"org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.11.0",
-			project(":libs:common-services").sourceSets.test.output
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
-	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
-	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	testImplementation libs.wiremock,
+			libs.junitJupiter,
+			libs.mockitoJunit,
+			project(":libs:common-services").sourceSets.test.output
+
+	testRuntimeOnly libs.junitPlatform
 }
 
 java {

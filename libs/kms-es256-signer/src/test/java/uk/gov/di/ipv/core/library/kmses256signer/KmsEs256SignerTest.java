@@ -10,7 +10,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.util.Base64URL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,15 +48,14 @@ class KmsEs256SignerTest {
         when(signResult.getSignature()).thenReturn(ByteBuffer.wrap(bytes));
         KmsEs256Signer kmsSigner = new KmsEs256Signer(kmsClient, "kmsKeyId");
 
-        JSONObject jsonPayload = new JSONObject(Map.of("test", "test"));
-
         JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256).build();
-        JWSObject jwsObject = new JWSObject(jwsHeader, new Payload(jsonPayload));
+        var testPayload = new Payload(Map.of("test", "test"));
+        JWSObject jwsObject = new JWSObject(jwsHeader, testPayload);
 
         jwsObject.sign(kmsSigner);
 
         assertEquals(JWSObject.State.SIGNED, jwsObject.getState());
         assertEquals(jwsHeader, jwsObject.getHeader());
-        assertEquals(jsonPayload.toJSONString(), jwsObject.getPayload().toString());
+        assertEquals(testPayload, jwsObject.getPayload());
     }
 }

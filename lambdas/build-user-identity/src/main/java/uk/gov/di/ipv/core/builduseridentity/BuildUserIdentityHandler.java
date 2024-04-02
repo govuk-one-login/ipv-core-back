@@ -50,6 +50,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
@@ -163,6 +164,10 @@ public class BuildUserIdentityHandler
                     userIdentityService.generateUserIdentity(
                             vcs, userId, ipvSessionItem.getVot(), contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
+            if (configService.enabled(TICF_CRI_BETA)
+                    && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
+                userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
+            }
 
             sendIdentityIssuedAuditEvent(
                     ipvSessionItem, auditEventUser, contraIndicators, userIdentity);

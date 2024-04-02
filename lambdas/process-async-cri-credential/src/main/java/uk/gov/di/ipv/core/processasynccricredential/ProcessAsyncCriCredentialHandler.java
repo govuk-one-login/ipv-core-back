@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -113,14 +113,10 @@ public class ProcessAsyncCriCredentialHandler
                     | CiPutException
                     | AsyncVerifiableCredentialException
                     | UnrecognisedVotException
-                    | CiPostMitigationsException e) {
+                    | CiPostMitigationsException
+                    | CredentialParseException e) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage("Failed to process VC response message.", e));
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
-            } catch (AuditExtensionException e) {
-                LOGGER.error(
-                        LogHelper.buildErrorMessage(
-                                "Failed to process/send audit event.", e.getMessage()));
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             } catch (VerifiableCredentialException e) {
                 LOGGER.error(
@@ -166,10 +162,9 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException, SqsException, JsonProcessingException, CiPutException,
-                    AsyncVerifiableCredentialException, CiPostMitigationsException,
-                    VerifiableCredentialException, AuditExtensionException,
-                    UnrecognisedVotException {
+            throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
+                    CiPostMitigationsException, VerifiableCredentialException,
+                    UnrecognisedVotException, CredentialParseException {
         validateOAuthState(successAsyncCriResponse);
 
         var oauthCriConfig =
@@ -226,7 +221,7 @@ public class ProcessAsyncCriCredentialHandler
             AuditEventUser auditEventUser,
             VerifiableCredential verifiableCredential,
             boolean isSuccessful)
-            throws SqsException, AuditExtensionException, UnrecognisedVotException {
+            throws SqsException, UnrecognisedVotException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
@@ -238,7 +233,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
-            throws SqsException {
+            throws SqsException, CredentialParseException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,

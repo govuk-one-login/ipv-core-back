@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.AuditExtensionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -103,8 +102,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(
-                        clientOAuthSessionItem, spyIpvSessionItem, VCS_RECEIVED_THIS_SESSION))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -132,7 +130,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of());
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -152,7 +150,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
 
@@ -171,7 +169,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
@@ -193,7 +191,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem, null))
+        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
@@ -235,7 +233,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
-        when(mockTicfCriService.getTicfVc(any(), any(), any()))
+        when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenThrow(new TicfCriServiceException("Oh dear"));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -255,7 +253,6 @@ class CallTicfCriHandlerTest {
         List<Exception> exceptionsToThrow =
                 List.of(
                         new SqsException("Oops"),
-                        new AuditExtensionException(""),
                         new CiPutException("Oops"),
                         new CiPostMitigationsException("Oops"),
                         new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
@@ -264,7 +261,7 @@ class CallTicfCriHandlerTest {
             when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(new ClientOAuthSessionItem());
-            when(mockTicfCriService.getTicfVc(any(), any(), any()))
+            when(mockTicfCriService.getTicfVc(any(), any()))
                     .thenReturn(List.of(mockVerifiableCredential));
             doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any());
 
@@ -307,7 +304,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(spyIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
-        when(mockTicfCriService.getTicfVc(any(), any(), any()))
+        when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Oh dear"));
