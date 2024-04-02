@@ -938,6 +938,13 @@ public interface VcFixtures {
                 TestVc.builder().credentialSubject(null).build());
     }
 
+    static VerifiableCredential vcEmptyEvidence() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                ADDRESS_CRI,
+                TestVc.builder().evidence(Collections.emptyList()).build());
+    }
+
     static VerifiableCredential vcHmrcMigration() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()

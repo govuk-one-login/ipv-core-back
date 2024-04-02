@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcEmptyEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -213,6 +214,17 @@ class VcHelperTest {
         // Assert Result
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldReturnFalseIfEmptyEvidenceType() throws Exception {
+        var vcs = List.of(vcEmptyEvidence());
+        // Call the method under test
+        List<VerifiableCredential> result =
+                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
+
+        // Assert Result
+        assertTrue(result.isEmpty());
     }
 
     @Test

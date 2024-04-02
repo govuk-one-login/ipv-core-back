@@ -106,7 +106,7 @@ public class VcHelper {
                 .toList();
     }
 
-    private static boolean matchesEvidenceType(
+    public static boolean matchesEvidenceType(
             VerifiableCredential vc, List<EvidenceType> evidenceTypes) {
         var evidenceArray =
                 OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
