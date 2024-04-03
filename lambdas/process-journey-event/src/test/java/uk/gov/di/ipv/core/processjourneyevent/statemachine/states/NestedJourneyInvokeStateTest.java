@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -16,6 +17,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class NestedJourneyInvokeStateTest {
+    private static final JourneyContext JOURNEY_CONTEXT =
+            new JourneyContext(mock(ConfigService.class));
+
     @Test
     void transitionShouldUseEntryEventsWhenStartStateHasOnePart() throws Exception {
         BasicState expectedEndState = new BasicState();
@@ -29,8 +33,7 @@ class NestedJourneyInvokeStateTest {
         nestedJourneyInvokeState.setNestedJourneyDefinition(nestedJourneyDefinition);
 
         State transitionedToState =
-                nestedJourneyInvokeState.transition(
-                        "next", "INVOKE_STATE", JourneyContext.emptyContext());
+                nestedJourneyInvokeState.transition("next", "INVOKE_STATE", JOURNEY_CONTEXT);
 
         assertEquals(expectedEndState, transitionedToState);
     }
@@ -52,7 +55,7 @@ class NestedJourneyInvokeStateTest {
 
         State transitionedToState =
                 nestedJourneyInvokeState.transition(
-                        "next", "INVOKE_STATE/NESTED_STATE", JourneyContext.emptyContext());
+                        "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
 
         assertEquals(expectedEndState, transitionedToState);
     }
@@ -78,7 +81,7 @@ class NestedJourneyInvokeStateTest {
 
         State transitionedToState =
                 nestedJourneyInvokeState.transition(
-                        "next", "INVOKE_STATE/NESTED_STATE", JourneyContext.emptyContext());
+                        "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
 
         assertEquals(expectedEndState, transitionedToState);
     }
@@ -95,7 +98,7 @@ class NestedJourneyInvokeStateTest {
                 UnknownEventException.class,
                 () ->
                         nestedJourneyInvokeState.transition(
-                                "unknown", "INVOKE_STATE", JourneyContext.emptyContext()));
+                                "unknown", "INVOKE_STATE", JOURNEY_CONTEXT));
     }
 
     @Test
@@ -111,9 +114,7 @@ class NestedJourneyInvokeStateTest {
                 UnknownStateException.class,
                 () ->
                         nestedJourneyInvokeState.transition(
-                                "unknown",
-                                "INVOKE_STATE/UNKNOWN_STATE",
-                                JourneyContext.emptyContext()));
+                                "unknown", "INVOKE_STATE/UNKNOWN_STATE", JOURNEY_CONTEXT));
     }
 
     @Test

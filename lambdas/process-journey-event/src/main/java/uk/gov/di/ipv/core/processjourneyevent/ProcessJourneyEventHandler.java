@@ -241,9 +241,7 @@ public class ProcessJourneyEventHandler
                                 ipvSessionItem.getJourneyType().name())));
 
         return stateMachine.transition(
-                ipvSessionItem.getUserState(),
-                journeyEvent,
-                JourneyContext.withFeatureSet(configService.getFeatureSet()));
+                ipvSessionItem.getUserState(), journeyEvent, new JourneyContext(configService));
     }
 
     @Tracing

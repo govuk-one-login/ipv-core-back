@@ -16,6 +16,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ExitNestedJourneyEventTest {
+    private static final JourneyContext JOURNEY_CONTEXT =
+            new JourneyContext(mock(ConfigService.class));
+
     @Test
     void resolveShouldResolveEventFromNestedJourneyExitEvents() throws UnknownEventException {
         BasicState expectedState = new BasicState();
@@ -27,19 +30,17 @@ class ExitNestedJourneyEventTest {
         exitNestedJourneyEvent.setNestedJourneyExitEvents(
                 Map.of("exiting", nestedJourneyExitEvent));
 
-        assertEquals(expectedState, exitNestedJourneyEvent.resolve(JourneyContext.emptyContext()));
+        assertEquals(expectedState, exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
     }
 
     @Test
     void resolveShouldThrowIfEventNotFoundInNestedJourneyExitEvents() {
         ExitNestedJourneyEvent exitNestedJourneyEvent = new ExitNestedJourneyEvent();
-        exitNestedJourneyEvent.setNestedJourneyExitEvents(
-                Map.of("exiting", new BasicEvent(mock(ConfigService.class))));
+        exitNestedJourneyEvent.setNestedJourneyExitEvents(Map.of("exiting", new BasicEvent()));
         exitNestedJourneyEvent.setExitEventToEmit("not-found");
 
         assertThrows(
-                UnknownEventException.class,
-                () -> exitNestedJourneyEvent.resolve(JourneyContext.emptyContext()));
+                UnknownEventException.class, () -> exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
     }
 
     @Test
