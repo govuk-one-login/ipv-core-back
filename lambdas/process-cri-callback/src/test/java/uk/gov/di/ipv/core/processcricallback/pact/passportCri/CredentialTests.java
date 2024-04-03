@@ -124,7 +124,7 @@ class CredentialTests {
                             try {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
-                                                "qq:DCC fail the test",
+                                                TEST_USER,
                                                 PASSPORT_CRI,
                                                 credential,
                                                 VerifiableCredentialConstants
