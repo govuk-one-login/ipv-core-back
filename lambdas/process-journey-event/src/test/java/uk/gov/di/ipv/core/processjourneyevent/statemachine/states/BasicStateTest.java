@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -18,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class BasicStateTest {
-    @Mock private static ConfigService mockConfigService;
+    @Mock private ConfigService mockConfigService;
+    @InjectMocks private JourneyContext journeyContext;
 
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
@@ -27,14 +29,12 @@ class BasicStateTest {
         targetState.setResponse(stepResponse);
 
         BasicState currentState = new BasicState();
-        BasicEvent currentToTargetEvent = new BasicEvent(mockConfigService);
+        BasicEvent currentToTargetEvent = new BasicEvent();
         currentToTargetEvent.setTargetStateObj(targetState);
         currentState.setEvents(Map.of("next", currentToTargetEvent));
 
         BasicState transitionedState =
-                (BasicState)
-                        currentState.transition(
-                                "next", "startState", JourneyContext.emptyContext());
+                (BasicState) currentState.transition("next", "startState", journeyContext);
 
         assertEquals(targetState, transitionedState);
         assertEquals(stepResponse, transitionedState.getResponse());
@@ -42,7 +42,7 @@ class BasicStateTest {
 
     @Test
     void transitionShouldUseEventsFromParentState() throws Exception {
-        BasicEvent parentEvent = new BasicEvent(mockConfigService);
+        BasicEvent parentEvent = new BasicEvent();
         BasicState parentEventTargetState = new BasicState();
         parentEvent.setTargetStateObj(parentEventTargetState);
 
@@ -53,8 +53,7 @@ class BasicStateTest {
         currentState.setParentObj(parentState);
 
         State transitionedState =
-                currentState.transition(
-                        "parent-event", "startState", JourneyContext.emptyContext());
+                currentState.transition("parent-event", "startState", journeyContext);
 
         assertEquals(parentEventTargetState, transitionedState);
     }
@@ -63,21 +62,14 @@ class BasicStateTest {
     void transitionShouldReturnThisIfAttemptRecoveryEventReceived() throws Exception {
         State state = new BasicState();
 
-        assertSame(
-                state,
-                state.transition("attempt-recovery", "startState", JourneyContext.emptyContext()));
+        assertSame(state, state.transition("attempt-recovery", "startState", journeyContext));
     }
 
     @Test
     void transitionShouldThrowIfEventNotFound() {
         assertThrows(
                 UnknownEventException.class,
-                () ->
-                        new BasicState()
-                                .transition(
-                                        "unknown-event",
-                                        "startState",
-                                        JourneyContext.emptyContext()));
+                () -> new BasicState().transition("unknown-event", "startState", journeyContext));
     }
 
     @Test

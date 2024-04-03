@@ -254,7 +254,7 @@ public class ProcessJourneyEventHandler
         return stateMachine.transition(
                 ipvSessionItem.getUserState(),
                 journeyEvent,
-                JourneyContext.withFeatureSet(configService.getFeatureSet()),
+                new JourneyContext(configService),
                 currentPage);
     }
 
