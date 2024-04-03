@@ -1692,8 +1692,8 @@ class ContractTest {
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
                             } catch (VerifiableCredentialException
-                                     | ParseException
-                                     | JsonProcessingException e) {
+                                    | ParseException
+                                    | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
