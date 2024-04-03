@@ -358,7 +358,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-410-AC1 with given names removed")
-                .uponReceiving("Valid credential request for DVLA VC")
+                .uponReceiving("Valid credential request for DVLA VC with no given name")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -863,7 +863,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-4733-AC1")
-                .uponReceiving("Valid credential request for DVA VC")
+                .uponReceiving("Valid credential request for driving licence VC with no issuer")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1107,8 +1107,8 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("Returned VC is from DCMAW-5176-AC1")
-                .uponReceiving("Valid credential request for passport VC")
+                .given("Returned VC is from DCMAW-3146-AC1")
+                .uponReceiving("Valid credential request for NLD passport VC")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1219,92 +1219,6 @@ class ContractTest {
                         });
     }
 
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
-
-        // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
-                        CRI_OAUTH_SESSION_ITEM);
-
-        // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                var vc =
-                                        verifiableCredentialJwtValidator.parseAndValidate(
-                                                TEST_USER,
-                                                DCMAW_CRI,
-                                                credential,
-                                                VerifiableCredentialConstants
-                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
-                                                TEST_ISSUER,
-                                                false);
-
-                                JsonNode vcClaim =
-                                        objectMapper
-                                                .readTree(vc.getClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
-                                JsonNode evidence = vcClaim.get("evidence").get(0);
-
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode residencePermitNode =
-                                        credentialSubject.get("residencePermit").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals(
-                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
-
-                                assertEquals(
-                                        "2024-02-25",
-                                        residencePermitNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "ZR8016200",
-                                        residencePermitNode.get("documentNumber").asText());
-                                assertEquals(
-                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals(
-                                        "CR", residencePermitNode.get("documentType").asText());
-
-                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
-
-                                assertEquals(4, evidence.get("strengthScore").asInt());
-                                assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-    }
-
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedPassportCredential(
             PactDslWithProvider builder) {
@@ -1313,7 +1227,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-3171-AC2")
-                .uponReceiving("Valid credential request for failed passport VC")
+                .uponReceiving("Valid credential request for failed passport VC with CI")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1433,8 +1347,8 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is from DCMAW-5176-AC1")
-                .uponReceiving("Valid credential request for passport VC")
+                .given("VC is from BRP DCMAW-5176-AC1")
+                .uponReceiving("Valid credential request for BRP VC")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1550,7 +1464,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-5175-AC1")
-                .uponReceiving("Valid credential request for failed BRP VC")
+                .uponReceiving("Valid credential request for failed BRP VC with CI")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1668,7 +1582,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("Returned VC is from DCMAW-5176-AC1")
+                .given("Returned VC is from BRC DCMAW-5176-AC1")
                 .uponReceiving("Valid credential request for valid BRC VC")
                 .path("/userinfo/v2")
                 .method("POST")
@@ -1697,6 +1611,92 @@ class ContractTest {
                                         })
                                 .build())
                 .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        CRI_OAUTH_SESSION_ITEM);
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                DCMAW_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
+
+                                JsonNode vcClaim =
+                                        objectMapper
+                                                .readTree(vc.getClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode residencePermitNode =
+                                        credentialSubject.get("residencePermit").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+
+                                assertEquals(
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "ZR8016200",
+                                        residencePermitNode.get("documentNumber").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
+
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
+
+                                assertEquals(4, evidence.get("strengthScore").asInt());
+                                assertEquals(3, evidence.get("validityScore").asInt());
+                            } catch (VerifiableCredentialException
+                                     | ParseException
+                                     | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
@@ -2834,7 +2834,7 @@ class ContractTest {
             "FZRxr03o7njVxKgUafUwSqbvbZtWNhmObEP7rHVoGcoWglBryD-Ghkn5gZ9AwqNVN8J4VpRIu2olij6TIiVq2A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5176-AC1
+    // From BRP DCMAW-5176-AC1 (there is also a BRC version!)
     private static final String VALID_BRP_VC_BODY =
             """
             {
@@ -2997,7 +2997,7 @@ class ContractTest {
             "hF24S4veyQQONjKl9brU5fkJb-uQro7khveIt20NtqYavO6_inquM5YkOI-jTtGkC-vej2kous5pLRFoXGDm1g";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5176-AC1
+    // From BRC DCMAW-5176-AC1 (there is also a BRP version!)
     private static final String VALID_BRC_VC_BODY =
             """
             {
