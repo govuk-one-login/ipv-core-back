@@ -250,6 +250,8 @@ public class CriApiService {
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
+        request.setHeader(
+                "Content-Type", ""); // remove the default, no request body so we don't need
 
         if (apiKey != null) {
             LOGGER.info(
