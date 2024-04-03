@@ -12,16 +12,13 @@ env:
 
 on:
 # qq:DCC For testing only
-  pull_request:
-    types:
-      - opened
-      - edited
+  push:
+    branches:
+      - 'PYIC-5364-pact-test-pipelines'
 #  workflow_dispatch:
 #  push:
 #    branches:
 #      - main
-#    paths:
-#      - tests/tests-demo-sam-app-java/**
 
 jobs:
   contract-testing:
