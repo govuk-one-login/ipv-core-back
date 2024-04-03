@@ -79,6 +79,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
@@ -1075,10 +1076,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(anyString()))
-                .thenReturn(false)
-                .thenReturn(true)
-                .thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(true);
+        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1273,10 +1273,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(anyString()))
-                .thenReturn(false)
-                .thenReturn(false)
-                .thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1300,10 +1299,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(anyString()))
-                .thenReturn(false)
-                .thenReturn(false)
-                .thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this
