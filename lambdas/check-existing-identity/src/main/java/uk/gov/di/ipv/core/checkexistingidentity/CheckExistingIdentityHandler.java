@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -59,6 +60,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
@@ -77,6 +79,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGR
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
@@ -107,6 +110,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH);
+    private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
+            new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
@@ -355,6 +360,7 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             attainedVot,
                             ipvSessionItem.getVcReceivedThisSession(),
+                            vcs,
                             auditEventUser));
         }
 
@@ -421,7 +427,10 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildReuseResponse(
-            Vot attainedVot, List<String> vcReceivedThisSession, AuditEventUser auditEventUser)
+            Vot attainedVot,
+            List<String> vcReceivedThisSession,
+            List<VerifiableCredential> vcs,
+            AuditEventUser auditEventUser)
             throws SqsException {
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
@@ -434,7 +443,27 @@ public class CheckExistingIdentityHandler
                     : JOURNEY_IN_MIGRATION_REUSE;
         }
 
+        // check the result of 6MFC and return the appropriate journey
+        if (configService.enabled(REPEAT_FRAUD_CHECK.getName()) && !hasCurrentFraudVc(vcs)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
+            return JOURNEY_REPEAT_FRAUD_CHECK;
+        }
+
         return JOURNEY_REUSE;
+    }
+
+    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
+        var fraudVCs =
+                VcHelper.filterVCBasedOnEvidenceType(
+                        vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
+        for (var vc : fraudVCs) {
+            if (!VcHelper.isExpiredFraudVc(vc)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sendAuditEvent(AuditEventTypes auditEventTypes, AuditEventUser auditEventUser)

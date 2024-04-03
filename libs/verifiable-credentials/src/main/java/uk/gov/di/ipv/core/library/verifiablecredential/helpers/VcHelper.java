@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
@@ -21,14 +22,17 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
@@ -92,6 +96,45 @@ public class VcHelper {
         } else {
             return vcs.stream().filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCriId()))).toList();
         }
+    }
+
+    public static List<VerifiableCredential> filterVCBasedOnEvidenceType(
+            List<VerifiableCredential> vcs, EvidenceType... evidenceType) {
+
+        return vcs.stream()
+                .filter(vc -> matchesEvidenceType(vc, Arrays.asList(evidenceType)))
+                .toList();
+    }
+
+    public static boolean matchesEvidenceType(
+            VerifiableCredential vc, List<EvidenceType> evidenceTypes) {
+        var evidenceArray =
+                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
+        if (evidenceArray == null || evidenceArray.isEmpty()) {
+            return false;
+        }
+
+        try {
+            List<CredentialEvidenceItem> credentialEvidenceList =
+                    OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
+            return credentialEvidenceList.stream()
+                    .anyMatch(
+                            credentialEvidenceItem -> {
+                                try {
+                                    return evidenceTypes.contains(
+                                            credentialEvidenceItem.getEvidenceType());
+                                } catch (UnknownEvidenceTypeException e) {
+                                    LOGGER.error(
+                                            "Unknown evidence type found in VC: {}",
+                                            vc.getVcString());
+                                    return false;
+                                }
+                            });
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to parse evidence array for VC: {}", vc.getVcString());
+        }
+
+        return false;
     }
 
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
@@ -211,5 +254,19 @@ public class VcHelper {
         } catch (ParseException | IllegalArgumentException e) {
             throw new UnrecognisedVotException("Invalid VOT found for this VC");
         }
+    }
+
+    public static boolean isExpiredFraudVc(VerifiableCredential vc) {
+        var jwtClaimsSet = vc.getClaimsSet();
+        var nbfClaim = jwtClaimsSet.getNotBeforeTime();
+        var nbf = nbfClaim.toInstant();
+        if (nbf == null) {
+            LOGGER.error("VC does not have a nbf claim");
+            return true;
+        }
+        var expiryPeriod =
+                Integer.parseInt(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
+        var now = Instant.now();
+        return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }
 }
