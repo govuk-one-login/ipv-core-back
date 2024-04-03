@@ -59,7 +59,7 @@ class ContractTest {
     @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "F2fCriProvider", consumer = "IPVCoreBack")
+    @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact issueCredentialsUri_returnsValidPendingVc(
             PactDslWithProvider builder) {
         return builder.given("dummyTestUser is a valid subject")
