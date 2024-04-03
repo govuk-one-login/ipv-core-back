@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -64,7 +63,9 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -426,8 +427,7 @@ public class CheckExistingIdentityHandler
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));
         }
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
-                .isEmpty()) {
+        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
@@ -443,7 +443,7 @@ public class CheckExistingIdentityHandler
             List<String> vcReceivedThisSession,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser)
-            throws SqsException {
+            throws SqsException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
 
@@ -460,10 +460,16 @@ public class CheckExistingIdentityHandler
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
+            sessionCredentialsService.persistCredentials(
+                    allVcsExceptFraud(vcs), auditEventUser.getSessionId());
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
         return JOURNEY_REUSE;
+    }
+
+    private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
+        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
     }
 
     private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
@@ -509,7 +515,7 @@ public class CheckExistingIdentityHandler
 
         for (var requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
-            if (requestedVot.getProfileType().equals(ProfileType.GPG45)) {
+            if (requestedVot.getProfileType().equals(GPG45)) {
                 if (areGpg45VcsCorrelated) {
                     requestedVotAttained =
                             achievedWithGpg45Profile(requestedVot, vcs, auditEventUser);
