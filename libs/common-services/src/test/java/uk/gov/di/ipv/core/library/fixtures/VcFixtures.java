@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -522,6 +523,43 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704290386));
     }
 
+    static VerifiableCredential vcFraudExpired() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_3))
+                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_KBV_CRI,
+                TestVc.builder()
+                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://review-f.integration.account.gov.uk",
+                Instant.ofEpochSecond(1658829758));
+    }
+
+    static VerifiableCredential vcFraudNotExpired() {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime sixMonthsLater = now.plusMonths(6);
+        Instant futureInstant = sixMonthsLater.toInstant();
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_3))
+                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_KBV_CRI,
+                TestVc.builder()
+                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://review-f.integration.account.gov.uk",
+                futureInstant);
+    }
+
     static VerifiableCredential vcExperianFraudScoreTwo() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
@@ -898,6 +936,13 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 ADDRESS_CRI,
                 TestVc.builder().credentialSubject(null).build());
+    }
+
+    static VerifiableCredential vcEmptyEvidence() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                ADDRESS_CRI,
+                TestVc.builder().evidence(Collections.emptyList()).build());
     }
 
     static VerifiableCredential vcHmrcMigration() throws Exception {

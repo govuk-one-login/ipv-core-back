@@ -1,11 +1,9 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
@@ -18,7 +16,6 @@ import java.util.Optional;
 @Data
 public class BasicEvent implements Event {
     private static final Logger LOGGER = LogManager.getLogger();
-    @JsonIgnore private ConfigService configService;
     private String name;
     private String targetJourney;
     private String targetState;
@@ -26,20 +23,11 @@ public class BasicEvent implements Event {
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;
 
-    public BasicEvent() {
-        this.configService = new ConfigService();
-    }
-
-    public BasicEvent(ConfigService configService) {
-        this.configService = configService;
-    }
-
     public State resolve(JourneyContext journeyContext) throws UnknownEventException {
-        configService.setFeatureSet(journeyContext.getFeatureSet());
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
-                            .filter(id -> !configService.isEnabled(id))
+                            .filter(id -> !journeyContext.configService().isEnabled(id))
                             .findFirst();
             if (firstDisabledCri.isPresent()) {
                 String disabledCriId = firstDisabledCri.get();
@@ -50,7 +38,11 @@ public class BasicEvent implements Event {
         if (checkFeatureFlag != null) {
             Optional<String> firstFeatureFlag =
                     checkFeatureFlag.keySet().stream()
-                            .filter(featureFlagValue -> configService.enabled(featureFlagValue))
+                            .filter(
+                                    featureFlagValue ->
+                                            journeyContext
+                                                    .configService()
+                                                    .enabled(featureFlagValue))
                             .findFirst();
             if (firstFeatureFlag.isPresent()) {
                 String featureFlagValue = firstFeatureFlag.get();

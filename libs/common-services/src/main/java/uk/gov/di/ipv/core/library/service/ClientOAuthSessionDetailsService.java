@@ -18,13 +18,11 @@ public class ClientOAuthSessionDetailsService {
     @ExcludeFromGeneratedCoverageReport
     public ClientOAuthSessionDetailsService(ConfigService configService) {
         this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
                         this.configService.getEnvironmentVariable(CLIENT_OAUTH_SESSIONS_TABLE_NAME),
                         ClientOAuthSessionItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
     }
 

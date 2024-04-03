@@ -28,24 +28,19 @@ public class IpvSessionService {
     private static final String ERROR_STATE = "ERROR";
 
     private final DataStore<IpvSessionItem> dataStore;
-    private final ConfigService configService;
+
+    public IpvSessionService(DataStore<IpvSessionItem> dataStore) {
+        this.dataStore = dataStore;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionService(ConfigService configService) {
-        this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
+                        configService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
                         IpvSessionItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
-    }
-
-    public IpvSessionService(DataStore<IpvSessionItem> dataStore, ConfigService configService) {
-        this.dataStore = dataStore;
-        this.configService = configService;
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {

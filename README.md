@@ -78,7 +78,6 @@ The application is configured as a Gradle project with a sub-project for each La
 
 ## Environment variables
 
-* IS_LOCAL - This only needs to be assigned when running locally. This is set to `true` in `local-startup`.
 * BEARER_TOKEN_TTL - The bearer token time to live in seconds. If not set this defaulted to a value in `ConfigurationService`
 
 ### DynamoDB table name variables:

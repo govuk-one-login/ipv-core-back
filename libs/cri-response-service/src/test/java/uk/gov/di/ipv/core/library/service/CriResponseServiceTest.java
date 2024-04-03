@@ -25,14 +25,11 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 
 @ExtendWith(MockitoExtension.class)
 public class CriResponseServiceTest {
-    @Mock private ConfigService mockConfigService;
-
     @Mock private DataStore<CriResponseItem> mockDataStore;
 
     private CriResponseService criResponseService;
 
     private static final String USER_ID_1 = "user-id-1";
-    private static final String USER_ID = "userId";
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER = F2F_CRI;
     private static final String TEST_ISSUER_RESPONSE =
@@ -45,7 +42,7 @@ public class CriResponseServiceTest {
 
     @BeforeEach
     void setUp() {
-        criResponseService = new CriResponseService(mockConfigService, mockDataStore);
+        criResponseService = new CriResponseService(mockDataStore);
     }
 
     @Test
