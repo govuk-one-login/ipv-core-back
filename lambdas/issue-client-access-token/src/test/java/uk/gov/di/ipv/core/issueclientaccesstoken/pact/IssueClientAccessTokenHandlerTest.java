@@ -6,7 +6,6 @@ import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvide
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
-import com.nimbusds.jose.JOSEException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,8 +33,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
@@ -65,14 +62,13 @@ class IssueClientAccessTokenHandlerTest {
     }
 
     @BeforeEach
-    void pactSetup(PactVerificationContext context)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void pactSetup(PactVerificationContext context) throws IOException {
 
         var accessTokenService = new AccessTokenService(configService);
-        var sessionService = new IpvSessionService(ipvSessionDataStore, configService);
+        var sessionService = new IpvSessionService(ipvSessionDataStore);
         var clientOAuthSessionService =
                 new ClientOAuthSessionDetailsService(oAuthDataStore, configService);
-        var clientAuthJwtIdService = new ClientAuthJwtIdService(configService, jwtIdStore);
+        var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);
         var tokenRequestValidator =
                 new TokenRequestValidator(configService, clientAuthJwtIdService);
         ipvSessionItem = new IpvSessionItem();

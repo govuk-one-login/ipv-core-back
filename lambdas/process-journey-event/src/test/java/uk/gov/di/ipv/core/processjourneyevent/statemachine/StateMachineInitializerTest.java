@@ -1,9 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -14,9 +12,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,15 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SystemStubsExtension.class)
 class StateMachineInitializerTest {
-
-    @SystemStub private static EnvironmentVariables environmentVariables;
-
-    @BeforeAll
-    private static void beforeAll() {
-        environmentVariables.set("IS_LOCAL", "true");
-    }
 
     @ParameterizedTest
     @EnumSource

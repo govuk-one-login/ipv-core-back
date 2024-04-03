@@ -64,7 +64,6 @@ class DataStoreTest {
                         TEST_TABLE_NAME,
                         AuthorizationCodeItem.class,
                         mockDynamoDbEnhancedClient,
-                        false,
                         mockConfigService);
     }
 

@@ -1,22 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
-import lombok.Data;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.util.List;
-
-@Data
-public class JourneyContext {
-    private List<String> featureSet;
-
-    private JourneyContext() {}
-
-    public static JourneyContext emptyContext() {
-        return new JourneyContext();
-    }
-
-    public static JourneyContext withFeatureSet(List<String> featureSet) {
-        JourneyContext journeyContext = new JourneyContext();
-        journeyContext.setFeatureSet(featureSet);
-        return journeyContext;
-    }
-}
+@ExcludeFromGeneratedCoverageReport
+public record JourneyContext(ConfigService configService) {}
