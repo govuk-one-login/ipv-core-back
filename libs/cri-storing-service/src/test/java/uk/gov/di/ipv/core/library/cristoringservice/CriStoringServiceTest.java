@@ -157,7 +157,7 @@ class CriStoringServiceTest {
 
         verify(mockVerifiableCredentialService).persistUserCredentials(vc);
         verify(mockSessionCredentialsService)
-                .persistCredential(vc, mockIpvSessionItem.getIpvSessionId(), true);
+                .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
@@ -204,7 +204,7 @@ class CriStoringServiceTest {
 
         verify(mockVerifiableCredentialService, never()).persistUserCredentials(vc);
         verify(mockSessionCredentialsService, never())
-                .persistCredential(vc, mockIpvSessionItem.getIpvSessionId(), true);
+                .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
