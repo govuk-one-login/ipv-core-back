@@ -110,7 +110,6 @@ public class ProcessJourneyEventHandler
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             Optional<String> currentPage = StepFunctionHelpers.getCurrentPage(input);
 
-
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
             // Handle route direct back to RP (used for recoverable timeouts)

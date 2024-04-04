@@ -44,17 +44,23 @@ public class StateMachine {
 
                 if (((BasicState) state).getResponse() instanceof PageStepResponse) {
 
-                    String pageId = ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
+                    String pageId =
+                            ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
 
                     if (!currentPage.get().equals(pageId)) {
-                        LOGGER.warn(LogHelper.buildLogMessage(String.format("Something has gone wrong: %s, %s, %s", pageId, currentPage.get(), event)));
+                        LOGGER.warn(
+                                LogHelper.buildLogMessage(
+                                        String.format(
+                                                "Something has gone wrong: %s, %s, %s",
+                                                pageId, currentPage.get(), event)));
                         return state;
                     }
                 } else if (((BasicState) state).getResponse() instanceof CriStepResponse) {
                     return state;
                 } else {
                     throw new UnknownStateException(
-                            String.format("Unknown state provided to state machine: %s", startState));
+                            String.format(
+                                    "Unknown state provided to state machine: %s", startState));
                 }
             }
         }
