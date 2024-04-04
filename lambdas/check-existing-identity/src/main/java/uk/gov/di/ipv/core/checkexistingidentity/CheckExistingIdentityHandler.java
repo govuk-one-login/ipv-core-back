@@ -365,7 +365,8 @@ public class CheckExistingIdentityHandler
             // Store relevant VCs in the session credentials table
             sessionCredentialsService.persistCredentials(
                     VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
-                    ipvSessionItem.getIpvSessionId());
+                    ipvSessionItem.getIpvSessionId(),
+                    false);
 
             ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -461,7 +462,7 @@ public class CheckExistingIdentityHandler
                     LogHelper.buildLogMessage(
                             "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
             sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(vcs), auditEventUser.getSessionId());
+                    allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 

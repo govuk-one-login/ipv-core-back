@@ -61,10 +61,11 @@ public class SessionCredentialsService {
         }
     }
 
-    public void persistCredentials(List<VerifiableCredential> vcs, String ipvSessionId)
+    public void persistCredentials(
+            List<VerifiableCredential> vcs, String ipvSessionId, boolean receivedThisSession)
             throws VerifiableCredentialException {
         for (var vc : vcs) {
-            persistCredential(vc, ipvSessionId, false);
+            persistCredential(vc, ipvSessionId, receivedThisSession);
         }
     }
 
