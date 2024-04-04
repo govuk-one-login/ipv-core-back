@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -57,13 +56,6 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void persistCredentialShouldNotCreateItemInDataStore() throws Exception {
-            sessionCredentialService.persistCredential(CREDENTIAL_1, SESSION_ID, true);
-
-            verify(mockDataStore, never()).create(any(), any());
-        }
-
-        @Test
         void persistCredentialsShouldNotCreateItemsInDataStore() throws Exception {
             List<VerifiableCredential> credentialsToStore =
                     List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
@@ -78,35 +70,6 @@ class SessionCredentialsServiceTest {
         @BeforeEach
         void setUp() {
             when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)).thenReturn(true);
-        }
-
-        @Test
-        void persistCredentialShouldCreateItemInDataStore() throws Exception {
-            sessionCredentialService.persistCredential(CREDENTIAL_1, SESSION_ID, true);
-
-            verify(mockDataStore)
-                    .create(
-                            sessionCredentialItemArgumentCaptor.capture(),
-                            eq(ConfigurationVariable.SESSION_CREDENTIALS_TTL));
-            var capturedSessionCredentialItem = sessionCredentialItemArgumentCaptor.getValue();
-
-            assertEquals(SESSION_ID, capturedSessionCredentialItem.getIpvSessionId());
-            assertEquals(
-                    String.format("drivingLicence#%s", CREDENTIAL_1.getSignedJwt().getSignature()),
-                    capturedSessionCredentialItem.getSortKey());
-            assertEquals(CREDENTIAL_1.getVcString(), capturedSessionCredentialItem.getCredential());
-            assertTrue(capturedSessionCredentialItem.isReceivedThisSession());
-        }
-
-        @Test
-        void persistCredentialShouldThrowVerifiableCredentialExceptionIfProblemStoring() {
-            doThrow(IllegalStateException.class).when(mockDataStore).create(any(), any());
-
-            assertThrows(
-                    VerifiableCredentialException.class,
-                    () ->
-                            sessionCredentialService.persistCredential(
-                                    CREDENTIAL_1, SESSION_ID, false));
         }
 
         @Test
@@ -131,6 +94,17 @@ class SessionCredentialsServiceTest {
                                         createdItems.get(i).getCredential());
                                 assertFalse(createdItems.get(i).isReceivedThisSession());
                             });
+        }
+
+        @Test
+        void persistCredentialsShouldThrowVerifiableCredentialExceptionIfProblemStoring() {
+            doThrow(IllegalStateException.class).when(mockDataStore).create(any(), any());
+
+            assertThrows(
+                    VerifiableCredentialException.class,
+                    () ->
+                            sessionCredentialService.persistCredentials(
+                                    List.of(CREDENTIAL_1), SESSION_ID, false));
         }
     }
 

@@ -41,27 +41,23 @@ public class SessionCredentialsService {
                         configService);
     }
 
-    public void persistCredential(
-            VerifiableCredential credential, String ipvSessionId, boolean receivedThisSession)
+    public void persistCredentials(
+            List<VerifiableCredential> credentials,
+            String ipvSessionId,
+            boolean receivedThisSession)
             throws VerifiableCredentialException {
         try {
             if (configService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)) {
-                dataStore.create(
-                        credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
-                        ConfigurationVariable.SESSION_CREDENTIALS_TTL);
+                for (var credential : credentials) {
+                    dataStore.create(
+                            credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
+                            ConfigurationVariable.SESSION_CREDENTIALS_TTL);
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Error persisting session credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
-        }
-    }
-
-    public void persistCredentials(
-            List<VerifiableCredential> vcs, String ipvSessionId, boolean receivedThisSession)
-            throws VerifiableCredentialException {
-        for (var vc : vcs) {
-            persistCredential(vc, ipvSessionId, receivedThisSession);
         }
     }
 
