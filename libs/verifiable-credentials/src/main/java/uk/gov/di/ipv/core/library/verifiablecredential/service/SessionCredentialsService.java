@@ -49,10 +49,6 @@ public class SessionCredentialsService {
                 dataStore.create(
                         credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
                         ConfigurationVariable.SESSION_CREDENTIALS_TTL);
-            } else {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "Not writing to session credentials table as feature flag not active"));
             }
         } catch (Exception e) {
             LOGGER.error("Error persisting session credential: {}", e.getMessage(), e);

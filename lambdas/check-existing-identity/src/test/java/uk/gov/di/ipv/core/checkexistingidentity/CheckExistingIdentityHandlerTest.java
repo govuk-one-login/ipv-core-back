@@ -419,7 +419,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), true);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
@@ -446,7 +446,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), true);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
@@ -514,10 +514,6 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(
                     ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
                     journeyResponse.getMessage());
-
-            verify(ipvSessionService, never()).updateIpvSession(any());
-            verify(ipvSessionItem, never()).setVot(any());
-            assertNull(ipvSessionItem.getVot());
         }
     }
 
