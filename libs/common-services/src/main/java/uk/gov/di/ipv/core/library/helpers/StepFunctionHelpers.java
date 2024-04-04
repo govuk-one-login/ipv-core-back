@@ -82,9 +82,7 @@ public class StepFunctionHelpers {
 
         String[] decodedParts = URLDecoder.decode(journeyEvent, StandardCharsets.UTF_8).split("/");
 
-        return Optional.ofNullable(
-                decodedParts.length == 4  ? decodedParts[2] : null
-        );
+        return Optional.ofNullable(decodedParts.length == 4 ? decodedParts[2] : null);
     }
 
     public static Map<String, Object> generateErrorOutputMap(

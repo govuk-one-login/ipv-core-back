@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -12,7 +11,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
 import java.util.Map;
@@ -46,17 +44,23 @@ public class StateMachine {
 
                 if (((BasicState) state).getResponse() instanceof PageStepResponse) {
 
-                    String pageId = ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
+                    String pageId =
+                            ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
 
                     if (!currentPage.get().equals(pageId)) {
-                        LOGGER.warn(LogHelper.buildLogMessage(String.format("Something has gone wrong: %s, %s, %s", pageId, currentPage.get(), event)));
+                        LOGGER.warn(
+                                LogHelper.buildLogMessage(
+                                        String.format(
+                                                "Something has gone wrong: %s, %s, %s",
+                                                pageId, currentPage.get(), event)));
                         return state;
                     }
                 } else if (((BasicState) state).getResponse() instanceof CriStepResponse) {
                     return state;
                 } else {
                     throw new UnknownStateException(
-                            String.format("Unknown state provided to state machine: %s", startState));
+                            String.format(
+                                    "Unknown state provided to state machine: %s", startState));
                 }
             }
         }

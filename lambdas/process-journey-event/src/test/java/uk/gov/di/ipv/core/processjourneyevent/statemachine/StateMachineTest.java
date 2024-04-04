@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,7 +33,7 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         State transitionedState =
-                stateMachine.transition("START_STATE", "event", journeyContext, null);
+                stateMachine.transition("START_STATE", "event", journeyContext, Optional.empty());
 
         assertEquals(expectedEndState, transitionedState);
     }
@@ -71,7 +72,7 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         State transitionState =
-                stateMachine.transition("START_STATE", "event", journeyContext, null);
+                stateMachine.transition("START_STATE", "event", journeyContext, Optional.empty());
 
         assertEquals(expectedNestedEndState, transitionState);
     }
@@ -93,7 +94,7 @@ class StateMachineTest {
 
         State transitionedState =
                 stateMachine.transition(
-                        "START_STATE/NESTED_JOURNEY", "event", journeyContext, null);
+                        "START_STATE/NESTED_JOURNEY", "event", journeyContext, Optional.empty());
 
         assertEquals(expectedEndState, transitionedState);
     }
