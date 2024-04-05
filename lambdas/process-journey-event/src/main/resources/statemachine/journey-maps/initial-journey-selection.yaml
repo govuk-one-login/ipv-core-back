@@ -68,7 +68,7 @@ RESET_IDENTITY:
   events:
     next:
       targetJourney: NEW_P2_IDENTITY
-      targetState: START
+      targetState: REPROVE_IDENTITY
 
 RESET_GPG45_IDENTITY:
   response:
