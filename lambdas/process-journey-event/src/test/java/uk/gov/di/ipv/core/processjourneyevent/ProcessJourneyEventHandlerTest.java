@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationTyp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -54,14 +55,13 @@ class ProcessJourneyEventHandlerTest {
             "/journey/testWithContext";
     private static final String JOURNEY_TEST_WITH_CONTEXT_WITH_EMPTY_CURRENT_PAGE =
             "/journey/testWithContext?currentPage=";
-    private static final String JOURNEY_TEST_WITH_CONTEXT_WITH_A_CRI_ID =
-            "/journey/testWithContext?currentPage=aCriId";
     private static final String JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE =
             "/journey/eventTwo?currentPage=page-id-for-some-page";
+    private static final String TEST_IP = "1.2.3.4";
+    private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
     private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
     private static final String CODE = "code";
-    private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
@@ -75,7 +75,7 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, "1234");
+        var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_IP).build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -87,7 +87,7 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400OnMissingSessionIdParam() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT);
+        var input = JourneyRequest.builder().ipAddress(TEST_IP).journey(JOURNEY_NEXT).build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -99,7 +99,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400WhenInvalidSessionIdProvided() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -111,7 +116,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn500WhenUnknownJourneyEngineStepProvided() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, "invalid-event", IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("invalid-event")
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("START");
 
@@ -125,7 +135,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn500WhenUserIsInUnknownState() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("INVALIDSTATE");
 
@@ -139,7 +154,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn500IfNoStateMachineMatchingJourneyType() throws IOException {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("START");
 
@@ -161,8 +181,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturnCurrentStateIfPageOutOfSync() throws IOException {
-        Map<String, String> input =
-                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
 
@@ -182,12 +206,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturnNextStateIfInSync() throws IOException {
-        Map<String, String> input =
-                Map.of(
-                        JOURNEY,
-                        JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE,
-                        IPV_SESSION_ID,
-                        "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         when(mockConfigService.isEnabled("aCriId")).thenReturn(true);
 
@@ -211,7 +235,12 @@ class ProcessJourneyEventHandlerTest {
     @MethodSource("journeyUrisWithCurrentPageForCri")
     void shouldTransitionCriStateIfCurrentPageMatchesCriId(
             String journeyUri, String expectedNewJourneyState) throws IOException {
-        Map<String, String> input = Map.of(JOURNEY, journeyUri, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(journeyUri)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -247,8 +276,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldThrowErrorIfJourneyEventDuringProcess() throws IOException {
-        Map<String, String> input =
-                Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("PROCESS_STATE");
 
@@ -270,10 +303,15 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturnErrorPageIfSessionHasExpired() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
-        IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession("1234");
+        IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession(TEST_IP);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
 
@@ -308,7 +346,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturnSessionEndJourneyIfStateIsSessionTimeout() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
@@ -329,7 +372,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldClearOauthSessionIfItExists() throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, JOURNEY_NEXT, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_NEXT)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("START");
 
@@ -345,7 +393,12 @@ class ProcessJourneyEventHandlerTest {
     @MethodSource("journeyUriParameters")
     void shouldIncludeParametersInJourneyUriIfExists(String journeyEvent, String expectedJourneyUri)
             throws Exception {
-        Map<String, String> input = Map.of(JOURNEY, journeyEvent, IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(journeyEvent)
+                        .ipvSessionId(TEST_IP)
+                        .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -380,9 +433,13 @@ class ProcessJourneyEventHandlerTest {
     @Test
     void shouldFollowJourneyChanges() throws Exception {
         // arrange
-        var sessionId = "1234";
         mockIpvSessionItemAndTimeout("CRI_STATE");
-        var input = Map.of(JOURNEY, "testJourneyStep", IPV_SESSION_ID, sessionId);
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testJourneyStep")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
 
         // act
         var output =
@@ -392,7 +449,8 @@ class ProcessJourneyEventHandlerTest {
         // assert
         assertEquals("technical-error-page", output.get("page"));
         assertEquals(
-                TECHNICAL_ERROR, mockIpvSessionService.getIpvSession(sessionId).getJourneyType());
+                TECHNICAL_ERROR,
+                mockIpvSessionService.getIpvSession(TEST_SESSION_ID).getJourneyType());
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         var capturedAuditEvent = auditEventCaptor.getValue();
@@ -408,8 +466,12 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldSendAuditEventForMitigationStart() throws Exception {
-        Map<String, String> input =
-                Map.of(JOURNEY, "testWithMitigationStart", IPV_SESSION_ID, "1234");
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testWithMitigationStart")
+                        .ipvSessionId(TEST_IP)
+                        .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
         getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)

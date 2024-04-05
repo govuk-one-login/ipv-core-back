@@ -85,7 +85,8 @@ public enum ErrorResponse {
     MITIGATION_ROUTE_CONFIG_NOT_FOUND(
             1069, "No mitigation journey route event found in cimit config"),
     UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route"),
-    FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential");
+    FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
+    INVALID_JOURNEY_EVENT(1072, "Invalid journey event in input");
 
     private final int code;
     private final String message;

@@ -53,7 +53,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -146,9 +145,7 @@ public class BuildCriOauthRequestHandler
             String ipAddress = getIpAddress(input);
             configService.setFeatureSet(getFeatureSet(input));
 
-            URI journeyUri = URI.create(input.getJourney());
-
-            var criId = getCriIdFromJourney(journeyUri.getPath());
+            var criId = getCriIdFromJourney(input.getJourneyUri().getPath());
             if (criId == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
@@ -158,8 +155,8 @@ public class BuildCriOauthRequestHandler
             }
             LogHelper.attachCriIdToLogs(criId);
 
-            String criContext = getJourneyParameter(journeyUri, CONTEXT);
-            String criScope = getJourneyParameter(journeyUri, SCOPE);
+            String criContext = getJourneyParameter(input, CONTEXT);
+            String criScope = getJourneyParameter(input, SCOPE);
             String connection = configService.getActiveConnection(criId);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, criId);
