@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.DataStoreException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
@@ -114,14 +115,17 @@ class SessionCredentialsServiceTest {
         void deleteSessionCredentialsShouldClearAllCredentialsForCurrentSession() throws Exception {
             sessionCredentialService.deleteSessionCredentials(SESSION_ID);
 
-            verify(mockDataStore).delete(ipvSessionIdArgumentCaptor.capture());
+            verify(mockDataStore).deleteAllByPartition(ipvSessionIdArgumentCaptor.capture());
 
             assertEquals(SESSION_ID, ipvSessionIdArgumentCaptor.getValue());
         }
 
         @Test
-        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting() {
-            when(mockDataStore.delete(SESSION_ID)).thenThrow(new IllegalStateException());
+        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting()
+                throws Exception {
+            doThrow(new DataStoreException("nope"))
+                    .when(mockDataStore)
+                    .deleteAllByPartition(SESSION_ID);
 
             var verifiableCredentialException =
                     assertThrows(

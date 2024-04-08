@@ -66,7 +66,7 @@ public class SessionCredentialsService {
                 LogHelper.buildLogMessage(
                         "Deleting credentials for current session from session credentials table"));
         try {
-            dataStore.delete(ipvSessionId);
+            dataStore.deleteAllByPartition(ipvSessionId);
         } catch (Exception e) {
             LOGGER.error("Error deleting session credentials: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(
