@@ -13,8 +13,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.util.List;
-
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final DataStore<SessionCredentialItem> dataStore;
@@ -45,13 +43,6 @@ public class SessionCredentialsService {
             LOGGER.error("Error persisting session credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
-        }
-    }
-
-    public void persistCredentials(List<VerifiableCredential> vcs, String ipvSessionId)
-            throws VerifiableCredentialException {
-        for (var vc : vcs) {
-            persistCredential(vc, ipvSessionId, false);
         }
     }
 }
