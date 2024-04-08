@@ -225,9 +225,13 @@ public class CheckExistingIdentityHandler
 
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY.getName())) {
+
+            if (reproveIdentity.orElse(false)) {
                 return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
+            } else if (configService.enabled(RESET_IDENTITY.getName())) {
+                return buildForceGpg45ResetResponse(ciScoringCheckResponse.orElse(null));
             }
+
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -285,6 +289,22 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private JourneyResponse buildForceResetResponse(JourneyResponse ciScoringCheckResponse) {
+        LOGGER.info(
+                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
+        if (ciScoringCheckResponse != null) {
+            if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
+                // forces a reset of the user's identity if the CI breached and no
+                // possible mitigation
+                return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
+            }
+            // sends the user on mitigation journey if the CI breached and mitigation is possible
+            return ciScoringCheckResponse;
+        }
+        return JOURNEY_RESET_IDENTITY;
+    }
+
+    @Tracing
+    private JourneyResponse buildForceGpg45ResetResponse(JourneyResponse ciScoringCheckResponse) {
         LOGGER.info(
                 LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
         if (ciScoringCheckResponse != null) {
