@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -37,7 +36,6 @@ import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
@@ -45,8 +43,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -63,7 +59,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
-    private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -74,7 +69,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             VerifiableCredentialService verifiableCredentialService,
-            SessionCredentialsService sessionCredentialsService,
             EmailServiceFactory emailServiceFactory,
             UserIdentityService userIdentityService) {
         this.configService = configService;
@@ -83,7 +77,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
-        this.sessionCredentialsService = sessionCredentialsService;
         this.emailServiceFactory = emailServiceFactory;
         this.userIdentityService = userIdentityService;
     }
@@ -97,7 +90,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.emailServiceFactory = new EmailServiceFactory(configService);
         this.userIdentityService = new UserIdentityService(configService);
     }
@@ -135,7 +127,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             verifiableCredentialService.deleteVcs(vcs, isUserInitiated);
             criResponseService.deleteCriResponseItem(userId, F2F_CRI);
-            sessionCredentialsService.deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
 
             if (isUserInitiated) {
                 sendIpvVcResetAuditEvent(event, userId, govukSigninJourneyId);
@@ -154,20 +145,30 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                 }
             }
             return JOURNEY_NEXT;
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            return buildErrorResponse(e.getErrorResponse(), e);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            LOGGER.error(LogHelper.buildErrorMessage("HTTP response exception", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         } catch (CredentialParseException e) {
-            return buildErrorResponse(FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (SqsException e) {
-            return buildErrorResponse(FAILED_TO_SEND_AUDIT_EVENT, e);
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
+                    .toObjectMap();
         }
-    }
-
-    private Map<String, Object> buildErrorResponse(ErrorResponse errorResponse, Exception e) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
-        return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse)
-                .toObjectMap();
     }
 
     private void sendIpvVcResetAuditEvent(
