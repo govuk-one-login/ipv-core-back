@@ -128,8 +128,8 @@ public class CriStoringService {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
             } else {
                 verifiableCredentialService.persistUserCredentials(vc);
-                sessionCredentialsService.persistCredentials(
-                        List.of(vc), ipvSessionItem.getIpvSessionId(), true);
+                sessionCredentialsService.persistCredential(
+                        vc, ipvSessionItem.getIpvSessionId(), true);
                 ipvSessionItem.addVcReceivedThisSession(vc);
             }
         }
