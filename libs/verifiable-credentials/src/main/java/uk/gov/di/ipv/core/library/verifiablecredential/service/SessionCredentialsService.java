@@ -16,22 +16,16 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
-
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final DataStore<SessionCredentialItem> dataStore;
-    private final ConfigService configService;
 
-    public SessionCredentialsService(
-            DataStore<SessionCredentialItem> dataStore, ConfigService configService) {
+    public SessionCredentialsService(DataStore<SessionCredentialItem> dataStore) {
         this.dataStore = dataStore;
-        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SessionCredentialsService(ConfigService configService) {
-        this.configService = configService;
         this.dataStore =
                 new DataStore<>(
                         configService.getEnvironmentVariable(
@@ -45,15 +39,9 @@ public class SessionCredentialsService {
             VerifiableCredential credential, String ipvSessionId, boolean receivedThisSession)
             throws VerifiableCredentialException {
         try {
-            if (configService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)) {
-                dataStore.create(
-                        credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
-                        ConfigurationVariable.SESSION_CREDENTIALS_TTL);
-            } else {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "Not writing to session credentials table as feature flag not active"));
-            }
+            dataStore.create(
+                    credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
+                    ConfigurationVariable.SESSION_CREDENTIALS_TTL);
         } catch (Exception e) {
             LOGGER.error("Error persisting session credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(
