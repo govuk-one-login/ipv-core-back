@@ -84,8 +84,7 @@ public enum ErrorResponse {
     MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER(1068, "Missing deleteOnlyGPG45VCs in request"),
     MITIGATION_ROUTE_CONFIG_NOT_FOUND(
             1069, "No mitigation journey route event found in cimit config"),
-    UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route"),
-    FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential");
+    UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route");
 
     private final int code;
     private final String message;

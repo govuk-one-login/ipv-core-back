@@ -17,6 +17,9 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -30,7 +33,6 @@ import uk.gov.di.ipv.core.library.service.EmailServiceFactory;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Arrays;
@@ -51,8 +53,8 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.DELETE_ONLY_GPG45
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IS_USER_INITIATED;
 
 @ExtendWith(MockitoExtension.class)
-class ResetIdentityHandlerTest {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+public class ResetIdentityHandlerTest {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
@@ -67,7 +69,6 @@ class ResetIdentityHandlerTest {
     @Mock private Context context;
     @Mock private List<VerifiableCredential> vcs;
     @Mock private VerifiableCredentialService verifiableCredentialService;
-    @Mock private SessionCredentialsService sessionCredentialsService;
     @Mock private CriResponseService criResponseService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService ipvSessionService;
@@ -101,7 +102,7 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext() throws Exception {
+    void handleRequest_whenNotUserInitiated_shouldDeleteUsersVcsAndReturnNext() {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -118,13 +119,11 @@ class ResetIdentityHandlerTest {
 
         // Act
         JourneyResponse journeyResponse =
-                OBJECT_MAPPER.convertValue(
+                objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
         verify(verifiableCredentialService).deleteVcs(any(), any());
-        verify(sessionCredentialsService)
-                .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verifyNoInteractions(mockAuditService);
         verifyNoInteractions(emailService);
@@ -132,7 +131,7 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenUserInitiated_shouldSendEmailAndRaiseAuditLog() throws Exception {
+    void handleRequest_whenUserInitiated_shouldSendEmailAndRaiseAuditLog() throws SqsException {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -150,13 +149,11 @@ class ResetIdentityHandlerTest {
 
         // Act
         JourneyResponse journeyResponse =
-                OBJECT_MAPPER.convertValue(
+                objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
         verify(verifiableCredentialService).deleteVcs(any(), any());
-        verify(sessionCredentialsService)
-                .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -165,7 +162,8 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenUserInitiatedF2F_shouldSendEmailAndRaiseAuditLog() throws Exception {
+    void handleRequest_whenUserInitiatedF2F_shouldSendEmailAndRaiseAuditLog()
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -200,13 +198,11 @@ class ResetIdentityHandlerTest {
 
         // Act
         JourneyResponse journeyResponse =
-                OBJECT_MAPPER.convertValue(
+                objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
         verify(verifiableCredentialService).deleteVcs(any(), any());
-        verify(sessionCredentialsService)
-                .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -217,7 +213,7 @@ class ResetIdentityHandlerTest {
 
     @Test
     void handleRequest_whenUserInitiatedF2F_shouldSendEmailWithNullFullNameAndRaiseAuditLog()
-            throws Exception {
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -240,13 +236,11 @@ class ResetIdentityHandlerTest {
 
         // Act
         JourneyResponse journeyResponse =
-                OBJECT_MAPPER.convertValue(
+                objectMapper.convertValue(
                         resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         // Assert
         verify(verifiableCredentialService).deleteVcs(any(), any());
-        verify(sessionCredentialsService)
-                .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         verify(mockAuditService, times(1)).sendAuditEvent((AuditEvent) any());
         verify(emailService, times(1))
@@ -255,8 +249,7 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequest_whenDeleteOnlyGPG45Vcs_shouldCallVcHelperToFilterOnGPG45VCs()
-            throws Exception {
+    void handleRequest_whenDeleteOnlyGPG45Vcs_shouldCallVcHelperToFilterOnGPG45VCs() {
         try (MockedStatic<VcHelper> dummyStatic = mockStatic(VcHelper.class)) {
             // Arrange
             when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -275,23 +268,20 @@ class ResetIdentityHandlerTest {
 
             // Act
             JourneyResponse journeyResponse =
-                    OBJECT_MAPPER.convertValue(
+                    objectMapper.convertValue(
                             resetIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
 
             // Assert
             dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(1));
             verify(verifiableCredentialService).deleteVcs(any(), any());
-            verify(sessionCredentialsService)
-                    .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
             verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
             assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
         }
     }
 
     @Test
-    void handleRequest_whenFalseDeleteOnlyGPG45Vcs_shouldNotCallVcHelperToFilterOnGPG45VCs()
-            throws Exception {
+    void handleRequest_whenFalseDeleteOnlyGPG45Vcs_shouldNotCallVcHelperToFilterOnGPG45VCs() {
         try (MockedStatic<VcHelper> dummyStatic = mockStatic(VcHelper.class)) {
             // Arrange
             when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -310,15 +300,13 @@ class ResetIdentityHandlerTest {
 
             // Act
             JourneyResponse journeyResponse =
-                    OBJECT_MAPPER.convertValue(
+                    objectMapper.convertValue(
                             resetIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
 
             // Assert
             dummyStatic.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()), times(0));
             verify(verifiableCredentialService).deleteVcs(any(), any());
-            verify(sessionCredentialsService)
-                    .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
             verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
             assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
         }

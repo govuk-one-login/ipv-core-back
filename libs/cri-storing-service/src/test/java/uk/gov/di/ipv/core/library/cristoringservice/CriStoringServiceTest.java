@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
@@ -52,7 +52,6 @@ class CriStoringServiceTest {
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
-    @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private CiMitService mockCiMitService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
@@ -63,6 +62,17 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
     @Captor private ArgumentCaptor<VerifiableCredential> vcCaptor;
     @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
+
+    @BeforeEach
+    void setUp() {
+        criStoringService =
+                new CriStoringService(
+                        mockConfigService,
+                        mockAuditService,
+                        mockCriResponseService,
+                        mockVerifiableCredentialService,
+                        mockCiMitService);
+    }
 
     @Test
     void storeCriResponseShouldStoreResponseAndSendAuditEvent()
@@ -156,14 +166,12 @@ class CriStoringServiceTest {
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
         verify(mockVerifiableCredentialService).persistUserCredentials(vc);
-        verify(mockSessionCredentialsService)
-                .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
     @Test
-    void storeVcsShouldProcessTicfVcsAndSendAuditEvents() throws Exception {
+    void storeTicfVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vc = vcTicf();
@@ -202,9 +210,7 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockVerifiableCredentialService, never()).persistUserCredentials(vc);
-        verify(mockSessionCredentialsService, never())
-                .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
+        verify(mockVerifiableCredentialService, times(0)).persistUserCredentials(vc);
         verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
