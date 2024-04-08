@@ -15,6 +15,7 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
@@ -480,7 +481,22 @@ public interface VcFixtures {
     VerifiableCredential M1A_EXPERIAN_FRAUD_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    EXPERIAN_KBV_CRI,
+                    EXPERIAN_FRAUD_CRI,
+                    TestVc.builder()
+                            .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .address(List.of(ADDRESS_3))
+                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .build())
+                            .build(),
+                    "https://review-f.integration.account.gov.uk",
+                    Instant.now().minusSeconds(10));
+
+    VerifiableCredential EXPIRED_M1A_EXPERIAN_FRAUD_VC =
+            generateVerifiableCredential(
+                    TEST_SUBJECT,
+                    EXPERIAN_FRAUD_CRI,
                     TestVc.builder()
                             .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                             .credentialSubject(

@@ -76,6 +76,7 @@ services:
       CRI_RESPONSE_TABLE_NAME: cri-response-${ENVIRONMENT}
       F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
       IPV_SESSIONS_TABLE_NAME: sessions-${ENVIRONMENT}
+      SESSION_CREDENTIALS_TABLE_NAME: session-credentials-${ENVIRONMENT}
       SIGNING_KEY_ID_PARAM: /${ENVIRONMENT}/core/self/signingKeyId
       SQS_AUDIT_EVENT_QUEUE_URL: https://sqs.eu-west-2.amazonaws.com/130355686670/audit-sqs-AuditEventQueue-JnUaGH1DLHLZ
       USER_ISSUED_CREDENTIALS_TABLE_NAME: user-issued-credentials-v2-${ENVIRONMENT}
