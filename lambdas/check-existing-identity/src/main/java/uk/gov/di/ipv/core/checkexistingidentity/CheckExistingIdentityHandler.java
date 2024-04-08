@@ -362,6 +362,12 @@ public class CheckExistingIdentityHandler
             // Profile matched
             Vot attainedVot = strongestAttainedVotFromVtr.get();
 
+            // Store relevant VCs in the session credentials table
+            sessionCredentialsService.persistCredentials(
+                    VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
+                    ipvSessionItem.getIpvSessionId(),
+                    false);
+
             ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
@@ -445,29 +451,21 @@ public class CheckExistingIdentityHandler
         if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
             // the only VC we should possibly have collected this session at this point is a
             // migration VC
-            boolean isOpProfileReuse =
-                    vcReceivedThisSession == null || vcReceivedThisSession.isEmpty();
-            sessionCredentialsService.persistCredentials(
-                    VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
-                    auditEventUser.getSessionId(),
-                    !isOpProfileReuse);
-            return isOpProfileReuse
+            return vcReceivedThisSession == null || vcReceivedThisSession.isEmpty()
                     ? JOURNEY_OPERATIONAL_PROFILE_REUSE
                     : JOURNEY_IN_MIGRATION_REUSE;
         }
 
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK) && !hasCurrentFraudVc(vcs)) {
-            LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Fraud VC found and expired, resetting identity for GPG45 evaluation."));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
-        sessionCredentialsService.persistCredentials(
-                VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
-                auditEventUser.getSessionId(),
-                false);
         return JOURNEY_REUSE;
     }
 
