@@ -73,7 +73,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -285,7 +284,7 @@ class CheckExistingIdentityHandlerTest {
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId());
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.P2);
@@ -341,7 +340,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId());
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
@@ -367,7 +366,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId());
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
@@ -419,7 +418,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId());
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
@@ -446,7 +445,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
 
             verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), false);
+                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId());
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
@@ -499,7 +498,7 @@ class CheckExistingIdentityHandlerTest {
                                     HTTPResponse.SC_SERVER_ERROR,
                                     ErrorResponse.FAILED_TO_SAVE_CREDENTIAL))
                     .when(mockSessionCredentialService)
-                    .persistCredentials(any(), any(), anyBoolean());
+                    .persistCredentials(any(), any());
 
             var journeyResponse =
                     toResponseClass(
@@ -1332,7 +1331,7 @@ class CheckExistingIdentityHandlerTest {
         var expectedStoredVc =
                 vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
         verify(mockSessionCredentialService)
-                .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
+                .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId());
     }
 
     @Test
@@ -1362,7 +1361,7 @@ class CheckExistingIdentityHandlerTest {
         assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
 
         verify(mockSessionCredentialService)
-                .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
+                .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId());
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {

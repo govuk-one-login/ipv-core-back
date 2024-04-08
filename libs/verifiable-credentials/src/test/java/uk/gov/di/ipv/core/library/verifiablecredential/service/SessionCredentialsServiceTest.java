@@ -67,7 +67,7 @@ class SessionCredentialsServiceTest {
         void persistCredentialsShouldNotCreateItemsInDataStore() throws Exception {
             List<VerifiableCredential> credentialsToStore =
                     List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
-            sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID, false);
+            sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID);
 
             verify(mockDataStore, never()).create(any(), any());
         }
@@ -113,7 +113,7 @@ class SessionCredentialsServiceTest {
         void persistCredentialsShouldStoreAllCredentials() throws Exception {
             List<VerifiableCredential> credentialsToStore =
                     List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
-            sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID, false);
+            sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID);
 
             verify(mockDataStore, times(3))
                     .create(
