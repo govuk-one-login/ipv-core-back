@@ -296,7 +296,7 @@ public class CheckExistingIdentityHandler
             // sends the user on mitigation journey if the CI breached and mitigation is possible
             return ciScoringCheckResponse;
         }
-        return JOURNEY_RESET_IDENTITY;
+        return JOURNEY_RESET_GPG45_IDENTITY;
     }
 
     @Tracing
