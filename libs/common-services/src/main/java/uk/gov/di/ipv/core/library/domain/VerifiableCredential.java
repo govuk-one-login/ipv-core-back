@@ -2,10 +2,8 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.text.ParseException;
@@ -13,22 +11,19 @@ import java.time.Instant;
 import java.util.Date;
 
 @Getter
-@EqualsAndHashCode
 public class VerifiableCredential {
     private final String userId;
     private final String criId;
     private final String vcString;
     private final JWTClaimsSet claimsSet;
-    private final SignedJWT signedJwt;
 
-    private VerifiableCredential(String userId, String criId, SignedJWT signedJwt)
+    private VerifiableCredential(String userId, String criId, SignedJWT jwt)
             throws CredentialParseException {
         try {
             this.userId = userId;
             this.criId = criId;
-            this.vcString = signedJwt.serialize();
-            this.claimsSet = signedJwt.getJWTClaimsSet();
-            this.signedJwt = signedJwt;
+            this.vcString = jwt.serialize();
+            this.claimsSet = jwt.getJWTClaimsSet();
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
@@ -70,10 +65,5 @@ public class VerifiableCredential {
             vcStoreItem.setExpirationTime(expirationTime.toInstant());
         }
         return vcStoreItem;
-    }
-
-    public SessionCredentialItem toSessionCredentialItem(
-            String ipvSessionId, boolean receivedThisSession) {
-        return new SessionCredentialItem(ipvSessionId, criId, signedJwt, receivedThisSession);
     }
 }
