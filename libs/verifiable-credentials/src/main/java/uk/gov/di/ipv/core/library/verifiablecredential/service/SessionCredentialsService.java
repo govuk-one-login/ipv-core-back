@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -53,19 +52,6 @@ public class SessionCredentialsService {
             throws VerifiableCredentialException {
         for (var vc : vcs) {
             persistCredential(vc, ipvSessionId, false);
-        }
-    }
-
-    public void deleteSessionCredentials(String ipvSessionId) throws VerifiableCredentialException {
-        LOGGER.info(
-                LogHelper.buildLogMessage(
-                        "Deleting credentials for current session from session credentials table"));
-        try {
-            dataStore.delete(ipvSessionId);
-        } catch (Exception e) {
-            LOGGER.error("Error deleting session credentials: {}", e.getMessage(), e);
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
         }
     }
 }
