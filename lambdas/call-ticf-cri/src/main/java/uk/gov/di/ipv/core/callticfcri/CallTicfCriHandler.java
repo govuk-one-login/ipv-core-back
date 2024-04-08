@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Map;
@@ -76,7 +75,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         new AuditService(AuditService.getDefaultSqsClient(), configService),
                         null,
                         new VerifiableCredentialService(configService),
-                        new SessionCredentialsService(configService),
                         ciMitService);
     }
 

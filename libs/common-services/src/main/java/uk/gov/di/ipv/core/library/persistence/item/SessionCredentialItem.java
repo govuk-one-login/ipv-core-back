@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.persistence.item;
 
 import com.nimbusds.jwt.SignedJWT;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
@@ -10,15 +8,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 @DynamoDbBean
-@Getter
-@NoArgsConstructor
 public class SessionCredentialItem implements DynamodbItem {
 
     private static final String SORT_KEY_TEMPLATE = "%s#%s";
-    private String ipvSessionId;
-    private String sortKey;
-    private String credential;
-    private boolean receivedThisSession;
+    private final String ipvSessionId;
+    private final String sortKey;
+    private final String credential;
+    private final boolean receivedThisSession;
     private long ttl;
 
     public SessionCredentialItem(
