@@ -451,7 +451,7 @@ class CriCheckingServiceTest {
                                         vcResponse, clientOAuthSessionItem));
 
         // Assert
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE,
                 exception.getErrorResponse());

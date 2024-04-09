@@ -95,6 +95,34 @@ class VerifiableCredentialTest {
     }
 
     @Test
+    void fromSessionCredentialItemShouldCreateAVerifiableCredential() throws Exception {
+        var sessionCredentialItem =
+                new SessionCredentialItem(SESSION_ID, CRI_ID, vcFixture.getSignedJwt(), true);
+        var generatedVc =
+                VerifiableCredential.fromSessionCredentialItem(sessionCredentialItem, USER_ID);
+
+        assertEquals(USER_ID, generatedVc.getUserId());
+        assertEquals(CRI_ID, generatedVc.getCriId());
+        assertEquals(vcFixture.getVcString(), generatedVc.getVcString());
+        assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
+        assertEquals(vcFixture.getSignedJwt().serialize(), generatedVc.getSignedJwt().serialize());
+    }
+
+    @Test
+    void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfUnableToParse() {
+        var mockSignedJwt = mock(SignedJWT.class);
+        when(mockSignedJwt.serialize()).thenReturn("👽");
+        var sessionCredentialItem =
+                new SessionCredentialItem(SESSION_ID, CRI_ID, mockSignedJwt, true);
+
+        assertThrows(
+                CredentialParseException.class,
+                () ->
+                        VerifiableCredential.fromSessionCredentialItem(
+                                sessionCredentialItem, USER_ID));
+    }
+
+    @Test
     void toSessionCredentialItemShouldCreateOne() {
         var sessionCredentialItem = vcFixture.toSessionCredentialItem(SESSION_ID, true);
 

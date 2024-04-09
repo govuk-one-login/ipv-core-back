@@ -189,8 +189,8 @@ public class ProcessCriCallbackHandler
                                 "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID));
             }
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
         } catch (JsonProcessingException | SqsException e) {
             return buildErrorResponse(
                     e,
@@ -201,8 +201,6 @@ public class ProcessCriCallbackHandler
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-        } catch (VerifiableCredentialException e) {
-            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
         } catch (CiPutException | CiPostMitigationsException e) {
             return buildErrorResponse(
                     e,

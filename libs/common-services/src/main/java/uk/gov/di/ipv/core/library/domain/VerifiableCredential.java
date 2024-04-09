@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.Date;
 
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
     private final String userId;
     private final String criId;
@@ -70,6 +70,20 @@ public class VerifiableCredential {
             vcStoreItem.setExpirationTime(expirationTime.toInstant());
         }
         return vcStoreItem;
+    }
+
+    public static VerifiableCredential fromSessionCredentialItem(
+            SessionCredentialItem sessionCredentialItem, String userId)
+            throws CredentialParseException {
+        try {
+            return new VerifiableCredential(
+                    userId,
+                    sessionCredentialItem.getCriId(),
+                    SignedJWT.parse(sessionCredentialItem.getCredential()));
+        } catch (ParseException e) {
+            throw new CredentialParseException(
+                    "Failed to parse SessionCredentialItem credential", e);
+        }
     }
 
     public SessionCredentialItem toSessionCredentialItem(

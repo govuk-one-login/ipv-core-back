@@ -8,7 +8,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     ALTERNATE_DOC_MITIGATION_ENABLED("alternateDocMitigationEnabled"),
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
     TICF_CRI_BETA("ticfCriBeta"),
-    SESSION_CREDENTIALS_TABLE_WRITES("sessionCredentialsTableWrites");
+    SESSION_CREDENTIALS_TABLE_WRITES("sessionCredentialsTableWrites"),
+    SESSION_CREDENTIALS_TABLE_READS("sessionCredentialsTableReads");
 
     private final String name;
 

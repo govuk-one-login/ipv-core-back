@@ -156,7 +156,7 @@ class VerifiableCredentialValidatorTest {
                                     TEST_COMPONENT_ID,
                                     false);
                         });
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
@@ -177,7 +177,7 @@ class VerifiableCredentialValidatorTest {
                                     "not the component id",
                                     false);
                         });
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
@@ -198,7 +198,7 @@ class VerifiableCredentialValidatorTest {
                                     TEST_COMPONENT_ID,
                                     false);
                         });
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
@@ -255,7 +255,7 @@ class VerifiableCredentialValidatorTest {
                                     TEST_COMPONENT_ID,
                                     false);
                         });
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
@@ -280,7 +280,7 @@ class VerifiableCredentialValidatorTest {
                                     false);
                         });
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
@@ -329,7 +329,7 @@ class VerifiableCredentialValidatorTest {
                                     false);
                         });
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());

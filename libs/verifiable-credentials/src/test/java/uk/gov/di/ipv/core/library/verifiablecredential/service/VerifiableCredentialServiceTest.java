@@ -107,7 +107,7 @@ class VerifiableCredentialServiceTest {
                                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
 
         assertNotNull(thrown);
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getResponseCode());
         assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
     }
 
