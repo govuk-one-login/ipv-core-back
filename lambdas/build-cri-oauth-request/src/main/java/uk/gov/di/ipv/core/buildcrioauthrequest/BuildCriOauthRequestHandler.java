@@ -9,7 +9,6 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +36,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
@@ -51,6 +51,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URISyntaxException;
@@ -64,8 +65,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -79,6 +87,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 public class BuildCriOauthRequestHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
@@ -91,7 +100,6 @@ public class BuildCriOauthRequestHandler
     public static final String CONTEXT = "context";
     public static final String SCOPE = "scope";
 
-    private final ObjectMapper mapper = new ObjectMapper();
     private final ConfigService configService;
     private final KmsEs256SignerFactory signerFactory;
     private final AuditService auditService;
@@ -100,6 +108,7 @@ public class BuildCriOauthRequestHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     public BuildCriOauthRequestHandler(
             ConfigService configService,
@@ -109,8 +118,8 @@ public class BuildCriOauthRequestHandler
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            VerifiableCredentialService verifiableCredentialService) {
-
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -119,6 +128,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -132,6 +142,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -149,7 +160,7 @@ public class BuildCriOauthRequestHandler
             if (criId == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
-                                HttpStatus.SC_BAD_REQUEST,
+                                SC_BAD_REQUEST,
                                 ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
@@ -164,7 +175,7 @@ public class BuildCriOauthRequestHandler
             if (criConfig == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
-                                HttpStatus.SC_BAD_REQUEST,
+                                SC_BAD_REQUEST,
                                 ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
@@ -218,60 +229,48 @@ public class BuildCriOauthRequestHandler
 
             return criResponse.toObjectMap();
 
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
-                return new JourneyErrorResponse(
-                                JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
-                        .toObjectMap();
-            }
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to create cri JAR", e.getErrorReason()));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            e.getErrorResponse())
-                    .toObjectMap();
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            return buildJourneyErrorResponse(
+                    e.getErrorReason(), e, e.getResponseCode(), e.getErrorResponse());
         } catch (SqsException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
-                            e.getMessage())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    "Failed to send audit event to SQS queue",
+                    e,
+                    SC_INTERNAL_SERVER_ERROR,
+                    FAILED_TO_SEND_AUDIT_EVENT);
         } catch (CredentialParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to get credentials to build request.", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
-                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    "Failed to get credentials to build request",
+                    e,
+                    SC_BAD_REQUEST,
+                    FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (ParseException | JOSEException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse encryption public JWK.", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
-                            ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG)
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    "Failed to parse encryption public JWK",
+                    e,
+                    SC_BAD_REQUEST,
+                    FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (URISyntaxException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to construct redirect uri.", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
-                            e.getMessage())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    "Failed to construct redirect uri",
+                    e,
+                    SC_INTERNAL_SERVER_ERROR,
+                    FAILED_TO_CONSTRUCT_REDIRECT_URI);
         } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential.", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE,
-                            e.getMessage())
-                    .toObjectMap();
+            return buildJourneyErrorResponse(
+                    "Unable to determine type of credential",
+                    e,
+                    SC_INTERNAL_SERVER_ERROR,
+                    FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         }
+    }
+
+    private Map<String, Object> buildJourneyErrorResponse(
+            String errorMessage, Exception e, int statusCode, ErrorResponse errorResponse) {
+        LOGGER.error(LogHelper.buildErrorMessage(errorMessage, e));
+        return new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH, statusCode, errorResponse, e.getMessage())
+                .toObjectMap();
     }
 
     private String getCriIdFromJourney(String journeyPath) {
@@ -305,9 +304,14 @@ public class BuildCriOauthRequestHandler
             String context,
             String scope)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
-                    UnknownEvidenceTypeException, CredentialParseException {
+                    UnknownEvidenceTypeException, CredentialParseException,
+                    VerifiableCredentialException {
 
-        var vcs = getGpg45Vcs(userId);
+        var vcs =
+                configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                        ? sessionCredentialsService.getCredentials(
+                                ipvSessionItem.getIpvSessionId(), userId)
+                        : getGpg45Vcs(userId);
 
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributesForUser(ipvSessionItem, vcs, criId);
@@ -389,7 +393,8 @@ public class BuildCriOauthRequestHandler
 
                 if (VcHelper.isSuccessfulVc(vc)) {
                     JsonNode credentialSubject =
-                            mapper.readTree(
+                            OBJECT_MAPPER
+                                    .readTree(
                                             SignedJWT.parse(vc.getVcString())
                                                     .getPayload()
                                                     .toString())
@@ -404,7 +409,8 @@ public class BuildCriOauthRequestHandler
                     }
 
                     SharedClaims credentialsSharedClaims =
-                            mapper.readValue(credentialSubject.toString(), SharedClaims.class);
+                            OBJECT_MAPPER.readValue(
+                                    credentialSubject.toString(), SharedClaims.class);
                     if (credentialIss.equals(configService.getComponentId(ADDRESS_CRI))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
@@ -422,7 +428,7 @@ public class BuildCriOauthRequestHandler
             } catch (ParseException | CredentialParseException e) {
                 LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials.", e));
                 throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                        500, FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
         return SharedClaimsResponse.from(
