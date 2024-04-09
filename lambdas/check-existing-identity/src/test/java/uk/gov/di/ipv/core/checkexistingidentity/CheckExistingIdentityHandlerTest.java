@@ -8,6 +8,7 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -41,10 +43,12 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -56,6 +60,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
@@ -68,6 +73,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -85,16 +91,18 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -117,6 +125,7 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
+    private static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static List<VerifiableCredential> VCS_FROM_STORE;
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
@@ -139,6 +148,8 @@ class CheckExistingIdentityHandlerTest {
     private static ECDSASigner jwtSigner;
     private static VerifiableCredential pcl200Vc;
     private static VerifiableCredential pcl250Vc;
+    private static VerifiableCredential gpg45Vc = vcDrivingPermit();
+
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -150,9 +161,11 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CiMitService ciMitService;
     @Mock private CiMitUtilityService ciMitUtilityService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private SessionCredentialsService mockSessionCredentialService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
     @Spy private IpvSessionItem ipvSessionItem;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
     private JourneyRequest event;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
@@ -207,7 +220,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -216,8 +229,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
     }
 
@@ -235,8 +246,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
     }
 
@@ -252,6 +261,8 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(gpg45Vc, vcHmrcMigration()));
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(Vot.P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -264,8 +275,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                    ArgumentCaptor.forClass(AuditEvent.class);
             verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
@@ -275,6 +284,9 @@ class CheckExistingIdentityHandlerTest {
                     auditEventArgumentCaptor.getAllValues().get(1).getEventName());
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.P2);
@@ -297,8 +309,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                    ArgumentCaptor.forClass(AuditEvent.class);
             verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
@@ -317,8 +327,9 @@ class CheckExistingIdentityHandlerTest {
         @Test // User returning after migration
         void
                 shouldReturnJourneyOpProfileReuseResponseIfPCL200RequestedAndMetWhenNoVcInCurrentSession()
-                        throws CredentialParseException {
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(pcl200Vc));
+                        throws Exception {
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(gpg45Vc, pcl200Vc));
             clientOAuthSessionItem.setVtr(
                     List.of(Vot.P2.name(), Vot.PCL250.name(), Vot.PCL200.name()));
             ipvSessionItem.setVcReceivedThisSession(List.of());
@@ -329,6 +340,10 @@ class CheckExistingIdentityHandlerTest {
                             JourneyResponse.class);
 
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), false);
+
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
@@ -339,8 +354,9 @@ class CheckExistingIdentityHandlerTest {
         @Test // User returning after migration
         void
                 shouldReturnJourneyOpProfileReuseResponseIfPCL250RequestedAndMetWhenNoVcInCurrentSession()
-                        throws CredentialParseException {
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(pcl250Vc));
+                        throws Exception {
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(gpg45Vc, pcl250Vc));
             clientOAuthSessionItem.setVtr(List.of(Vot.P2.name(), Vot.PCL250.name()));
             ipvSessionItem.setVcReceivedThisSession(List.of());
 
@@ -350,6 +366,9 @@ class CheckExistingIdentityHandlerTest {
                             JourneyResponse.class);
 
             assertEquals(JOURNEY_OP_PROFILE_REUSE, journeyResponse);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), false);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
@@ -384,10 +403,11 @@ class CheckExistingIdentityHandlerTest {
         @Test // User in process of migration
         void
                 shouldReturnJourneyInMigrationReuseResponseIfPCL200RequestedAndMetWhenVcInCurrentSession()
-                        throws CredentialParseException {
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(pcl200Vc));
+                        throws Exception {
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(gpg45Vc, pcl200Vc));
             when(ipvSessionItem.getVcReceivedThisSession())
-                    .thenReturn(List.of(pcl250Vc.getVcString()));
+                    .thenReturn(List.of(pcl200Vc.getVcString()));
             clientOAuthSessionItem.setVtr(
                     List.of(Vot.P2.name(), Vot.PCL250.name(), Vot.PCL200.name()));
             ipvSessionItem.setVcReceivedThisSession(List.of(pcl200Vc.getVcString()));
@@ -398,6 +418,10 @@ class CheckExistingIdentityHandlerTest {
                             JourneyResponse.class);
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(List.of(pcl200Vc), ipvSessionItem.getIpvSessionId(), true);
+
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL200);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
@@ -408,8 +432,9 @@ class CheckExistingIdentityHandlerTest {
         @Test // User in process of migration
         void
                 shouldReturnJourneyInMigrationReuseResponseIfPCL250RequestedAndMetWhenVcInCurrentSession()
-                        throws CredentialParseException {
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(pcl250Vc));
+                        throws Exception {
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(gpg45Vc, pcl250Vc));
             when(ipvSessionItem.getVcReceivedThisSession())
                     .thenReturn(List.of(pcl250Vc.getVcString()));
             clientOAuthSessionItem.setVtr(List.of(Vot.P2.name(), Vot.PCL250.name()));
@@ -420,6 +445,10 @@ class CheckExistingIdentityHandlerTest {
                             JourneyResponse.class);
 
             assertEquals(JOURNEY_IN_MIGRATION_REUSE, journeyResponse);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), true);
+
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
@@ -444,8 +473,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                    ArgumentCaptor.forClass(AuditEvent.class);
             verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
@@ -459,6 +486,35 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnErrorResponseIfVcCanNotBeStoredInSessionCredentialTable()
+                throws Exception {
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(Vot.P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            doThrow(
+                            new VerifiableCredentialException(
+                                    HTTPResponse.SC_SERVER_ERROR,
+                                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL))
+                    .when(mockSessionCredentialService)
+                    .persistCredentials(any(), any(), anyBoolean());
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyErrorResponse.class);
+
+            assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
+
+            assertEquals(HTTPResponse.SC_SERVER_ERROR, journeyResponse.getStatusCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getCode(), journeyResponse.getCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
+                    journeyResponse.getMessage());
         }
     }
 
@@ -481,8 +537,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
@@ -511,8 +565,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
@@ -532,7 +584,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
         clientOAuthSessionItem.setVtr((List<String>) votAndVtr.get("vtr"));
 
@@ -566,8 +618,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
@@ -593,8 +643,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -613,7 +661,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context),
                         JourneyErrorResponse.class);
 
-        assertEquals("/journey/error", journeyResponse.getJourney());
+        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, journeyResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), journeyResponse.getCode());
@@ -706,8 +754,6 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
@@ -736,8 +782,6 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
@@ -784,7 +828,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyErrorResponse.class);
 
-        assertEquals("/journey/error", journeyResponse.getJourney());
+        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(
@@ -820,7 +864,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyErrorResponse.class);
 
-        assertEquals("/journey/error", journeyResponse.getJourney());
+        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), journeyResponse.getCode());
@@ -983,7 +1027,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyErrorResponse.class);
 
-        assertEquals(JOURNEY_ERROR_PATH, response.getJourney());
+        assertEquals(JourneyUris.JOURNEY_ERROR_PATH, response.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
@@ -999,7 +1043,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         JourneyResponse journeyResponse =
@@ -1009,8 +1053,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
@@ -1047,8 +1089,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
@@ -1077,9 +1117,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(true);
-        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
+        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1087,12 +1127,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
         assertEquals(JOURNEY_REUSE, journeyResponse);
         verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
-
-        ArgumentCaptor<String> configServiceArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(configService, times(3)).enabled(configServiceArgumentCaptor.capture());
-        assertEquals(RESET_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(0));
-        assertEquals(
-                INHERITED_IDENTITY.getName(), configServiceArgumentCaptor.getAllValues().get(1));
     }
 
     @Test
@@ -1112,8 +1146,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        //        enables the inherited identity feature (could be better)
-        when(configService.enabled(anyString())).thenReturn(false).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1135,7 +1168,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyStep(any())).thenReturn(Optional.empty());
 
@@ -1158,7 +1191,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
@@ -1265,7 +1298,14 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_FROM_STORE);
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a(),
+                        M1B_DCMAW_VC);
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
 
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                         any(), eq(Vot.P2.getSupportedGpg45Profiles())))
@@ -1274,9 +1314,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(false);
-        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
+        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1285,6 +1325,11 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
         assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+        var expectedStoredVc =
+                vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
+        verify(mockSessionCredentialService)
+                .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
     }
 
     @Test
@@ -1300,9 +1345,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY.getName())).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY.getName())).thenReturn(false);
-        when(configService.enabled(REPEAT_FRAUD_CHECK.getName())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
+        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this
@@ -1312,6 +1357,9 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
         assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+        verify(mockSessionCredentialService)
+                .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
     }
 
     private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
