@@ -358,7 +358,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-410-AC1 with given names removed")
-                .uponReceiving("Valid credential request for DVLA VC")
+                .uponReceiving("Valid credential request for DVLA VC with no given name")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -863,7 +863,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-4733-AC1")
-                .uponReceiving("Valid credential request for DVA VC")
+                .uponReceiving("Valid credential request for driving licence VC with no issuer")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1107,8 +1107,8 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("Returned VC is from DCMAW-5176-AC1")
-                .uponReceiving("Valid credential request for passport VC")
+                .given("Returned VC is from DCMAW-3146-AC1")
+                .uponReceiving("Valid credential request for NLD passport VC")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1219,92 +1219,6 @@ class ContractTest {
                         });
     }
 
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        configureMockConfigService(credentialIssuerConfig);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
-
-        // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
-                        CRI_OAUTH_SESSION_ITEM);
-
-        // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                var vc =
-                                        verifiableCredentialJwtValidator.parseAndValidate(
-                                                TEST_USER,
-                                                DCMAW_CRI,
-                                                credential,
-                                                VerifiableCredentialConstants
-                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
-                                                TEST_ISSUER,
-                                                false);
-
-                                JsonNode vcClaim =
-                                        objectMapper
-                                                .readTree(vc.getClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
-                                JsonNode evidence = vcClaim.get("evidence").get(0);
-
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode residencePermitNode =
-                                        credentialSubject.get("residencePermit").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
-                                assertEquals(
-                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
-
-                                assertEquals(
-                                        "2024-02-25",
-                                        residencePermitNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "ZR8016200",
-                                        residencePermitNode.get("documentNumber").asText());
-                                assertEquals(
-                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
-                                assertEquals(
-                                        "CR", residencePermitNode.get("documentType").asText());
-
-                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
-
-                                assertEquals(4, evidence.get("strengthScore").asInt());
-                                assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-    }
-
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedPassportCredential(
             PactDslWithProvider builder) {
@@ -1313,7 +1227,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-3171-AC2")
-                .uponReceiving("Valid credential request for failed passport VC")
+                .uponReceiving("Valid credential request for failed passport VC with CI")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1433,8 +1347,8 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is from DCMAW-5176-AC1")
-                .uponReceiving("Valid credential request for passport VC")
+                .given("VC is from BRP DCMAW-5176-AC1")
+                .uponReceiving("Valid credential request for BRP VC")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1550,7 +1464,7 @@ class ContractTest {
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-5175-AC1")
-                .uponReceiving("Valid credential request for failed BRP VC")
+                .uponReceiving("Valid credential request for failed BRP VC with CI")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1668,7 +1582,7 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("Returned VC is from DCMAW-5176-AC1")
+                .given("Returned VC is from BRC DCMAW-5176-AC1")
                 .uponReceiving("Valid credential request for valid BRC VC")
                 .path("/userinfo/v2")
                 .method("POST")
@@ -1697,6 +1611,92 @@ class ContractTest {
                                         })
                                 .build())
                 .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidBrcResponse")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidBrc(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        getCallbackRequest(
+                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        CRI_OAUTH_SESSION_ITEM);
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                DCMAW_CRI,
+                                                credential,
+                                                VerifiableCredentialConstants
+                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
+                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                TEST_ISSUER,
+                                                false);
+
+                                JsonNode vcClaim =
+                                        objectMapper
+                                                .readTree(vc.getClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
+
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
+                                JsonNode residencePermitNode =
+                                        credentialSubject.get("residencePermit").get(0);
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("LATEFAMFOUR", nameParts.get(0).get("value").asText());
+                                assertEquals(
+                                        "LATEFAMLASTFOUR", nameParts.get(1).get("value").asText());
+
+                                assertEquals(
+                                        "2024-02-25",
+                                        residencePermitNode.get("expiryDate").asText());
+                                assertEquals(
+                                        "ZR8016200",
+                                        residencePermitNode.get("documentNumber").asText());
+                                assertEquals(
+                                        "GBR", residencePermitNode.get("icaoIssuerCode").asText());
+                                assertEquals(
+                                        "CR", residencePermitNode.get("documentType").asText());
+
+                                assertEquals("1980-01-01", birthDateNode.get("value").asText());
+
+                                assertEquals(4, evidence.get("strengthScore").asInt());
+                                assertEquals(3, evidence.get("validityScore").asInt());
+                            } catch (VerifiableCredentialException
+                                    | ParseException
+                                    | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
@@ -1976,10 +1976,12 @@ class ContractTest {
     private static final String VALID_DVLA_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2065,24 +2067,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "MPwaYUsf5HBJ7Gp5oq5TJ71l1B2zfUXOrDeIXpotsnJpWsHonGV11yralObDqFM5UXCCrqemyCLQPWZ6z6seFg";
+            "XnLMK9U7VYjlcgYFnQYoH0hx03Uua_PVorQNNTSVDXJxrEfCpXoL4zz0azboiMQHsQwQj8XXoVQKl5Ce2NXL4Q";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2160,24 +2165,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
-            "iHsylWKOSdUv2bbCkKeU5yyQKNsuXiXSM7vcK3t7HFUnWKX--bAOwsw8_vOK84QeVhzOBy8u7RFR95kNF76OoQ";
+            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
     private static final String FAILED_DVLA_VC_WITH_CI_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2262,24 +2270,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
-            "hURplyqcvd87w2tm76hDRlGxuBgGmmKC6o-h8IA0fz3uuTHCLLyhhpH6DvuHRtOUleTmNJ19tabUXZwT9vIFjQ";
+            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1045-AC1
     private static final String FAILED_DVA_VC_NO_CI_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2366,24 +2377,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_NO_CI_SIGNATURE =
-            "Vfn6YWxKlwwdUeau-o_2Qx67ni2KMp6JPseqShrP9lcQskNaoBMpxFeae-Q5VAWlVcZlry9D9cU7tsrr6r2WYA";
+            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1559-AC2
     private static final String VALID_DVA_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2469,24 +2483,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "KLX-9APfnyzb9BOxHW4Brrdgw3ovGA6DotcwXjGweCJeBUzczzE3FsBwN6HKueM9wabsSWQql7mOxRjHwRqf0A";
+            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-4733-AC1
     private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2572,28 +2589,35 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
-            "TIe5PXJag0Mn9Oh_3Q6XuOWhwVfeiO-dvSabw9AZs3C2Md26cnX8eR_wu0MaMyD3w5MO_CzzBpYqxY-W6FmVhA";
+            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
     private static final String VALID_UK_PASSPORT_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -2626,16 +2650,12 @@ class ContractTest {
                   ],
                   "passport": [
                     {
-                      "icaoIssuerCode": "GBR",
                       "documentNumber": "549364783",
-                      "expiryDate": "2027-08-01"
+                      "expiryDate": "2027-08-01",
+                      "icaoIssuerCode": "GBR"
                     }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2655,24 +2675,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "dnXc3avCGKj6XdKpGnNTgjH3lpRZotBSyzx4ttFksnaheiHExklxqGHc8ZNRdIJu0cpFyP-Dw6Bl5xO46nZCVA";
+            "hhP8sfn4tvMUwKA79ywi1zG4ZEGJ1ojwoZf8mEaGMvbju1NL3VpjDeqxzRNj8FLIUeOyq9h7lqQuyTybrrWRPw";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3146-AC1
     private static final String VALID_NLD_PASSPORT_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2738,24 +2761,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NLD_PASSPORT_VC_SIGNATURE =
-            "HaA5_LWPnyzxb4zfBYDq9FR9rJGt4_YAfSJ7wzyF90SpCxRh2QoMscmkmBSz60rPZMXMoXXv5sWx96fbJyzd0g";
+            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3171-AC2
     private static final String FAILED_PASSPORT_VC_WITH_CI_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2824,24 +2850,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_WITH_CI_SIGNATURE =
-            "FZRxr03o7njVxKgUafUwSqbvbZtWNhmObEP7rHVoGcoWglBryD-Ghkn5gZ9AwqNVN8J4VpRIu2olij6TIiVq2A";
+            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5176-AC1
+    // From BRP DCMAW-5176-AC1 (there is also a BRC version!)
     private static final String VALID_BRP_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2904,24 +2933,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "9CWqNbNL9ypAU0nD9mtNnu3uYInfyBxFybk0Cymj38axQfN-UPDpepwgNHkR9ebEGGoIy4dW3SPzjzENddAt2w";
+            "BW6qRRzL7t_vtH9Hj4gnmDmAC6jgSA204dS_-DV9c_kcnH5fZ9V2kAJlOqSdUbuAqFeu7cAcZGC_6MWsaNRGvQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
     private static final String FAILED_BRP_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -2987,24 +3019,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRP_VC_SIGNATURE =
-            "hF24S4veyQQONjKl9brU5fkJb-uQro7khveIt20NtqYavO6_inquM5YkOI-jTtGkC-vej2kous5pLRFoXGDm1g";
+            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5176-AC1
+    // From BRC DCMAW-5176-AC1 (there is also a BRP version!)
     private static final String VALID_BRC_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -3067,24 +3102,27 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRC_VC_SIGNATURE =
-            "XHDMYWyiTJyBwZ2Za3PXRro7g0ggO_wDCLWXw8ukxrW5gE7wWz-ClBg_8oph_8QrbQBTArV5zkOmP2iCNMCknA";
+            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC2
     private static final String FAILED_BRC_VC_BODY =
             """
             {
-              "sub": "test-subject",
+              "iat": 1712228728,
               "iss": "dummyDcmawComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -3148,12 +3186,13 @@ class ContractTest {
                     ]
                   }
                 ]
-              }
+              },
+              "exp": 4070909400
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRC_VC_SIGNATURE =
-            "77iM911qVdFEzBmfDI_M6GP62jq51laUj0LyK5ISwWWioDuciwi4aZji6yVsjk-SsZsckt6EOVBlUQ0RhFPRuA";
+            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA";
 }
