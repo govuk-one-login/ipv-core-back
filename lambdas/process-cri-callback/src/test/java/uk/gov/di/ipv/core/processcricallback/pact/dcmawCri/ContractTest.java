@@ -1996,16 +1996,16 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Joe",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "Joe"
                         },
                         {
-                          "value": "Shmoe",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "Shmoe"
                         },
                         {
-                          "value": "Doe The Ball",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "Doe The Ball"
                         }
                       ]
                     }
@@ -2018,6 +2018,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOE99802085J99FG",
+                      "expiryDate": "2023-01-18",
+                      "issueDate": "2022-05-29",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
                     }
                   ],
                   "address": [
@@ -2035,24 +2045,10 @@ class ContractTest {
                       "postalCode": "CH1 1AQ",
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "DOE99802085J99FG",
-                      "expiryDate": "2023-01-18",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "issueDate": "2022-05-29",
-                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
-                    }
                   ]
                 },
                 "evidence": [
                   {
-                    "type": "IdentityCheck",
-                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
-                    "strengthScore": 3,
-                    "validityScore": 2,
                     "activityHistoryScore": 1,
                     "checkDetails": [
                       {
@@ -2061,10 +2057,14 @@ class ContractTest {
                         "activityFrom": "2022-05-29"
                       },
                       {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
+                        "biometricVerificationProcessLevel": 3,
+                        "checkMethod": "bvr"
                       }
-                    ]
+                    ],
+                    "strengthScore": 3,
+                    "validityScore": 2,
+                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
+                    "type": "IdentityCheck"
                   }
                 ]
               },
@@ -2075,7 +2075,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "XnLMK9U7VYjlcgYFnQYoH0hx03Uua_PVorQNNTSVDXJxrEfCpXoL4zz0azboiMQHsQwQj8XXoVQKl5Ce2NXL4Q";
+            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
@@ -2876,6 +2876,10 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "credentialSubject": {
                   "name": [
                     {
@@ -2896,24 +2900,20 @@ class ContractTest {
                       "value": "1980-01-01"
                     }
                   ],
-                  "residencePermit": [
-                    {
-                      "icaoIssuerCode": "GBR",
-                      "documentNumber": "ZR8016200",
-                      "expiryDate": "2024-02-25",
-                      "documentType": "IR"
-                    }
-                  ],
                   "deviceId": [
                     {
                       "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
+                  ],
+                  "residencePermit": [
+                    {
+                      "documentNumber": "ZR8016200",
+                      "expiryDate": "2024-02-25",
+                      "icaoIssuerCode": "GBR",
+                      "documentType": "IR"
+                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2941,7 +2941,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "BW6qRRzL7t_vtH9Hj4gnmDmAC6jgSA204dS_-DV9c_kcnH5fZ9V2kAJlOqSdUbuAqFeu7cAcZGC_6MWsaNRGvQ";
+            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
