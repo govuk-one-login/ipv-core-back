@@ -60,6 +60,21 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         passthroughBehavior: "when_no_match"
         requestTemplates:
+          application/json:
+            # This VTL template maps the request into the format required by the step function API
+            # Note that the lack of indentation is deliberate:
+            # the 'input' field must be condensed into a single line to be a valid JSON string
+            Fn::Sub: >
+              {
+              "input": "{
+              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))\",
+              \"ipAddress\":\"$util.escapeJavaScript($input.params('ip-address'))\",
+              \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",
+              \"ipvSessionId\":\"$util.escapeJavaScript($input.params('ipv-session-id'))\",
+              \"clientOAuthSessionId\":\"$util.escapeJavaScript($input.params('client-session-id'))\"
+              }",
+              "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
+              }
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
