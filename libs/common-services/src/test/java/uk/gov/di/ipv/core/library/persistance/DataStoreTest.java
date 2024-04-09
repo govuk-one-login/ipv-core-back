@@ -17,18 +17,25 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+import uk.gov.di.ipv.core.library.exceptions.DataStoreException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -40,9 +47,11 @@ class DataStoreTest {
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
+    @Mock private Page<AuthorizationCodeItem> mockPage;
     @Mock private DynamoDbIndex<AuthorizationCodeItem> mockIndex;
     @Mock private SdkIterable<Page<AuthorizationCodeItem>> mockIterable;
     @Mock private ConfigService mockConfigService;
+    @Mock private BatchWriteResult mockBatchWriteResult;
 
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
@@ -250,17 +259,67 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldDeleteItemFromDynamoDbTableViaPartitionKey() {
-        dataStore.delete("partition-key-12345");
+    void deleteAllByPartitionShouldDeleteItemsFromDynamoDbTableViaPartitionKey() throws Exception {
+        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
+        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
+        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+        when(mockPageIterable.stream()).thenReturn(Stream.of(mockPage));
+        when(mockPage.items()).thenReturn(List.of(item1, item2, item3));
+        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockDynamoDbEnhancedClient.batchWriteItem(any(Consumer.class)))
+                .thenReturn(mockBatchWriteResult);
+        when(mockBatchWriteResult.unprocessedDeleteItemsForTable(mockDynamoDbTable))
+                .thenReturn(List.of());
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
+        var spyWriteBatchBuilder = spy(WriteBatch.builder(AuthorizationCodeItem.class));
+
+        String partitionValue = "partition-key-12345";
+        try (var writeBatch = mockStatic(WriteBatch.class)) {
+            writeBatch.when(() -> WriteBatch.builder(any())).thenReturn(spyWriteBatchBuilder);
+
+            dataStore.deleteAllByPartition(partitionValue);
+        }
+
+        verify(mockDynamoDbTable)
+                .query(
+                        QueryConditional.keyEqualTo(
+                                Key.builder().partitionValue(partitionValue).build()));
+        verify(spyWriteBatchBuilder).addDeleteItem(item1);
+        verify(spyWriteBatchBuilder).addDeleteItem(item2);
+        verify(spyWriteBatchBuilder).addDeleteItem(item3);
+        verify(mockDynamoDbEnhancedClient).batchWriteItem(any(Consumer.class));
+    }
+
+    @Test
+    void deleteAllByPartitionShouldDoNothingIfNoItemsToDelete() throws Exception {
+        when(mockPageIterable.stream()).thenReturn(Stream.of(mockPage));
+        when(mockPage.items()).thenReturn(List.of());
+        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+
+        dataStore.deleteAllByPartition("a-partition-key");
+
+        verify(mockDynamoDbEnhancedClient, never()).batchWriteItem(any(Consumer.class));
+    }
+
+    @Test
+    void deleteAllByPartitionShouldThrowIfUnprocessedDeleteItems() {
+        when(mockPageIterable.stream()).thenReturn(Stream.of(mockPage));
+        when(mockPage.items()).thenReturn(List.of(AuthorizationCodeItem.builder().build()));
+        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockDynamoDbEnhancedClient.batchWriteItem(any(Consumer.class)))
+                .thenReturn(mockBatchWriteResult);
+        when(mockBatchWriteResult.unprocessedDeleteItemsForTable(mockDynamoDbTable))
+                .thenReturn(
+                        List.of(Key.builder().partitionValue("hello").sortValue("there").build()));
+
+        var dataStoreException =
+                assertThrows(
+                        DataStoreException.class,
+                        () -> dataStore.deleteAllByPartition("some-stuff"));
+
+        assertEquals(
+                "Unable to delete datastore items: partition key: 'AttributeValue(S=hello)', sort key: 'AttributeValue(S=there)'",
+                dataStoreException.getMessage());
     }
 }
