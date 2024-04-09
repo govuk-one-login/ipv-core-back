@@ -228,6 +228,8 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsDvlaCredential(PactDslWithProvider builder) {
         return builder.given("dummyAccessToken is a valid access token")
+                .given("iat is 1712228728")
+                .given("aud is issuer")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
@@ -1430,11 +1432,13 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsBrpCredential(PactDslWithProvider builder) {
         return builder.given("dummyAccessToken is a valid access token")
+                .given("iat is 1712228728")
+                .given("aud is issuer")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
                 .given("VC is from DCMAW-5176-AC1")
-                .uponReceiving("Valid credential request for passport VC")
+                .uponReceiving("Valid credential request for BRP VC")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -1976,103 +1980,106 @@ class ContractTest {
     private static final String VALID_DVLA_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyDcmawComponentId",
-              "nbf": 4070908800,
-              "exp": 4070909400,
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
-                ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "value": "Joe",
-                          "type": "GivenName"
-                        },
-                        {
-                          "value": "Shmoe",
-                          "type": "GivenName"
-                        },
-                        {
-                          "value": "Doe The Ball",
-                          "type": "FamilyName"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1985-02-08"
-                    }
-                  ],
-                  "deviceId": [
-                    {
-                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": null,
-                      "organisationName": null,
-                      "subBuildingName": null,
-                      "buildingNumber": null,
-                      "buildingName": null,
-                      "dependentStreetName": null,
-                      "streetName": null,
-                      "doubleDependentAddressLocality": null,
-                      "dependentAddressLocality": null,
-                      "addressLocality": null,
-                      "postalCode": "CH1 1AQ",
-                      "addressCountry": null
-                    }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "DOE99802085J99FG",
-                      "expiryDate": "2023-01-18",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "issueDate": "2022-05-29",
-                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "type": "IdentityCheck",
-                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
-                    "strengthScore": 3,
-                    "validityScore": 2,
-                    "activityHistoryScore": 1,
-                    "checkDetails": [
-                      {
-                        "checkMethod": "vri",
-                        "identityCheckPolicy": "published",
-                        "activityFrom": "2022-05-29"
-                      },
-                      {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-            """;
+               "iat": 1712228728,
+               "iss": "dummyDcmawComponentId",
+               "aud": "issuer",
+               "sub": "test-subject",
+               "nbf": 4070908800,
+               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
+               "vc": {
+                 "@context": [
+                   "https://www.w3.org/2018/credentials/v1",
+                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                 ],
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Joe"
+                         },
+                         {
+                           "type": "GivenName",
+                           "value": "Shmoe"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Doe The Ball"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1985-02-08"
+                     }
+                   ],
+                   "deviceId": [
+                     {
+                       "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                     }
+                   ],
+                   "drivingPermit": [
+                     {
+                       "personalNumber": "DOE99802085J99FG",
+                       "expiryDate": "2023-01-18",
+                       "issueDate": "2022-05-29",
+                       "issueNumber": null,
+                       "issuedBy": "DVLA",
+                       "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
+                     }
+                   ],
+                   "address": [
+                     {
+                       "uprn": null,
+                       "organisationName": null,
+                       "subBuildingName": null,
+                       "buildingNumber": null,
+                       "buildingName": null,
+                       "dependentStreetName": null,
+                       "streetName": null,
+                       "doubleDependentAddressLocality": null,
+                       "dependentAddressLocality": null,
+                       "addressLocality": null,
+                       "postalCode": "CH1 1AQ",
+                       "addressCountry": null
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "activityHistoryScore": 1,
+                     "checkDetails": [
+                       {
+                         "checkMethod": "vri",
+                         "identityCheckPolicy": "published",
+                         "activityFrom": "2022-05-29"
+                       },
+                       {
+                         "biometricVerificationProcessLevel": 3,
+                         "checkMethod": "bvr"
+                       }
+                     ],
+                     "strengthScore": 3,
+                     "validityScore": 2,
+                     "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
+                     "type": "IdentityCheck"
+                   }
+                 ]
+               },
+               "exp": 4070909400
+             }
+    """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "MPwaYUsf5HBJ7Gp5oq5TJ71l1B2zfUXOrDeIXpotsnJpWsHonGV11yralObDqFM5UXCCrqemyCLQPWZ6z6seFg";
+            "vJp6ESVj7O5WEWNl9AKOSivBDcwuaKyFctJKIKdafmFZ8GA5t9OSyGKJS8b2djaP5noxru7fo5ahRlEINqCzEQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
@@ -2838,80 +2845,83 @@ class ContractTest {
     private static final String VALID_BRP_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyDcmawComponentId",
-              "nbf": 4070908800,
-              "exp": 4070909400,
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
-                ],
-                "credentialSubject": {
-                  "name": [
+                "iat": 1712228728,
+                "iss": "dummyDcmawComponentId",
+                "aud": "issuer",
+                "sub": "test-subject",
+                "nbf": 4070908800,
+                "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
+                "vc": {
+                  "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                  ],
+                  "type": [
+                    "VerifiableCredential",
+                    "IdentityCheckCredential"
+                  ],
+                  "credentialSubject": {
+                    "name": [
+                      {
+                        "nameParts": [
+                          {
+                            "type": "GivenName",
+                            "value": "LATEFAMFOUR"
+                          },
+                          {
+                            "type": "FamilyName",
+                            "value": "LATEFAMLASTFOUR"
+                          }
+                        ]
+                      }
+                    ],
+                    "birthDate": [
+                      {
+                        "value": "1980-01-01"
+                      }
+                    ],
+                    "deviceId": [
+                      {
+                        "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
+                      }
+                    ],
+                    "residencePermit": [
+                      {
+                        "documentNumber": "ZR8016200",
+                        "expiryDate": "2024-02-25",
+                        "icaoIssuerCode": "GBR",
+                        "documentType": "IR"
+                      }
+                    ]
+                  },
+                  "evidence": [
                     {
-                      "nameParts": [
+                      "type": "IdentityCheck",
+                      "txn": "bcd2346",
+                      "strengthScore": 4,
+                      "validityScore": 3,
+                      "checkDetails": [
                         {
-                          "type": "GivenName",
-                          "value": "LATEFAMFOUR"
+                          "checkMethod": "vcrypt",
+                          "identityCheckPolicy": "published",
+                          "activityFrom": null
                         },
                         {
-                          "type": "FamilyName",
-                          "value": "LATEFAMLASTFOUR"
+                          "checkMethod": "bvr",
+                          "biometricVerificationProcessLevel": 3
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1980-01-01"
-                    }
-                  ],
-                  "residencePermit": [
-                    {
-                      "icaoIssuerCode": "GBR",
-                      "documentNumber": "ZR8016200",
-                      "expiryDate": "2024-02-25",
-                      "documentType": "IR"
-                    }
-                  ],
-                  "deviceId": [
-                    {
-                      "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
-                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "evidence": [
-                  {
-                    "type": "IdentityCheck",
-                    "txn": "bcd2346",
-                    "strengthScore": 4,
-                    "validityScore": 3,
-                    "checkDetails": [
-                      {
-                        "checkMethod": "vcrypt",
-                        "identityCheckPolicy": "published",
-                        "activityFrom": null
-                      },
-                      {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
-                      }
-                    ]
-                  }
-                ]
+                "exp": 4070909400
               }
-            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "9CWqNbNL9ypAU0nD9mtNnu3uYInfyBxFybk0Cymj38axQfN-UPDpepwgNHkR9ebEGGoIy4dW3SPzjzENddAt2w";
+            "iPHyXNrf1-XWwb8spBpyyugrKUB0lqtaIA4JVp9ujy0dztRGNGRm5LCFtMqjfAxVbsqaDQFnz3DQcWEe2-yHzQ";
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
