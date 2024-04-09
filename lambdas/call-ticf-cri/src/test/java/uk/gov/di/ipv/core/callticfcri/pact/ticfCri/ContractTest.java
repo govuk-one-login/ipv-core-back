@@ -12,7 +12,6 @@ import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -39,6 +38,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.hamcrest.CoreMatchers.is;
@@ -46,7 +46,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
-@Disabled("PACT tests should not be run in build pipelines at this time")
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "TicfCriProvider")
@@ -121,7 +120,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(passportVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -185,7 +187,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(passportVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -247,7 +252,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(passportVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -312,7 +320,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(passportVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -367,7 +378,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(dvlaVcJwtHelper, passportVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -424,7 +438,8 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        IpvSessionItem ipvSessionItem = getIpvSessionItem();
+        IpvSessionItem ipvSessionItem =
+                getIpvSessionItem(List.of(passportVcJwtHelper)); // qq:DCC why does this still pass?
         ipvSessionItem.setVcReceivedThisSession(List.of());
         var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), ipvSessionItem);
 
@@ -491,7 +506,10 @@ class ContractTest {
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), getIpvSessionItem());
+        var ticfVcs =
+                underTest.getTicfVc(
+                        getClientOAuthSessionItem(),
+                        getIpvSessionItem(List.of(dvlaWithCiVcJwtHelper)));
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -580,10 +598,12 @@ class ContractTest {
                 .build();
     }
 
-    private IpvSessionItem getIpvSessionItem() {
+    private IpvSessionItem getIpvSessionItem(List<PactJwtBuilder> sessionVcs) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setVot(Vot.P2);
-        ipvSessionItem.setVcReceivedThisSession(List.of(passportVcJwtHelper.buildJwt()));
+        var vcStrings =
+                sessionVcs.stream().map(PactJwtBuilder::buildJwt).collect(Collectors.toList());
+        ipvSessionItem.setVcReceivedThisSession(vcStrings);
 
         return ipvSessionItem;
     }

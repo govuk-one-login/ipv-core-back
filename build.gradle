@@ -2,6 +2,7 @@ plugins {
 	id "java"
 	alias libs.plugins.sonar
 	alias libs.plugins.spotless
+	id "au.com.dius.pact" version "4.6.5"
 }
 
 repositories {
@@ -33,4 +34,15 @@ spotless {
 
 subprojects {
 	task allDeps(type: DependencyReportTask) {}
+}
+
+pact {
+	publish {
+		pactDirectory = "$rootDir/build/pacts"
+		pactBrokerUrl = "${System.env.PACT_URL}?testSource=${System.env.PACT_BROKER_SOURCE_SECRET_DEV}"
+		pactBrokerUsername = "${System.env.PACT_USER}"
+		pactBrokerPassword = "${System.env.PACT_PASSWORD}"
+		consumerVersion = "${System.env.CONSUMER_APP_VERSION}"
+		consumerBranch = "${System.env.GIT_BRANCH}"
+	}
 }
