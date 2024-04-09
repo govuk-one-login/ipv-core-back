@@ -97,7 +97,7 @@ EVALUATE_GPG45_SCORES_RFC:
       targetState: IPV_SUCCESS_PAGE_RFC
       checkFeatureFlag:
         ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_SUCCESS
+          targetState: CRI_TICF_BEFORE_SUCCESS_RFC
     unmet:
       targetJourney: FAILED
       targetState: FAILED_RFC
