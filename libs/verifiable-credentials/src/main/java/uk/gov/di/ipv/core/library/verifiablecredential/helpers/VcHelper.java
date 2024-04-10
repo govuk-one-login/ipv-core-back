@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;

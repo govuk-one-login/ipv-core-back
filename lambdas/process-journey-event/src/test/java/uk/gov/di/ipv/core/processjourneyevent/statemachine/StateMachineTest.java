@@ -34,7 +34,6 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         State transitionedState =
-
                 stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
@@ -92,7 +91,6 @@ class StateMachineTest {
 
         State transitionedState =
                 stateMachine.transition(
-
                         "START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
