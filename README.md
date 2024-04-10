@@ -1,5 +1,5 @@
 # Digital Identity IPV Core Back
-
+Hello
 This the back-end code for the core of the Identity Proofing and Verification (IPV) system within the GDS digital identity platform, GOV.UK One Login.
 
 The following projects are related to the di-ipv-core-back, providing additional functionality:
@@ -24,6 +24,7 @@ brew install aws-sam-cli
 ```
 
 We use [pre-commit](https://pre-commit.com/) to help with linting. This configured through the [.pre-commit-config.yaml](pre-commit-config.yaml) configuration setup in this repo, this uses pre-commit to verify your commit before actually commiting, it runs the following checks:
+
 * Check Json files for formatting issues
 * Fixes end of file issues (it will auto correct if it spots an issue - you will need to run the git commit again after it has fixed the issue)
 * It automatically removes trailing whitespaces (again will need to run commit again after it detects and fixes the issue)
