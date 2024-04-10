@@ -118,16 +118,14 @@ public class DataStore<T extends DynamodbItem> {
                 .toList();
     }
 
-    public List<T> getItemsWithAttributeLessThanOrEqualValue(
-            String partitionValue, String filterAttribute, String filterValue) {
+    public List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value) {
         var queryConditional =
                 QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build());
-        AttributeValue expressionValue = AttributeValue.builder().s(filterValue).build();
         var filterExpression =
                 Expression.builder()
-                        .expression("#a <= :b")
-                        .putExpressionName("#a", filterAttribute)
-                        .putExpressionValue(":b", expressionValue)
+                        .expression("#a = :b")
+                        .putExpressionName("#a", name)
+                        .putExpressionValue(":b", AttributeValue.builder().bool(value).build())
                         .build();
         var queryEnhancedRequest =
                 QueryEnhancedRequest.builder()

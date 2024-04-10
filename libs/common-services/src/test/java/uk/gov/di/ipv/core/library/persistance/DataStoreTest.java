@@ -198,29 +198,21 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldGetItemsFromDynamoDbTableViaLessThanOrEqualFilterExpression() {
+    void getItemsWithBooleanAttributeShouldGetItemsWithAttribute() {
         String testAttribute = "an-attribute";
-        String testValue = "a-value";
         when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
-        dataStore.getItemsWithAttributeLessThanOrEqualValue(
-                "partition-key-12345", testAttribute, testValue);
+        dataStore.getItemsWithBooleanAttribute("partition-key-12345", testAttribute, true);
 
-        ArgumentCaptor<QueryEnhancedRequest> keyCaptor =
-                ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        var keyCaptor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), any());
         verify(mockDynamoDbTable).query(keyCaptor.capture());
-        assertEquals("#a <= :b", keyCaptor.getValue().filterExpression().expression());
-        assertEquals(
-                testAttribute, keyCaptor.getValue().filterExpression().expressionNames().get("#a"));
-        assertEquals(
-                testValue,
-                keyCaptor.getValue().filterExpression().expressionValues().get(":b").s());
+        var filterExpression = keyCaptor.getValue().filterExpression();
+        assertEquals("#a = :b", filterExpression.expression());
+        assertEquals(testAttribute, filterExpression.expressionNames().get("#a"));
+        assertTrue(filterExpression.expressionValues().get(":b").bool());
     }
 
     @Test

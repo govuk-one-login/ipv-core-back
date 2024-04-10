@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
@@ -70,6 +71,7 @@ class ContractTest {
     private static PactJwtBuilder noInterventionWithWarningsTicfVcJwtHelper;
 
     @Mock ConfigService mockConfigService;
+    @Mock SessionCredentialsService mockSessionCredentialsService;
 
     @BeforeAll
     public static void setup() throws IOException {
@@ -544,7 +546,8 @@ class ContractTest {
                                         exactMatchClaims,
                                         requiredClaims,
                                         Date.from(CURRENT_TIME.instant()))));
-        return new TicfCriService(mockConfigService, verifiableCredentialJwtValidator);
+        return new TicfCriService(
+                mockConfigService, verifiableCredentialJwtValidator, mockSessionCredentialsService);
     }
 
     private DslPart getRequestBody(List<PactJwtBuilder> pactJwtBuilders) {

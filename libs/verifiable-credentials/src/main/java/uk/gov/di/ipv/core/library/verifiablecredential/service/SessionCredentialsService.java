@@ -22,6 +22,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTI
 
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String RECEIVED_THIS_SESSION = "receivedThisSession";
     private final DataStore<SessionCredentialItem> dataStore;
     private final ConfigService configService;
 
@@ -45,9 +46,20 @@ public class SessionCredentialsService {
 
     public List<VerifiableCredential> getCredentials(String ipvSessionId, String userId)
             throws VerifiableCredentialException {
+        return getCredentials(ipvSessionId, userId, null);
+    }
+
+    public List<VerifiableCredential> getCredentials(
+            String ipvSessionId, String userId, Boolean receivedThisSession)
+            throws VerifiableCredentialException {
         try {
             var verifiableCredentialList = new ArrayList<VerifiableCredential>();
-            for (var credential : dataStore.getItems(ipvSessionId)) {
+            var credentials =
+                    receivedThisSession != null
+                            ? dataStore.getItemsWithBooleanAttribute(
+                                    ipvSessionId, RECEIVED_THIS_SESSION, receivedThisSession)
+                            : dataStore.getItems(ipvSessionId);
+            for (var credential : credentials) {
                 verifiableCredentialList.add(
                         VerifiableCredential.fromSessionCredentialItem(credential, userId));
             }

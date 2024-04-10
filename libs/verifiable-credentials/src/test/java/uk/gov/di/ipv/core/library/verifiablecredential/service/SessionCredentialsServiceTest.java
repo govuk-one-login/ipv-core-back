@@ -147,6 +147,23 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
+        void getCredentialsShouldAllowFilteringByReceivedThisSession() throws Exception {
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false);
+
+            when(mockDataStore.getItemsWithBooleanAttribute(
+                            SESSION_ID, "receivedThisSession", true))
+                    .thenReturn(List.of(item1));
+
+            var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID, true);
+
+            assertEquals(
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                    retrievedVc.get(0));
+        }
+
+        @Test
         void
                 getCredentialsShouldThrowVerifiableCredentialExceptionIfSessionStoreItemCanNotBeParsed() {
             SignedJWT mockSignedJwt = mock(SignedJWT.class);
