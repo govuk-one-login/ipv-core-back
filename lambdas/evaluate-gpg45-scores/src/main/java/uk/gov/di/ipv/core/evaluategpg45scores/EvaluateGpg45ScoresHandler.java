@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -39,12 +40,14 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -66,8 +69,12 @@ public class EvaluateGpg45ScoresHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
-    @SuppressWarnings("unused") // Used by tests through injection
+    @SuppressWarnings({
+        "unused",
+        "java:S107"
+    }) // Used by tests through injection, methods should not have too many parameters
     public EvaluateGpg45ScoresHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
@@ -75,7 +82,8 @@ public class EvaluateGpg45ScoresHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
@@ -83,6 +91,7 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -96,6 +105,7 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -118,7 +128,10 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var vcs = verifiableCredentialService.getVcs(userId);
+            var vcs =
+                    configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                            ? sessionCredentialsService.getCredentials(ipvSessionId, userId)
+                            : verifiableCredentialService.getVcs(userId);
 
             if (!userIdentityService.areVcsCorrelated(vcs)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
@@ -134,8 +147,8 @@ public class EvaluateGpg45ScoresHandler
             return hasMatchingGpg45Profile
                     ? JOURNEY_MET.toObjectMap()
                     : JOURNEY_UNMET.toObjectMap();
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Received HTTP response exception", e));
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
