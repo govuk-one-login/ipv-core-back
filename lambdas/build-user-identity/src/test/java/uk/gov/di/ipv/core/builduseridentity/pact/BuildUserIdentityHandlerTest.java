@@ -67,7 +67,6 @@ class BuildUserIdentityHandlerTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
-    @Mock private VerifiableCredentialService verifiableCredentialService;
 
     @BeforeAll
     static void setupServer() {
@@ -126,6 +125,8 @@ class BuildUserIdentityHandlerTest {
         vcs.add(addressItem);
 
         when(mockVcStore.getItems("dummyOAuthUserId")).thenReturn(vcs);
+
+        var verifiableCredentialService = new VerifiableCredentialService(mockVcStore);
 
         // Set up the web server for the tests
         var handler =
