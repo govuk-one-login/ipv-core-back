@@ -104,8 +104,8 @@ public class CriStoringService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws SqsException, CiPutException, CiPostMitigationsException,
-                    VerifiableCredentialException,
-                    UnrecognisedVotException, CredentialParseException {
+                    VerifiableCredentialException, UnrecognisedVotException,
+                    CredentialParseException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
