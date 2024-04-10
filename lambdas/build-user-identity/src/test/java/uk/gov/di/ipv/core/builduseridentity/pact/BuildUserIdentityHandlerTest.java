@@ -126,8 +126,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockVcStore.getItems("dummyOAuthUserId")).thenReturn(vcs);
 
-        var verifiableCredentialService =
-                new VerifiableCredentialService(mockVcStore);
+        var verifiableCredentialService = new VerifiableCredentialService(mockVcStore);
 
         // Set up the web server for the tests
         var handler =
