@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -37,19 +36,12 @@ public class StateMachine {
 
         if (currentPage != null) {
             if (state instanceof BasicState basicState) {
-
                 if (basicState.getResponse() instanceof PageStepResponse pageStepResponse) {
-
-                    String pageId = pageStepResponse.getPageId();
-
-                    if (!currentPage.equals(pageId)) {
+                    if (!pageStepResponse.getPageId().equals(currentPage)) {
                         return state;
                     }
                 } else if (basicState.getResponse() instanceof CriStepResponse criStepResponse) {
-
-                    String criId = criStepResponse.getCriId();
-
-                    if (!currentPage.equals(criId)) {
+                    if (!criStepResponse.getCriId().equals(currentPage)) {
                         return state;
                     }
                 } else {

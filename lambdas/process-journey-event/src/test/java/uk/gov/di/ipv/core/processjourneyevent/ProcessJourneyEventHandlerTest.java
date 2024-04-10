@@ -339,8 +339,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldTransitionCriStateIfCurrentPageMatchesCriId()
-            throws IOException, UnknownStateException, UnknownEventException {
+    void shouldTransitionCriStateIfCurrentPageMatchesCriId() throws IOException {
         Map<String, String> input =
                 Map.of(JOURNEY, JOURNEY_TEST_WITH_CONTEXT_WITH_A_CRI_ID, IPV_SESSION_ID, "1234");
 
@@ -363,8 +362,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldThrowErrorIfJourneyEventDuringProcess()
-            throws IOException, UnknownStateException, UnknownEventException {
+    void shouldThrowErrorIfJourneyEventDuringProcess() throws IOException {
         Map<String, String> input =
                 Map.of(JOURNEY, JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE, IPV_SESSION_ID, "1234");
 
