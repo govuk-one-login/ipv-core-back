@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,7 +33,8 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionedState = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, Optional.empty());
+        State transitionedState =
+                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
     }
@@ -49,7 +49,7 @@ class StateMachineTest {
 
         assertThrows(
                 UnknownStateException.class,
-                () -> stateMachine.transition("UNKNOWN_STATE", "event", JOURNEY_CONTEXT, Optional.empty()));
+                () -> stateMachine.transition("UNKNOWN_STATE", "event", JOURNEY_CONTEXT, null));
     }
 
     @Test
@@ -69,7 +69,8 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionState = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, Optional.empty());
+        State transitionState =
+                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedNestedEndState, transitionState);
     }
@@ -89,7 +90,8 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         State transitionedState =
-                stateMachine.transition("START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, Optional.empty());
+                stateMachine.transition(
+                        "START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, null);
 
         assertEquals(expectedEndState, transitionedState);
     }

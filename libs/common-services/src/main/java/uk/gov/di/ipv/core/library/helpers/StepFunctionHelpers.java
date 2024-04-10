@@ -5,8 +5,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +24,7 @@ public class StepFunctionHelpers {
     private static final String TYPE = "type";
     private static final String PAGE = "page";
     private static final String FEATURE_SET = "featureSet";
+    public static final String CURRENT_PAGE = "currentPage";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -56,7 +57,8 @@ public class StepFunctionHelpers {
     }
 
     public static String getJourneyEvent(Map<String, String> input)
-            throws HttpResponseExceptionWithErrorBody, UnsupportedEncodingException {
+            throws HttpResponseExceptionWithErrorBody, UnsupportedEncodingException,
+                    URISyntaxException {
         String journeyEvent =
                 Optional.ofNullable(input.get(JOURNEY))
                         .orElseThrow(
@@ -65,13 +67,16 @@ public class StepFunctionHelpers {
                                                 HttpStatus.SC_BAD_REQUEST,
                                                 ErrorResponse.MISSING_JOURNEY_EVENT));
 
-        String[] decodedParts = URLDecoder.decode(journeyEvent, StandardCharsets.UTF_8).split("/");
+        URI uri = new URI(journeyEvent);
 
-        return decodedParts[decodedParts.length - 1];
+        String[] parts = uri.getPath().split("/");
+
+        return parts[parts.length - 1];
     }
 
-    public static Optional<String> getCurrentPage(Map<String, String> input)
-            throws HttpResponseExceptionWithErrorBody {
+    public static String getCurrentPage(Map<String, String> input)
+            throws HttpResponseExceptionWithErrorBody, URISyntaxException {
+
         String journeyEvent =
                 Optional.ofNullable(input.get(JOURNEY))
                         .orElseThrow(
@@ -80,10 +85,9 @@ public class StepFunctionHelpers {
                                                 HttpStatus.SC_BAD_REQUEST,
                                                 ErrorResponse.MISSING_JOURNEY_EVENT));
 
-        String[] decodedParts = URLDecoder.decode(journeyEvent, StandardCharsets.UTF_8).split("/");
+        String currentPage = RequestHelper.getJourneyParameter(new URI(journeyEvent), CURRENT_PAGE);
 
-        return Optional.ofNullable(
-                decodedParts.length == 4  ? decodedParts[2] : null);
+        return currentPage != null && !currentPage.isEmpty() ? currentPage : null;
     }
 
     public static Map<String, Object> generateErrorOutputMap(

@@ -44,11 +44,11 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepRes
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
@@ -108,7 +108,7 @@ public class ProcessJourneyEventHandler
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
-            Optional<String> currentPage = StepFunctionHelpers.getCurrentPage(input);
+            String currentPage = StepFunctionHelpers.getCurrentPage(input);
 
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
@@ -120,11 +120,13 @@ public class ProcessJourneyEventHandler
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+
             if (ipvSessionItem == null) {
                 LOGGER.error(LogHelper.buildLogMessage("Failed to find ipv-session"));
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
+
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -160,6 +162,8 @@ public class ProcessJourneyEventHandler
         } catch (UnsupportedEncodingException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.valueOf(e.getMessage()));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -168,7 +172,7 @@ public class ProcessJourneyEventHandler
             String journeyEvent,
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
-            Optional<String> currentPage)
+            String currentPage)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(
@@ -191,7 +195,7 @@ public class ProcessJourneyEventHandler
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
                 sendSubJourneyStartAuditEvent(auditEventUser, journeyChangeState.getJourneyType());
-                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, Optional.empty());
+                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, null);
             }
 
             var basicState = (BasicState) newState;
@@ -236,7 +240,7 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private State executeStateTransition(
-            IpvSessionItem ipvSessionItem, String journeyEvent, Optional<String> currentPage)
+            IpvSessionItem ipvSessionItem, String journeyEvent, String currentPage)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
         StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
         if (stateMachine == null) {

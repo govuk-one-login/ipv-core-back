@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 
 public class StateMachine {
     public static final String DELIMITER = "/";
@@ -27,10 +26,7 @@ public class StateMachine {
     }
 
     public State transition(
-            String startState,
-            String event,
-            JourneyContext journeyContext,
-            Optional<String> currentPage)
+            String startState, String event, JourneyContext journeyContext, String currentPage)
             throws UnknownEventException, UnknownStateException {
         var state = states.get(startState.split(DELIMITER)[0]);
 
@@ -39,24 +35,23 @@ public class StateMachine {
                     String.format("Unknown state provided to state machine: %s", startState));
         }
 
-        if (currentPage.isPresent() && !currentPage.get().equals("oauth")) {
-            if (state instanceof BasicState) {
+        if (currentPage != null) {
+            if (state instanceof BasicState basicState) {
 
-                if (((BasicState) state).getResponse() instanceof PageStepResponse) {
+                if (basicState.getResponse() instanceof PageStepResponse pageStepResponse) {
 
-                    String pageId =
-                            ((PageStepResponse) ((BasicState) state).getResponse()).getPageId();
+                    String pageId = pageStepResponse.getPageId();
 
-                    if (!currentPage.get().equals(pageId)) {
-                        LOGGER.warn(
-                                LogHelper.buildLogMessage(
-                                        String.format(
-                                                "Something has gone wrong: %s, %s, %s",
-                                                pageId, currentPage.get(), event)));
+                    if (!currentPage.equals(pageId)) {
                         return state;
                     }
-                } else if (((BasicState) state).getResponse() instanceof CriStepResponse) {
-                    return state;
+                } else if (basicState.getResponse() instanceof CriStepResponse criStepResponse) {
+
+                    String criId = criStepResponse.getCriId();
+
+                    if (!currentPage.equals(criId)) {
+                        return state;
+                    }
                 } else {
                     throw new UnknownStateException(
                             String.format(
