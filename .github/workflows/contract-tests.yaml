@@ -7,7 +7,7 @@ env:
   PACT_PASSWORD: ${{ secrets.PACT_PASSWORD }}
   PACT_URL: ${{ secrets.PACT_URL }}
   PACT_BROKER_SOURCE_SECRET_DEV: ${{ secrets.PACT_BROKER_SOURCE_SECRET_DEV }}
-  GIT_BRANCH: ${{ github.ref }}
+  GIT_BRANCH: ${{ github.ref_name }}
   CONSUMER_APP_VERSION: ${{ github.sha }}
 
 on:
