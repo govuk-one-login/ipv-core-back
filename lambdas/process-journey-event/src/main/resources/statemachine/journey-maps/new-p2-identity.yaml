@@ -25,6 +25,11 @@ ENHANCED_VERIFICATION_F2F_FAIL:
     next:
       targetState: F2F_FAILED_MITIGATION_PAGE
 
+REPROVE_IDENTITY:
+  events:
+    next:
+      targetState: REPROVE_IDENTITY_START
+
 # Parent states
 
 CRI_STATE:
@@ -65,6 +70,12 @@ CRI_TICF_STATE:
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
+    alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
+    alternate-doc-invalid-passport:
+      targetJourney: FAILED
+      targetState: FAILED_NO_TICF
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
@@ -73,6 +84,15 @@ CRI_TICF_STATE:
       targetState: ERROR_NO_TICF
 
 # Journey states
+
+
+REPROVE_IDENTITY_START:
+  response:
+    type: page
+    pageId: reprove-identity-start
+  events:
+    next:
+      targetState: IDENTITY_START_PAGE
 
 RESET_IDENTITY:
   response:

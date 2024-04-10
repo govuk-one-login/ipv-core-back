@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneyevent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,9 +26,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -50,7 +46,6 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(SystemStubsExtension.class)
 class ProcessJourneyEventHandlerTest {
     private static final String JOURNEY_NEXT = "/journey/next";
     private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
@@ -67,13 +62,6 @@ class ProcessJourneyEventHandlerTest {
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
-
-    @SystemStub static EnvironmentVariables environmentVariables;
-
-    @BeforeAll
-    public static void beforeAll() {
-        environmentVariables.set("IS_LOCAL", true);
-    }
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {

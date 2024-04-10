@@ -36,6 +36,7 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
+			libs.wiremock,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(":libs:pact-test-helpers")
 
@@ -52,6 +53,13 @@ test {
 	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	exclude 'uk/gov/di/ipv/core/processcricallback/pact/**'
+}
+
+task contractTests (type: Test) {
+	useJUnitPlatform()
+	include 'uk/gov/di/ipv/core/processcricallback/pact/**'
+	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
 }
 
 jacocoTestReport {

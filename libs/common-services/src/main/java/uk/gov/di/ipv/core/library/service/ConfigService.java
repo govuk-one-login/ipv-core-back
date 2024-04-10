@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
@@ -19,6 +18,7 @@ import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,7 +45,6 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONNECTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -57,16 +55,15 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_I
 
 public class ConfigService {
 
-    public static final int LOCALHOST_PORT = 4567;
-    private static final String LOCALHOST_URI = "http://localhost:" + LOCALHOST_PORT;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
+    private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
     private static final String CORE_BASE_PATH = "/%s/core/";
     private static final Logger LOGGER = LogManager.getLogger();
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private List<String> featureSet;
 
@@ -81,55 +78,27 @@ public class ConfigService {
         this(ssmProvider, secretsProvider, null);
     }
 
-    public ConfigService(List<String> featureSet) {
-        if (isRunningLocally()) {
-            this.ssmProvider =
-                    ParamManager.getSsmProvider(
-                            SsmClient.builder()
-                                    .endpointOverride(URI.create(LOCALHOST_URI))
-                                    .httpClient(UrlConnectionHttpClient.create())
-                                    .region(Region.EU_WEST_2)
-                                    .build());
-
-            this.secretsProvider =
-                    ParamManager.getSecretsProvider(
-                            SecretsManagerClient.builder()
-                                    .endpointOverride(URI.create(LOCALHOST_URI))
-                                    .httpClient(UrlConnectionHttpClient.create())
-                                    .region(Region.EU_WEST_2)
-                                    .build());
-        } else {
-            this.ssmProvider =
-                    ParamManager.getSsmProvider(
-                                    SsmClient.builder()
-                                            .httpClient(UrlConnectionHttpClient.create())
-                                            .build())
-                            .defaultMaxAge(
-                                    Integer.parseInt(
-                                            getEnvironmentVariable(
-                                                    CONFIG_SERVICE_CACHE_DURATION_MINUTES)),
-                                    MINUTES);
-
-            this.secretsProvider =
-                    ParamManager.getSecretsProvider(
-                                    SecretsManagerClient.builder()
-                                            .httpClient(UrlConnectionHttpClient.create())
-                                            .build())
-                            .defaultMaxAge(
-                                    Integer.parseInt(
-                                            getEnvironmentVariable(
-                                                    CONFIG_SERVICE_CACHE_DURATION_MINUTES)),
-                                    MINUTES);
-        }
-        setFeatureSet(featureSet);
-    }
-
+    @ExcludeFromGeneratedCoverageReport
     public ConfigService() {
-        this(null);
-    }
+        var cacheDuration =
+                getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES) == null
+                        ? DEFAULT_CACHE_DURATION_MINUTES
+                        : Integer.parseInt(
+                                getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES));
 
-    public SSMProvider getSsmProvider() {
-        return ssmProvider;
+        this.ssmProvider =
+                ParamManager.getSsmProvider(
+                                SsmClient.builder()
+                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .build())
+                        .defaultMaxAge(cacheDuration, MINUTES);
+
+        this.secretsProvider =
+                ParamManager.getSecretsProvider(
+                                SecretsManagerClient.builder()
+                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .build())
+                        .defaultMaxAge(cacheDuration, MINUTES);
     }
 
     public List<String> getFeatureSet() {
@@ -185,10 +154,6 @@ public class ConfigService {
         return resolveBasePath()
                 + String.format("features/%s/", featureSet)
                 + String.format(path, (Object[]) pathProperties);
-    }
-
-    public boolean isRunningLocally() {
-        return Boolean.parseBoolean(getEnvironmentVariable(IS_LOCAL));
     }
 
     public long getBearerAccessTokenTtl() {
@@ -265,7 +230,7 @@ public class ConfigService {
         try {
             String secretValue = getCoreSecretValue(ConfigurationVariable.CI_CONFIG);
             List<ContraIndicatorConfig> configList =
-                    objectMapper.readValue(secretValue, new TypeReference<>() {});
+                    OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
             for (ContraIndicatorConfig config : configList) {
                 configMap.put(config.getCi(), config);
@@ -280,7 +245,7 @@ public class ConfigService {
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
         final String cimitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
-            return objectMapper.readValue(
+            return OBJECT_MAPPER.readValue(
                     cimitConfig, new TypeReference<HashMap<String, List<MitigationRoute>>>() {});
         } catch (JsonProcessingException e) {
             throw new ConfigException("Failed to parse CIMit configuration");
@@ -345,7 +310,7 @@ public class ConfigService {
 
             if (secretValue != null) {
                 Map<String, String> secret =
-                        objectMapper.readValue(secretValue, new TypeReference<>() {});
+                        OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
                 return secret.get(API_KEY);
             }
             LOGGER.warn(
@@ -367,7 +332,7 @@ public class ConfigService {
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {
             String parameter = ssmProvider.get(resolvePath(pathTemplate, criId, connection));
-            return objectMapper.readValue(parameter, configType);
+            return OBJECT_MAPPER.readValue(parameter, configType);
         } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format(

@@ -61,8 +61,7 @@ public class DataStoreIpvSessionIT {
                 new DataStore<>(
                         ipvSessionsTableName,
                         IpvSessionItem.class,
-                        DataStore.getClient(false),
-                        false,
+                        DataStore.getClient(),
                         configService);
 
         AmazonDynamoDB independentClient =

@@ -24,26 +24,20 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 public class VerifiableCredentialService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final DataStore<VcStoreItem> dataStore;
-    private final ConfigService configService;
+
+    public VerifiableCredentialService(DataStore<VcStoreItem> dataStore) {
+        this.dataStore = dataStore;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public VerifiableCredentialService(ConfigService configService) {
-        this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(
+                        configService.getEnvironmentVariable(
                                 EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
-    }
-
-    public VerifiableCredentialService(
-            DataStore<VcStoreItem> dataStore, ConfigService configService) {
-        this.configService = configService;
-        this.dataStore = dataStore;
     }
 
     public void persistUserCredentials(VerifiableCredential vc)

@@ -619,14 +619,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/build-client-oauth-response
-            Method: POST
       AutoPublishAlias: live
 
   BuildClientOauthResponseFunctionLogGroup:
@@ -862,6 +854,7 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
             - cimit_account_id: !If
@@ -923,8 +916,6 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CriOAuthSessionsTable
@@ -938,6 +929,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
@@ -1562,6 +1555,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -1639,6 +1633,8 @@ Resources:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1685,6 +1681,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1723,6 +1720,8 @@ Resources:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:

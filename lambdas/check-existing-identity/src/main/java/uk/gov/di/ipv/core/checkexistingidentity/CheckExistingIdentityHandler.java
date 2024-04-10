@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -31,8 +30,10 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -49,6 +50,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
@@ -59,8 +61,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -77,6 +82,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGR
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
@@ -107,6 +113,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH);
+    private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
+            new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
@@ -120,6 +128,7 @@ public class CheckExistingIdentityHandler
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings({
         "unused",
@@ -135,7 +144,8 @@ public class CheckExistingIdentityHandler
             CriResponseService criResponseService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -146,6 +156,7 @@ public class CheckExistingIdentityHandler
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -162,6 +173,7 @@ public class CheckExistingIdentityHandler
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -220,9 +232,13 @@ public class CheckExistingIdentityHandler
 
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY.getName())) {
+
+            if (reproveIdentity.orElse(false)) {
                 return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
+            } else if (configService.enabled(RESET_IDENTITY)) {
+                return buildForceGpg45ResetResponse(ciScoringCheckResponse.orElse(null));
             }
+
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -255,7 +271,7 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated, auditEventUser, contraIndicators)
                     : buildNoMatchResponse(vcs, auditEventUser, contraIndicators);
 
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -292,6 +308,22 @@ public class CheckExistingIdentityHandler
             return ciScoringCheckResponse;
         }
         return JOURNEY_RESET_IDENTITY;
+    }
+
+    @Tracing
+    private JourneyResponse buildForceGpg45ResetResponse(JourneyResponse ciScoringCheckResponse) {
+        LOGGER.info(
+                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
+        if (ciScoringCheckResponse != null) {
+            if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
+                // forces a reset of the user's identity if the CI breached and no
+                // possible mitigation
+                return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
+            }
+            // sends the user on mitigation journey if the CI breached and mitigation is possible
+            return ciScoringCheckResponse;
+        }
+        return JOURNEY_RESET_GPG45_IDENTITY;
     }
 
     @Tracing
@@ -336,7 +368,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException {
+                    CredentialParseException, VerifiableCredentialException {
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -349,12 +381,14 @@ public class CheckExistingIdentityHandler
         if (strongestAttainedVotFromVtr.isPresent()) {
             // Profile matched
             Vot attainedVot = strongestAttainedVotFromVtr.get();
+
             ipvSessionItem.setVot(attainedVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
                     buildReuseResponse(
                             attainedVot,
                             ipvSessionItem.getVcReceivedThisSession(),
+                            vcs,
                             auditEventUser));
         }
 
@@ -408,8 +442,7 @@ public class CheckExistingIdentityHandler
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));
         }
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, ProfileType.GPG45)
-                .isEmpty()) {
+        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, GPG45).isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
             sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
@@ -421,20 +454,57 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildReuseResponse(
-            Vot attainedVot, List<String> vcReceivedThisSession, AuditEventUser auditEventUser)
-            throws SqsException {
+            Vot attainedVot,
+            List<String> vcReceivedThisSession,
+            List<VerifiableCredential> vcs,
+            AuditEventUser auditEventUser)
+            throws SqsException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
 
         if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
             // the only VC we should possibly have collected this session at this point is a
             // migration VC
-            return vcReceivedThisSession == null || vcReceivedThisSession.isEmpty()
+            boolean isOpProfileReuse =
+                    vcReceivedThisSession == null || vcReceivedThisSession.isEmpty();
+            sessionCredentialsService.persistCredentials(
+                    VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
+                    auditEventUser.getSessionId(),
+                    !isOpProfileReuse);
+            return isOpProfileReuse
                     ? JOURNEY_OPERATIONAL_PROFILE_REUSE
                     : JOURNEY_IN_MIGRATION_REUSE;
         }
 
+        // check the result of 6MFC and return the appropriate journey
+        if (configService.enabled(REPEAT_FRAUD_CHECK) && !hasCurrentFraudVc(vcs)) {
+            LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
+            sessionCredentialsService.persistCredentials(
+                    allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
+            return JOURNEY_REPEAT_FRAUD_CHECK;
+        }
+
+        sessionCredentialsService.persistCredentials(
+                VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
+                auditEventUser.getSessionId(),
+                false);
         return JOURNEY_REUSE;
+    }
+
+    private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
+        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
+    }
+
+    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
+        var fraudVCs =
+                VcHelper.filterVCBasedOnEvidenceType(
+                        vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
+        for (var vc : fraudVCs) {
+            if (!VcHelper.isExpiredFraudVc(vc)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sendAuditEvent(AuditEventTypes auditEventTypes, AuditEventUser auditEventUser)
@@ -468,7 +538,7 @@ public class CheckExistingIdentityHandler
 
         for (var requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
-            if (requestedVot.getProfileType().equals(ProfileType.GPG45)) {
+            if (requestedVot.getProfileType().equals(GPG45)) {
                 if (areGpg45VcsCorrelated) {
                     requestedVotAttained =
                             achievedWithGpg45Profile(requestedVot, vcs, auditEventUser);
@@ -499,8 +569,7 @@ public class CheckExistingIdentityHandler
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY.getName())
-                    && requestedVot.equals(Vot.P2)) {
+            if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
 

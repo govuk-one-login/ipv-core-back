@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.processjourneyevent;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -14,9 +12,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyI
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,14 +25,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(SystemStubsExtension.class)
-public class JourneyMapTest {
-    @SystemStub private static EnvironmentVariables environmentVariables;
-
-    @BeforeAll
-    public static void beforeAll() {
-        environmentVariables.set("IS_LOCAL", "true");
-    }
+class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource

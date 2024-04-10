@@ -16,25 +16,19 @@ public class CriOAuthSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final DataStore<CriOAuthSessionItem> dataStore;
-    private final ConfigService configService;
+
+    public CriOAuthSessionService(DataStore<CriOAuthSessionItem> dataStore) {
+        this.dataStore = dataStore;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public CriOAuthSessionService(ConfigService configService) {
-        this.configService = configService;
-        boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(CRI_OAUTH_SESSIONS_TABLE_NAME),
+                        configService.getEnvironmentVariable(CRI_OAUTH_SESSIONS_TABLE_NAME),
                         CriOAuthSessionItem.class,
-                        DataStore.getClient(isRunningLocally),
-                        isRunningLocally,
+                        DataStore.getClient(),
                         configService);
-    }
-
-    public CriOAuthSessionService(
-            DataStore<CriOAuthSessionItem> dataStore, ConfigService configService) {
-        this.dataStore = dataStore;
-        this.configService = configService;
     }
 
     public CriOAuthSessionItem getCriOauthSessionItem(String criOAuthSessionId) {

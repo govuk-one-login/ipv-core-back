@@ -60,11 +60,20 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         passthroughBehavior: "when_no_match"
         requestTemplates:
-          application/x-www-form-urlencoded:
-            Fn::Sub: |
+          application/json:
+            # This VTL template maps the request into the format required by the step function API
+            # Note that the lack of indentation is deliberate:
+            # the 'input' field must be condensed into a single line to be a valid JSON string
+            Fn::Sub: >
               {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\", \"journey\": \"/journey/$input.params('journeyStep')\", \"clientOAuthSessionId\": \"$input.params('client-session-id')\", \"featureSet\": \"$input.params('feature-set')\"}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
+              "input": "{
+              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))\",
+              \"ipAddress\":\"$util.escapeJavaScript($input.params('ip-address'))\",
+              \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",
+              \"ipvSessionId\":\"$util.escapeJavaScript($input.params('ipv-session-id'))\",
+              \"clientOAuthSessionId\":\"$util.escapeJavaScript($input.params('client-session-id'))\"
+              }",
+              "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }
         responses:
           default:
@@ -87,42 +96,6 @@ paths:
                   #set($context.responseOverride.status = 500)
                   $bodyObj
                 #end
-
-  /journey/build-client-oauth-response:
-    post:
-      description: "Called when the user has completed their user journey in IPV Core"
-      responses:
-        200:
-          description: "Authorization Code and details"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildClientOauthResponseFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws"
-        requestTemplates:
-          application/x-www-form-urlencoded:
-            Fn::Sub: |
-              {
-                "ipvSessionId": "$input.params('ipv-session-id')",
-                "ipAddress": "$input.params('ip-address')",
-                "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
-              }
-        responses:
-          default:
-            statusCode: 200
-            responseTemplates:
-              application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-                #if ($bodyObj.statusCode)
-                #set($context.responseOverride.status = $bodyObj.statusCode)
-                #end
-                $input.body
 
   /user/proven-identity-details:
     get:

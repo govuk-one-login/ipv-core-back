@@ -79,7 +79,7 @@ class BuildUserIdentityHandlerTest {
             throws IOException, CiRetrievalException, ParseException, CredentialParseException {
 
         var userIdentityService = new UserIdentityService(mockConfigService);
-        var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockConfigService);
+        var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore);
         var clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
 

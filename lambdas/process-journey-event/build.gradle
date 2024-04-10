@@ -26,8 +26,7 @@ dependencies {
 	annotationProcessor libs.lombok
 
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit,
-			libs.systemStubs
+			libs.mockitoJunit
 
 	testRuntimeOnly libs.junitPlatform
 }

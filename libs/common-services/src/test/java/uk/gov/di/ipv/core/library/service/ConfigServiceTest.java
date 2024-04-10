@@ -1,9 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,10 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -65,7 +57,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED;
 
-@WireMockTest(httpPort = ConfigService.LOCALHOST_PORT)
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class ConfigServiceTest {
@@ -91,31 +82,6 @@ class ConfigServiceTest {
     @BeforeEach
     void setUp() {
         configService = new ConfigService(ssmProvider, secretsProvider);
-    }
-
-    @Test
-    void usesLocalSSMProviderWhenRunningLocally(WireMockRuntimeInfo wmRuntimeInfo)
-            throws JsonProcessingException {
-        stubFor(post("/").willReturn(ok()));
-        environmentVariables.set("IS_LOCAL", "true");
-        environmentVariables.set("AWS_ACCESS_KEY_ID", "ASDFGHJKL");
-        environmentVariables.set("AWS_SECRET_ACCESS_KEY", "1234567890987654321");
-
-        systemProperties.set(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
-
-        SSMProvider ssmProvider = new ConfigService().getSsmProvider();
-        assertThrows(NullPointerException.class, () -> ssmProvider.get("any-old-thing"));
-
-        HashMap requestBody =
-                new ObjectMapper()
-                        .readValue(
-                                getAllServeEvents().get(0).getRequest().getBodyAsString(),
-                                HashMap.class);
-
-        assertEquals("any-old-thing", requestBody.get("Name"));
-        assertEquals(false, requestBody.get("WithDecryption"));
     }
 
     @Nested
