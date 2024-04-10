@@ -4,7 +4,6 @@ import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -57,8 +56,7 @@ public class StepFunctionHelpers {
     }
 
     public static String getJourneyEvent(Map<String, String> input)
-            throws HttpResponseExceptionWithErrorBody, UnsupportedEncodingException,
-                    URISyntaxException {
+            throws HttpResponseExceptionWithErrorBody, URISyntaxException {
         String journeyEvent =
                 Optional.ofNullable(input.get(JOURNEY))
                         .orElseThrow(

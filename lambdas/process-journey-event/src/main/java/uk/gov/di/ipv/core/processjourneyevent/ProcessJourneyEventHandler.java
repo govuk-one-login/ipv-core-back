@@ -43,7 +43,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
@@ -159,9 +158,6 @@ public class ProcessJourneyEventHandler
         } catch (SqsException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
-        } catch (UnsupportedEncodingException e) {
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.valueOf(e.getMessage()));
         }
     }
 
