@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,21 +31,12 @@ public class StateMachine {
                     String.format("Unknown state provided to state machine: %s", startState));
         }
 
-        if (currentPage != null) {
-            if (state instanceof BasicState basicState) {
-                if (basicState.getResponse() instanceof PageStepResponse pageStepResponse) {
-                    if (!pageStepResponse.getPageId().equals(currentPage)) {
-                        return state;
-                    }
-                } else if (basicState.getResponse() instanceof CriStepResponse criStepResponse) {
-                    if (!criStepResponse.getCriId().equals(currentPage)) {
-                        return state;
-                    }
-                } else {
-                    throw new UnknownStateException(
-                            String.format(
-                                    "Unknown state provided to state machine: %s", startState));
-                }
+        if (currentPage != null && state instanceof BasicState basicState) {
+            if (isPageOrCriStateAndOutOfSync(basicState, currentPage)) {
+                return state;
+            } else if (basicState.getResponse() instanceof ProcessStepResponse) {
+                throw new UnknownStateException(
+                        String.format("Unknown state provided to state machine: %s", startState));
             }
         }
 
@@ -54,5 +46,12 @@ public class StateMachine {
         }
 
         return newState;
+    }
+
+    private Boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {
+        return basicState.getResponse() instanceof PageStepResponse pageStepResponse
+                        && !pageStepResponse.getPageId().equals(currentPage)
+                || basicState.getResponse() instanceof CriStepResponse criStepResponse
+                        && !criStepResponse.getCriId().equals(currentPage);
     }
 }
