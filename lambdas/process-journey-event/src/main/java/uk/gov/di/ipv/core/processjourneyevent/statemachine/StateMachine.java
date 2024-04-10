@@ -48,7 +48,7 @@ public class StateMachine {
         return newState;
     }
 
-    private Boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {
+    private boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {
         return basicState.getResponse() instanceof PageStepResponse pageStepResponse
                         && !pageStepResponse.getPageId().equals(currentPage)
                 || basicState.getResponse() instanceof CriStepResponse criStepResponse
