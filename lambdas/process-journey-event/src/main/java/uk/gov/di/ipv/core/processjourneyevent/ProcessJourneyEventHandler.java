@@ -153,7 +153,7 @@ public class ProcessJourneyEventHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
-        } catch (JourneyEngineException e) {
+        } catch (JourneyEngineException | URISyntaxException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         } catch (SqsException e) {
@@ -162,8 +162,6 @@ public class ProcessJourneyEventHandler
         } catch (UnsupportedEncodingException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.valueOf(e.getMessage()));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
         }
     }
 

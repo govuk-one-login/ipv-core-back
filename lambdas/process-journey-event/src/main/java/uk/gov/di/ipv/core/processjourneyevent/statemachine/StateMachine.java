@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -17,8 +15,6 @@ import java.util.Map;
 public class StateMachine {
     public static final String DELIMITER = "/";
     private final Map<String, State> states;
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();

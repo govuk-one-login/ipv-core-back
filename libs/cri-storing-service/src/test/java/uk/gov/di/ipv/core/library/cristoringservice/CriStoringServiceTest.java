@@ -163,7 +163,7 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeTicfVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
+    void storeVcsShouldProcessTicfVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vc = vcTicf();
