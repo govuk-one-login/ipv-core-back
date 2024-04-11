@@ -81,7 +81,7 @@ class RevokeVcsHandlerTest {
         revokeVcsHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
-        verify(mockDataStore, times(0)).create(any());
+        verify(mockDataStore, times(0)).create(any(VcStoreItem.class));
         verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         var auditEvent = auditEventArgumentCaptor.getValue();
@@ -102,7 +102,9 @@ class RevokeVcsHandlerTest {
                         Instant.now(),
                         Instant.now());
         when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVcStoreItem);
-        doThrow(new RuntimeException("Some error")).when(mockDataStore).create(any());
+        doThrow(new RuntimeException("Some error"))
+                .when(mockDataStore)
+                .create(any(VcStoreItem.class));
 
         // Act
         revokeVcsHandler.handleRequest(inputStream, outputStream, null);

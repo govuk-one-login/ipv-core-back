@@ -12,14 +12,18 @@ repositories {
 dependencies {
 	implementation libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
-			project(":libs:common-services")
+			libs.nimbusdsOauth2OidcSdk,
+			project(":libs:common-services"),
+			project(':libs:journey-uris'),
+			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly libs.junitPlatform
 }

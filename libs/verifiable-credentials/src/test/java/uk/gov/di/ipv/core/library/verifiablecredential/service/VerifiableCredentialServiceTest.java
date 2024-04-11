@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
@@ -10,6 +9,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +28,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -36,19 +37,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 
-@WireMockTest
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
+    private static final String USER_ID = "user-id";
+    @Captor ArgumentCaptor<VcStoreItem> vcStoreItemCaptor;
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @InjectMocks private VerifiableCredentialService verifiableCredentialService;
 
@@ -70,7 +76,7 @@ class VerifiableCredentialServiceTest {
     @Test
     void expectedSuccessWithoutExpWhenSaveCredentials() throws Exception {
         String credentialIssuerId = "cred_issuer_id_1";
-        String userId = "user-id-1";
+        String userId = USER_ID;
         SignedJWT signedJwt =
                 new SignedJWT(
                         new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
@@ -96,7 +102,7 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void expectedExceptionWhenSaveCredentials() throws Exception {
+    void expectedExceptionWhenSaveCredentials() {
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any(), any());
 
         VerifiableCredentialException thrown =
@@ -148,7 +154,7 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldDeleteAllExistingVCs() throws CredentialParseException {
+    void shouldDeleteAllExistingVCs() {
         var experianVc1 = vcExperianFraudScoreOne();
         var experianVc2 = vcExperianFraudScoreTwo();
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, experianVc1, experianVc2);
@@ -196,6 +202,59 @@ class VerifiableCredentialServiceTest {
 
         // Assert
         verify(mockDataStore, times(0)).delete(any(), eq(HMRC_MIGRATION_CRI));
+    }
+
+    @Test
+    void storeIdentityShouldClearVcsAndStoreNewOnes() throws Exception {
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
+                        M1A_ADDRESS_VC);
+
+        verifiableCredentialService.storeIdentity(vcs, USER_ID);
+
+        var inOrder = inOrder(mockDataStore);
+        inOrder.verify(mockDataStore).deleteAllByPartition(USER_ID);
+        inOrder.verify(mockDataStore, times(3)).create(vcStoreItemCaptor.capture());
+        inOrder.verifyNoMoreInteractions();
+
+        var capturedItems = vcStoreItemCaptor.getAllValues();
+
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                capturedItems.get(0).getCredential());
+        assertEquals(
+                EXPIRED_M1A_EXPERIAN_FRAUD_VC.getVcString(), capturedItems.get(1).getCredential());
+        assertEquals(M1A_ADDRESS_VC.getVcString(), capturedItems.get(2).getCredential());
+    }
+
+    @Test
+    void storeIdentityShouldThrowIfFailureToDeleteExistingVc() {
+        doThrow(new IllegalStateException()).when(mockDataStore).deleteAllByPartition(USER_ID);
+
+        var verifiableCredentialException =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> verifiableCredentialService.storeIdentity(List.of(), USER_ID));
+
+        assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+        assertEquals(FAILED_TO_STORE_IDENTITY, verifiableCredentialException.getErrorResponse());
+    }
+
+    @Test
+    void storeIdentityShouldThrowIfFailureToWriteNewVc() {
+        doThrow(new IllegalStateException()).when(mockDataStore).create(any());
+
+        var verifiableCredentialException =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () ->
+                                verifiableCredentialService.storeIdentity(
+                                        List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC), USER_ID));
+
+        assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+        assertEquals(FAILED_TO_STORE_IDENTITY, verifiableCredentialException.getErrorResponse());
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
