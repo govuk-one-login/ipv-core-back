@@ -36,7 +36,9 @@ public class StateMachine {
                 return state;
             } else if (basicState.getResponse() instanceof ProcessStepResponse) {
                 throw new UnknownStateException(
-                        String.format("Unknown state provided to state machine: %s", startState));
+                        String.format(
+                                "Unexpected page event (%s) from page (%s) received in process state (%s)",
+                                event, currentPage, startState));
             }
         }
 
@@ -51,7 +53,6 @@ public class StateMachine {
     private boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {
         return basicState.getResponse() instanceof PageStepResponse pageStepResponse
                         && !pageStepResponse.getPageId().equals(currentPage)
-                || basicState.getResponse() instanceof CriStepResponse criStepResponse
-                        && !criStepResponse.getCriId().equals(currentPage);
+                || basicState.getResponse() instanceof CriStepResponse;
     }
 }
