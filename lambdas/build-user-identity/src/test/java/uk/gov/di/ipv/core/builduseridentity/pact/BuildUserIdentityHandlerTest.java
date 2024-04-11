@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
@@ -67,6 +68,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
+    @Mock private SessionCredentialsService mockSessionCredentialsService;
 
     @BeforeAll
     static void setupServer() {
@@ -138,7 +140,8 @@ class BuildUserIdentityHandlerTest {
                         clientOAuthSessionDetailsService,
                         mockCiMitService,
                         mockCiMitUtilityService,
-                        verifiableCredentialService);
+                        verifiableCredentialService,
+                        mockSessionCredentialsService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity", PORT);
         httpServer.startServer();
