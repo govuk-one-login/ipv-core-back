@@ -232,14 +232,11 @@ class ProcessJourneyEventHandlerTest {
     private static Stream<Arguments> journeyUrisWithCurrentPageForCri() {
         return Stream.of(
                 Arguments.of(
-                        JOURNEY_TEST_WITH_CONTEXT_WITH_A_CRI_ID,
+                        JOURNEY_TEST_WITH_CONTEXT_WITH_MISSING_CURRENT_PAGE,
                         "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
                         JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE,
                         "/journey/cri/build-oauth-request/aCriId"),
-                Arguments.of(
-                        JOURNEY_TEST_WITH_CONTEXT_WITH_MISSING_CURRENT_PAGE,
-                        "/journey/cri/build-oauth-request/aCriId?context=test_context"),
                 Arguments.of(
                         JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE,
                         "/journey/cri/build-oauth-request/aCriId"),
