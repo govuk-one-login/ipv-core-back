@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
@@ -47,6 +49,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -59,6 +62,7 @@ public class BuildProvenUserIdentityDetailsHandler
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -67,12 +71,14 @@ public class BuildProvenUserIdentityDetailsHandler
             UserIdentityService userIdentityService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -83,6 +89,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -108,9 +115,13 @@ public class BuildProvenUserIdentityDetailsHandler
 
             ProfileType profileType = ipvSessionItem.getVot().getProfileType();
             var vcs =
-                    VcHelper.filterVCBasedOnProfileType(
-                            verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()),
-                            profileType);
+                    configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                            ? sessionCredentialsService.getCredentials(
+                                    ipvSessionId, clientOAuthSessionItem.getUserId())
+                            : VcHelper.filterVCBasedOnProfileType(
+                                    verifiableCredentialService.getVcs(
+                                            clientOAuthSessionItem.getUserId()),
+                                    profileType);
 
             var currentVcStatuses = generateCurrentVcStatuses(vcs);
 
@@ -128,7 +139,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HTTPResponse.SC_OK, provenUserIdentityDetailsBuilder.build());
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildJourneyErrorResponse(e.getErrorResponse(), e.getResponseCode());
         } catch (ParseException | JsonProcessingException | CredentialParseException e) {
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
