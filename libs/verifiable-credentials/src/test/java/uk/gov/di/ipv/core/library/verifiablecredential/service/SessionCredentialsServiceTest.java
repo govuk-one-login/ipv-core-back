@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -40,6 +41,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_IS
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 
 @ExtendWith(MockitoExtension.class)
 class SessionCredentialsServiceTest {
@@ -191,6 +193,46 @@ class SessionCredentialsServiceTest {
                             () -> sessionCredentialService.getCredentials(SESSION_ID, USER_ID));
 
             assertEquals(FAILED_TO_GET_CREDENTIAL, caughtException.getErrorResponse());
+        }
+
+        @Test
+        void getLatestCredentialsByIssuerShouldReturnTheNewestVcIssuedByCris() throws Exception {
+            var now = Instant.now();
+            var cri1Latest = generateVerifiableCredential(USER_ID, "criId1", null, now);
+            var cri1Older =
+                    generateVerifiableCredential(USER_ID, "criId1", null, now.minusSeconds(10));
+            var cri1Oldest =
+                    generateVerifiableCredential(USER_ID, "criId1", null, now.minusSeconds(20));
+            var cri2Latest =
+                    generateVerifiableCredential(USER_ID, "criId2", null, now.minusSeconds(10));
+            var cri2Older =
+                    generateVerifiableCredential(USER_ID, "criId2", null, now.minusSeconds(20));
+            var cri2Oldest =
+                    generateVerifiableCredential(USER_ID, "criId2", null, now.minusSeconds(30));
+            var cri3Latest =
+                    generateVerifiableCredential(USER_ID, "criId3", null, now.minusSeconds(5));
+            var cri3Older =
+                    generateVerifiableCredential(USER_ID, "criId3", null, now.minusSeconds(6));
+            var cri3Oldest =
+                    generateVerifiableCredential(USER_ID, "criId3", null, now.minusSeconds(7));
+
+            List<SessionCredentialItem> sessionCredentialItems =
+                    List.of(
+                            cri1Latest.toSessionCredentialItem(SESSION_ID, true),
+                            cri1Older.toSessionCredentialItem(SESSION_ID, true),
+                            cri1Oldest.toSessionCredentialItem(SESSION_ID, true),
+                            cri2Latest.toSessionCredentialItem(SESSION_ID, true),
+                            cri2Older.toSessionCredentialItem(SESSION_ID, true),
+                            cri2Oldest.toSessionCredentialItem(SESSION_ID, true),
+                            cri3Latest.toSessionCredentialItem(SESSION_ID, true),
+                            cri3Older.toSessionCredentialItem(SESSION_ID, true),
+                            cri3Oldest.toSessionCredentialItem(SESSION_ID, true));
+            when(mockDataStore.getItems(any())).thenReturn(sessionCredentialItems);
+
+            var latestByIssuerCredentials =
+                    sessionCredentialService.getLatestCredentialsByIssuer(SESSION_ID, USER_ID);
+
+            assertEquals(latestByIssuerCredentials, List.of(cri1Latest, cri2Latest, cri3Latest));
         }
     }
 

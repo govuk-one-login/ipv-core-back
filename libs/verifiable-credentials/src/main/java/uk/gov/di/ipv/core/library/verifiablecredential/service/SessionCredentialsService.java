@@ -17,7 +17,11 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.maxBy;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
 
 public class SessionCredentialsService {
@@ -74,6 +78,20 @@ public class SessionCredentialsService {
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_CREDENTIAL);
         }
+    }
+
+    public List<VerifiableCredential> getLatestCredentialsByIssuer(
+            String ipvSessionId, String userId) throws VerifiableCredentialException {
+        return getCredentials(ipvSessionId, userId).stream()
+                .collect(
+                        groupingBy(
+                                VerifiableCredential::getCriId,
+                                maxBy(comparing(vc -> vc.getClaimsSet().getNotBeforeTime()))))
+                .values()
+                .stream()
+                .flatMap(Optional::stream)
+                .sorted(comparing(VerifiableCredential::getCriId))
+                .toList();
     }
 
     public void persistCredentials(
