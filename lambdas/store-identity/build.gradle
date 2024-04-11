@@ -1,0 +1,44 @@
+plugins {
+	id "java"
+	id "idea"
+	id "jacoco"
+	alias libs.plugins.postCompileWeaving
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation libs.awsLambdaJavaCore,
+			libs.awsLambdaJavaEvents,
+			project(":libs:common-services")
+
+	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
+			libs.aspectj
+
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}
