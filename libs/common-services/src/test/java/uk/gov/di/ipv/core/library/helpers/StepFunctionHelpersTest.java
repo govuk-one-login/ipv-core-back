@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StepFunctionHelpersTest {
@@ -40,9 +41,30 @@ class StepFunctionHelpersTest {
 
     @Test
     void getJourneyEventShouldReturnJourneyEvent() throws Exception {
-        Map<String, String> input = Map.of("journey", "/journey/next");
+        Map<String, String> input = Map.of("journey", "/journey/next?currentPage=testCurrentPage");
 
         assertEquals("next", StepFunctionHelpers.getJourneyEvent(input));
+    }
+
+    @Test
+    void getCurrentPageShouldReturnCurrentPage() throws Exception {
+        Map<String, String> input = Map.of("journey", "/journey/next?currentPage=testCurrentPage");
+
+        assertEquals("testCurrentPage", StepFunctionHelpers.getCurrentPage(input));
+    }
+
+    @Test
+    void getCurrentPageShouldReturnNullIfMissing() throws Exception {
+        Map<String, String> input = Map.of("journey", "/journey/next?currentPage=");
+
+        assertNull(StepFunctionHelpers.getCurrentPage(input));
+    }
+
+    @Test
+    void getCurrentPageShouldReturnNullIfNoParameter() throws Exception {
+        Map<String, String> input = Map.of("journey", "/journey/next");
+
+        assertNull(StepFunctionHelpers.getCurrentPage(input));
     }
 
     @Test

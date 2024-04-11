@@ -4,6 +4,8 @@ import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ public class StepFunctionHelpers {
     private static final String TYPE = "type";
     private static final String PAGE = "page";
     private static final String FEATURE_SET = "featureSet";
+    public static final String CURRENT_PAGE = "currentPage";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -53,16 +56,36 @@ public class StepFunctionHelpers {
     }
 
     public static String getJourneyEvent(Map<String, String> input)
-            throws HttpResponseExceptionWithErrorBody {
-        String[] parts =
+            throws HttpResponseExceptionWithErrorBody, URISyntaxException {
+        String journeyEvent =
                 Optional.ofNullable(input.get(JOURNEY))
                         .orElseThrow(
                                 () ->
                                         new HttpResponseExceptionWithErrorBody(
                                                 HttpStatus.SC_BAD_REQUEST,
-                                                ErrorResponse.MISSING_JOURNEY_EVENT))
-                        .split("/");
+                                                ErrorResponse.MISSING_JOURNEY_EVENT));
+
+        URI uri = new URI(journeyEvent);
+
+        String[] parts = uri.getPath().split("/");
+
         return parts[parts.length - 1];
+    }
+
+    public static String getCurrentPage(Map<String, String> input)
+            throws HttpResponseExceptionWithErrorBody, URISyntaxException {
+
+        String journeyEvent =
+                Optional.ofNullable(input.get(JOURNEY))
+                        .orElseThrow(
+                                () ->
+                                        new HttpResponseExceptionWithErrorBody(
+                                                HttpStatus.SC_BAD_REQUEST,
+                                                ErrorResponse.MISSING_JOURNEY_EVENT));
+
+        String currentPage = RequestHelper.getJourneyParameter(new URI(journeyEvent), CURRENT_PAGE);
+
+        return currentPage != null && !currentPage.isEmpty() ? currentPage : null;
     }
 
     public static Map<String, Object> generateErrorOutputMap(

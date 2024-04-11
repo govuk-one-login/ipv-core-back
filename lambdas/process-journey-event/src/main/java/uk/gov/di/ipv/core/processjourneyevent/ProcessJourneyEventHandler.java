@@ -43,6 +43,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
@@ -106,6 +107,8 @@ public class ProcessJourneyEventHandler
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
+            String currentPage = StepFunctionHelpers.getCurrentPage(input);
+
             configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
 
             // Handle route direct back to RP (used for recoverable timeouts)
@@ -116,11 +119,13 @@ public class ProcessJourneyEventHandler
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+
             if (ipvSessionItem == null) {
                 LOGGER.error(LogHelper.buildLogMessage("Failed to find ipv-session"));
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
+
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -137,7 +142,7 @@ public class ProcessJourneyEventHandler
                             ipAddress);
 
             StepResponse stepResponse =
-                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser);
+                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser, currentPage);
 
             if (stepResponse.getMitigationStart() != null) {
                 sendMitigationStartAuditEvent(auditEventUser, stepResponse.getMitigationStart());
@@ -147,7 +152,7 @@ public class ProcessJourneyEventHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
-        } catch (JourneyEngineException e) {
+        } catch (JourneyEngineException | URISyntaxException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         } catch (SqsException e) {
@@ -158,7 +163,10 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private StepResponse executeJourneyEvent(
-            String journeyEvent, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
+            String journeyEvent,
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser,
+            String currentPage)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(
@@ -167,7 +175,7 @@ public class ProcessJourneyEventHandler
         }
 
         try {
-            var newState = executeStateTransition(ipvSessionItem, journeyEvent);
+            var newState = executeStateTransition(ipvSessionItem, journeyEvent, currentPage);
 
             while (newState instanceof JourneyChangeState journeyChangeState) {
                 LOGGER.info(
@@ -181,7 +189,7 @@ public class ProcessJourneyEventHandler
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
                 sendSubJourneyStartAuditEvent(auditEventUser, journeyChangeState.getJourneyType());
-                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT);
+                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, null);
             }
 
             var basicState = (BasicState) newState;
@@ -225,7 +233,8 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private State executeStateTransition(IpvSessionItem ipvSessionItem, String journeyEvent)
+    private State executeStateTransition(
+            IpvSessionItem ipvSessionItem, String journeyEvent, String currentPage)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
         StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
         if (stateMachine == null) {
@@ -241,7 +250,10 @@ public class ProcessJourneyEventHandler
                                 ipvSessionItem.getJourneyType().name())));
 
         return stateMachine.transition(
-                ipvSessionItem.getUserState(), journeyEvent, new JourneyContext(configService));
+                ipvSessionItem.getUserState(),
+                journeyEvent,
+                new JourneyContext(configService),
+                currentPage);
     }
 
     @Tracing
