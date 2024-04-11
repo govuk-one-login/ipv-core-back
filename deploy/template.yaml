@@ -1202,6 +1202,7 @@ Resources:
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
         CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
+        StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1233,6 +1234,8 @@ Resources:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CallTicfCriFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StoreIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

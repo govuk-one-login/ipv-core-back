@@ -169,8 +169,14 @@ CRI_F2F:
   events:
     next:
       targetState: F2F_HANDOFF_PAGE
+      checkFeatureFlag:
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     enhanced-verification:
       targetState: F2F_HANDOFF_PAGE
+      checkFeatureFlag:
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     access-denied:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_NO_TICF
@@ -306,12 +312,37 @@ EVALUATE_GPG45_SCORES:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_SUCCESS
+
     unmet:
       targetJourney: FAILED
       targetState: FAILED
     vcs-not-correlated:
       targetJourney: FAILED
       targetState: FAILED
+
+STORE_IDENTITY_BEFORE_SUCCESS:
+  response:
+    type: process
+    lambda: store-identity
+  events:
+    identity-stored:
+      targetState: IPV_SUCCESS_PAGE
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+
+STORE_IDENTITY_BEFORE_F2F_HANDOFF:
+  response:
+    type: process
+    lambda: store-identity
+  events:
+    identity-stored:
+      targetState: F2F_HANDOFF_PAGE
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
 
 IPV_SUCCESS_PAGE:
   response:
@@ -334,6 +365,9 @@ CRI_TICF_BEFORE_SUCCESS:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE
+      checkFeatureFlag:
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_SUCCESS
 
 CRI_TICF_BEFORE_F2F:
   response:
