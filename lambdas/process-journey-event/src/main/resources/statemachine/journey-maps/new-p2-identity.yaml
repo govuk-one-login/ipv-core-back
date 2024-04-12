@@ -112,6 +112,9 @@ IDENTITY_START_PAGE:
   events:
     next:
       targetState: CRI_DCMAW
+      checkFeatureFlag:
+        dcmawTriage:
+          targetState: SELECT_DEVICE_PAGE
       checkIfDisabled:
         dcmaw:
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
@@ -124,6 +127,76 @@ IDENTITY_START_PAGE:
         f2f:
           targetJourney: INELIGIBLE
           targetState: INELIGIBLE
+
+SELECT_DEVICE_PAGE:
+  response:
+    type: page
+    pageId: pyi-triage-select-device
+  events:
+    computer-or-tablet:
+      targetState: DAD_SELECT_SMARTPHONE
+    smartphone:
+      targetState: MAM_SELECT_SMARTPHONE
+
+DAD_SELECT_SMARTPHONE:
+  response:
+    type: page
+    pageId: pyi-triage-select-smartphone
+  events:
+    iphone:
+      targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+    android:
+      targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+    end:
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+
+MAM_SELECT_SMARTPHONE:
+  response:
+    type: page
+    pageId: pyi-triage-select-smartphone
+  events:
+    iphone:
+      targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+    android:
+      targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+    end:
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+
+DESKTOP_IPHONE_DOWNLOAD_PAGE:
+  response:
+    type: page
+    pageId: pyi-triage-desktop-download-app
+    context: iphone
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE
+
+DESKTOP_ANDROID_DOWNLOAD_PAGE:
+  response:
+    type: page
+    pageId: pyi-triage-desktop-download-app
+    context: android
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE
+
+MOBILE_IPHONE_DOWNLOAD_PAGE:
+  response:
+    type: page
+    pageId: pyi-triage-mobile-download-app
+    context: iphone
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE
+
+MOBILE_ANDROID_DOWNLOAD_PAGE:
+  response:
+    type: page
+    pageId: pyi-triage-mobile-download-app
+    context: android
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE
 
 F2F_START_PAGE:
   response:
