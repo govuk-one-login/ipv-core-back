@@ -18,9 +18,11 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyTyp
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -43,7 +45,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
@@ -57,8 +58,9 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
 public class ProcessJourneyEventHandler
-        implements RequestHandler<Map<String, String>, Map<String, Object>> {
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final String CURRENT_PAGE = "currentPage";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
@@ -99,17 +101,16 @@ public class ProcessJourneyEventHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
             // Extract variables
-            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
-            String ipAddress = StepFunctionHelpers.getIpAddress(input);
-            String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
-            String currentPage = StepFunctionHelpers.getCurrentPage(input);
-
-            configService.setFeatureSet(StepFunctionHelpers.getFeatureSet(input));
+            String ipvSessionId = RequestHelper.getIpvSessionId(journeyRequest);
+            String ipAddress = RequestHelper.getIpAddress(journeyRequest);
+            String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
+            String currentPage = RequestHelper.getJourneyParameter(journeyRequest, CURRENT_PAGE);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
 
             // Handle route direct back to RP (used for recoverable timeouts)
             if (journeyEvent.equals(END_SESSION_EVENT)) {
@@ -152,7 +153,7 @@ public class ProcessJourneyEventHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
-        } catch (JourneyEngineException | URISyntaxException e) {
+        } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         } catch (SqsException e) {

@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +39,7 @@ class RequestHelperTest {
     private final String TEST_IP_ADDRESS = "127.0.0.1";
     private final String TEST_FEATURE_SET = "test-feature-set";
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
-    private final String TEST_JOURNEY = DCMAW_CRI;
+    private final String TEST_JOURNEY = "/journey/next";
     private static final String CONTEXT = "context";
     private static final String BANK_ACCOUNT_CONTEXT = "context";
     private static final String TEST_JOURNEY_WITH_CONTEXT =
@@ -53,6 +52,8 @@ class RequestHelperTest {
             String.format(
                     "claimedIdentity?%s=%s&%s=%s",
                     CONTEXT, BANK_ACCOUNT_CONTEXT, SCOPE, IDENTITY_CHECK_SCOPE);
+    private static final String TEST_JOURNEY_WITH_EMPTY_CONTEXT =
+            String.format("claimedIdentity?%s=", CONTEXT);
 
     @Test
     void getHeaderByKeyShouldReturnNullIfHeaderNotFound() {
@@ -259,10 +260,40 @@ class RequestHelperTest {
         assertTrue(getFeatureSet(event).isEmpty());
     }
 
+    @Test
+    void getJourneyEventShouldReturnJourneyEvent() throws Exception {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .build();
+
+        assertEquals("next", RequestHelper.getJourneyEvent(event));
+    }
+
+    @Test
+    void getJourneyEventShouldThrowIfJourneyMissing() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .build();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getJourneyEvent(event));
+        assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT, exception.getErrorResponse());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+    }
+
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void getJourneyShouldReturnJourneyWithParametersFromJourneyRequest(
-            String journey, String expectedContext, String expectedScope) {
+            String journey, String expectedContext, String expectedScope) throws Exception {
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_IPV_SESSION_ID)
@@ -271,10 +302,9 @@ class RequestHelperTest {
                         .journey(journey)
                         .build();
 
-        URI journeyUri = URI.create(event.getJourney());
-        assertEquals(CLAIMED_IDENTITY_CRI, journeyUri.getPath());
-        assertEquals(expectedContext, RequestHelper.getJourneyParameter(journeyUri, CONTEXT));
-        assertEquals(expectedScope, RequestHelper.getJourneyParameter(journeyUri, SCOPE));
+        assertEquals(CLAIMED_IDENTITY_CRI, event.getJourneyUri().getPath());
+        assertEquals(expectedContext, RequestHelper.getJourneyParameter(event, CONTEXT));
+        assertEquals(expectedScope, RequestHelper.getJourneyParameter(event, SCOPE));
     }
 
     static Stream<Arguments> journeyUriParameters() {
@@ -284,7 +314,8 @@ class RequestHelperTest {
                 Arguments.of(
                         TEST_JOURNEY_WITH_CONTEXT_AND_SCOPE,
                         BANK_ACCOUNT_CONTEXT,
-                        IDENTITY_CHECK_SCOPE));
+                        IDENTITY_CHECK_SCOPE),
+                Arguments.of(TEST_JOURNEY_WITH_EMPTY_CONTEXT, null, null));
     }
 
     @Test

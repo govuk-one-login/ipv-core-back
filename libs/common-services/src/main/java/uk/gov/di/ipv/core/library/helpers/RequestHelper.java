@@ -13,13 +13,11 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -124,14 +122,21 @@ public class RequestHelper {
         return featureSet;
     }
 
-    public static String getJourneyParameter(URI journeyUri, String key) {
-        List<NameValuePair> queryParams = new URIBuilder(journeyUri).getQueryParams();
-        Optional<NameValuePair> parameter =
-                queryParams.stream()
-                        .filter(query -> Objects.equals(query.getName(), key))
-                        .findFirst();
+    public static String getJourneyEvent(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        var parts = request.getJourneyUri().getPath().split("/");
+        return parts[parts.length - 1];
+    }
 
-        return parameter.map(NameValuePair::getValue).orElse(null);
+    public static String getJourneyParameter(JourneyRequest request, String key)
+            throws HttpResponseExceptionWithErrorBody {
+        List<NameValuePair> queryParams = new URIBuilder(request.getJourneyUri()).getQueryParams();
+        return queryParams.stream()
+                .filter(query -> Objects.equals(query.getName(), key))
+                .findFirst()
+                .map(NameValuePair::getValue)
+                .filter(StringUtils::isNotBlank)
+                .orElse(null);
     }
 
     public static String getScoreType(ProcessRequest request)
