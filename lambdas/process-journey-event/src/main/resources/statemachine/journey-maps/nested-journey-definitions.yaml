@@ -73,7 +73,7 @@ DCMAW_TRIAGE:
         context: iphone
       events:
         next:
-          targetState: next
+          exitEventToEmit: next
 
     DESKTOP_ANDROID_DOWNLOAD_PAGE:
       response:
@@ -82,7 +82,7 @@ DCMAW_TRIAGE:
         context: android
       events:
         next:
-          targetState: next
+          exitEventToEmit: next
 
     MOBILE_IPHONE_DOWNLOAD_PAGE:
       response:
@@ -91,7 +91,7 @@ DCMAW_TRIAGE:
         context: iphone
       events:
         next:
-          targetState: next
+          exitEventToEmit: next
 
     MOBILE_ANDROID_DOWNLOAD_PAGE:
       response:
@@ -100,4 +100,4 @@ DCMAW_TRIAGE:
         context: android
       events:
         next:
-          targetState: next
+          exitEventToEmit: next
