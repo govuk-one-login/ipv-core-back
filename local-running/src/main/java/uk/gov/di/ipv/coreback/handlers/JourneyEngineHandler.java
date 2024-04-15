@@ -68,10 +68,10 @@ public class JourneyEngineHandler {
                             processJourneyStep(request, processJourneyEventOutput);
 
                     if (!processJourneyStepOutput.containsKey(JOURNEY)) {
-                        return OBJECT_MAPPER.writeValueAsString(processJourneyEventOutput);
+                        return OBJECT_MAPPER.writeValueAsString(processJourneyStepOutput);
                     }
 
-                    journeyEvent = (String) processJourneyEventOutput.get(JOURNEY);
+                    journeyEvent = (String) processJourneyStepOutput.get(JOURNEY);
                 }
             };
 
