@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -32,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -44,12 +46,14 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -67,6 +71,7 @@ public class BuildUserIdentityHandler
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildUserIdentityHandler(
@@ -77,7 +82,8 @@ public class BuildUserIdentityHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -86,6 +92,7 @@ public class BuildUserIdentityHandler
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -98,6 +105,7 @@ public class BuildUserIdentityHandler
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
     @Override
@@ -159,7 +167,11 @@ public class BuildUserIdentityHandler
 
             var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
 
-            var vcs = verifiableCredentialService.getVcs(userId);
+            var vcs =
+                    configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                            ? sessionCredentialsService.getCredentials(ipvSessionId, userId)
+                            : verifiableCredentialService.getVcs(userId);
+
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
                             vcs, userId, ipvSessionItem.getVot(), contraIndicators);
@@ -189,12 +201,8 @@ public class BuildUserIdentityHandler
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
             return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Failed to generate the user identity output.", e.getErrorReason()));
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiRetrievalException e) {
             return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
         } catch (CredentialParseException e) {
@@ -294,6 +302,13 @@ public class BuildUserIdentityHandler
             return Instant.now().isAfter(Instant.parse(accessTokenMetadata.getExpiryDateTime()));
         }
         return false;
+    }
+
+    private APIGatewayProxyResponseEvent errorResponseJsonResponse(
+            int httpStatusCode, ErrorResponse errorResponse) {
+        LOGGER.error(LogHelper.buildLogMessage(errorResponse.getMessage()));
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                httpStatusCode, errorResponse.toResponseBody());
     }
 
     private APIGatewayProxyResponseEvent serverErrorJsonResponse(String errorHeader, Exception e) {

@@ -269,12 +269,7 @@ class UserIdentityServiceTest {
                         () -> userIdentityService.areVcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
     }
 
     @ParameterizedTest
@@ -303,12 +298,7 @@ class UserIdentityServiceTest {
                         () -> userIdentityService.areVcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
     }
 
     @ParameterizedTest
@@ -364,12 +354,7 @@ class UserIdentityServiceTest {
                         () -> userIdentityService.areVcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
     }
 
     @Test
@@ -454,12 +439,7 @@ class UserIdentityServiceTest {
                         () -> userIdentityService.areVcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertEquals(ErrorResponse.FAILED_BIRTHDATE_CORRELATION, thrownError.getErrorResponse());
     }
 
     @ParameterizedTest
@@ -740,11 +720,7 @@ class UserIdentityServiceTest {
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM, thrownError.getErrorResponse());
     }
 
     @Test
@@ -769,11 +745,7 @@ class UserIdentityServiceTest {
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM, thrownError.getErrorResponse());
     }
 
     @Test
@@ -1028,11 +1000,7 @@ class UserIdentityServiceTest {
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
-                thrownException.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
-                thrownException.getErrorBody().get("error_description"));
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM, thrownException.getErrorResponse());
     }
 
     @Test

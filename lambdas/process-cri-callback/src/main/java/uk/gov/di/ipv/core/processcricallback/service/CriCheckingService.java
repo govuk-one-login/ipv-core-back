@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
@@ -41,6 +42,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -78,6 +80,7 @@ public class CriCheckingService {
     private final CiMitUtilityService ciMitUtilityService;
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
@@ -86,13 +89,15 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     public JourneyResponse handleCallbackError(
@@ -211,11 +216,13 @@ public class CriCheckingService {
     }
 
     public JourneyResponse checkVcResponse(
-            List<VerifiableCredential> vcs,
+            List<VerifiableCredential> newVcs,
             CriCallbackRequest callbackRequest,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String ipvSessionId)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, MitigationRouteConfigNotFoundException {
+                    CredentialParseException, MitigationRouteConfigNotFoundException,
+                    VerifiableCredentialException {
         var cis =
                 ciMitService.getContraIndicators(
                         clientOAuthSessionItem.getUserId(),
@@ -227,11 +234,14 @@ public class CriCheckingService {
         }
 
         if (!userIdentityService.areVcsCorrelated(
-                verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()))) {
+                configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                        ? sessionCredentialsService.getCredentials(
+                                ipvSessionId, clientOAuthSessionItem.getUserId())
+                        : verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        for (var vc : vcs) {
+        for (var vc : newVcs) {
             if (!VcHelper.isSuccessfulVc(vc)) {
                 return JOURNEY_FAIL_WITH_NO_CI;
             }

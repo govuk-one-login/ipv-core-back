@@ -37,8 +37,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
@@ -156,6 +158,33 @@ class CriStoringServiceTest {
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
         verify(mockVerifiableCredentialService).persistUserCredentials(vc);
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
+        verify(mockSessionCredentialsService)
+                .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
+        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
+        verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
+    }
+
+    @Test
+    void storeVcsShouldRemoveExistingAddressVcFromSessionCredentialsStoreIfNewAddressVcReceived()
+            throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var vc = VC_ADDRESS;
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        // Act
+        criStoringService.storeVcs(
+                ADDRESS_CRI,
+                callbackRequest.getIpAddress(),
+                List.of(vc),
+                clientOAuthSessionItem,
+                mockIpvSessionItem);
+
+        // Assert
+        verify(mockVerifiableCredentialService).persistUserCredentials(vc);
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForCri(mockIpvSessionItem.getIpvSessionId(), ADDRESS_CRI);
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem).addVcReceivedThisSession(vc);

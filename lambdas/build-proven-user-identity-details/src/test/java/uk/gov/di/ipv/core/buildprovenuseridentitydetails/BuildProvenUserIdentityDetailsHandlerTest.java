@@ -9,6 +9,9 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -32,6 +36,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Collections;
@@ -45,6 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -64,7 +70,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -72,10 +78,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
+    @InjectMocks private BuildProvenUserIdentityDetailsHandler handler;
 
-    private BuildProvenUserIdentityDetailsHandler handler;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
@@ -90,31 +97,32 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         .userId(TEST_USER_ID)
                         .build();
 
-        handler =
-                new BuildProvenUserIdentityDetailsHandler(
-                        mockIpvSessionService,
-                        mockUserIdentityService,
-                        mockConfigService,
-                        mockClientOAuthSessionDetailsService,
-                        mockVerifiableCredentialService);
-
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
     }
 
-    @Test
-    void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReceive200ResponseCodeProvenUserIdentityDetails(boolean sessionCredentialsReads)
+            throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS))
+                .thenReturn(sessionCredentialsReads);
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a());
+        if (sessionCredentialsReads) {
+            when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
+                    .thenReturn(vcs);
+        } else {
+            when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenReturn(vcs);
+        }
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
-        when(VcHelper.filterVCBasedOnProfileType(any(), any()))
-                .thenReturn(
-                        List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -129,6 +137,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        if (sessionCredentialsReads) {
+            verify(mockSessionCredentialsService).getCredentials(SESSION_ID, TEST_USER_ID);
+        } else {
+            mockVcHelper.verify(() -> VcHelper.filterVCBasedOnProfileType(any(), any()));
+        }
     }
 
     @Test
@@ -384,6 +397,28 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorResponseWhenErrorGettingVcFromSessionCredentialsService()
+            throws Exception {
+        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenThrow(
+                        new VerifiableCredentialException(
+                                418, ErrorResponse.FAILED_TO_GET_CREDENTIAL));
+
+        var input = createRequestEvent();
+
+        var output = handler.handleRequest(input, context);
+
+        assertEquals(418, output.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL,
+                toResponseClass(output, ErrorResponse.class));
+    }
+
+    @Test
     void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockUserIdentityService.isVcSuccessful(any(), any()))
@@ -492,6 +527,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private <T> T toResponseClass(
             APIGatewayProxyResponseEvent handlerOutput, Class<T> responseClass)
             throws JsonProcessingException {
-        return objectMapper.readValue(handlerOutput.getBody(), responseClass);
+        return OBJECT_MAPPER.readValue(handlerOutput.getBody(), responseClass);
     }
 }

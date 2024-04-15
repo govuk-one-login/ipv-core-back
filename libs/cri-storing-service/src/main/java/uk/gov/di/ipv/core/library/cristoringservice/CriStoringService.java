@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -128,6 +129,11 @@ public class CriStoringService {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
             } else {
                 verifiableCredentialService.persistUserCredentials(vc);
+                if (criId.equals(ADDRESS_CRI)) {
+                    // Remove any existing address VC from session credentials - for 6MFC
+                    sessionCredentialsService.deleteSessionCredentialsForCri(
+                            ipvSessionItem.getIpvSessionId(), ADDRESS_CRI);
+                }
                 sessionCredentialsService.persistCredentials(
                         List.of(vc), ipvSessionItem.getIpvSessionId(), true);
                 ipvSessionItem.addVcReceivedThisSession(vc);

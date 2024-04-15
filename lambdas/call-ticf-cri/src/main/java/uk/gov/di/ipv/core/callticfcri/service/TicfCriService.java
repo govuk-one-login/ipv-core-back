@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
@@ -26,38 +27,47 @@ import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
 public class TicfCriService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String TRUSTMARK = "https://oidc.account.gov.uk/trustmark";
     public static final String X_API_KEY_HEADER = "x-api-key";
 
     private final ConfigService configService;
     private final HttpClient httpClient;
     private final VerifiableCredentialValidator jwtValidator;
+    private final SessionCredentialsService sessionCredentialsService;
 
     public TicfCriService(ConfigService configService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
         this.jwtValidator = new VerifiableCredentialValidator(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public TicfCriService(ConfigService configService, VerifiableCredentialValidator jwtValidator) {
+    public TicfCriService(
+            ConfigService configService,
+            VerifiableCredentialValidator jwtValidator,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
         this.jwtValidator = jwtValidator;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     protected TicfCriService(
             ConfigService configService,
             HttpClient httpClient,
-            VerifiableCredentialValidator jwtValidator) {
+            VerifiableCredentialValidator jwtValidator,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.httpClient = httpClient;
         this.jwtValidator = jwtValidator;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     public List<VerifiableCredential> getTicfVc(
@@ -73,14 +83,23 @@ public class TicfCriService {
                             TRUSTMARK,
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipvSessionItem.getVcReceivedThisSession());
+                            configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
+                                    ? sessionCredentialsService
+                                            .getCredentials(
+                                                    ipvSessionItem.getIpvSessionId(),
+                                                    clientOAuthSessionItem.getUserId(),
+                                                    true)
+                                            .stream()
+                                            .map(VerifiableCredential::getVcString)
+                                            .toList()
+                                    : ipvSessionItem.getVcReceivedThisSession());
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(ticfCriConfig.getCredentialUrl())
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
-                                            objectMapper.writeValueAsString(ticfCriRequest)));
+                                            OBJECT_MAPPER.writeValueAsString(ticfCriRequest)));
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
@@ -92,7 +111,7 @@ public class TicfCriService {
             checkStatusCode(ticfCriHttpResponse);
 
             TicfCriDto ticfCriResponse =
-                    objectMapper.readValue(ticfCriHttpResponse.body(), TicfCriDto.class);
+                    OBJECT_MAPPER.readValue(ticfCriHttpResponse.body(), TicfCriDto.class);
 
             if (ticfCriResponse.credentials().isEmpty()) {
                 throw new TicfCriServiceException("No credentials in TICF CRI response");

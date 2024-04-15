@@ -47,7 +47,7 @@ class ProcessCriCallbackHandlerTest {
     private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
-    private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
+    private static final String TEST_IPV_SESSION_ID = "test_ipv_session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private ConfigService mockConfigService;
@@ -94,7 +94,10 @@ class ProcessCriCallbackHandlerTest {
                         any(), any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem)))
+                        any(),
+                        eq(callbackRequest),
+                        eq(clientOAuthSessionItem),
+                        eq(TEST_IPV_SESSION_ID)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -145,7 +148,7 @@ class ProcessCriCallbackHandlerTest {
                         bearerToken, callbackRequest, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem))
+                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -173,7 +176,7 @@ class ProcessCriCallbackHandlerTest {
     }
 
     @Test
-    void getJourneyResponseShouldThrowWhenCriStoringServiceThrows() throws Exception {
+    void getJourneyResponseShouldThrowWhenCriCheckingServiceThrows() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var ipvSessionItem = buildValidIpvSessionItem();
@@ -205,7 +208,10 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(
                         OauthCriConfig.builder().signingKey(TestFixtures.EC_PUBLIC_JWK).build());
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem)))
+                        any(),
+                        eq(callbackRequest),
+                        eq(clientOAuthSessionItem),
+                        eq(TEST_IPV_SESSION_ID)))
                 .thenThrow(
                         new MitigationRouteConfigNotFoundException(
                                 "mitigation route event not found"));
@@ -341,6 +347,7 @@ class ProcessCriCallbackHandlerTest {
 
     private IpvSessionItem buildValidIpvSessionItem() {
         var ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID);
         return ipvSessionItem;
     }

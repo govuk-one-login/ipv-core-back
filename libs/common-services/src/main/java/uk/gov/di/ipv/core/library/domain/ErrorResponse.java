@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.Map;
+
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @ExcludeFromGeneratedCoverageReport
 @AllArgsConstructor
@@ -86,8 +88,11 @@ public enum ErrorResponse {
             1069, "No mitigation journey route event found in cimit config"),
     UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route"),
     FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
-    INVALID_JOURNEY_EVENT(1072, "Invalid journey event in input");
+    FAILED_TO_GET_CREDENTIAL(1072, "Failed to get credential"),
+    INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input");
 
+    private static final String ERROR = "error";
+    private static final String ERROR_DESCRIPTION = "error_description";
     private final int code;
     private final String message;
 
@@ -99,5 +104,9 @@ public enum ErrorResponse {
             }
         }
         return null;
+    }
+
+    public Map<String, Object> toResponseBody() {
+        return Map.of(ERROR, code, ERROR_DESCRIPTION, message);
     }
 }

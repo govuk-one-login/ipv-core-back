@@ -6,18 +6,24 @@ public class VerifiableCredentialException extends Exception implements ErrorRes
 
     private final ErrorResponse errorResponse;
 
-    private final int httpStatusCode;
+    private final int responseCode;
 
-    public VerifiableCredentialException(int httpStatusCode, ErrorResponse errorResponse) {
+    public VerifiableCredentialException(int responseCode, ErrorResponse errorResponse) {
         this.errorResponse = errorResponse;
-        this.httpStatusCode = httpStatusCode;
+        this.responseCode = responseCode;
     }
 
     public ErrorResponse getErrorResponse() {
         return errorResponse;
     }
 
-    public int getHttpStatusCode() {
-        return httpStatusCode;
+    @Override
+    public String getErrorReason() {
+        return this.errorResponse.getMessage();
+    }
+
+    @Override
+    public int getResponseCode() {
+        return responseCode;
     }
 }

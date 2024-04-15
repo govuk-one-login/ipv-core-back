@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -12,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.DataStoreException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
@@ -27,12 +27,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -43,6 +46,10 @@ class SessionCredentialsServiceTest {
     private static final VerifiableCredential CREDENTIAL_1 = vcDrivingPermit();
     private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
     private static final VerifiableCredential CREDENTIAL_3 = vcNinoSuccessful();
+    private static final String USER_ID = "userId";
+    private static final String CRI_ID_1 = "criId1";
+    private static final String CRI_ID_2 = "criId2";
+    private static final String CRI_ID_3 = "criId3";
     @Mock private static ConfigService mockConfigService;
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
@@ -110,6 +117,83 @@ class SessionCredentialsServiceTest {
     }
 
     @Nested
+    class Reads {
+        @Test
+        void getCredentialsShouldReturnAListOfVerifiableCredentials() throws Exception {
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false);
+            var item2 =
+                    new SessionCredentialItem(
+                            SESSION_ID, CRI_ID_2, CREDENTIAL_2.getSignedJwt(), false);
+            var item3 =
+                    new SessionCredentialItem(
+                            SESSION_ID, CRI_ID_3, CREDENTIAL_3.getSignedJwt(), true);
+
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2, item3));
+
+            var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
+
+            assertEquals(
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                    retrievedVc.get(0));
+            assertEquals(
+                    VerifiableCredential.fromSessionCredentialItem(item2, USER_ID),
+                    retrievedVc.get(1));
+            assertEquals(
+                    VerifiableCredential.fromSessionCredentialItem(item3, USER_ID),
+                    retrievedVc.get(2));
+        }
+
+        @Test
+        void getCredentialsShouldAllowFilteringByReceivedThisSession() throws Exception {
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false);
+
+            when(mockDataStore.getItemsWithBooleanAttribute(
+                            SESSION_ID, "receivedThisSession", true))
+                    .thenReturn(List.of(item1));
+
+            var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID, true);
+
+            assertEquals(
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                    retrievedVc.get(0));
+        }
+
+        @Test
+        void
+                getCredentialsShouldThrowVerifiableCredentialExceptionIfSessionStoreItemCanNotBeParsed() {
+            SignedJWT mockSignedJwt = mock(SignedJWT.class);
+            when(mockSignedJwt.serialize()).thenReturn("🫠");
+
+            var sessionCredentialItem =
+                    new SessionCredentialItem(SESSION_ID, CRI_ID_1, mockSignedJwt, false);
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(sessionCredentialItem));
+
+            var caughtException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> sessionCredentialService.getCredentials(SESSION_ID, USER_ID));
+
+            assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS, caughtException.getErrorResponse());
+        }
+
+        @Test
+        void getCredentialsShouldThrowVerifiableCredentialExceptionIfFetchingThrows() {
+            when(mockDataStore.getItems(SESSION_ID)).thenThrow(new IllegalStateException());
+
+            var caughtException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> sessionCredentialService.getCredentials(SESSION_ID, USER_ID));
+
+            assertEquals(FAILED_TO_GET_CREDENTIAL, caughtException.getErrorResponse());
+        }
+    }
+
+    @Nested
     class Deletes {
         @Test
         void deleteSessionCredentialsShouldClearAllCredentialsForCurrentSession() throws Exception {
@@ -121,9 +205,8 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting()
-                throws Exception {
-            doThrow(new DataStoreException("nope"))
+        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting() {
+            doThrow(new IllegalStateException())
                     .when(mockDataStore)
                     .deleteAllByPartition(SESSION_ID);
 
@@ -133,8 +216,56 @@ class SessionCredentialsServiceTest {
                             () -> sessionCredentialService.deleteSessionCredentials(SESSION_ID));
 
             assertEquals(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    verifiableCredentialException.getHttpStatusCode());
+                    HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+            assertEquals(
+                    FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
+        }
+
+        @Test
+        void deleteSessionCredentialsForCriShouldDeleteAllCredentialsFromCriForSession()
+                throws Exception {
+            var sessionCredentialItem = new SessionCredentialItem();
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1))
+                    .thenReturn(List.of(sessionCredentialItem));
+
+            sessionCredentialService.deleteSessionCredentialsForCri(SESSION_ID, CRI_ID_1);
+
+            verify(mockDataStore).getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1);
+            verify(mockDataStore).delete(List.of(sessionCredentialItem));
+        }
+
+        @Test
+        void deleteSessionCredentialsForCriShouldThrowIfProblemGetting() {
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1))
+                    .thenThrow(new IllegalStateException());
+
+            var verifiableCredentialException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () ->
+                                    sessionCredentialService.deleteSessionCredentialsForCri(
+                                            SESSION_ID, CRI_ID_1));
+
+            assertEquals(
+                    HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+            assertEquals(
+                    FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
+        }
+
+        @Test
+        void deleteSessionCredentialsForCriShouldThrowIfProblemDeleting() {
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1)).thenReturn(List.of());
+            when(mockDataStore.delete(any())).thenThrow(new IllegalStateException());
+
+            var verifiableCredentialException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () ->
+                                    sessionCredentialService.deleteSessionCredentialsForCri(
+                                            SESSION_ID, CRI_ID_1));
+
+            assertEquals(
+                    HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
             assertEquals(
                     FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
         }
