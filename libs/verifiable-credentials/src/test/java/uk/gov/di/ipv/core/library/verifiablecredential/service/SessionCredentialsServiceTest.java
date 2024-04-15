@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.DataStoreException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
@@ -206,9 +205,8 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting()
-                throws Exception {
-            doThrow(new DataStoreException("nope"))
+        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting() {
+            doThrow(new IllegalStateException())
                     .when(mockDataStore)
                     .deleteAllByPartition(SESSION_ID);
 

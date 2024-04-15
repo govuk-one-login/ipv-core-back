@@ -12,21 +12,17 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.exceptions.DataStoreException;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
-import java.util.StringJoiner;
 
 public class DataStore<T extends DynamodbItem> {
 
@@ -34,7 +30,6 @@ public class DataStore<T extends DynamodbItem> {
     private final Class<T> typeParameterClass;
     private final ConfigService configService;
     private final DynamoDbTable<T> table;
-    private final DynamoDbEnhancedClient client;
 
     public DataStore(
             String tableName,
@@ -44,7 +39,6 @@ public class DataStore<T extends DynamodbItem> {
         this.typeParameterClass = typeParameterClass;
         this.configService = configService;
         this.table = client.table(tableName, TableSchema.fromBean(this.typeParameterClass));
-        this.client = client;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -105,7 +99,7 @@ public class DataStore<T extends DynamodbItem> {
                         .flatMap(page -> page.items().stream())
                         .toList();
 
-        if (Objects.isNull(results) || results.isEmpty()) {
+        if (results.isEmpty()) {
             return null;
         }
         return results.get(0);
@@ -158,24 +152,8 @@ public class DataStore<T extends DynamodbItem> {
         return items.stream().map(table::deleteItem).toList();
     }
 
-    public void deleteAllByPartition(String partitionValue) throws DataStoreException {
-        var itemsToDelete = getItems(partitionValue);
-        if (itemsToDelete.isEmpty()) {
-            return;
-        }
-        var writeBatchBuilder = WriteBatch.builder(typeParameterClass).mappedTableResource(table);
-        itemsToDelete.forEach(writeBatchBuilder::addDeleteItem);
-        var batchWriteResult =
-                client.batchWriteItem(b -> b.writeBatches(writeBatchBuilder.build()));
-
-        if (!batchWriteResult.unprocessedDeleteItemsForTable(table).isEmpty()) {
-            var joiner = new StringJoiner(", ");
-            batchWriteResult
-                    .unprocessedDeleteItemsForTable(table)
-                    .forEach(key -> joiner.add(stringifyKey(key)));
-            throw new DataStoreException(
-                    String.format("Unable to delete datastore items: %s", joiner));
-        }
+    public void deleteAllByPartition(String partitionValue) {
+        delete(getItems(partitionValue));
     }
 
     private T getItemByKey(Key key, boolean warnOnNull) {
@@ -188,11 +166,5 @@ public class DataStore<T extends DynamodbItem> {
             LOGGER.warn(message);
         }
         return result;
-    }
-
-    private String stringifyKey(Key key) {
-        return String.format(
-                "partition key: '%s', sort key: '%s'",
-                key.partitionKeyValue(), key.sortKeyValue().map(Object::toString).orElse("none"));
     }
 }
