@@ -71,18 +71,12 @@ DCMAW_TRIAGE:
         type: page
         pageId: pyi-triage-desktop-download-app
         context: iphone
-      events:
-        next:
-          exitEventToEmit: next
 
     DESKTOP_ANDROID_DOWNLOAD_PAGE:
       response:
         type: page
         pageId: pyi-triage-desktop-download-app
         context: android
-      events:
-        next:
-          exitEventToEmit: next
 
     MOBILE_IPHONE_DOWNLOAD_PAGE:
       response:
