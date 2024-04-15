@@ -89,7 +89,8 @@ public enum ErrorResponse {
     UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route"),
     FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
     FAILED_TO_GET_CREDENTIAL(1072, "Failed to get credential"),
-    INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input");
+    INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input"),
+    FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

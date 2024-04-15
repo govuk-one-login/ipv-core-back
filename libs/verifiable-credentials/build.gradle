@@ -21,8 +21,7 @@ dependencies {
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.wiremock,
-			libs.junitJupiter,
+	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(":libs:common-services").sourceSets.test.output
 

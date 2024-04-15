@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -18,7 +17,9 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class VerifiableCredentialService {
@@ -47,7 +48,7 @@ public class VerifiableCredentialService {
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+                    SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
     }
 
@@ -93,5 +94,15 @@ public class VerifiableCredentialService {
 
     public void deleteVcStoreItem(String userId, String criId) {
         dataStore.delete(userId, criId);
+    }
+
+    public void storeIdentity(List<VerifiableCredential> vcs, String userId)
+            throws VerifiableCredentialException {
+        try {
+            dataStore.deleteAllByPartition(userId);
+            vcs.stream().map(VerifiableCredential::toVcStoreItem).forEach(dataStore::create);
+        } catch (Exception e) {
+            throw new VerifiableCredentialException(SC_SERVER_ERROR, FAILED_TO_STORE_IDENTITY);
+        }
     }
 }

@@ -100,12 +100,25 @@ EVALUATE_GPG45_SCORES_RFC:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS_RFC
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_SUCCESS
     unmet:
       targetJourney: FAILED
       targetState: FAILED_RFC
     vcs-not-correlated:
       targetJourney: FAILED
       targetState: FAILED_RFC
+
+STORE_IDENTITY_BEFORE_SUCCESS:
+  response:
+    type: process
+    lambda: store-identity
+  events:
+    identity-stored:
+      targetState: IPV_SUCCESS_PAGE_RFC
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
 
 CRI_TICF_BEFORE_SUCCESS_RFC:
   response:
@@ -114,6 +127,9 @@ CRI_TICF_BEFORE_SUCCESS_RFC:
   events:
     next:
       targetState: IPV_SUCCESS_PAGE_RFC
+      checkFeatureFlag:
+        sessionCredentialsTableReads:
+          targetState: STORE_IDENTITY_BEFORE_SUCCESS
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
