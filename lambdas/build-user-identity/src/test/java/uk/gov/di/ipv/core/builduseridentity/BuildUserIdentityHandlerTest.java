@@ -208,8 +208,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS))
                 .thenReturn(sessionCredentialsReads);
         if (sessionCredentialsReads) {
-            when(mockSessionCredentialsService.getLatestCredentialsByIssuer(
-                            TEST_IPV_SESSION_ID, TEST_USER_ID))
+            when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                     .thenReturn(List.of(VC_ADDRESS));
         } else {
             when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
@@ -710,8 +709,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(true);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockSessionCredentialsService.getLatestCredentialsByIssuer(
-                        TEST_IPV_SESSION_ID, TEST_USER_ID))
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenThrow(new VerifiableCredentialException(418, FAILED_TO_GET_CREDENTIAL));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

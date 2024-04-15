@@ -14,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.internal.conditional.BeginsWithConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
@@ -216,6 +217,19 @@ class DataStoreTest {
     }
 
     @Test
+    void getItemsBySortKeyPrefixShouldUseBeginsWithConditional() {
+        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockPageIterable.stream()).thenReturn(Stream.empty());
+
+        dataStore.getItemsBySortKeyPrefix("partition-value", "sort-key-prefix");
+
+        var queryConditional = ArgumentCaptor.forClass(QueryConditional.class);
+        verify(mockDynamoDbTable).query(queryConditional.capture());
+
+        assertTrue(queryConditional.getValue() instanceof BeginsWithConditional);
+    }
+
+    @Test
     void shouldUpdateItemInDynamoDbTable() {
         dataStore.update(authorizationCodeItem);
 
@@ -248,6 +262,26 @@ class DataStoreTest {
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
+    }
+
+    @Test
+    void deleteWithItemListShouldDeleteAllItems() {
+        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
+        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
+        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
+
+        when(mockDynamoDbTable.deleteItem(any(AuthorizationCodeItem.class)))
+                .thenReturn(item1)
+                .thenReturn(item2)
+                .thenReturn(item3);
+
+        var deletedItems = dataStore.delete(List.of(item1, item2, item3));
+
+        assertEquals(List.of(item1, item2, item3), deletedItems);
+
+        verify(mockDynamoDbTable).deleteItem(item1);
+        verify(mockDynamoDbTable).deleteItem(item2);
+        verify(mockDynamoDbTable).deleteItem(item3);
     }
 
     @Test

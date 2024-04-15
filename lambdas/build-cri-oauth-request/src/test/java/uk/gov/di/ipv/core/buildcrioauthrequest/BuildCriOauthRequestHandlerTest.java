@@ -326,8 +326,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS))
                 .thenReturn(sessionCredentialReads);
         when(sessionCredentialReads
-                        ? mockSessionCredentialService.getLatestCredentialsByIssuer(
-                                SESSION_ID, TEST_USER_ID)
+                        ? mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID)
                         : mockVerifiableCredentialService.getVcs(any()))
                 .thenReturn(vcs);
         when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();

@@ -169,8 +169,7 @@ public class BuildUserIdentityHandler
 
             var vcs =
                     configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                            ? sessionCredentialsService.getLatestCredentialsByIssuer(
-                                    ipvSessionId, userId)
+                            ? sessionCredentialsService.getCredentials(ipvSessionId, userId)
                             : verifiableCredentialService.getVcs(userId);
 
             UserIdentity userIdentity =

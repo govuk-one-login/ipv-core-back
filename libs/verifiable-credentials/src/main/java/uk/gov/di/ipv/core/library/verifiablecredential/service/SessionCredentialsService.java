@@ -17,11 +17,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.maxBy;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
 
 public class SessionCredentialsService {
@@ -80,20 +76,6 @@ public class SessionCredentialsService {
         }
     }
 
-    public List<VerifiableCredential> getLatestCredentialsByIssuer(
-            String ipvSessionId, String userId) throws VerifiableCredentialException {
-        return getCredentials(ipvSessionId, userId).stream()
-                .collect(
-                        groupingBy(
-                                VerifiableCredential::getCriId,
-                                maxBy(comparing(vc -> vc.getClaimsSet().getNotBeforeTime()))))
-                .values()
-                .stream()
-                .flatMap(Optional::stream)
-                .sorted(comparing(VerifiableCredential::getCriId))
-                .toList();
-    }
-
     public void persistCredentials(
             List<VerifiableCredential> credentials,
             String ipvSessionId,
@@ -122,6 +104,25 @@ public class SessionCredentialsService {
             dataStore.deleteAllByPartition(ipvSessionId);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error deleting session credentials", e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
+        }
+    }
+
+    public void deleteSessionCredentialsForCri(String ipvSessionId, String criId)
+            throws VerifiableCredentialException {
+        try {
+            var deleted = dataStore.delete(dataStore.getItemsBySortKeyPrefix(ipvSessionId, criId));
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Deleted %d credentials for %s from session credentials table",
+                                    deleted.size(), criId)));
+        } catch (Exception e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            String.format("Error deleting session credentials for CRI: %s", criId),
+                            e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
         }

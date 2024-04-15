@@ -309,7 +309,7 @@ public class BuildCriOauthRequestHandler
 
         var vcs =
                 configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                        ? sessionCredentialsService.getLatestCredentialsByIssuer(
+                        ? sessionCredentialsService.getCredentials(
                                 ipvSessionItem.getIpvSessionId(), userId)
                         : getGpg45Vcs(userId);
 

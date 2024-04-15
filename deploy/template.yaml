@@ -920,21 +920,19 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*

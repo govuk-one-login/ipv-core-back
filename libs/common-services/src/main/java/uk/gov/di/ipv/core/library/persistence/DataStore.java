@@ -137,13 +137,25 @@ public class DataStore<T extends DynamodbItem> {
                 .toList();
     }
 
+    public List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix) {
+        Key key = Key.builder().partitionValue(partitionValue).sortValue(sortPrefix).build();
+
+        return table.query(QueryConditional.sortBeginsWith(key)).stream()
+                .flatMap(page -> page.items().stream())
+                .toList();
+    }
+
     public T update(T item) {
         return table.updateItem(item);
     }
 
     public T delete(String partitionValue, String sortValue) {
         var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return delete(key);
+        return table.deleteItem(key);
+    }
+
+    public List<T> delete(List<T> items) {
+        return items.stream().map(table::deleteItem).toList();
     }
 
     public void deleteAllByPartition(String partitionValue) throws DataStoreException {
@@ -176,10 +188,6 @@ public class DataStore<T extends DynamodbItem> {
             LOGGER.warn(message);
         }
         return result;
-    }
-
-    private T delete(Key key) {
-        return table.deleteItem(key);
     }
 
     private String stringifyKey(Key key) {
