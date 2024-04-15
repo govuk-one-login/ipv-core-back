@@ -113,7 +113,7 @@ IDENTITY_START_PAGE:
     next:
       targetState: CRI_DCMAW
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE
       checkIfDisabled:
         dcmaw:
@@ -289,7 +289,7 @@ PYI_CRI_ESCAPE:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -309,7 +309,7 @@ PYI_CRI_ESCAPE_NO_F2F:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -683,7 +683,7 @@ MITIGATION_KBV_FAIL_M2B:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -732,7 +732,7 @@ PYI_KBV_DROPOUT_M2B:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -763,7 +763,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
     next:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: MITIGATION_01_DCMAW_TRIAGE
       checkIfDisabled:
         dcmaw:
@@ -858,7 +858,7 @@ MITIGATION_02_OPTIONS:
     next:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -929,7 +929,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
@@ -951,7 +951,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
     dcmaw:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
-        dcmawTriage:
+        strategicAppEnabled:
           targetState: DCMAW_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
