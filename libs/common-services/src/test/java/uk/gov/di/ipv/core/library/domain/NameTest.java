@@ -35,4 +35,32 @@ class NameTest {
         // Assert
         assertEquals("FirstNamePart SecondNamePart", result);
     }
+    @Test
+    void getFormattedName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
+        // Arrange
+        var underTest = new Name(Arrays.asList(new NameParts("SingleNamePart", "dummyType")));
+
+        // Act
+        var result = underTest.getFormattedName();
+
+        // Assert
+        assertEquals("SingleNamePart", result.get("dummyType"));
+    }
+
+    @Test
+    void getFormattedName_whenCalledWithOneNameWithMultipleNameParts_ReturnsTheNameParts() {
+        // Arrange
+        var underTest =
+                new Name(
+                        Arrays.asList(
+                                new NameParts("FirstNamePart", "dummyType"),
+                                new NameParts("SecondNamePart", "dummyType2")));
+
+        // Act
+        var result = underTest.getFormattedName();
+
+        // Assert
+        assertEquals("FirstNamePart", result.get("dummyType"));
+        assertEquals("SecondNamePart", result.get("dummyType2"));
+    }
 }

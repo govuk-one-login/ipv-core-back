@@ -201,6 +201,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         List<Address> addresses = provenUserIdentityDetails.getAddresses();
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getFormattedName().get("dummyType"));
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals(3, addresses.size());
         assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
@@ -235,6 +236,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getFormattedName().get("dummyType"));
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("CA14 5PH", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -471,6 +473,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getFormattedName().get("dummyType"));
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -502,6 +505,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
+        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getFormattedName().get("dummyType"));
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertNull(provenUserIdentityDetails.getAddresses());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
