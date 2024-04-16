@@ -28,7 +28,7 @@ ADDRESS_AND_FRAUD:
 
 DCMAW_TRIAGE:
   entryEvents:
-    next:
+    dcmaw:
       targetState: SELECT_DEVICE_PAGE
     smartphone:
       targetState: MAM_SELECT_SMARTPHONE
