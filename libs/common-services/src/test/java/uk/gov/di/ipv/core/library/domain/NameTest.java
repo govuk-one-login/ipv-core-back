@@ -35,6 +35,7 @@ class NameTest {
         // Assert
         assertEquals("FirstNamePart SecondNamePart", result);
     }
+
     @Test
     void getFormattedName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
         // Arrange
