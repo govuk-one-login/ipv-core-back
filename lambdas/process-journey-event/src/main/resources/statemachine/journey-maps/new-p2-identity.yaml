@@ -145,6 +145,9 @@ DCMAW_TRIAGE:
       targetState: ERROR
     end:
       targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
 
 F2F_START_PAGE:
   response:
@@ -831,6 +834,10 @@ MITIGATION_01_DCMAW_TRIAGE:
       targetState: ERROR
     end:
       targetState: MITIGATION_01_PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 MITIGATION_01_CRI_DCMAW:
   response:
@@ -935,6 +942,10 @@ DCMAW_TRIAGE_PYI_ESCAPE:
       targetState: ERROR
     end:
       targetState: PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 CRI_DCMAW_PYI_ESCAPE:
   response:
