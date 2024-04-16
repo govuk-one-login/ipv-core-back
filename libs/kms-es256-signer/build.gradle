@@ -10,11 +10,13 @@ repositories {
 }
 
 dependencies {
-	implementation libs.awsJavaSdkDynamodb,
+	implementation platform(libs.awsSdkBom),
+			libs.awsJavaSdkDynamodb,
 			libs.awsLambdaJavaEvents,
+			libs.commonsCodec,
 			libs.gson,
 			libs.nimbusdsOauth2OidcSdk,
-			libs.dynamodbEnhanced,
+			libs.awsJavaSdkDynamodbEnhanced,
 			libs.kms,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,

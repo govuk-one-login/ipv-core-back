@@ -68,7 +68,7 @@ public class BuildClientOauthResponseHandler
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
     }
 
     public BuildClientOauthResponseHandler(

@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.auditing;
 
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -24,18 +24,16 @@ public class AuditEventUser {
     private final String ipAddress;
 
     public AuditEventUser(
-            @JsonProperty(value = "user_id", required = false) String userId,
-            @JsonProperty(value = "session_id", required = false) String sessionId,
-            @JsonProperty(value = "govuk_signin_journey_id", required = false)
-                    String govukSigninJourneyId,
-            @JsonProperty(value = "ip_address", required = false) String ipAddress) {
+            @JsonProperty(value = "user_id") String userId,
+            @JsonProperty(value = "session_id") String sessionId,
+            @JsonProperty(value = "govuk_signin_journey_id") String govukSigninJourneyId,
+            @JsonProperty(value = "ip_address") String ipAddress) {
         this.userId = userId;
         this.sessionId = sessionId;
-        if (StringUtils.isNullOrEmpty(govukSigninJourneyId)) {
-            this.govukSigninJourneyId = GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE;
-        } else {
-            this.govukSigninJourneyId = govukSigninJourneyId;
-        }
+        this.govukSigninJourneyId =
+                StringUtils.isBlank(govukSigninJourneyId)
+                        ? GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE
+                        : govukSigninJourneyId;
         this.ipAddress = ipAddress;
     }
 }

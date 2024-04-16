@@ -11,7 +11,8 @@ repositories {
 
 dependencies {
 
-	implementation libs.awsJavaSdkSqs,
+	implementation platform(libs.awsSdkBom),
+			libs.awsJavaSdkSqs,
 			libs.awsJavaSdkKms,
 			libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,

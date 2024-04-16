@@ -1,38 +1,41 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
+import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
 
 public class AuditService {
-    private final AmazonSQS sqs;
+    private final SqsClient sqs;
     private final String queueUrl;
-
     private final ObjectMapper objectMapper;
 
-    public AuditService(AmazonSQS sqs, ConfigService configService) {
+    public AuditService(SqsClient sqs, ConfigService configService) {
         this.sqs = sqs;
         this.queueUrl = configService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
         this.objectMapper = new ObjectMapper();
     }
 
-    public AuditService(AmazonSQS sqs, ConfigService configService, ObjectMapper objectMapper) {
+    public AuditService(SqsClient sqs, ConfigService configService, ObjectMapper objectMapper) {
         this.sqs = sqs;
         this.queueUrl = configService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
         this.objectMapper = objectMapper;
     }
 
-    public static AmazonSQS getDefaultSqsClient() {
-        return AmazonSQSClientBuilder.defaultClient();
+    public static SqsClient getSqsClient() {
+        return SqsClient.builder()
+                .region(EU_WEST_2)
+                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .build();
     }
 
     public void sendAuditEvent(AuditEventTypes eventType) throws SqsException {
@@ -53,12 +56,11 @@ public class AuditService {
 
     public void sendAuditEvent(AuditEvent auditEvent) throws SqsException {
         try {
-            SendMessageRequest sendMessageRequest =
-                    new SendMessageRequest()
-                            .withQueueUrl(queueUrl)
-                            .withMessageBody(objectMapper.writeValueAsString(auditEvent));
-
-            sqs.sendMessage(sendMessageRequest);
+            sqs.sendMessage(
+                    SendMessageRequest.builder()
+                            .queueUrl(queueUrl)
+                            .messageBody(objectMapper.writeValueAsString(auditEvent))
+                            .build());
         } catch (JsonProcessingException e) {
             throw new SqsException(e);
         }

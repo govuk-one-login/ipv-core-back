@@ -9,11 +9,13 @@ repositories {
 }
 
 dependencies {
-	implementation libs.spark,
+	implementation platform(libs.awsSdkBom),
+			libs.spark,
 			libs.awsJavaSdkSqs,
 			libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
 			libs.gson,
+			libs.jacksonDatabind,
 			libs.log4j12Api,
 			libs.bundles.log4j,
 			project(":lambdas:build-client-oauth-response"),

@@ -58,7 +58,7 @@ public class JarValidator {
 
             return jweObject.getPayload().toSignedJWT();
         } catch (JOSEException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to decrypt the JWE"));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to decrypt the JWE", e));
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to decrypt the contents of the JAR"));

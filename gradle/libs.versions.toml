@@ -1,6 +1,5 @@
 [versions]
-awsSdk = "2.25.18"
-awsJavaSdk = "1.12.665"
+awsSdk = "2.25.31"
 jackson = "2.15.3"
 log4j = "2.23.0"
 mockito = "5.11.0"
@@ -9,13 +8,15 @@ powertools = "1.18.0"
 
 [libraries]
 aspectj = { module = "org.aspectj:aspectjrt", version = { strictly = "1.9.8" } }
-awsJavaSdkDynamodb = { module = "com.amazonaws:aws-java-sdk-dynamodb", version.ref = "awsJavaSdk" }
-awsJavaSdkKms = { module = "com.amazonaws:aws-java-sdk-kms", version.ref = "awsJavaSdk" }
-awsJavaSdkLambda = { module = "com.amazonaws:aws-java-sdk-lambda", version.ref = "awsJavaSdk" }
-awsJavaSdkSqs = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "awsJavaSdk" }
+awsJavaSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
+awsJavaSdkKms = { module = "software.amazon.awssdk:kms" }
+awsJavaSdkLambda = { module = "software.amazon.awssdk:lambda" }
+awsJavaSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
-dynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "awsSdk" }
+awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
+commonsCodec = "commons-codec:commons-codec:1.16.0"
+awsJavaSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }

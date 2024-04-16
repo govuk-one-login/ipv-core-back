@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -42,6 +41,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -309,7 +309,7 @@ public class UserIdentityService {
                 }
                 addLogMessage(vc, "Names missing from VC: " + missingNames);
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
+                        SC_SERVER_ERROR, ErrorResponse.FAILED_NAME_CORRELATION);
             }
             identityClaims.add(identityClaim);
         }
@@ -328,8 +328,7 @@ public class UserIdentityService {
                 }
                 addLogMessage(vc, "Birthdate property is missing from VC");
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
+                        SC_SERVER_ERROR, ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
             }
             identityClaims.add(identityClaim);
         }
@@ -617,8 +616,7 @@ public class UserIdentityService {
             return getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT).path(detailName);
         } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage(errorLog, e));
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
+            throw new HttpResponseExceptionWithErrorBody(SC_SERVER_ERROR, errorResponse);
         }
     }
 

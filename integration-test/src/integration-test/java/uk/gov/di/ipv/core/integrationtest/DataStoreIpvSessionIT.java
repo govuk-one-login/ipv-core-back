@@ -1,20 +1,17 @@
 package uk.gov.di.ipv.core.integrationtest;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -25,27 +22,22 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static software.amazon.awssdk.regions.Region.US_WEST_2;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class DataStoreIpvSessionIT {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER =
-            new ObjectMapper().registerModule(new JavaTimeModule());
-
-    private static final String IPV_SESSION_ID = "ipvSessionId";
-    private static final String USER_STATE = "userState";
-    private static final String CREATION_DATE_TIME = "creationDateTime";
     private static final String CRI_OAUTH_SESSION_ID = SecureTokenHelper.getInstance().generate();
     private static final String CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
 
-    private static List<String> createdItemIds = new ArrayList<>();
+    private static final List<IpvSessionItem> createdItems = new ArrayList<>();
     private static final String START_STATE = "START";
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
-    private static Table tableTestHarness;
+    private static DynamoDbTable<IpvSessionItem> tableTestHarness;
 
     @BeforeAll
     public static void setUp() {
@@ -55,33 +47,39 @@ public class DataStoreIpvSessionIT {
                     "The environment variable 'IPV_SESSIONS_TABLE_NAME' must be provided to run this test");
         }
 
-        ConfigService configService = new ConfigService();
-
         ipvSessionItemDataStore =
                 new DataStore<>(
                         ipvSessionsTableName,
                         IpvSessionItem.class,
                         DataStore.getClient(),
-                        configService);
+                        new ConfigService());
 
-        AmazonDynamoDB independentClient =
-                AmazonDynamoDBClient.builder().withRegion("eu-west-2").build();
-        DynamoDB testClient = new DynamoDB(independentClient);
-        tableTestHarness = testClient.getTable(ipvSessionsTableName);
+        var enhancedClient =
+                DynamoDbEnhancedClient.builder()
+                        .dynamoDbClient(
+                                DynamoDbClient.builder()
+                                        .region(US_WEST_2)
+                                        .credentialsProvider(
+                                                EnvironmentVariableCredentialsProvider.create())
+                                        .build())
+                        .build();
+        tableTestHarness =
+                enhancedClient.table(
+                        ipvSessionsTableName, TableSchema.fromBean(IpvSessionItem.class));
     }
 
     @AfterAll
     public static void deleteTestItems() {
-        for (String id : createdItemIds) {
+        for (var item : createdItems) {
             try {
-                tableTestHarness.deleteItem(new KeyAttribute(IPV_SESSION_ID, id));
+                tableTestHarness.deleteItem(item);
             } catch (Exception e) {
                 LOGGER.warn(
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Failed to delete test data.")
-                                .with(LOG_IPV_SESSION_ID.getFieldName(), id));
+                                .with(LOG_IPV_SESSION_ID.getFieldName(), item.getIpvSessionId()));
             }
         }
     }
@@ -91,16 +89,13 @@ public class DataStoreIpvSessionIT {
         IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
         ipvSessionItemDataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);
+        createdItems.add(ipvSessionItem);
 
-        Item savedIpvSession =
-                tableTestHarness.getItem(IPV_SESSION_ID, ipvSessionItem.getIpvSessionId());
+        var savedIpvSession =
+                tableTestHarness.getItem(
+                        Key.builder().partitionValue(ipvSessionItem.getIpvSessionId()).build());
 
-        assertEquals(ipvSessionItem.getIpvSessionId(), savedIpvSession.get(IPV_SESSION_ID));
-        assertEquals(ipvSessionItem.getUserState(), savedIpvSession.get(USER_STATE));
-        assertEquals(ipvSessionItem.getCreationDateTime(), savedIpvSession.get(CREATION_DATE_TIME));
-
-        assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
-        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
+        assertEquals(ipvSessionItem, savedIpvSession);
     }
 
     private IpvSessionItem setUpIpvSessionItem() {
@@ -116,27 +111,23 @@ public class DataStoreIpvSessionIT {
     }
 
     @Test
-    void shouldReadIpvSessionFromTable() throws JsonProcessingException {
+    void shouldReadIpvSessionFromTable() {
         IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
-        Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
-        tableTestHarness.putItem(item);
+        tableTestHarness.putItem(ipvSessionItem);
+        createdItems.add(ipvSessionItem);
 
         IpvSessionItem result = ipvSessionItemDataStore.getItem(ipvSessionItem.getIpvSessionId());
 
-        assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
-        assertEquals(ipvSessionItem.getUserState(), result.getUserState());
-        assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
-        assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
-        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
+        assertEquals(ipvSessionItem, result);
     }
 
     @Test
-    void shouldUpdateIpvSessionInTable() throws JsonProcessingException {
+    void shouldUpdateIpvSessionInTable() {
         IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
-        Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
-        tableTestHarness.putItem(item);
+        tableTestHarness.putItem(ipvSessionItem);
+        createdItems.add(ipvSessionItem);
 
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
@@ -147,10 +138,6 @@ public class DataStoreIpvSessionIT {
 
         IpvSessionItem result = ipvSessionItemDataStore.update(updatedIpvSessionItem);
 
-        assertEquals(updatedIpvSessionItem.getIpvSessionId(), result.getIpvSessionId());
-        assertEquals(updatedIpvSessionItem.getUserState(), result.getUserState());
-        assertEquals(updatedIpvSessionItem.getCreationDateTime(), result.getCreationDateTime());
-        assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
-        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
+        assertEquals(updatedIpvSessionItem, result);
     }
 }

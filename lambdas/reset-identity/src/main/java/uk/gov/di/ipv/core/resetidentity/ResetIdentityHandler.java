@@ -92,7 +92,7 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
     @ExcludeFromGeneratedCoverageReport
     public ResetIdentityHandler() {
         this.configService = new ConfigService();
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);

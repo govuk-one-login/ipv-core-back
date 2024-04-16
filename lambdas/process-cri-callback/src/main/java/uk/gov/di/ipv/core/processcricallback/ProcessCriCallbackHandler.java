@@ -115,7 +115,7 @@ public class ProcessCriCallbackHandler
         verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
 
-        var auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        var auditService = new AuditService(AuditService.getSqsClient(), configService);
         var verifiableCredentialService = new VerifiableCredentialService(configService);
         var sessionCredentialsService = new SessionCredentialsService(configService);
         var ciMitService = new CiMitService(configService);
