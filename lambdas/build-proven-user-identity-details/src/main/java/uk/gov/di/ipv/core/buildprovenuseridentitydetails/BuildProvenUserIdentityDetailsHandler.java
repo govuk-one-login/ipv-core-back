@@ -127,6 +127,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
             var nameAndDateOfBirth = getProvenIdentityNameAndDateOfBirth(vcs);
             provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.getName());
+            provenUserIdentityDetailsBuilder.formattedName(nameAndDateOfBirth.getFormattedName());
             provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
             if (profileType.equals(ProfileType.GPG45)) {
@@ -177,7 +178,10 @@ public class BuildProvenUserIdentityDetailsHandler
             BirthDate birthDate =
                     mapper.convertValue(identityClaim.get().getBirthDate().get(0), BirthDate.class);
 
-            return new NameAndDateOfBirth(identityClaim.get().getFullName(), birthDate.getValue());
+            return new NameAndDateOfBirth(
+                    identityClaim.get().getFullName(),
+                    identityClaim.get().getFormattedName(),
+                    birthDate.getValue());
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(
                     LogHelper.buildLogMessage(

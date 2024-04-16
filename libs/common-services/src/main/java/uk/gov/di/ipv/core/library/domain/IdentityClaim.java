@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @EqualsAndHashCode
@@ -24,5 +25,10 @@ public class IdentityClaim {
     @JsonIgnore
     public String getFullName() {
         return name.get(0).getFullName();
+    }
+
+    @JsonIgnore
+    public Map<String, String> getFormattedName() {
+        return name.get(0).getFormattedName();
     }
 }
