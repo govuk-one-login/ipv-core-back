@@ -121,6 +121,12 @@ IDENTITY_START_PAGE:
           checkIfDisabled:
             f2f:
               targetState: MULTIPLE_DOC_CHECK_PAGE
+    smartphone:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: DCMAW_TRIAGE
     end:
       targetState: F2F_START_PAGE
       checkIfDisabled:

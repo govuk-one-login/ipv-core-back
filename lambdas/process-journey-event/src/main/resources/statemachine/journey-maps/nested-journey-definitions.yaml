@@ -30,6 +30,8 @@ DCMAW_TRIAGE:
   entryEvents:
     next:
       targetState: SELECT_DEVICE_PAGE
+    smartphone:
+      targetState: MAM_SELECT_SMARTPHONE
 
   nestedJourneyStates:
     SELECT_DEVICE_PAGE:
