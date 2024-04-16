@@ -239,7 +239,7 @@ def determine_dev_account():
         print(f"Looks like you're not authenticated against a dev account ({account_id}). Cowardly refusing to write params.")
     return DevAccount(account_id, account_num)
 
-def set_async_lambda_event_source_mapping_enabled_state(environment, account_id, dry_run, enabled):
+def delete_async_lambda_event_source_mapping(environment, account_id, dry_run):
     get_event_mapping_uuid_result = subprocess.run(
         ['aws', 'lambda', 'list-event-source-mappings', '--function-name', f'arn:aws:lambda:eu-west-2:{account_id}:function:process-async-cri-credential-{environment}:live', '--query', "EventSourceMappings[0].UUID", '--output', 'text'],
         capture_output=True,
@@ -247,26 +247,41 @@ def set_async_lambda_event_source_mapping_enabled_state(environment, account_id,
     )
 
     if get_event_mapping_uuid_result.returncode != 0:
-        print(f"Could not get event mapping UUID. Cowardly refusing to continue.")
+        print("Could not get event mapping UUID. Cowardly refusing to continue")
         exit(1)
 
     event_mapping_uuid = get_event_mapping_uuid_result.stdout.strip()
     print(f"Found event mapping with UUID: {event_mapping_uuid}")
 
-    enabled_flag = "--enabled" if enabled else "--no-enabled"
     if not dry_run:
-        update_event_mapping_return_code = subprocess.run(
-            ['aws', 'lambda', 'update-event-source-mapping', '--uuid', f'{event_mapping_uuid}', enabled_flag],
+        delete_event_mapping_return_code = subprocess.run(
+            ['aws', 'lambda', 'delete-event-source-mapping', '--uuid', f'{event_mapping_uuid}'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         ).returncode
 
-        if update_event_mapping_return_code != 0:
-            print(f"Could not update event mapping enabled state. Cowardly refusing to do anything else.")
+        if delete_event_mapping_return_code != 0:
+            print("Could not delete event mapping. Cowardly refusing to do anything else")
             exit(1)
-        print(f"process-async-cri-credential lambda event mapping state set to: {enabled_flag}")
+        print("process-async-cri-credential lambda event mapping deleted")
     else:
-        print(f"process-async-cri-credential lambda event mapping state would have been set to: {enabled_flag}")
+        print("process-async-cri-credential lambda event mapping would have been deleted")
+
+def create_async_lambda_event_source_mapping(environment, account_id, dry_run):
+    if not dry_run:
+        create_event_mapping_uuid_return_code = subprocess.run(
+            ['aws', 'lambda', 'create-event-source-mapping', '--event-source-arn', f'arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_{environment}', '--function-name', f'arn:aws:lambda:eu-west-2:{account_id}:function:process-async-cri-credential-{environment}:live'],
+            capture_output=True,
+            text=True
+        ).returncode
+
+        if create_event_mapping_uuid_return_code != 0:
+            print("Could not create event mapping. Cowardly refusing to do anything else")
+            exit(1)
+        else:
+            print("New event mapping created")
+    else:
+        print("New event mapping would have been created")
 
 
 if __name__ == "__main__":
@@ -278,11 +293,11 @@ if __name__ == "__main__":
     validate_env(args.environment)
     devAccount = determine_dev_account()
     if args.local_or_cloud == 'local':
-        set_async_lambda_event_source_mapping_enabled_state(args.environment, devAccount.account_id, args.dry_run, enabled=False)
+        delete_async_lambda_event_source_mapping(args.environment, devAccount.account_id, args.dry_run)
         local_params = get_local_running_params(args.environment, devAccount.number)
         write_params(local_params, args.dry_run)
     elif args.local_or_cloud == 'cloud':
-        set_async_lambda_event_source_mapping_enabled_state(args.environment, devAccount.account_id, args.dry_run, enabled=True)
+        create_async_lambda_event_source_mapping(args.environment, devAccount.account_id, args.dry_run)
         cloud_params = get_cloud_running_params(args.environment, devAccount.number)
         write_params(cloud_params, args.dry_run)
     else:
