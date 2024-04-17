@@ -126,9 +126,9 @@ public class BuildProvenUserIdentityDetailsHandler
             var currentVcStatuses = generateCurrentVcStatuses(vcs);
 
             var nameAndDateOfBirth = getProvenIdentityNameAndDateOfBirth(vcs);
-            provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.getName());
-            provenUserIdentityDetailsBuilder.nameParts(nameAndDateOfBirth.getNameParts());
-            provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.getDateOfBirth());
+            provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.name());
+            provenUserIdentityDetailsBuilder.nameParts(nameAndDateOfBirth.nameParts());
+            provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.dateOfBirth());
 
             if (profileType.equals(ProfileType.GPG45)) {
                 var addresses = getProvenIdentityAddresses(vcs, currentVcStatuses);
