@@ -525,7 +525,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static VerifiableCredential vcExperianFraudScoreOne() {
+    static VerifiableCredential vcExperianFraudScoreTwo() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_3)).build();
         return generateVerifiableCredential(
@@ -576,7 +576,7 @@ public interface VcFixtures {
                 futureInstant);
     }
 
-    static VerifiableCredential vcExperianFraudScoreTwo() {
+    static VerifiableCredential vcExperianFraudScoreOne() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(

@@ -1476,7 +1476,7 @@ class UserIdentityServiceTest {
 
     @Test
     void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse() throws Exception {
-        var vcs = List.of(vcExperianFraudScoreOne());
+        var vcs = List.of(vcExperianFraudScoreTwo());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs, false);
         assertTrue(result.isPresent());
         assertEquals("KENNETH DECERQUEIRA", result.get().getFullName());
