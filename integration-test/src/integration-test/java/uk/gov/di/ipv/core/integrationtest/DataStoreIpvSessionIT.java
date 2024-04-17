@@ -6,7 +6,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -56,12 +55,7 @@ public class DataStoreIpvSessionIT {
 
         var enhancedClient =
                 DynamoDbEnhancedClient.builder()
-                        .dynamoDbClient(
-                                DynamoDbClient.builder()
-                                        .region(US_WEST_2)
-                                        .credentialsProvider(
-                                                EnvironmentVariableCredentialsProvider.create())
-                                        .build())
+                        .dynamoDbClient(DynamoDbClient.builder().region(US_WEST_2).build())
                         .build();
         tableTestHarness =
                 enhancedClient.table(

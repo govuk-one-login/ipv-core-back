@@ -6,7 +6,6 @@ import com.nimbusds.jose.jwk.ECKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
@@ -59,11 +58,7 @@ public class CiMitService {
 
     @ExcludeFromGeneratedCoverageReport
     public CiMitService(ConfigService configService) {
-        this.lambdaClient =
-                LambdaClient.builder()
-                        .region(EU_WEST_2)
-                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                        .build();
+        this.lambdaClient = LambdaClient.builder().region(EU_WEST_2).build();
         this.configService = configService;
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
     }

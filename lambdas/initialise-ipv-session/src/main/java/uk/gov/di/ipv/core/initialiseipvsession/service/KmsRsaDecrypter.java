@@ -9,7 +9,6 @@ import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.jca.JWEJCAContext;
 import com.nimbusds.jose.util.Base64URL;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
@@ -35,11 +34,7 @@ public class KmsRsaDecrypter implements JWEDecrypter {
     private final JWEJCAContext jwejcaContext = new JWEJCAContext();
 
     public KmsRsaDecrypter() {
-        this.kmsClient =
-                KmsClient.builder()
-                        .region(EU_WEST_2)
-                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                        .build();
+        this.kmsClient = KmsClient.builder().region(EU_WEST_2).build();
     }
 
     public void setKeyId(String keyId) {
