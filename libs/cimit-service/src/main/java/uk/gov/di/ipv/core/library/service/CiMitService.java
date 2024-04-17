@@ -95,6 +95,7 @@ public class CiMitService {
                         .functionName(
                                 configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
+                        .qualifier("live")
                         .build();
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
@@ -128,6 +129,7 @@ public class CiMitService {
                                 configService.getEnvironmentVariable(
                                         CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
+                        .qualifier("live")
                         .build();
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
@@ -193,6 +195,7 @@ public class CiMitService {
                                 configService.getEnvironmentVariable(
                                         CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
+                        .qualifier("live")
                         .build();
 
         InvokeResponse response;
