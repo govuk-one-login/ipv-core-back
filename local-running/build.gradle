@@ -10,12 +10,10 @@ repositories {
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
-			libs.awsJavaSdkSqs,
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
-			libs.awsJavaSdkUrlConnectionClient,
+			libs.awsSdkSqs,
+			libs.awsSdkUrlConnectionClient,
+			libs.bundles.awsLambda,
 			libs.bundles.log4j,
-			libs.gson,
 			libs.jacksonDatabind,
 			libs.log4j12Api,
 			libs.spark,

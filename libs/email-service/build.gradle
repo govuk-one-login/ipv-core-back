@@ -12,9 +12,9 @@ repositories {
 dependencies {
 	implementation libs.gson,
 			libs.nimbusdsOauth2OidcSdk,
+			libs.notificationsJavaClient,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
-			libs.notificationsJavaClient,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 

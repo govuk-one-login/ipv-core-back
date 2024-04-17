@@ -15,23 +15,13 @@ repositories {
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
-			libs.awsJavaSdkDynamodb,
-			libs.awsJavaSdkDynamodbEnhanced,
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
-			libs.awsJavaSdkUrlConnectionClient,
+			libs.awsSdkDynamodb,
+			libs.awsSdkDynamodbEnhanced,
+			libs.awsSdkUrlConnectionClient,
 			libs.bundles.log4j,
-			libs.gson,
-			libs.nimbusdsOauth2OidcSdk,
-			libs.powertoolsParameters,
 			project(":libs:common-services")
 
-	testImplementation libs.wiremock,
-			libs.junitJupiter,
-			libs.mockitoCore,
-			libs.mockitoJunit,
-			libs.systemStubs,
-			libs.jacksonDatatypeJsr
+	testImplementation libs.junitJupiter
 	testRuntimeOnly libs.junitPlatform
 }
 

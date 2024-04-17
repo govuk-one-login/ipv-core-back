@@ -11,14 +11,16 @@ repositories {
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
-			libs.awsJavaSdkSqs,
-			libs.awsJavaSdkUrlConnectionClient,
+			libs.awsSdkUrlConnectionClient,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials")
+
+	api platform(libs.awsSdkBom),
+			libs.awsSdkSqs
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,

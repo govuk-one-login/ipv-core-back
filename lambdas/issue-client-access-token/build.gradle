@@ -12,10 +12,9 @@ repositories {
 dependencies {
 
 	implementation platform(libs.awsSdkBom),
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
+			libs.awsSdkDynamodbEnhanced,
+			libs.bundles.awsLambda,
 			libs.nimbusdsOauth2OidcSdk,
-			libs.awsJavaSdkDynamodbEnhanced,
 			project(":libs:common-services")
 
 	aspect libs.powertoolsLogging,

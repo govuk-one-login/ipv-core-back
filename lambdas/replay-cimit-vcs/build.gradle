@@ -10,11 +10,7 @@ repositories {
 }
 
 dependencies {
-	implementation platform(libs.awsSdkBom),
-			libs.awsJavaSdkSqs,
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
-			libs.nimbusdsOauth2OidcSdk,
+	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:journey-uris"),
 			project(":libs:cri-response-service"),

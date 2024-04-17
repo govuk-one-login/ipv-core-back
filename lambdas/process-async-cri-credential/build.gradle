@@ -10,12 +10,8 @@ repositories {
 }
 
 dependencies {
-	implementation platform(libs.awsSdkBom),
-			libs.awsJavaSdkSqs,
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
+	implementation libs.bundles.awsLambda,
 			libs.nimbusdsOauth2OidcSdk,
-			libs.awsJavaSdkDynamodbEnhanced,
 			project(":libs:common-services"),
 			project(":libs:cimit-service"),
 			project(":libs:cri-response-service"),
