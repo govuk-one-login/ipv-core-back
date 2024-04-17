@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 
 import java.util.List;
 
@@ -16,15 +17,18 @@ import java.util.List;
 @Builder
 public class ProvenUserIdentityDetails {
     @JsonProperty private final String name;
+    @JsonProperty private final List<NameParts> nameParts;
     @JsonProperty private final String dateOfBirth;
     @JsonProperty private final List<Address> addresses;
 
     @JsonCreator
     public ProvenUserIdentityDetails(
             @JsonProperty(value = "name") String name,
+            @JsonProperty(value = "nameParts") List<NameParts> nameParts,
             @JsonProperty(value = "dateOfBirth") String dateOfBirth,
             @JsonProperty(value = "addresses") List<Address> addresses) {
         this.name = name;
+        this.nameParts = nameParts;
         this.dateOfBirth = dateOfBirth;
         this.addresses = addresses;
     }
