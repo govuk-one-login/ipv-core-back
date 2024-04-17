@@ -1,18 +1,19 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 
-import java.util.Map;
+import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 public class NameAndDateOfBirth {
     private final String name;
-    private final Map<String, String> formattedName;
+    private final List<NameParts> nameParts;
     private final String dateOfBirth;
 
-    public NameAndDateOfBirth(String name, Map<String, String> formattedName, String dateOfBirth) {
+    public NameAndDateOfBirth(String name, List<NameParts> nameParts, String dateOfBirth) {
         this.name = name;
-        this.formattedName = formattedName;
+        this.nameParts = nameParts;
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -20,8 +21,8 @@ public class NameAndDateOfBirth {
         return name;
     }
 
-    public Map<String, String> getFormattedName() {
-        return formattedName;
+    public List<NameParts> getNameParts() {
+        return nameParts;
     }
 
     public String getDateOfBirth() {

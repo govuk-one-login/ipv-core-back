@@ -37,19 +37,20 @@ class NameTest {
     }
 
     @Test
-    void getFormattedName_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
+    void getNameParts_whenCalledWithOneNameWithOneNamePart_ReturnsTheNamePart() {
         // Arrange
         var underTest = new Name(Arrays.asList(new NameParts("SingleNamePart", "dummyType")));
 
         // Act
-        var result = underTest.getFormattedName();
+        var result = underTest.getNameParts();
 
         // Assert
-        assertEquals("SingleNamePart", result.get("dummyType"));
+        assertEquals(1, result.size());
+        assertEquals("SingleNamePart", result.get(0).getValue());
     }
 
     @Test
-    void getFormattedName_whenCalledWithOneNameWithMultipleNameParts_ReturnsTheNameParts() {
+    void getNameParts_whenCalledWithOneNameWithMultipleNameParts_ReturnsTheNameParts() {
         // Arrange
         var underTest =
                 new Name(
@@ -58,10 +59,13 @@ class NameTest {
                                 new NameParts("SecondNamePart", "dummyType2")));
 
         // Act
-        var result = underTest.getFormattedName();
+        var result = underTest.getNameParts();
 
         // Assert
-        assertEquals("FirstNamePart", result.get("dummyType"));
-        assertEquals("SecondNamePart", result.get("dummyType2"));
+        assertEquals(2, result.size());
+        assertEquals("FirstNamePart", result.get(0).getValue());
+        assertEquals("dummyType", result.get(0).getType());
+        assertEquals("SecondNamePart", result.get(1).getValue());
+        assertEquals("dummyType2", result.get(1).getType());
     }
 }

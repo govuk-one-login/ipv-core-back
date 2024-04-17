@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @EqualsAndHashCode
 public class Name {
@@ -34,14 +32,5 @@ public class Name {
                 });
 
         return nameBuilder.toString();
-    }
-
-    @JsonIgnore
-    public Map<String, String> getFormattedName() {
-        Map<String, String> formattedName = new HashMap<>();
-        for (NameParts namePart : nameParts) {
-            formattedName.put(namePart.getType(), namePart.getValue());
-        }
-        return formattedName;
     }
 }
