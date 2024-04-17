@@ -84,7 +84,7 @@ public class ProcessAsyncCriCredentialHandler
         this.configService = new ConfigService();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
         VcHelper.setConfigService(this.configService);

@@ -10,8 +10,9 @@ repositories {
 }
 
 dependencies {
-	implementation libs.nimbusdsOauth2OidcSdk,
-			libs.dynamodbEnhanced,
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkDynamodbEnhanced,
+			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services")

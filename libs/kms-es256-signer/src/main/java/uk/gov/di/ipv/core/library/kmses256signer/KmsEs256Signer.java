@@ -1,10 +1,5 @@
 package uk.gov.di.ipv.core.library.kmses256signer;
 
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.model.MessageType;
-import com.amazonaws.services.kms.model.SignRequest;
-import com.amazonaws.services.kms.model.SignResult;
-import com.amazonaws.services.kms.model.SigningAlgorithmSpec;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -13,22 +8,27 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jca.JCAContext;
 import com.nimbusds.jose.util.Base64URL;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.SignRequest;
 
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Set;
 
+import static software.amazon.awssdk.services.kms.model.MessageType.DIGEST;
+import static software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec.ECDSA_SHA_256;
+
 public class KmsEs256Signer implements JWSSigner {
 
-    private final AWSKMS kmsClient;
+    private final KmsClient kmsClient;
 
-    private static final Base64.Encoder b64UrlEncoder = Base64.getUrlEncoder();
+    private static final Base64.Encoder B64_URL_ENCODER = Base64.getUrlEncoder();
     private final JCAContext jcaContext = new JCAContext();
     private final String keyId;
 
-    public KmsEs256Signer(AWSKMS kmsClient, String keyId) {
+    public KmsEs256Signer(KmsClient kmsClient, String keyId) {
         this.keyId = keyId;
         this.kmsClient = kmsClient;
     }
@@ -44,21 +44,22 @@ public class KmsEs256Signer implements JWSSigner {
             throw new JOSEException(e.getMessage());
         }
 
-        SignRequest signRequest =
-                new SignRequest()
-                        .withSigningAlgorithm(SigningAlgorithmSpec.ECDSA_SHA_256.toString())
-                        .withKeyId(keyId)
-                        .withMessage(ByteBuffer.wrap(signingInputHash))
-                        .withMessageType(MessageType.DIGEST);
+        var signRequest =
+                SignRequest.builder()
+                        .signingAlgorithm(ECDSA_SHA_256)
+                        .keyId(keyId)
+                        .message(SdkBytes.fromByteArray(signingInputHash))
+                        .messageType(DIGEST)
+                        .build();
 
-        SignResult signResult = kmsClient.sign(signRequest);
+        var signResponse = kmsClient.sign(signRequest);
 
         byte[] concatSignature =
                 ECDSA.transcodeSignatureToConcat(
-                        signResult.getSignature().array(),
+                        signResponse.signature().asByteArray(),
                         ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256));
 
-        return new Base64URL(b64UrlEncoder.encodeToString(concatSignature));
+        return new Base64URL(B64_URL_ENCODER.encodeToString(concatSignature));
     }
 
     @Override

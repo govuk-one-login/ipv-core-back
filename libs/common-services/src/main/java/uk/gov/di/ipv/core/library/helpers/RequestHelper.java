@@ -2,9 +2,6 @@ package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -18,7 +15,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class RequestHelper {
@@ -130,11 +129,11 @@ public class RequestHelper {
 
     public static String getJourneyParameter(JourneyRequest request, String key)
             throws HttpResponseExceptionWithErrorBody {
-        List<NameValuePair> queryParams = new URIBuilder(request.getJourneyUri()).getQueryParams();
-        return queryParams.stream()
-                .filter(query -> Objects.equals(query.getName(), key))
+        return Stream.ofNullable(request.getJourneyUri().getQuery())
+                .flatMap(queryString -> Arrays.stream(queryString.split("&")))
+                .filter(queryParam -> queryParam.startsWith(String.format("%s=", key)))
                 .findFirst()
-                .map(NameValuePair::getValue)
+                .map(queryParam -> queryParam.split("=", 2)[1])
                 .filter(StringUtils::isNotBlank)
                 .orElse(null);
     }
@@ -174,13 +173,13 @@ public class RequestHelper {
         Map<String, Object> lambdaInput = request.getLambdaInput();
         if (lambdaInput == null) {
             LOGGER.error(LogHelper.buildLogMessage("Missing lambdaInput map"));
-            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
+            throw new HttpResponseExceptionWithErrorBody(SC_BAD_REQUEST, errorResponse);
         }
         T value = (T) lambdaInput.get(key);
         if (value == null) {
             LOGGER.error(
                     LogHelper.buildLogMessage(String.format("Missing '%s' in lambdaInput", key)));
-            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST, errorResponse);
+            throw new HttpResponseExceptionWithErrorBody(SC_BAD_REQUEST, errorResponse);
         }
         return value;
     }
@@ -205,7 +204,7 @@ public class RequestHelper {
             } else {
                 LOGGER.error(LogHelper.buildLogMessage(errorMessage));
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+                        SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
             }
         }
     }
@@ -222,7 +221,7 @@ public class RequestHelper {
         if (ipAddress == null) {
             LOGGER.error(LogHelper.buildErrorMessage(errorMessage, IP_ADDRESS_HEADER));
             throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
+                    SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
     }
 

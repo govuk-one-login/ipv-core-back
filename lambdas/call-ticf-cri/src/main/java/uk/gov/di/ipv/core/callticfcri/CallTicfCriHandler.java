@@ -73,7 +73,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.criStoringService =
                 new CriStoringService(
                         configService,
-                        new AuditService(AuditService.getDefaultSqsClient(), configService),
+                        new AuditService(AuditService.getSqsClient(), configService),
                         null,
                         new VerifiableCredentialService(configService),
                         new SessionCredentialsService(configService),

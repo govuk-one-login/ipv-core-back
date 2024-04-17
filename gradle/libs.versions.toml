@@ -1,6 +1,5 @@
 [versions]
-awsSdk = "2.25.18"
-awsJavaSdk = "1.12.665"
+awsSdk = "2.25.31"
 jackson = "2.15.3"
 log4j = "2.23.0"
 mockito = "5.11.0"
@@ -9,13 +8,16 @@ powertools = "1.18.0"
 
 [libraries]
 aspectj = { module = "org.aspectj:aspectjrt", version = { strictly = "1.9.8" } }
-awsJavaSdkDynamodb = { module = "com.amazonaws:aws-java-sdk-dynamodb", version.ref = "awsJavaSdk" }
-awsJavaSdkKms = { module = "com.amazonaws:aws-java-sdk-kms", version.ref = "awsJavaSdk" }
-awsJavaSdkLambda = { module = "com.amazonaws:aws-java-sdk-lambda", version.ref = "awsJavaSdk" }
-awsJavaSdkSqs = { module = "com.amazonaws:aws-java-sdk-sqs", version.ref = "awsJavaSdk" }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
-dynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced", version.ref = "awsSdk" }
+awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
+awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
+awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
+awsSdkKms = { module = "software.amazon.awssdk:kms" }
+awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
+awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
+awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
+commonsCodec = "commons-codec:commons-codec:1.16.0"
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
@@ -23,7 +25,6 @@ jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dat
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
-kms = { module = "software.amazon.awssdk:kms", version.ref = "awsSdk" }
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4jApi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
@@ -43,6 +44,7 @@ wiremock = "com.github.tomakehurst:wiremock-jre8:3.0.1"
 
 [bundles]
 log4j = ["log4jApi", "log4jCore"]
+awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.6"

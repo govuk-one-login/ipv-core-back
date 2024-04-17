@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,7 +41,7 @@ class RequestHelperTest {
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
     private final String TEST_JOURNEY = "/journey/next";
     private static final String CONTEXT = "context";
-    private static final String BANK_ACCOUNT_CONTEXT = "context";
+    private static final String BANK_ACCOUNT_CONTEXT = "bankAccountContext";
     private static final String TEST_JOURNEY_WITH_CONTEXT =
             String.format("claimedIdentity?%s=%s", CONTEXT, BANK_ACCOUNT_CONTEXT);
     private static final String SCOPE = "scope";
@@ -100,7 +100,7 @@ class RequestHelperTest {
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class, () -> getIpvSessionId(event));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
                 exception.getErrorResponse().getMessage());
@@ -116,7 +116,7 @@ class RequestHelperTest {
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class, () -> getIpvSessionId(event));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
                 exception.getErrorResponse().getMessage());
@@ -141,7 +141,7 @@ class RequestHelperTest {
         var exception =
                 assertThrows(HttpResponseExceptionWithErrorBody.class, () -> getIpAddress(event));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
@@ -156,7 +156,7 @@ class RequestHelperTest {
         var exception =
                 assertThrows(HttpResponseExceptionWithErrorBody.class, () -> getIpAddress(event));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
@@ -287,7 +287,7 @@ class RequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () -> RequestHelper.getJourneyEvent(event));
         assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT, exception.getErrorResponse());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
     }
 
     @ParameterizedTest
@@ -336,7 +336,7 @@ class RequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () -> RequestHelper.getScoreType(processRequest));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_SCORE_TYPE.getMessage(),
                 exception.getErrorResponse().getMessage());
@@ -360,7 +360,7 @@ class RequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () -> RequestHelper.getScoreThreshold(processRequest));
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
                 exception.getErrorResponse().getMessage());

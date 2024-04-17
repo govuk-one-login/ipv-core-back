@@ -11,10 +11,8 @@ repositories {
 
 dependencies {
 
-	implementation libs.awsJavaSdkSqs,
-			libs.awsJavaSdkKms,
-			libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
+	implementation libs.bundles.awsLambda,
+			libs.awsSdkKms,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

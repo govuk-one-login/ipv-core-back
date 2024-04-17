@@ -3,25 +3,25 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpHeaders;
-import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.Map;
 
+import static com.nimbusds.common.contenttype.ContentType.APPLICATION_JSON;
+import static software.amazon.awssdk.http.Header.CONTENT_TYPE;
+
 public class ApiGatewayResponseGenerator {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private ApiGatewayResponseGenerator() {}
 
     public static <T> APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, T body) {
 
-        Map<String, String> responseHeaders =
-                Map.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+        Map<String, String> responseHeaders = Map.of(CONTENT_TYPE, APPLICATION_JSON.getType());
 
         try {
             return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
@@ -45,6 +45,6 @@ public class ApiGatewayResponseGenerator {
     }
 
     private static <T> String generateResponseBody(T body) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(body);
+        return OBJECT_MAPPER.writeValueAsString(body);
     }
 }

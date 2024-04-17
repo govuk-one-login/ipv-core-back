@@ -103,7 +103,7 @@ public class InitialiseIpvSessionHandler
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters

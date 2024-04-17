@@ -10,9 +10,10 @@ repositories {
 }
 
 dependencies {
-	implementation libs.awsJavaSdkLambda,
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkDynamodbEnhanced,
+			libs.awsSdkLambda,
 			libs.nimbusdsOauth2OidcSdk,
-			libs.dynamodbEnhanced,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

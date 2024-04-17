@@ -1,11 +1,5 @@
 package uk.gov.di.ipv.core.library.kmses256signer;
 
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.model.MessageType;
-import com.amazonaws.services.kms.model.SignRequest;
-import com.amazonaws.services.kms.model.SignResult;
-import com.amazonaws.services.kms.model.SigningAlgorithmSpec;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -15,38 +9,43 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.SignRequest;
+import software.amazon.awssdk.services.kms.model.SignResponse;
 
-import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static software.amazon.awssdk.services.kms.model.MessageType.DIGEST;
+import static software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec.ECDSA_SHA_256;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 
 @ExtendWith(MockitoExtension.class)
 class KmsEs256SignerTest {
     private static final Base64.Decoder B64_DECODER = Base64.getDecoder();
-    @Mock private AWSKMS kmsClient;
-    @Mock private SignResult signResult;
+    private static final String SIGNATURE = "GS0KQ+D9O4llxqaQ+BROVqvr9EPP0m3ybj/8hHxJHQY=";
+    private static final String KMS_KEY_ID = "kmsKeyId";
+    @Mock private KmsClient kmsClient;
+    @Mock private SignResponse signResponse;
 
     @Test
-    void shouldSignJWSObject() throws JOSEException {
-        SignRequest expectedSignRequest =
-                new SignRequest()
-                        .withSigningAlgorithm(SigningAlgorithmSpec.ECDSA_SHA_256.toString())
-                        .withKeyId("kmsKeyId")
-                        .withMessage(
-                                ByteBuffer.wrap(
-                                        B64_DECODER.decode(
-                                                "GS0KQ+D9O4llxqaQ+BROVqvr9EPP0m3ybj/8hHxJHQY=")))
-                        .withMessageType(MessageType.DIGEST);
+    void shouldSignJWSObject() throws Exception {
+        var expectedSignRequest =
+                SignRequest.builder()
+                        .signingAlgorithm(ECDSA_SHA_256)
+                        .keyId(KMS_KEY_ID)
+                        .message(SdkBytes.fromByteArray(B64_DECODER.decode(SIGNATURE)))
+                        .messageType(DIGEST)
+                        .build();
 
-        when(kmsClient.sign(expectedSignRequest)).thenReturn(signResult);
+        when(kmsClient.sign(expectedSignRequest)).thenReturn(signResponse);
 
         byte[] bytes = Base64URL.from(DER_SIGNATURE).decode();
-        when(signResult.getSignature()).thenReturn(ByteBuffer.wrap(bytes));
-        KmsEs256Signer kmsSigner = new KmsEs256Signer(kmsClient, "kmsKeyId");
+        when(signResponse.signature()).thenReturn(SdkBytes.fromByteArray(bytes));
+        KmsEs256Signer kmsSigner = new KmsEs256Signer(kmsClient, KMS_KEY_ID);
 
         JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256).build();
         var testPayload = new Payload(Map.of("test", "test"));

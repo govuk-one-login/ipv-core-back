@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.library.helpers;
 
-import com.amazonaws.util.StringUtils;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -113,7 +113,7 @@ public class LogHelper {
     }
 
     public static void attachGovukSigninJourneyIdToLogs(String govukSigninJourneyId) {
-        if (StringUtils.isNullOrEmpty(govukSigninJourneyId)) {
+        if (StringUtils.isBlank(govukSigninJourneyId)) {
             attachFieldToLogs(
                     LogField.LOG_GOVUK_SIGNIN_JOURNEY_ID, GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE);
         } else {

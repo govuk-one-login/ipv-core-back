@@ -100,7 +100,7 @@ public class BuildUserIdentityHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);

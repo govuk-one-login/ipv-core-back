@@ -9,8 +9,9 @@ repositories {
 	mavenCentral()
 }
 
-def var = dependencies {
-	implementation libs.dynamodbEnhanced,
+dependencies {
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkDynamodbEnhanced,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services")
@@ -21,7 +22,6 @@ def var = dependencies {
 
 	testRuntimeOnly libs.junitPlatform
 }
-var
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17

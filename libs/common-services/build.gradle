@@ -10,12 +10,14 @@ repositories {
 }
 
 dependencies {
-	implementation libs.awsJavaSdkDynamodb,
-			libs.awsJavaSdkLambda,
+	implementation platform(libs.awsSdkBom),
 			libs.awsLambdaJavaEvents,
+			libs.awsSdkDynamodb,
+			libs.awsSdkDynamodbEnhanced,
+			libs.awsSdkLambda,
+			libs.commonsCodec,
 			libs.gson,
 			libs.nimbusdsOauth2OidcSdk,
-			libs.dynamodbEnhanced,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:journey-uris")
