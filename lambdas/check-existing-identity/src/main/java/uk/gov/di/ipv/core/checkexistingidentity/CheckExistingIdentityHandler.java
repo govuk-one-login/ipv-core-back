@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.checkexistingidentity.exceptions.UnsupportedMitigationRouteException;
+import uk.gov.di.ipv.core.checkexistingidentity.exceptions.MitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -287,10 +286,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
-        } catch (MitigationRouteConfigNotFoundException e) {
-            return buildErrorResponse(ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND, e);
-        } catch (UnsupportedMitigationRouteException e) {
-            return buildErrorResponse(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE, e);
+        } catch (MitigationRouteException e) {
+            return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         }
     }
 
@@ -348,7 +345,7 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private Optional<JourneyResponse> checkForCIScoringFailure(ContraIndicators contraIndicators)
-            throws ConfigException, MitigationRouteConfigNotFoundException {
+            throws ConfigException {
 
         // CI scoring failure
         if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
@@ -399,8 +396,7 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators)
-            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException,
-                    UnsupportedMitigationRouteException {
+            throws SqsException, ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -409,17 +405,21 @@ public class CheckExistingIdentityHandler
                 auditEventUser);
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
-            var mitigationRoute = ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI.get());
-            if (mitigationRoute.isPresent()) {
-                JourneyResponse journeyResponse = mitigationRoute.get();
-                if (!JOURNEY_ENHANCED_VERIFICATION_PATH.equals(journeyResponse.getJourney())) {
-                    throw new UnsupportedMitigationRouteException(
-                            String.format(
-                                    "Unsupported mitigation route: %s",
-                                    journeyResponse.getJourney()));
-                }
-                return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
+            var mitigationJourney =
+                    ciMitUtilityService
+                            .getMitigatedCiJourneyStep(mitigatedCI.get())
+                            .map(JourneyResponse::getJourney)
+                            .orElseThrow(
+                                    () ->
+                                            new MitigationRouteException(
+                                                    String.format(
+                                                            "Empty mitigation route for mitigated CI: %s",
+                                                            mitigatedCI.get())));
+            if (!JOURNEY_ENHANCED_VERIFICATION_PATH.equals(mitigationJourney)) {
+                throw new MitigationRouteException(
+                        String.format("Unsupported mitigation route: %s", mitigationJourney));
             }
+            return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
         }
         return JOURNEY_F2F_FAIL;
     }
@@ -428,8 +428,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> verifiableCredentials,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators)
-            throws SqsException, MitigationRouteConfigNotFoundException, ConfigException,
-                    UnsupportedMitigationRouteException {
+            throws SqsException, ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
@@ -437,7 +436,7 @@ public class CheckExistingIdentityHandler
                     .getMitigatedCiJourneyStep(mitigatedCI.get())
                     .orElseThrow(
                             () ->
-                                    new UnsupportedMitigationRouteException(
+                                    new MitigationRouteException(
                                             String.format(
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));

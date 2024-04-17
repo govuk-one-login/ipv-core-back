@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -229,11 +228,6 @@ public class ProcessCriCallbackHandler
                         HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
             }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
-        } catch (MitigationRouteConfigNotFoundException e) {
-            return buildErrorResponse(
-                    e,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND);
         }
     }
 
@@ -256,7 +250,7 @@ public class ProcessCriCallbackHandler
                     HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
                     CriApiException, VerifiableCredentialException, CiPostMitigationsException,
                     CiPutException, CredentialParseException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException, MitigationRouteConfigNotFoundException {
+                    UnrecognisedVotException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

@@ -12,7 +12,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -212,12 +212,10 @@ class ProcessCriCallbackHandlerTest {
                         eq(callbackRequest),
                         eq(clientOAuthSessionItem),
                         eq(TEST_IPV_SESSION_ID)))
-                .thenThrow(
-                        new MitigationRouteConfigNotFoundException(
-                                "mitigation route event not found"));
+                .thenThrow(new ConfigException("bad config"));
         // Assert
         assertThrows(
-                MitigationRouteConfigNotFoundException.class,
+                ConfigException.class,
                 () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
     }
 
