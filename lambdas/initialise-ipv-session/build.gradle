@@ -16,6 +16,7 @@ dependencies {
 			libs.awsJavaSdkKms,
 			libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
+			libs.awsJavaSdkUrlConnectionClient,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

@@ -10,14 +10,15 @@ repositories {
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
-			libs.spark,
 			libs.awsJavaSdkSqs,
 			libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
+			libs.awsJavaSdkUrlConnectionClient,
+			libs.bundles.log4j,
 			libs.gson,
 			libs.jacksonDatabind,
 			libs.log4j12Api,
-			libs.bundles.log4j,
+			libs.spark,
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-cri-oauth-request"),

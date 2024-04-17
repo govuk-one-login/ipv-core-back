@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.kmses256signer;
 
 import com.nimbusds.jose.JWSSigner;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -12,7 +13,11 @@ public class KmsEs256SignerFactory {
     private final KmsClient kmsClient;
 
     public KmsEs256SignerFactory() {
-        this.kmsClient = KmsClient.builder().region(EU_WEST_2).build();
+        this.kmsClient =
+                KmsClient.builder()
+                        .region(EU_WEST_2)
+                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                        .build();
     }
 
     public JWSSigner getSigner(String kmsKeyId) {

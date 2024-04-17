@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -23,7 +24,11 @@ public class SqsReader implements Runnable {
     private final RequestHandler<SQSEvent, SQSBatchResponse> sqsHandler;
 
     public SqsReader(RequestHandler<SQSEvent, SQSBatchResponse> sqsHandler) {
-        this.sqs = SqsClient.builder().region(EU_WEST_2).build();
+        this.sqs =
+                SqsClient.builder()
+                        .region(EU_WEST_2)
+                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                        .build();
         this.queueUrl =
                 String.format(
                         "https://sqs.eu-west-2.amazonaws.com/616199614141/%s",

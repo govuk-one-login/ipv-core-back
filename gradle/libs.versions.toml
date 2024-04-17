@@ -9,14 +9,15 @@ powertools = "1.18.0"
 [libraries]
 aspectj = { module = "org.aspectj:aspectjrt", version = { strictly = "1.9.8" } }
 awsJavaSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
+awsJavaSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsJavaSdkKms = { module = "software.amazon.awssdk:kms" }
 awsJavaSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsJavaSdkSqs = { module = "software.amazon.awssdk:sqs" }
+awsJavaSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.11.4"
 awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 commonsCodec = "commons-codec:commons-codec:1.16.0"
-awsJavaSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 gson = "com.google.code.gson:gson:2.10.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }

@@ -10,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -55,7 +56,11 @@ public class DataStoreIpvSessionIT {
 
         var enhancedClient =
                 DynamoDbEnhancedClient.builder()
-                        .dynamoDbClient(DynamoDbClient.builder().region(US_WEST_2).build())
+                        .dynamoDbClient(
+                                DynamoDbClient.builder()
+                                        .region(US_WEST_2)
+                                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                                        .build())
                         .build();
         tableTestHarness =
                 enhancedClient.table(
