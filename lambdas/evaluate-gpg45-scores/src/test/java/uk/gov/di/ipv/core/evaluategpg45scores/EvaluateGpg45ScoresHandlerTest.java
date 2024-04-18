@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -25,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -45,8 +42,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,7 +56,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
@@ -82,8 +76,6 @@ class EvaluateGpg45ScoresHandlerTest {
     private static JourneyRequest request;
     private static List<VerifiableCredential> VCS_IN_STORE;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    public static OauthCriConfig addressConfig = null;
-    public static OauthCriConfig claimedIdentityConfig = null;
     private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
@@ -91,42 +83,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        try {
-            addressConfig =
-                    OauthCriConfig.builder()
-                            .tokenUrl(new URI("http://example.com/token"))
-                            .credentialUrl(new URI("http://example.com/credential"))
-                            .authorizeUrl(new URI("http://example.com/authorize"))
-                            .clientId("ipv-core")
-                            .signingKey("test-jwk")
-                            .encryptionKey("test-encryption-jwk")
-                            .componentId("https://review-a.integration.account.gov.uk")
-                            .clientCallbackUrl(new URI("http://example.com/redirect"))
-                            .requiresApiKey(true)
-                            .requiresAdditionalEvidence(false)
-                            .build();
-
-            claimedIdentityConfig =
-                    OauthCriConfig.builder()
-                            .tokenUrl(new URI("http://example.com/token"))
-                            .credentialUrl(new URI("http://example.com/credential"))
-                            .authorizeUrl(new URI("http://example.com/authorize"))
-                            .clientId("ipv-core")
-                            .signingKey("test-jwk")
-                            .encryptionKey("test-encryption-jwk")
-                            .componentId("https://review-a.integration.account.gov.uk")
-                            .clientCallbackUrl(new URI("http://example.com/redirect"))
-                            .requiresApiKey(true)
-                            .requiresAdditionalEvidence(false)
-                            .build();
-
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigService configService;
@@ -177,18 +134,14 @@ class EvaluateGpg45ScoresHandlerTest {
                         .build();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void shouldReturnJourneyMetIfScoresSatisfyM1AGpg45Profile(boolean sessionCredentialsRead)
-            throws Exception {
+    @Test
+    void shouldReturnJourneyMetIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS))
-                .thenReturn(sessionCredentialsRead);
 
         JourneyResponse response =
                 toResponseClass(
@@ -197,12 +150,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
 
-        if (sessionCredentialsRead) {
-            verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
-        } else {
-            verify(verifiableCredentialService).getVcs(TEST_USER_ID);
-        }
-
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
@@ -228,7 +176,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
-        verify(verifiableCredentialService).getVcs(TEST_USER_ID);
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
@@ -255,7 +203,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
-        verify(verifiableCredentialService).getVcs(TEST_USER_ID);
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionItem, never()).setVot(any());
@@ -284,13 +232,13 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldRemoveOperationalProfileIfGpg45ProfileMatched() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(verifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_IN_STORE);
+        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
+                .thenReturn(VCS_IN_STORE);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(false);
         when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         JourneyResponse response =
                 toResponseClass(
@@ -305,14 +253,13 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldNotRemoveOperationalProfileIfGpg45ProfileNotMatched() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        var vcs = List.of(vcHmrcMigrationPCL250NoEvidence());
-        when(verifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
+        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(vcHmrcMigrationPCL250NoEvidence()));
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(false);
         when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         JourneyResponse response =
                 toResponseClass(
@@ -362,7 +309,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 response.getMessage());
-        verify(verifiableCredentialService).getVcs(TEST_USER_ID);
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -376,7 +323,6 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(true);
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenThrow(
                         new VerifiableCredentialException(
@@ -394,13 +340,13 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldSendAuditEventWhenProfileMatched() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        vcVerificationM1a());
-        when(verifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
+        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                                M1A_ADDRESS_VC,
+                                M1A_EXPERIAN_FRAUD_VC,
+                                vcVerificationM1a()));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(M1A));
@@ -503,7 +449,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
-        verify(verifiableCredentialService).getVcs(TEST_USER_ID);
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionItem, never()).setVot(any());
@@ -528,7 +474,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
-        verify(verifiableCredentialService).getVcs(TEST_USER_ID);
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -541,6 +487,6 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
-        return mapper.convertValue(handlerOutput, responseClass);
+        return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
 }

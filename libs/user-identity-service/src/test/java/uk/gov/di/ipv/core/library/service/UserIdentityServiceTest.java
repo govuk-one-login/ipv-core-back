@@ -1408,7 +1408,7 @@ class UserIdentityServiceTest {
     void shouldReturnCredentialsFromDataStoreForGPGProfile() throws Exception {
         var passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var fraudVc = vcExperianFraudScoreOne();
-        var vcs = List.of(passportVc, fraudVc, vcHmrcMigration());
+        var vcs = List.of(passportVc, fraudVc);
 
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
@@ -1431,7 +1431,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnCredentialsFromDataStoreForOperationalProfile() throws Exception {
         var hmrcVc = vcHmrcMigration();
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne(), hmrcVc);
+        var vcs = List.of(hmrcVc);
 
         var credentials =
                 userIdentityService.generateUserIdentity(

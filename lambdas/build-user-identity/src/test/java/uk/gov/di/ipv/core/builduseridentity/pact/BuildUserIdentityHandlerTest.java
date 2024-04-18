@@ -38,7 +38,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -128,8 +127,6 @@ class BuildUserIdentityHandlerTest {
 
         when(mockVcStore.getItems("dummyOAuthUserId")).thenReturn(vcs);
 
-        var verifiableCredentialService = new VerifiableCredentialService(mockVcStore);
-
         // Set up the web server for the tests
         var handler =
                 new BuildUserIdentityHandler(
@@ -140,7 +137,6 @@ class BuildUserIdentityHandlerTest {
                         clientOAuthSessionDetailsService,
                         mockCiMitService,
                         mockCiMitUtilityService,
-                        verifiableCredentialService,
                         mockSessionCredentialsService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity", PORT);

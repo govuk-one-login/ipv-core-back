@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.callticfcri.service.TicfCriService;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
@@ -33,13 +33,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.hamcrest.CoreMatchers.is;
@@ -111,21 +109,25 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validPassportVcReturnsVcWithNoInterventions")
     void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithNoInterventions(
-            MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+            MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, passportVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(passportVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -176,23 +178,27 @@ class ContractTest {
     @PactTestFor(pactMethod = "validPassportVcReturnsVcWithWarningsButNoInterventions")
     void
             fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithWarningsButNoInterventions(
-                    MockServer mockServer)
-                    throws TicfCriServiceException, ParseException, URISyntaxException {
+                    MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("B00", new ContraIndicatorConfig()));
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, passportVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(passportVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -243,21 +249,25 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validPassportVcReturnsVcWithInterventions")
     void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_returnsVcWithInterventions(
-            MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+            MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, passportVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(passportVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -312,20 +322,25 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validPassportVcReturnsEmptyVc")
     void fetchRiskAssessment_whenCalledWithValidPassportVcOnTicfCri_timesOut(MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+            throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, passportVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(passportVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -369,21 +384,27 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validVcsReturnVcWithNoInterventions")
     void fetchRiskAssessment_whenCalledWithMultipleVcsOnTicfCri_returnsVcWithNoInterventions(
-            MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+            MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, dvlaVcJwtHelper.buildSignedJwt()),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, passportVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(dvlaVcJwtHelper, passportVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -429,21 +450,22 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "noVcsReturnVcWithNoInterventions")
     void fetchRiskAssessment_whenCalledWithNoVcsOnTicfCri_returnsVcWithNoInterventions(
-            MockServer mockServer)
-            throws TicfCriServiceException, ParseException, URISyntaxException {
+            MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(List.of());
 
         var underTest = getTicfCriService();
 
         // Act
-        IpvSessionItem ipvSessionItem =
-                getIpvSessionItem(List.of(passportVcJwtHelper)); // qq:DCC why does this still pass?
-        ipvSessionItem.setVcReceivedThisSession(List.of());
-        var ticfVcs = underTest.getTicfVc(getClientOAuthSessionItem(), ipvSessionItem);
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -495,23 +517,27 @@ class ContractTest {
     @PactTestFor(pactMethod = "dvlaVcWithCiReturnVcWithWarningsButNoInterventions")
     void
             fetchRiskAssessment_whenCalledWithDvlaVcWithCiOnTicfCri_returnsVcWithWarningsButNoInterventions(
-                    MockServer mockServer)
-                    throws TicfCriServiceException, ParseException, URISyntaxException {
+                    MockServer mockServer) throws Exception {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var ipvSessionItem = getIpvSessionItem();
+        var clientOAuthSessionItem = getClientOAuthSessionItem();
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("B00", new ContraIndicatorConfig()));
+        when(mockSessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, dvlaWithCiVcJwtHelper.buildSignedJwt())));
 
         var underTest = getTicfCriService();
 
         // Act
-        var ticfVcs =
-                underTest.getTicfVc(
-                        getClientOAuthSessionItem(),
-                        getIpvSessionItem(List.of(dvlaWithCiVcJwtHelper)));
+        var ticfVcs = underTest.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         var claimsSet = ticfVcs.get(0).getClaimsSet();
@@ -601,13 +627,9 @@ class ContractTest {
                 .build();
     }
 
-    private IpvSessionItem getIpvSessionItem(List<PactJwtBuilder> sessionVcs) {
+    private IpvSessionItem getIpvSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setVot(Vot.P2);
-        var vcStrings =
-                sessionVcs.stream().map(PactJwtBuilder::buildJwt).collect(Collectors.toList());
-        ipvSessionItem.setVcReceivedThisSession(vcStrings);
-
         return ipvSessionItem;
     }
 

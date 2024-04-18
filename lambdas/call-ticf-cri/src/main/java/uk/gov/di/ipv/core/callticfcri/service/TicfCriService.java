@@ -27,7 +27,6 @@ import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 
 public class TicfCriService {
@@ -83,16 +82,14 @@ public class TicfCriService {
                             TRUSTMARK,
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                                    ? sessionCredentialsService
-                                            .getCredentials(
-                                                    ipvSessionItem.getIpvSessionId(),
-                                                    clientOAuthSessionItem.getUserId(),
-                                                    true)
-                                            .stream()
-                                            .map(VerifiableCredential::getVcString)
-                                            .toList()
-                                    : ipvSessionItem.getVcReceivedThisSession());
+                            sessionCredentialsService
+                                    .getCredentials(
+                                            ipvSessionItem.getIpvSessionId(),
+                                            clientOAuthSessionItem.getUserId(),
+                                            true)
+                                    .stream()
+                                    .map(VerifiableCredential::getVcString)
+                                    .toList());
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
