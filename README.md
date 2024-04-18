@@ -63,7 +63,6 @@ See the [Deployment Documentation](deploy/README.md) for information on deployin
 ### Testing
 The di-ipv-core-back has a number of different tests:
 * Unit Tests - Each lambda contains unit tests which test a classes functionality in isolation. These tests can be found within the `lambda\*\src\test` folder.
-* Integration Tests - Integration tests are found in the `integration-test` folder and test the functionality of `di-ipv-core-back` running on an AWS test environment.
 * Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
 
 ## Code structure
@@ -71,7 +70,6 @@ The application is configured as a Gradle project with a sub-project for each La
 | Folder | Description |
 | ------ | ----------- |
 | deploy | Contains the AWS Resources such as Cloud Formation Templates and Step Function Definitions required to build and deploy the di-ipv-core-back component.
-| integration-test | Contains the Integration Tests used to test various components of di-ipv-core running on AWS. |
 | lambdas | Source code to the Java and Node.js AWS Lambdas which come together to form di-ipv-core-back |
 | lib & libs | Shared sources used by each of the Lambdas |
 | openAPI | Open API Definition used by the Internal and External API Gateway |
@@ -93,12 +91,6 @@ These values are automatically assigned by terraform within the `aws_lambda_func
 ## Build
 ```
 sam build --cached --parallel
-```
-
-As part of the build stage tests are disabled. To enable them run the following:
-```
-# Build with Unit Tests and Integration Tests
-GRADLE_SAM_EXECUTE_TEST=1 sam build -cached --parallel
 ```
 
 ## Deploy
