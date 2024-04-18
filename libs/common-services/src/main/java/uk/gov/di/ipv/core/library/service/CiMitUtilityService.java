@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ALTERNATE_DOC_MITIGATION_ENABLED;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ALTERNATE_DOC_PATH;
 
 public class CiMitUtilityService {
     private final ConfigService configService;
@@ -36,8 +34,8 @@ public class CiMitUtilityService {
                 > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
     }
 
-    public Optional<JourneyResponse> getCiMitigationJourneyStep(ContraIndicators contraIndicators)
-            throws ConfigException {
+    public Optional<JourneyResponse> getCiMitigationJourneyResponse(
+            ContraIndicators contraIndicators) throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getUsersContraIndicators()) {
@@ -46,26 +44,14 @@ public class CiMitUtilityService {
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
                     return Optional.empty();
                 }
-                var mitigationJourneyResponse =
-                        getMitigationJourneyResponse(
-                                cimitConfig.get(ci.getCode()), ci.getDocument());
-
-                if (mitigationJourneyResponse.isPresent()
-                        && mitigationJourneyResponse
-                                .get()
-                                .getJourney()
-                                .startsWith(JOURNEY_ALTERNATE_DOC_PATH)
-                        && !configService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)) {
-                    return Optional.empty();
-                }
-
-                return mitigationJourneyResponse;
+                return getMitigationJourneyResponse(
+                        cimitConfig.get(ci.getCode()), ci.getDocument());
             }
         }
         return Optional.empty();
     }
 
-    public Optional<JourneyResponse> getMitigatedCiJourneyStep(ContraIndicator ci)
+    public Optional<JourneyResponse> getMitigatedCiJourneyResponse(ContraIndicator ci)
             throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
         if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {

@@ -173,7 +173,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             ipvSessionItem.setVot(Vot.P0);
 
             return ciMitUtilityService
-                    .getCiMitigationJourneyStep(cis)
+                    .getCiMitigationJourneyResponse(cis)
                     .orElse(JOURNEY_FAIL_WITH_CI)
                     .toObjectMap();
         }

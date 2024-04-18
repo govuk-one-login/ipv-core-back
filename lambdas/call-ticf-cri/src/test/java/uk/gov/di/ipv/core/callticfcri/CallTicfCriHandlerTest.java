@@ -165,7 +165,7 @@ class CallTicfCriHandlerTest {
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, spyIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCiMitUtilityService.getCiMitigationJourneyStep(any()))
+        when(mockCiMitUtilityService.getCiMitigationJourneyResponse(any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

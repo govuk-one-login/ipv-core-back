@@ -351,7 +351,7 @@ public class CheckExistingIdentityHandler
         if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
             return Optional.of(
                     ciMitUtilityService
-                            .getCiMitigationJourneyStep(contraIndicators)
+                            .getCiMitigationJourneyResponse(contraIndicators)
                             .orElse(JOURNEY_FAIL_WITH_CI));
         }
         return Optional.empty();
@@ -407,7 +407,7 @@ public class CheckExistingIdentityHandler
         if (mitigatedCI.isPresent()) {
             var mitigationJourney =
                     ciMitUtilityService
-                            .getMitigatedCiJourneyStep(mitigatedCI.get())
+                            .getMitigatedCiJourneyResponse(mitigatedCI.get())
                             .map(JourneyResponse::getJourney)
                             .orElseThrow(
                                     () ->
@@ -433,7 +433,7 @@ public class CheckExistingIdentityHandler
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
             return ciMitUtilityService
-                    .getMitigatedCiJourneyStep(mitigatedCI.get())
+                    .getMitigatedCiJourneyResponse(mitigatedCI.get())
                     .orElseThrow(
                             () ->
                                     new MitigationRouteException(

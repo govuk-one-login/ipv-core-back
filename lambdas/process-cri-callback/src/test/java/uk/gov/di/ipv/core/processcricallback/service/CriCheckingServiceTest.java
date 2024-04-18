@@ -507,7 +507,7 @@ class CriCheckingServiceTest {
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCimitUtilityService.getCiMitigationJourneyStep(any()))
+        when(mockCimitUtilityService.getCiMitigationJourneyResponse(any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
 
         // Act

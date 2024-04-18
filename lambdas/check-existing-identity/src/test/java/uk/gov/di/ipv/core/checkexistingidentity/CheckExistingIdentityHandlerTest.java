@@ -914,7 +914,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -936,7 +936,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.empty());
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -975,7 +975,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(any()))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -1146,7 +1146,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(testContraIndicators);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(any())).thenReturn(Optional.empty());
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
+                .thenReturn(Optional.empty());
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1169,7 +1170,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(testContraIndicators);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         JourneyResponse journeyResponse =
@@ -1196,7 +1197,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(journey)));
 
         JourneyResponse journeyResponse =
@@ -1225,7 +1226,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));
 
         JourneyResponse journeyResponse =
@@ -1256,7 +1257,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.empty());
 
         JourneyErrorResponse response =
@@ -1290,7 +1291,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(journey)));
 
         JourneyErrorResponse response =

@@ -228,7 +228,9 @@ public class CriCheckingService {
                         callbackRequest.getIpAddress());
 
         if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-            return ciMitUtilityService.getCiMitigationJourneyStep(cis).orElse(JOURNEY_FAIL_WITH_CI);
+            return ciMitUtilityService
+                    .getCiMitigationJourneyResponse(cis)
+                    .orElse(JOURNEY_FAIL_WITH_CI);
         }
 
         if (!userIdentityService.areVcsCorrelated(
