@@ -12,7 +12,9 @@ repositories {
 dependencies {
 	implementation libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:journey-uris"),
+			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
