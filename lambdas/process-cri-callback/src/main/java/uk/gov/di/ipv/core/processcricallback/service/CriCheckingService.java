@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -221,8 +220,7 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipvSessionId)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, MitigationRouteConfigNotFoundException,
-                    VerifiableCredentialException {
+                    CredentialParseException, VerifiableCredentialException {
         var cis =
                 ciMitService.getContraIndicators(
                         clientOAuthSessionItem.getUserId(),

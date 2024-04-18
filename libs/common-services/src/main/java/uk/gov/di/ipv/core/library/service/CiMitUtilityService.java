@@ -5,7 +5,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +37,7 @@ public class CiMitUtilityService {
     }
 
     public Optional<JourneyResponse> getCiMitigationJourneyStep(ContraIndicators contraIndicators)
-            throws ConfigException, MitigationRouteConfigNotFoundException {
+            throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getUsersContraIndicators()) {
@@ -47,46 +46,32 @@ public class CiMitUtilityService {
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
                     return Optional.empty();
                 }
-                String journeyEvent =
-                        getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument()).event();
-                if (journeyEvent.startsWith(JOURNEY_ALTERNATE_DOC_PATH)
+                var mitigationJourneyResponse =
+                        getMitigationJourneyResponse(
+                                cimitConfig.get(ci.getCode()), ci.getDocument());
+
+                if (mitigationJourneyResponse.isPresent()
+                        && mitigationJourneyResponse
+                                .get()
+                                .getJourney()
+                                .startsWith(JOURNEY_ALTERNATE_DOC_PATH)
                         && !configService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)) {
                     return Optional.empty();
                 }
-                return Optional.of(new JourneyResponse(journeyEvent));
+
+                return mitigationJourneyResponse;
             }
         }
         return Optional.empty();
     }
 
-    private MitigationRoute getMitigationRoute(
-            List<MitigationRoute> mitigationRoute, String document)
-            throws MitigationRouteConfigNotFoundException {
-        String documentType = document != null ? document.split("/")[0] : null;
-        return mitigationRoute.stream()
-                .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
-                .findFirst()
-                .orElseThrow(
-                        () ->
-                                new MitigationRouteConfigNotFoundException(
-                                        "No mitigation journey route event found."));
-    }
-
     public Optional<JourneyResponse> getMitigatedCiJourneyStep(ContraIndicator ci)
-            throws ConfigException, MitigationRouteConfigNotFoundException {
+            throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
         if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {
-            return Optional.of(
-                    new JourneyResponse(
-                            getMitigationRoute(cimitConfig.get(ci.getCode()), ci.getDocument())
-                                    .event()));
+            return getMitigationJourneyResponse(cimitConfig.get(ci.getCode()), ci.getDocument());
         }
         return Optional.empty();
-    }
-
-    private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
-        var cimitConfig = configService.getCimitConfig();
-        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
     }
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
@@ -94,5 +79,20 @@ public class CiMitUtilityService {
         return contraIndicators.getUsersContraIndicators().stream()
                 .filter(ContraIndicator::isMitigated)
                 .findFirst();
+    }
+
+    private Optional<JourneyResponse> getMitigationJourneyResponse(
+            List<MitigationRoute> mitigationRoute, String document) {
+        String documentType = document != null ? document.split("/")[0] : null;
+        return mitigationRoute.stream()
+                .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
+                .findFirst()
+                .map(MitigationRoute::event)
+                .map(JourneyResponse::new);
+    }
+
+    private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
+        var cimitConfig = configService.getCimitConfig();
+        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
     }
 }

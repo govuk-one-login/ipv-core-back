@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -518,31 +517,6 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
-    }
-
-    @Test
-    void checkVcResponseShouldThrowExceptionWhenCimitUtilityThrows() throws Exception {
-        // Arrange for CI mitigation possibility
-        var callbackRequest = buildValidCallbackRequest();
-        var vcResponse = VerifiableCredentialResponse.builder().userId(TEST_USER_ID).build();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        when(mockCiMitService.getContraIndicators(any(), any(), any()))
-                .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCimitUtilityService.getCiMitigationJourneyStep(any()))
-                .thenThrow(
-                        new MitigationRouteConfigNotFoundException(
-                                "mitigation route event not found"));
-
-        // assert
-        assertThrows(
-                MitigationRouteConfigNotFoundException.class,
-                () ->
-                        criCheckingService.checkVcResponse(
-                                List.of(),
-                                callbackRequest,
-                                clientOAuthSessionItem,
-                                TEST_IPV_SESSION_ID));
     }
 
     @Test
