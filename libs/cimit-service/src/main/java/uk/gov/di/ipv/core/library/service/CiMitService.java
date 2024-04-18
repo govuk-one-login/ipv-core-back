@@ -54,6 +54,7 @@ public class CiMitService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private final LambdaClient lambdaClient;
+    private static final String LIVE_ALIAS = "live";
     private final ConfigService configService;
     private final VerifiableCredentialValidator verifiableCredentialValidator;
 
@@ -95,8 +96,9 @@ public class CiMitService {
                         .functionName(
                                 configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
-                        .qualifier("live")
+                        .qualifier(LIVE_ALIAS)
                         .build();
+
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         var response = lambdaClient.invoke(invokeRequest);
@@ -129,7 +131,7 @@ public class CiMitService {
                                 configService.getEnvironmentVariable(
                                         CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
-                        .qualifier("live")
+                        .qualifier(LIVE_ALIAS)
                         .build();
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
@@ -195,7 +197,7 @@ public class CiMitService {
                                 configService.getEnvironmentVariable(
                                         CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                         .payload(SdkBytes.fromUtf8String(payload))
-                        .qualifier("live")
+                        .qualifier(LIVE_ALIAS)
                         .build();
 
         InvokeResponse response;
