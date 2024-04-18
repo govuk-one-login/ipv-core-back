@@ -1,11 +1,15 @@
 package uk.gov.di.ipv.core.library.domain.cimitvc;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
 
+@AllArgsConstructor
+@NoArgsConstructor(force = true)
 @Getter
 @Builder
 @ToString
