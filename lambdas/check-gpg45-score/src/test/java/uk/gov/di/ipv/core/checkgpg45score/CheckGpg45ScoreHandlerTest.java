@@ -2,12 +2,13 @@ package uk.gov.di.ipv.core.checkgpg45score;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,11 +26,10 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,9 +37,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 
 @ExtendWith(MockitoExtension.class)
 class CheckGpg45ScoreHandlerTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_USER_ID = "test-user-id";
@@ -48,8 +50,6 @@ class CheckGpg45ScoreHandlerTest {
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static List<String> CREDENTIALS;
-    private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static ProcessRequest request;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private ConfigService configService;
@@ -58,10 +58,10 @@ class CheckGpg45ScoreHandlerTest {
     @Mock private IpvSessionService ipvSessionService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private SessionCredentialsService mockSessionCredentialsService;
     @InjectMocks private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
     static void setUp() {
@@ -94,19 +94,27 @@ class CheckGpg45ScoreHandlerTest {
                         .build();
     }
 
-    @Test
-    void handlerShouldReturnJourneyMetPathIfThresholdMetFraud() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void handlerShouldReturnJourneyMetPathIfThresholdMetFraud(boolean sessionCredentialsTableReads)
+            throws Exception {
         request.getLambdaInput().put("scoreType", "fraud");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
+        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS))
+                .thenReturn(sessionCredentialsTableReads);
 
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        if (sessionCredentialsTableReads) {
+            verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
+        } else {
+            verify(mockVerifiableCredentialService).getVcs(TEST_USER_ID);
+        }
     }
 
     @Test
@@ -213,6 +221,6 @@ class CheckGpg45ScoreHandlerTest {
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
-        return mapper.convertValue(handlerOutput, responseClass);
+        return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
 }
