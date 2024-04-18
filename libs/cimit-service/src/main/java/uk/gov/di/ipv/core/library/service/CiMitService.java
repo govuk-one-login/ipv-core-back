@@ -7,7 +7,6 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.nimbusds.jose.jwk.ECKey;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +51,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_C
 
 public class CiMitService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Gson gson = new Gson();
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
@@ -78,57 +76,58 @@ public class CiMitService {
 
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
+        String payload;
         try {
-            InvokeRequest request =
-                    new InvokeRequest()
-                            .withFunctionName(
-                                    configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
-                            .withPayload(
-                                    objectMapper.writeValueAsString(
-                                            new PutCiRequest(
-                                                    govukSigninJourneyId,
-                                                    ipAddress,
-                                                    vc.getVcString())));
+            payload =
+                    objectMapper.writeValueAsString(
+                            new PutCiRequest(govukSigninJourneyId, ipAddress, vc.getVcString()));
 
-            LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
-            InvokeResult result = lambdaClient.invoke(request);
-
-            if (lambdaExecutionFailed(result)) {
-                logLambdaExecutionError(result, CI_STORAGE_PUT_LAMBDA_ARN);
-                throw new CiPutException(FAILED_LAMBDA_MESSAGE);
-            }
         } catch (JsonProcessingException e) {
             throw new CiPutException(e.getMessage());
+        }
+
+        InvokeRequest request =
+                new InvokeRequest()
+                        .withFunctionName(
+                                configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
+                        .withPayload(payload);
+
+        LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
+        InvokeResult result = lambdaClient.invoke(request);
+
+        if (lambdaExecutionFailed(result)) {
+            logLambdaExecutionError(result, CI_STORAGE_PUT_LAMBDA_ARN);
+            throw new CiPutException(FAILED_LAMBDA_MESSAGE);
         }
     }
 
     public void submitMitigatingVcList(
             List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
+        String payload;
         try {
-            InvokeRequest request =
-                    new InvokeRequest()
-                            .withFunctionName(
-                                    configService.getEnvironmentVariable(
-                                            CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
-                            .withPayload(
-                                    objectMapper.writeValueAsString(
-                                            new PostCiMitigationRequest(
-                                                    govukSigninJourneyId,
-                                                    ipAddress,
-                                                    vcs.stream()
-                                                            .map(VerifiableCredential::getVcString)
-                                                            .toList())));
-
-            LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
-            InvokeResult result = lambdaClient.invoke(request);
-
-            if (lambdaExecutionFailed(result)) {
-                logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
-                throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
-            }
+            payload =
+                    objectMapper.writeValueAsString(
+                            new PostCiMitigationRequest(
+                                    govukSigninJourneyId,
+                                    ipAddress,
+                                    vcs.stream().map(VerifiableCredential::getVcString).toList()));
         } catch (JsonProcessingException e) {
             throw new CiPostMitigationsException(e.getMessage());
+        }
+        InvokeRequest request =
+                new InvokeRequest()
+                        .withFunctionName(
+                                configService.getEnvironmentVariable(
+                                        CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+                        .withPayload(payload);
+
+        LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
+        InvokeResult result = lambdaClient.invoke(request);
+
+        if (lambdaExecutionFailed(result)) {
+            logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
+            throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
         }
     }
 
@@ -245,33 +244,33 @@ public class CiMitService {
             throws CiRetrievalException {
 
         var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
+        CiMitJwt ciMitJwt;
         try {
-            CiMitJwt ciMitJwt =
+            ciMitJwt =
                     objectMapper.readValue(
                             objectMapper.writeValueAsString(claimSetJsonObject), CiMitJwt.class);
-
-            CiMitVc vcClaim = ciMitJwt.getVc();
-            if (vcClaim == null) {
-                String message = "VC claim not found in CiMit JWT";
-                LOGGER.error(LogHelper.buildLogMessage(message));
-                throw new CiRetrievalException(message);
-            }
-
-            List<EvidenceItem> evidenceList = vcClaim.getEvidence();
-            if (evidenceList == null || evidenceList.size() != 1) {
-                String message = "Unexpected evidence count";
-                LOGGER.error(
-                        LogHelper.buildErrorMessage(
-                                message,
-                                String.format(
-                                        "Expected one evidence item, got %d",
-                                        evidenceList == null ? 0 : evidenceList.size())));
-                throw new CiRetrievalException(message);
-            }
-            return evidenceList.get(0);
         } catch (JsonProcessingException e) {
             throw new CiRetrievalException(e.getMessage());
         }
+        CiMitVc vcClaim = ciMitJwt.getVc();
+        if (vcClaim == null) {
+            String message = "VC claim not found in CiMit JWT";
+            LOGGER.error(LogHelper.buildLogMessage(message));
+            throw new CiRetrievalException(message);
+        }
+
+        List<EvidenceItem> evidenceList = vcClaim.getEvidence();
+        if (evidenceList == null || evidenceList.size() != 1) {
+            String message = "Unexpected evidence count";
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            message,
+                            String.format(
+                                    "Expected one evidence item, got %d",
+                                    evidenceList == null ? 0 : evidenceList.size())));
+            throw new CiRetrievalException(message);
+        }
+        return evidenceList.get(0);
     }
 
     private boolean lambdaExecutionFailed(InvokeResult result) {
