@@ -541,7 +541,10 @@ public class CheckExistingIdentityHandler
             if (requestedVot.getProfileType().equals(GPG45)) {
                 if (areGpg45VcsCorrelated) {
                     requestedVotAttained =
-                            achievedWithGpg45Profile(requestedVot, vcs, auditEventUser);
+                            achievedWithGpg45Profile(
+                                    requestedVot,
+                                    VcHelper.filterVCBasedOnProfileType(vcs, GPG45),
+                                    auditEventUser);
                 }
             } else {
                 requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);

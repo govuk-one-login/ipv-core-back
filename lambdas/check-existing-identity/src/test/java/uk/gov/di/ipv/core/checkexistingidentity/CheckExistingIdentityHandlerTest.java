@@ -437,6 +437,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of(gpg45Vc, pcl250Vc));
             when(ipvSessionItem.getVcReceivedThisSession())
                     .thenReturn(List.of(pcl250Vc.getVcString()));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             clientOAuthSessionItem.setVtr(List.of(Vot.P2.name(), Vot.PCL250.name()));
 
             JourneyResponse journeyResponse =
@@ -448,6 +449,7 @@ class CheckExistingIdentityHandlerTest {
 
             verify(mockSessionCredentialService)
                     .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), true);
+            verify(gpg45ProfileEvaluator).buildScore(List.of(gpg45Vc));
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
