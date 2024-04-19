@@ -104,7 +104,7 @@ class ResetSessionIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyIfIpvSessionIdMissing() throws Exception {
+    void shouldReturnErrorJourneyIfIpvSessionIdMissing() {
         // Arrange
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
