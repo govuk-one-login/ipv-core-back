@@ -31,7 +31,6 @@ dependencies {
 			project(":lambdas:process-async-cri-credential"),
 			project(":lambdas:process-cri-callback"),
 			project(":lambdas:process-journey-event"),
-			project(":lambdas:reset-identity"),
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
