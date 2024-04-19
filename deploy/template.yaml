@@ -1185,7 +1185,6 @@ Resources:
       DefinitionSubstitutions:
         IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
         CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Alias
-        ResetIpvSessionFunctionArn: !Ref ResetIpvSessionFunction.Alias
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
@@ -1211,8 +1210,6 @@ Resources:
             FunctionName: !Ref IPVProcessJourneyEventFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckExistingIdentityFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ResetIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
