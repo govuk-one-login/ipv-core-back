@@ -70,17 +70,14 @@ CONFIRM_DELETE_DETAILS_PAGE:
     pageId: pyi-confirm-delete-details
   events:
     next:
-      targetState: RESET_IDENTITY
+      targetState: RESET_IPV_SESSION
     end:
       targetState: IDENTITY_REUSE_PAGE
 
-RESET_IDENTITY:
+RESET_IPV_SESSION:
   response:
     type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: false
+    lambda: reset-ipv-session
   events:
     next:
       targetState: DETAILS_DELETED_PAGE

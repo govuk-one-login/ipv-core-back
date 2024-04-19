@@ -47,18 +47,15 @@ CONFIRM_DELETE_DETAILS_PAGE:
   events:
     next:
       targetState:
-        RESET_IDENTITY
+        RESET_IPV_SESSION
     end:
       targetState:
         PENDING_PAGE_TEST
 
-RESET_IDENTITY:
+RESET_IPV_SESSION:
   response:
     type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: true
-      deleteOnlyGPG45VCs: true
+    lambda: reset-ipv-session
   events:
     next:
       targetState: DETAILS_DELETED_PAGE

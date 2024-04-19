@@ -13,21 +13,10 @@ F2F_FAILED_PAGE:
     pageId: pyi-f2f-technical
   events:
     next:
-      targetState: RESET_IDENTITY
-    end:
-      targetState: RETURN_TO_RP
-
-RESET_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
       targetJourney: NEW_P2_IDENTITY
       targetState: START
+    end:
+      targetState: RETURN_TO_RP
 
 RETURN_TO_RP:
   response:
