@@ -27,11 +27,6 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/reset-identity",
-          "Next": "ResetIdentityLambda"
-        },
-        {
-          "Variable": "$.journey",
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
         },
@@ -75,9 +70,9 @@
       },
       "Next": "ProcessNextJourney"
     },
-    "ResetIdentityLambda": {
+    "ResetSessionIdentityLambda": {
       "Type": "Task",
-      "Resource": "${ResetIdentityFunctionArn}",
+      "Resource": "${ResetSessionIdentityFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
