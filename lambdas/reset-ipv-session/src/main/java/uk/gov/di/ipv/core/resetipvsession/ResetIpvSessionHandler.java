@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -44,6 +45,14 @@ public class ResetIpvSessionHandler implements RequestHandler<ProcessRequest, Ma
         this.ipvSessionService = ipvSessionService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public ResetIpvSessionHandler() {
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
