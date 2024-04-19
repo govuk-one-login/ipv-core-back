@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -528,7 +527,6 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -575,7 +573,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -750,7 +747,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws CredentialParseException {
+    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F()
+            throws CredentialParseException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);

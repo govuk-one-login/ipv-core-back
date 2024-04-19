@@ -368,8 +368,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private JourneyResponse buildNoMatchResponse(
-            ContraIndicators contraIndicators)
+    private JourneyResponse buildNoMatchResponse(ContraIndicators contraIndicators)
             throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
