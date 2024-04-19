@@ -1185,7 +1185,7 @@ Resources:
       DefinitionSubstitutions:
         IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
         CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Alias
-        ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Alias
+        ResetIpvSessionFunctionArn: !Ref ResetIpvSessionFunction.Alias
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
