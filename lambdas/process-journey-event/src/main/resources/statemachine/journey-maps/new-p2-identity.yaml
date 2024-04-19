@@ -103,6 +103,16 @@ RESET_IDENTITY:
     next:
       targetState: IDENTITY_START_PAGE
 
+RESET_IPV_SESSION:
+  response:
+    type: process
+    lambda: reset-ipv-session
+    lambdaInput:
+      isUserInitiated: false
+  events:
+    next:
+      targetState: IDENTITY_START_PAGE
+
 IDENTITY_START_PAGE:
   response:
     type: page
@@ -744,7 +754,7 @@ PYI_ESCAPE_ABANDON_M2B:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_SKIP_MESSAGE
     next:
-      targetState: RESET_IDENTITY
+      targetState: RESET_IPV_SESSION
 
 PYI_KBV_DROPOUT_M2B:
   response:
