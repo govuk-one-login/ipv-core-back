@@ -47,15 +47,15 @@ CONFIRM_DELETE_DETAILS_PAGE:
   events:
     next:
       targetState:
-        RESET_IPV_SESSION
+        RESET_SESSION_IDENTITY
     end:
       targetState:
         PENDING_PAGE_TEST
 
-RESET_IPV_SESSION:
+RESET_SESSION_IDENTITY:
   response:
     type: process
-    lambda: reset-ipv-session
+    lambda: reset-session-identity
   events:
     next:
       targetState: DETAILS_DELETED_PAGE

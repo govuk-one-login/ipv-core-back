@@ -2506,24 +2506,24 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref StoreIdentityFunctionLogGroup
 
-  ResetIpvSessionFunction:
+  ResetSessionIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - ResetIpvSessionFunctionLogGroup
+      - ResetSessionIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "reset-ipv-session-${Environment}"
+      FunctionName: !Sub "reset-session-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.resetipvsession.ResetIpvSessionHandler::handleRequest
       PackageType: Zip
-      CodeUri: ../lambdas/reset-ipv-session
+      CodeUri: ../lambdas/reset-session-identity
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub reset-ipv-session-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2559,20 +2559,20 @@ Resources:
             QueueName: !ImportValue AuditEventQueueName
       AutoPublishAlias: live
 
-  ResetIpvSessionFunctionLogGroup:
+  ResetSessionIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/reset-ipv-session-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/reset-session-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  ResetIpvSessionFunctionLogGroupSubscriptionFilter:
+  ResetSessionIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsSubscriptionEnviroment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref ResetIpvSessionFunctionLogGroup
+      LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

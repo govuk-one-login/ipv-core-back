@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.resetipvsession;
+package uk.gov.di.ipv.core.resetsessionidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +33,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IS_USER_INITIATED
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)
-class ResetIpvSessionHandlerTest {
+class ResetSessionIdentityHandlerTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String TEST_SESSION_ID = "test-session-id";
@@ -44,7 +44,7 @@ class ResetIpvSessionHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
-    private static final String TEST_JOURNEY = "journey/reset-ipv-session";
+    private static final String TEST_JOURNEY = "journey/reset-session-identity";
     private static final String STATUS_CODE = "statusCode";
     private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
@@ -53,7 +53,7 @@ class ResetIpvSessionHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Context mockContext;
-    @InjectMocks private ResetIpvSessionHandler resetIpvSessionHandler;
+    @InjectMocks private ResetSessionIdentityHandler resetSessionIdentityHandler;
     @Mock private ConfigService mockConfigService;
 
     @BeforeEach
@@ -94,7 +94,7 @@ class ResetIpvSessionHandlerTest {
         // Act
         JourneyResponse journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetIpvSessionHandler.handleRequest(event, mockContext),
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -116,7 +116,7 @@ class ResetIpvSessionHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetIpvSessionHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
@@ -145,7 +145,7 @@ class ResetIpvSessionHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetIpvSessionHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.resetipvsession;
+package uk.gov.di.ipv.core.resetsessionidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -27,7 +27,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
-public class ResetIpvSessionHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class ResetSessionIdentityHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
@@ -36,7 +36,7 @@ public class ResetIpvSessionHandler implements RequestHandler<ProcessRequest, Ma
     private final SessionCredentialsService sessionCredentialsService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
-    public ResetIpvSessionHandler(
+    public ResetSessionIdentityHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             SessionCredentialsService sessionCredentialsService,
@@ -48,7 +48,7 @@ public class ResetIpvSessionHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ResetIpvSessionHandler() {
+    public ResetSessionIdentityHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
