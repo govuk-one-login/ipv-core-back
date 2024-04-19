@@ -25,7 +25,6 @@ public class JourneyUris {
     public static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
     public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
     public static final String JOURNEY_PENDING_PATH = "/journey/pending";
-    public static final String JOURNEY_RESET_GPG45_IDENTITY_PATH = "/journey/reset-gpg45-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
