@@ -51,3 +51,11 @@ CHECK_EXISTING_IDENTITY:
     repeat-fraud-check:
       targetJourney: REPEAT_FRAUD_CHECK
       targetState: START
+
+RESET_IDENTITY:
+  response:
+    type: process
+  events:
+    next:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: REPROVE_IDENTITY
