@@ -227,7 +227,8 @@ public class CheckExistingIdentityHandler
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
                 LOGGER.info(
-                        LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
+                        LogHelper.buildLogMessage(
+                                "resetIdentity flag is enabled, reset users identity."));
                 return JOURNEY_RESET_IDENTITY;
             }
 
