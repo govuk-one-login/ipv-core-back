@@ -2557,6 +2557,12 @@ Resources:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
       AutoPublishAlias: live
 
   ResetSessionIdentityFunctionLogGroup:
