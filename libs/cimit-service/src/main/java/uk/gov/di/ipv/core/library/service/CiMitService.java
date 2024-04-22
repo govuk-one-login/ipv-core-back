@@ -242,21 +242,7 @@ public class CiMitService {
             throws CiRetrievalException {
 
         var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
-
-        String valueAsString;
-        try {
-            valueAsString = OBJECT_MAPPER.writeValueAsString(claimSetJsonObject);
-        } catch (JsonProcessingException e) {
-            throw new CiRetrievalException("Failed to serialize claim set");
-        }
-        CiMitJwt ciMitJwt;
-        try {
-            ciMitJwt = OBJECT_MAPPER.readValue(valueAsString, CiMitJwt.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            throw new CiRetrievalException("Failed to deserialize CiMitJwt");
-        }
-
+        CiMitJwt ciMitJwt = OBJECT_MAPPER.convertValue(claimSetJsonObject, CiMitJwt.class);
         CiMitVc vcClaim = ciMitJwt.getVc();
         if (vcClaim == null) {
             String message = "VC claim not found in CiMit JWT";
