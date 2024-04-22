@@ -84,6 +84,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
@@ -108,6 +109,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -1013,6 +1015,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
 
@@ -1048,25 +1051,25 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnMitigationJourneyStepResponseIfCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
+    shouldReturnMitigationJourneyStepResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
                     throws Exception {
-        var testJourneyResponse = "/journey/test-response";
         var testContraIndicators = ContraIndicators.builder().build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
-                .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH)));
 
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(testJourneyResponse, journeyResponse.getJourney());
+        assertEquals(JOURNEY_RESET_IDENTITY_PATH, journeyResponse.getJourney());
     }
 
     @Test
@@ -1212,6 +1215,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
@@ -1245,6 +1249,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
