@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -77,7 +78,7 @@ class ConfigServiceTest {
 
     private ConfigService configService;
 
-    private final Gson gson = new Gson();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -381,8 +382,15 @@ class ConfigServiceTest {
     void getCriPrivateApiKeyForActiveConnectionShouldReturnApiKeySecret() {
         environmentVariables.set("ENVIRONMENT", "test");
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
+
+        String json =
+                assertDoesNotThrow(
+                        () -> {
+                            return OBJECT_MAPPER.writeValueAsString(apiKeySecret);
+                        });
+
         when(secretsProvider.get("/test/credential-issuers/ukPassport/connections/stub/api-key"))
-                .thenReturn(gson.toJson(apiKeySecret));
+                .thenReturn(json);
         when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                 .thenReturn("stub");
 
@@ -394,7 +402,14 @@ class ConfigServiceTest {
     @Test
     void shouldGetSecretValueFromSecretsManager() {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
-        when(secretsProvider.get(any())).thenReturn(gson.toJson(apiKeySecret));
+
+        String json =
+                assertDoesNotThrow(
+                        () -> {
+                            return OBJECT_MAPPER.writeValueAsString(apiKeySecret);
+                        });
+
+        when(secretsProvider.get(any())).thenReturn(json);
 
         String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
 

@@ -16,7 +16,7 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkLambda,
 			libs.commonsCodec,
-			libs.gson,
+			libs.jacksonDatabind,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
