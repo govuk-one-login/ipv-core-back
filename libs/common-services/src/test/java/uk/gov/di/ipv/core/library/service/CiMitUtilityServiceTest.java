@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
-import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ALTERNATE_DOC_MITIGATION_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
 class CiMitUtilityServiceTest {
@@ -169,7 +167,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -191,7 +189,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -226,7 +224,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // assert
-        assertTrue(ciMitUtilityService.getCiMitigationJourneyStep(cis).isEmpty());
+        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis).isEmpty());
     }
 
     @Test
@@ -238,7 +236,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -259,7 +257,7 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -280,7 +278,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -303,66 +301,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // assert
-        assertTrue(ciMitUtilityService.getCiMitigationJourneyStep(cis).isEmpty());
-    }
-
-    @Test
-    void getMitigationJourneyResponseShouldReturnEmptyWhenCiCanBeMitigatedWithDisableMitigation()
-            throws Exception {
-        // arrange
-        var code = "ci_code";
-        var journey = JourneyUris.JOURNEY_ALTERNATE_DOC_INVALID_DL_PATH;
-        String document = "doc_type/213123";
-        String documentType = "doc_type";
-        var ci =
-                ContraIndicator.builder()
-                        .code(code)
-                        .document(document)
-                        .issuanceDate("some_date")
-                        .build();
-        var cis = ContraIndicators.builder().usersContraIndicators(List.of(ci)).build();
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-        Map<String, ContraIndicatorConfig> ciConfigMap =
-                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
-        when(mockConfigService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)).thenReturn(false);
-        // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
-
-        // assert
-        assertEquals(Optional.empty(), result);
-    }
-
-    @Test
-    void
-            getMitigationJourneyResponseShouldReturnMitigationWhenCiCanBeMitigatedWithEnableMitigation()
-                    throws Exception {
-        // arrange
-        var code = "ci_code";
-        var journey = JourneyUris.JOURNEY_ALTERNATE_DOC_INVALID_DL_PATH;
-        String document = "doc_type/213123";
-        String documentType = "doc_type";
-        var ci =
-                ContraIndicator.builder()
-                        .code(code)
-                        .document(document)
-                        .issuanceDate("some_date")
-                        .build();
-        var cis = ContraIndicators.builder().usersContraIndicators(List.of(ci)).build();
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-        Map<String, ContraIndicatorConfig> ciConfigMap =
-                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
-        when(mockConfigService.enabled(ALTERNATE_DOC_MITIGATION_ENABLED)).thenReturn(true);
-        // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
-
-        // assert
-        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis).isEmpty());
     }
 
     @Test
@@ -400,7 +339,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyStep(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -424,7 +363,7 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 
         // act
-        var result = ciMitUtilityService.getMitigatedCiJourneyStep(ci);
+        var result = ciMitUtilityService.getMitigatedCiJourneyResponse(ci);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -438,7 +377,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
 
         // act
-        var result = ciMitUtilityService.getMitigatedCiJourneyStep(ci);
+        var result = ciMitUtilityService.getMitigatedCiJourneyResponse(ci);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -461,6 +400,6 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 
-        assertTrue(ciMitUtilityService.getMitigatedCiJourneyStep(ci).isEmpty());
+        assertTrue(ciMitUtilityService.getMitigatedCiJourneyResponse(ci).isEmpty());
     }
 }
