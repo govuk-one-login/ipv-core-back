@@ -783,6 +783,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-document-start
+    mitigationStart: enhanced-verification
   events:
     appTriage:
       targetState: MITIGATION_01_CRI_DCMAW
