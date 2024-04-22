@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_RESET_IPV_SESSION;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.DELETE_ONLY_GPG45_VCS;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IS_USER_INITIATED;
@@ -131,7 +131,7 @@ class ResetSessionIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        doThrow(new VerifiableCredentialException(418, FAILED_TO_RESET_IPV_SESSION))
+        doThrow(new VerifiableCredentialException(418, FAILED_TO_DELETE_CREDENTIAL))
                 .when(mockSessionCredentialsService)
                 .deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         ProcessRequest event =
@@ -150,7 +150,7 @@ class ResetSessionIdentityHandlerTest {
         // Assert
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
         assertEquals(418, journeyResponse.get(STATUS_CODE));
-        assertEquals(FAILED_TO_RESET_IPV_SESSION.getCode(), journeyResponse.get("code"));
-        assertEquals(FAILED_TO_RESET_IPV_SESSION.getMessage(), journeyResponse.get("message"));
+        assertEquals(FAILED_TO_DELETE_CREDENTIAL.getCode(), journeyResponse.get("code"));
+        assertEquals(FAILED_TO_DELETE_CREDENTIAL.getMessage(), journeyResponse.get("message"));
     }
 }
