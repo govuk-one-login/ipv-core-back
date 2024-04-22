@@ -10,7 +10,9 @@ repositories {
 }
 
 dependencies {
-	implementation libs.awsJavaSdkLambda,
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkLambda,
+			libs.awsSdkUrlConnectionClient,
 			libs.gson,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,

@@ -441,11 +441,7 @@ CRI_UK_PASSPORT_J2:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
     alternate-doc-invalid-passport:
-      targetJourney: FAILED
-      targetState: FAILED
-      checkFeatureFlag:
-        alternateDocMitigationEnabled:
-          targetState: MITIGATION_05_OPTIONS
+      targetState: MITIGATION_05_OPTIONS
 
 ADDRESS_AND_FRAUD_J2:
   nestedJourney: ADDRESS_AND_FRAUD
@@ -476,11 +472,7 @@ CRI_DRIVING_LICENCE_J3:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
     alternate-doc-invalid-dl:
-      targetJourney: FAILED
-      targetState: FAILED
-      checkFeatureFlag:
-        alternateDocMitigationEnabled:
-          targetState: MITIGATION_03_OPTIONS
+      targetState: MITIGATION_03_OPTIONS
 
 ADDRESS_AND_FRAUD_J3:
   nestedJourney: ADDRESS_AND_FRAUD

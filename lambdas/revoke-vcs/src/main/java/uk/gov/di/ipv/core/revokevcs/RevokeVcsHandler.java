@@ -78,7 +78,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         VcStoreItem.class,
                         DataStore.getClient(),
                         configService);
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
     }
 
     @Override

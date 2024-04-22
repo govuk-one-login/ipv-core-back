@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -437,6 +436,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of(gpg45Vc, pcl250Vc));
             when(ipvSessionItem.getVcReceivedThisSession())
                     .thenReturn(List.of(pcl250Vc.getVcString()));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             clientOAuthSessionItem.setVtr(List.of(Vot.P2.name(), Vot.PCL250.name()));
 
             JourneyResponse journeyResponse =
@@ -448,6 +448,7 @@ class CheckExistingIdentityHandlerTest {
 
             verify(mockSessionCredentialService)
                     .persistCredentials(List.of(pcl250Vc), ipvSessionItem.getIpvSessionId(), true);
+            verify(gpg45ProfileEvaluator).buildScore(List.of(gpg45Vc));
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(Vot.PCL250);
@@ -915,7 +916,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -937,7 +938,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.empty());
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -976,7 +977,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(any()))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -988,29 +989,6 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
         assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReturn500IfFailedToGetMitigationRouteFromCimitConfig() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(any()))
-                .thenThrow(
-                        new MitigationRouteConfigNotFoundException(
-                                "mitigation route event not found"));
-
-        JourneyErrorResponse response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND.getCode(), response.getCode());
-        assertEquals(
-                ErrorResponse.MITIGATION_ROUTE_CONFIG_NOT_FOUND.getMessage(),
-                response.getMessage());
     }
 
     @Test
@@ -1170,7 +1148,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(testContraIndicators);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(any())).thenReturn(Optional.empty());
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
+                .thenReturn(Optional.empty());
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1193,7 +1172,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(testContraIndicators);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyStep(testContraIndicators))
+        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         JourneyResponse journeyResponse =
@@ -1220,7 +1199,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(journey)));
 
         JourneyResponse journeyResponse =
@@ -1249,7 +1228,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));
 
         JourneyResponse journeyResponse =
@@ -1262,8 +1241,41 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void
-            shouldThrowUnsupportedMitigationRouteExceptionWhenCiMitigationJourneyStepPresentButNotSupported()
+            shouldReturnErrorResponseIfNoMitigationRouteFoundForAlreadyMitigatedCiWhenBuildingF2FNoMatchResponse()
                     throws Exception {
+        var mitigatedCI =
+                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
+        var testContraIndicators =
+                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
+        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(testContraIndicators);
+        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
+
+        when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
+                .thenReturn(Optional.of(mitigatedCI));
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
+                .thenReturn(Optional.empty());
+
+        JourneyErrorResponse response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getMessage(), response.getMessage());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenCiMitigationJourneyStepPresentButNotSupported()
+            throws Exception {
         var journey = "unsupported_mitigation";
         var mitigatedCI =
                 ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
@@ -1281,7 +1293,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
-        when(ciMitUtilityService.getMitigatedCiJourneyStep(mitigatedCI))
+        when(ciMitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
                 .thenReturn(Optional.of(new JourneyResponse(journey)));
 
         JourneyErrorResponse response =
@@ -1290,9 +1302,9 @@ class CheckExistingIdentityHandlerTest {
                         JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getCode(), response.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getCode(), response.getCode());
         assertEquals(
-                ErrorResponse.UNSUPPORTED_MITIGATION_ROUTE.getMessage(), response.getMessage());
+                ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getMessage(), response.getMessage());
     }
 
     @Test

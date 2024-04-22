@@ -136,7 +136,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.configService = new ConfigService();
         this.signerFactory = new KmsEs256SignerFactory();
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

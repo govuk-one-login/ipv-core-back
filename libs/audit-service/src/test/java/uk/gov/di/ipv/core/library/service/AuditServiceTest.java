@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
@@ -33,17 +33,15 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EV
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
-
-    @Mock AmazonSQS mockSqs;
-    @Mock ConfigService mockConfigService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private AuditService auditService;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String RETURN_CODE_KEY = "returnCodes";
-
     private static final String FAILURE_RETURN_CODES_TEST =
             "[{\"code\":\"A\",\"issuers\":[\"https://review-d.account.gov.uk\",\"https://review-f.account.gov.uk\"]},{\"code\":\"V\",\"issuers\":[\"https://review-k.account.gov.uk\"]}]";
+
+    private AuditService auditService;
+
+    @Mock private SqsClient mockSqs;
+    @Mock private ConfigService mockConfigService;
 
     @BeforeEach
     void setup() {
@@ -62,17 +60,16 @@ class AuditServiceTest {
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
 
         assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
 
         AuditEvent messageBody =
-                objectMapper.readValue(
-                        sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
+                OBJECT_MAPPER.readValue(
+                        sqsSendMessageRequestCaptor.getValue().messageBody(), AuditEvent.class);
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
     }
 
     @Test
-    void shouldSendMessageToSqsQueueWithAuditExtensionErrorParams()
-            throws JsonProcessingException, SqsException {
+    void shouldSendMessageToSqsQueueWithAuditExtensionErrorParams() throws Exception {
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
@@ -87,10 +84,10 @@ class AuditServiceTest {
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
 
         assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
 
         JsonNode messageBody =
-                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+                OBJECT_MAPPER.readTree(sqsSendMessageRequestCaptor.getValue().messageBody());
         assertEquals(
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
@@ -126,10 +123,10 @@ class AuditServiceTest {
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
 
         assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
 
         JsonNode messageBody =
-                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+                OBJECT_MAPPER.readTree(sqsSendMessageRequestCaptor.getValue().messageBody());
         assertEquals(
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
@@ -158,10 +155,10 @@ class AuditServiceTest {
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
 
         assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
 
         JsonNode messageBody =
-                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+                OBJECT_MAPPER.readTree(sqsSendMessageRequestCaptor.getValue().messageBody());
         assertEquals(
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
@@ -189,17 +186,17 @@ class AuditServiceTest {
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
 
         assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
 
         JsonNode messageBody =
-                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+                OBJECT_MAPPER.readTree(sqsSendMessageRequestCaptor.getValue().messageBody());
         assertEquals(
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionsUserIdentity = messageBody.get("extensions");
         JsonNode returnCodeJson = auditExtensionsUserIdentity.get(RETURN_CODE_KEY);
         assertEquals(2, returnCodeJson.size());
-        assertEquals(objectMapper.readTree(FAILURE_RETURN_CODES_TEST), returnCodeJson);
+        assertEquals(OBJECT_MAPPER.readTree(FAILURE_RETURN_CODES_TEST), returnCodeJson);
     }
 
     @Test

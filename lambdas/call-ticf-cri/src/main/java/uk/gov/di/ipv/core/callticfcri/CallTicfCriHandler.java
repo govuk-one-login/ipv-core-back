@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.MitigationRouteConfigNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -73,7 +72,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.criStoringService =
                 new CriStoringService(
                         configService,
-                        new AuditService(AuditService.getDefaultSqsClient(), configService),
+                        new AuditService(AuditService.getSqsClient(), configService),
                         null,
                         new VerifiableCredentialService(configService),
                         new SessionCredentialsService(configService),
@@ -125,7 +124,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiRetrievalException
                 | ConfigException
                 | UnrecognisedVotException
-                | MitigationRouteConfigNotFoundException
                 | CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
@@ -144,8 +142,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, SqsException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    ConfigException, UnrecognisedVotException,
-                    MitigationRouteConfigNotFoundException, CredentialParseException {
+                    ConfigException, UnrecognisedVotException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -176,7 +173,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             ipvSessionItem.setVot(Vot.P0);
 
             return ciMitUtilityService
-                    .getCiMitigationJourneyStep(cis)
+                    .getCiMitigationJourneyResponse(cis)
                     .orElse(JOURNEY_FAIL_WITH_CI)
                     .toObjectMap();
         }

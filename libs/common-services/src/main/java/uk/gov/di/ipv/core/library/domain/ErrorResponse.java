@@ -84,9 +84,7 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1066, "Failed to parse cri callback request."),
     ERROR_PROCESSING_TICF_CRI_RESPONSE(1067, "Error processing response from the TICF CRI"),
     MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER(1068, "Missing deleteOnlyGPG45VCs in request"),
-    MITIGATION_ROUTE_CONFIG_NOT_FOUND(
-            1069, "No mitigation journey route event found in cimit config"),
-    UNSUPPORTED_MITIGATION_ROUTE(1070, "Unsupported mitigation route"),
+    FAILED_TO_FIND_MITIGATION_ROUTE(1070, "Failed to find mitigation route"),
     FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
     FAILED_TO_GET_CREDENTIAL(1072, "Failed to get credential"),
     INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input"),

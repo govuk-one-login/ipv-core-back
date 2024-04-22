@@ -25,4 +25,9 @@ public class IdentityClaim {
     public String getFullName() {
         return name.get(0).getFullName();
     }
+
+    @JsonIgnore
+    public List<NameParts> getNameParts() {
+        return name.get(0).getNameParts();
+    }
 }

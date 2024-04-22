@@ -102,7 +102,7 @@ public class EvaluateGpg45ScoresHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);

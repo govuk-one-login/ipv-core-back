@@ -10,12 +10,11 @@ repositories {
 }
 
 dependencies {
-	implementation libs.awsLambdaJavaCore,
-			libs.awsLambdaJavaEvents,
+	implementation libs.bundles.awsLambda,
+			libs.jacksonDatabind,
 			libs.mockitoJunit,
 			libs.nimbusdsOauth2OidcSdk,
 			libs.pactConsumerJunit,
-			libs.jacksonDatabind,
 			project(path: ':libs:common-services')
 
 	testImplementation libs.junitJupiter,

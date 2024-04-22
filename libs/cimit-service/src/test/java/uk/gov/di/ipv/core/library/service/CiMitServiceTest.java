@@ -1,9 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.amazonaws.services.lambda.AWSLambda;
-import com.amazonaws.services.lambda.model.AWSLambdaException;
-import com.amazonaws.services.lambda.model.InvokeRequest;
-import com.amazonaws.services.lambda.model.InvokeResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -15,6 +11,11 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.lambda.model.LambdaException;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
@@ -28,8 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.List;
 
@@ -62,9 +61,19 @@ class CiMitServiceTest {
     private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     private static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
+    private static final InvokeResponse INVOKE_RESPONSE_200 =
+            InvokeResponse.builder().statusCode(200).build();
+    private static final InvokeResponse INVOKE_RESPONSE_500 =
+            InvokeResponse.builder().statusCode(500).build();
+    private static final InvokeResponse INVOKE_RESPONSE_200_WITH_ERROR =
+            InvokeResponse.builder()
+                    .statusCode(200)
+                    .functionError("Unhandled")
+                    .payload(SdkBytes.fromUtf8String(""))
+                    .build();
 
-    @Mock AWSLambda lambdaClient;
+    @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
+    @Mock LambdaClient lambdaClient;
     @Mock ConfigService configService;
     @Mock VerifiableCredentialValidator verifiableCredentialValidator;
     @InjectMocks CiMitService ciMitService;
@@ -74,25 +83,23 @@ class CiMitServiceTest {
         var passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture()))
-                .thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(INVOKE_RESPONSE_200);
         ciMitService.submitVC(passportVc, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
-        assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());
+        assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.functionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt\":\"%s\"}",
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, passportVc.getVcString()),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+                request.payload().asUtf8String());
     }
 
     @Test
-    void submitVCThrowsIfLambdaExecutionFails() throws ParseException, CredentialParseException {
-        InvokeResult result = new InvokeResult().withStatusCode(500);
+    void submitVCThrowsIfLambdaExecutionFails() {
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(INVOKE_RESPONSE_500);
 
         assertThrows(
                 CiPutException.class,
@@ -104,16 +111,11 @@ class CiMitServiceTest {
     }
 
     @Test
-    void submitVCThrowsIfLambdaThrowsAnError() throws ParseException, CredentialParseException {
-        InvokeResult result =
-                new InvokeResult()
-                        .withStatusCode(200)
-                        .withFunctionError("Unhandled")
-                        .withPayload(ByteBuffer.allocate(0));
+    void submitVCThrowsIfLambdaThrowsAnError() {
         when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
-
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(INVOKE_RESPONSE_200_WITH_ERROR);
         assertThrows(
                 CiPutException.class,
                 () ->
@@ -127,30 +129,27 @@ class CiMitServiceTest {
     void submitMitigationVCInvokesTheLambdaClient() throws Exception {
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture()))
-                .thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(INVOKE_RESPONSE_200);
 
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         ciMitService.submitMitigatingVcList(vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
-        assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
+        assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.functionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
                         GOVUK_SIGNIN_JOURNEY_ID,
                         CLIENT_SOURCE_IP,
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+                request.payload().asUtf8String());
     }
 
     @Test
-    void submitMitigationVCThrowsIfLambdaExecutionFails()
-            throws ParseException, CredentialParseException {
-        InvokeResult result = new InvokeResult().withStatusCode(500);
+    void submitMitigationVCThrowsIfLambdaExecutionFails() {
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(INVOKE_RESPONSE_500);
 
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertThrows(
@@ -161,16 +160,11 @@ class CiMitServiceTest {
     }
 
     @Test
-    void submitMitigationVCThrowsIfLambdaThrowsAnError()
-            throws ParseException, CredentialParseException {
-        InvokeResult result =
-                new InvokeResult()
-                        .withStatusCode(200)
-                        .withFunctionError("Unhandled")
-                        .withPayload(ByteBuffer.allocate(0));
+    void submitMitigationVCThrowsIfLambdaThrowsAnError() {
         when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(INVOKE_RESPONSE_200_WITH_ERROR);
 
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertThrows(
@@ -201,21 +195,22 @@ class CiMitServiceTest {
                                 TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
+                                .build());
 
         ContraIndicators contraIndications =
                 ciMitService.getContraIndicators(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         InvokeRequest request = requestCaptor.getValue();
-        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
+        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.functionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+                request.payload().asUtf8String());
 
         assertEquals(
                 "ContraIndicators(usersContraIndicators=[ContraIndicator(code=D01, issuers=[https://issuing-cri.example], issuanceDate=2022-09-20T15:54:50.000Z, document=passport/GBR/824159121, txn=[abcdef], mitigation=[Mitigation(code=M01, mitigatingCredential=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50.000Z, txn=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigation=[Mitigation(code=M02, mitigatingCredential=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50.000Z, txn=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])])",
@@ -224,10 +219,9 @@ class CiMitServiceTest {
 
     @Test
     void getContraIndicatorsVCThrowsExceptionIfLambdaExecutionFails() {
-        InvokeResult result = new InvokeResult().withStatusCode(500);
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(INVOKE_RESPONSE_500);
 
         assertThrows(
                 CiRetrievalException.class,
@@ -238,14 +232,10 @@ class CiMitServiceTest {
 
     @Test
     void getContraIndicatorsVCThrowsExceptionIfLambdaThrowsError() {
-        InvokeResult result =
-                new InvokeResult()
-                        .withStatusCode(200)
-                        .withFunctionError("Unhandled")
-                        .withPayload(ByteBuffer.allocate(0));
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(INVOKE_RESPONSE_200_WITH_ERROR);
 
         assertThrows(
                 CiRetrievalException.class,
@@ -267,11 +257,12 @@ class CiMitServiceTest {
                 .thenThrow(
                         new VerifiableCredentialException(
                                 500, ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL));
-        when(lambdaClient.invoke(any()))
+        when(lambdaClient.invoke(any(InvokeRequest.class)))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload("NOT_A_JWT")));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload("NOT_A_JWT"))
+                                .build());
 
         assertThrows(
                 CiRetrievalException.class,
@@ -284,9 +275,9 @@ class CiMitServiceTest {
     void getContraIndicatorVCThrowsErrorForExceptionFromAWSLambdaClient() {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        doThrow(new AWSLambdaException("AWSLambda client invocation failed"))
+        doThrow(LambdaException.builder().message("AWSLambda client invocation failed").build())
                 .when(lambdaClient)
-                .invoke(any());
+                .invoke(any(InvokeRequest.class));
 
         assertThrows(
                 CiRetrievalException.class,
@@ -305,9 +296,10 @@ class CiMitServiceTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
+                                .build());
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -339,23 +331,24 @@ class CiMitServiceTest {
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(
                                         makeCiMitVCPayload(
-                                                SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
+                                                SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE))
+                                .build());
 
         ContraIndicators contraIndicators =
                 ciMitService.getContraIndicators(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         InvokeRequest request = requestCaptor.getValue();
-        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
+        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.functionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+                request.payload().asUtf8String());
 
         assertEquals("ContraIndicators(usersContraIndicators=[])", contraIndicators.toString());
     }
@@ -366,13 +359,12 @@ class CiMitServiceTest {
                     CredentialParseException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        when(lambdaClient.invoke(any()))
+        when(lambdaClient.invoke(any(InvokeRequest.class)))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(
-                                        makeCiMitVCPayload(
-                                                SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE))
+                                .build());
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
@@ -423,21 +415,22 @@ class CiMitServiceTest {
                                 TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
+                                .build());
 
         VerifiableCredential contraIndicatorsVc =
                 ciMitService.getContraIndicatorsVc(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         InvokeRequest request = requestCaptor.getValue();
-        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
+        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.functionName());
         assertEquals(
                 String.format(
                         "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+                request.payload().asUtf8String());
 
         assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVc.getVcString());
     }
@@ -450,11 +443,12 @@ class CiMitServiceTest {
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn("INVALID_CIMIT_KEY");
-        when(lambdaClient.invoke(any()))
+        when(lambdaClient.invoke(any(InvokeRequest.class)))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
+                                .build());
 
         assertThrows(
                 CiRetrievalException.class,
@@ -475,9 +469,10 @@ class CiMitServiceTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC))
+                                .build());
         when(verifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
@@ -497,9 +492,9 @@ class CiMitServiceTest {
     void getContraIndicatorsVCJwtWhenAWSLambdaClientInvocationFailed() {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        doThrow(new AWSLambdaException("AWSLambda client invocation failed"))
+        doThrow(LambdaException.builder().message("AWSLambda client invocation failed").build())
                 .when(lambdaClient)
-                .invoke(any());
+                .invoke(any(InvokeRequest.class));
 
         assertThrows(
                 CiRetrievalException.class,
@@ -518,9 +513,10 @@ class CiMitServiceTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+                        InvokeResponse.builder()
+                                .statusCode(200)
+                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC))
+                                .build());
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -535,10 +531,10 @@ class CiMitServiceTest {
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
-    private ByteBuffer makeCiMitVCPayload(String signedJwt) throws JsonProcessingException {
+    private SdkBytes makeCiMitVCPayload(String signedJwt) throws JsonProcessingException {
         ContraIndicatorCredentialDto contraIndicatorCredentialDto =
                 ContraIndicatorCredentialDto.builder().vc(signedJwt).build();
-        return ByteBuffer.wrap(
+        return SdkBytes.fromByteArray(
                 MAPPER.writerFor(ContraIndicatorCredentialDto.class)
                         .writeValueAsBytes(contraIndicatorCredentialDto));
     }
