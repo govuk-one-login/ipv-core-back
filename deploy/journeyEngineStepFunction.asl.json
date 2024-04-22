@@ -27,6 +27,11 @@
         },
         {
           "Variable": "$.journey",
+          "StringMatches": "/journey/reset-identity",
+          "Next": "ResetSessionIdentityLambda"
+        },
+        {
+          "Variable": "$.journey",
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
         },

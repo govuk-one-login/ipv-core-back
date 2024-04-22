@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
+import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
@@ -33,6 +34,7 @@ public class JourneyEngineHandler {
 
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
+    private final ResetSessionIdentityHandler resetSessionIdentityHandler;
     private final BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private final BuildClientOauthResponseHandler buildClientOauthResponseHandler;
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
@@ -42,6 +44,7 @@ public class JourneyEngineHandler {
     public JourneyEngineHandler() throws IOException {
         this.processJourneyEventHandler = new ProcessJourneyEventHandler();
         this.checkExistingIdentityHandler = new CheckExistingIdentityHandler();
+        this.resetSessionIdentityHandler = new ResetSessionIdentityHandler();
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler();
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler();
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
@@ -90,6 +93,8 @@ public class JourneyEngineHandler {
         return switch (journeyStep) {
             case "/journey/check-existing-identity" -> checkExistingIdentityHandler.handleRequest(
                     buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
+            case "/journey/reset-identity" -> resetSessionIdentityHandler.handleRequest(
+                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
                     .handleRequest(buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
             case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler.handleRequest(
