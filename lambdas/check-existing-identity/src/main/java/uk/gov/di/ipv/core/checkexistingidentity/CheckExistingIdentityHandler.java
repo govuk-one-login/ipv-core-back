@@ -376,15 +376,10 @@ public class CheckExistingIdentityHandler
 
         // vot achieved for vtr
         if (strongestAttainedVotFromVtr.isPresent()) {
-            // Profile matched
-            Vot attainedVot = strongestAttainedVotFromVtr.get();
-
-            ipvSessionItem.setVot(attainedVot);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
             return Optional.of(
                     buildReuseResponse(
-                            attainedVot,
-                            ipvSessionItem.getVcReceivedThisSession(),
+                            strongestAttainedVotFromVtr.get(),
+                            ipvSessionItem,
                             vcs,
                             auditEventUser));
         }
@@ -454,39 +449,48 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
-            List<String> vcReceivedThisSession,
+            IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser)
             throws SqsException, VerifiableCredentialException {
-        LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
-        sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
-
-        if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
-            // the only VC we should possibly have collected this session at this point is a
-            // migration VC
-            boolean isOpProfileReuse =
-                    vcReceivedThisSession == null || vcReceivedThisSession.isEmpty();
-            sessionCredentialsService.persistCredentials(
-                    VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
-                    auditEventUser.getSessionId(),
-                    !isOpProfileReuse);
-            return isOpProfileReuse
-                    ? JOURNEY_OPERATIONAL_PROFILE_REUSE
-                    : JOURNEY_IN_MIGRATION_REUSE;
-        }
-
         // check the result of 6MFC and return the appropriate journey
-        if (configService.enabled(REPEAT_FRAUD_CHECK) && !hasCurrentFraudVc(vcs)) {
+        if (configService.enabled(REPEAT_FRAUD_CHECK)
+                && attainedVot.getProfileType() == GPG45
+                && !hasCurrentFraudVc(vcs)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
+        LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
+        sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
+
+        ipvSessionItem.setVot(attainedVot);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+
+        if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
+            // the only VC we should possibly have collected this session at this point is a
+            // migration VC
+            var vcReceivedThisSession = ipvSessionItem.getVcReceivedThisSession();
+            boolean isOpProfileReuse =
+                    vcReceivedThisSession == null || vcReceivedThisSession.isEmpty();
+
+            sessionCredentialsService.persistCredentials(
+                    VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
+                    auditEventUser.getSessionId(),
+                    !isOpProfileReuse);
+
+            return isOpProfileReuse
+                    ? JOURNEY_OPERATIONAL_PROFILE_REUSE
+                    : JOURNEY_IN_MIGRATION_REUSE;
+        }
+
         sessionCredentialsService.persistCredentials(
                 VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
+
         return JOURNEY_REUSE;
     }
 
