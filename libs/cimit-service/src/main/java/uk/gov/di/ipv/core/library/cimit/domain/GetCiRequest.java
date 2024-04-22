@@ -1,16 +1,16 @@
 package uk.gov.di.ipv.core.library.cimit.domain;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class GetCiRequest {
-    @SerializedName(value = "govuk_signin_journey_id")
+    @JsonProperty("govuk_signin_journey_id")
     private final String govukSigninJourneyId;
 
-    @SerializedName(value = "ip_address")
+    @JsonProperty("ip_address")
     private final String ipAddress;
 
-    @SerializedName(value = "user_id")
+    @JsonProperty("user_id")
     private final String userId;
 }

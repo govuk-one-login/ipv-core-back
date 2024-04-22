@@ -23,7 +23,7 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.gson,
+	testImplementation libs.jacksonDatabind,
 			libs.junitJupiter,
 			libs.mockitoJunit,
 			project(path: ':libs:common-services', configuration: 'tests')
