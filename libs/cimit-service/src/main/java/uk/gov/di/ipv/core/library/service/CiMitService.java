@@ -243,6 +243,11 @@ public class CiMitService {
 
         var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
         CiMitJwt ciMitJwt = OBJECT_MAPPER.convertValue(claimSetJsonObject, CiMitJwt.class);
+        if (ciMitJwt == null) {
+            String message = "Failed to convert claim set object to CiMitJwt";
+            LOGGER.error(LogHelper.buildLogMessage(message));
+            throw new CiRetrievalException(message);
+        }
         CiMitVc vcClaim = ciMitJwt.getVc();
         if (vcClaim == null) {
             String message = "VC claim not found in CiMit JWT";
