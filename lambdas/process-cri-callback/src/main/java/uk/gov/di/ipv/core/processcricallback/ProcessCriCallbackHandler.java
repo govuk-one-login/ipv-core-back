@@ -115,7 +115,6 @@ public class ProcessCriCallbackHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
 
         var auditService = new AuditService(AuditService.getSqsClient(), configService);
-        var verifiableCredentialService = new VerifiableCredentialService(configService);
         var sessionCredentialsService = new SessionCredentialsService(configService);
         var ciMitService = new CiMitService(configService);
 
@@ -132,14 +131,13 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         ciMitService,
                         new CiMitUtilityService(configService),
-                        verifiableCredentialService,
+                        new VerifiableCredentialService(configService),
                         sessionCredentialsService);
         criStoringService =
                 new CriStoringService(
                         configService,
                         auditService,
                         new CriResponseService(configService),
-                        verifiableCredentialService,
                         sessionCredentialsService,
                         ciMitService);
 
