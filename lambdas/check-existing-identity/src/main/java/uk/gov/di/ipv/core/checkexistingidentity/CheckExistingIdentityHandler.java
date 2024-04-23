@@ -81,7 +81,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 /** Check Existing Identity response Lambda */
@@ -102,8 +102,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
             new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
+    private static final JourneyResponse JOURNEY_RESET_SESSION_IDENTITY =
+            new JourneyResponse(JOURNEY_RESET_SESSION_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
@@ -229,7 +229,7 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 "resetIdentity flag is enabled, reset users identity."));
-                return JOURNEY_RESET_IDENTITY;
+                return JOURNEY_RESET_SESSION_IDENTITY;
             }
 
             if (ciScoringCheckResponse.isPresent()) {

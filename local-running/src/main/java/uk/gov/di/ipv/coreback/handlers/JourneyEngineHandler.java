@@ -93,7 +93,7 @@ public class JourneyEngineHandler {
         return switch (journeyStep) {
             case "/journey/check-existing-identity" -> checkExistingIdentityHandler.handleRequest(
                     buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
-            case "/journey/reset-identity" -> resetSessionIdentityHandler.handleRequest(
+            case "/journey/reset-session-identity" -> resetSessionIdentityHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
                     .handleRequest(buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
