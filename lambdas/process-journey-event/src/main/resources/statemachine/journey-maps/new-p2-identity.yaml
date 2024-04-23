@@ -108,19 +108,15 @@ IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next:
+    next: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW
-      checkFeatureFlag:
-        strategicAppEnabled:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
       checkIfDisabled:
         dcmaw:
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
           checkIfDisabled:
             f2f:
               targetState: MULTIPLE_DOC_CHECK_PAGE
-    dcmaw:
+    appTriage:
       targetState: CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
@@ -131,11 +127,17 @@ IDENTITY_START_PAGE:
           checkIfDisabled:
             f2f:
               targetState: MULTIPLE_DOC_CHECK_PAGE
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
           targetState: DCMAW_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
     end:
       targetState: F2F_START_PAGE
       checkIfDisabled:
@@ -305,7 +307,13 @@ PYI_CRI_ESCAPE:
     type: page
     pageId: pyi-cri-escape
   events:
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -314,7 +322,7 @@ PYI_CRI_ESCAPE:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -334,17 +342,13 @@ PYI_CRI_ESCAPE_NO_F2F:
     type: page
     pageId: pyi-cri-escape-no-f2f
   events:
-    next:
+    next: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
-      checkFeatureFlag:
-        strategicAppEnabled:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    dcmaw:
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -353,7 +357,7 @@ PYI_CRI_ESCAPE_NO_F2F:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -727,7 +731,13 @@ MITIGATION_KBV_FAIL_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after 5624
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -736,7 +746,7 @@ MITIGATION_KBV_FAIL_M2B:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -785,7 +795,13 @@ PYI_KBV_DROPOUT_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -794,7 +810,7 @@ PYI_KBV_DROPOUT_M2B:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -825,7 +841,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next:
+    next: # TODO: Remove after PYIC-5624
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
@@ -835,7 +851,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    dcmaw:
+    appTriage:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
@@ -844,7 +860,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
@@ -944,7 +960,7 @@ MITIGATION_02_OPTIONS:
     pageId: pyi-suggest-other-options-no-f2f
     mitigationStart: enhanced-verification
   events:
-    next:
+    next: # TODO: Remove after PYIC-5624
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -954,7 +970,7 @@ MITIGATION_02_OPTIONS:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    dcmaw:
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -963,7 +979,7 @@ MITIGATION_02_OPTIONS:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -1039,7 +1055,13 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -1048,7 +1070,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -1070,7 +1092,13 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -1079,7 +1107,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
-    smartphone:
+    appTriage/smartphone:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
