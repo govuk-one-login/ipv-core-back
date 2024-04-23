@@ -1051,7 +1051,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void
-    shouldReturnMitigationJourneyStepResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
+            shouldReturnMitigationJourneyStepResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
                     throws Exception {
         var testContraIndicators = ContraIndicators.builder().build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
