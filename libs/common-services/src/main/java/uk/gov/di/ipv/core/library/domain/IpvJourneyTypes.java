@@ -16,6 +16,7 @@ public enum IpvJourneyTypes {
     REUSE_EXISTING_IDENTITY("reuse-existing-identity"),
     NEW_P2_IDENTITY("new-p2-identity"),
     REPEAT_FRAUD_CHECK("repeat-fraud-check"),
+    UPDATE_ADDRESS("update-address"),
 
     // Unsuccessful journeys
     INELIGIBLE("ineligible"),

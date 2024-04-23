@@ -34,6 +34,11 @@ FAILED_RFC:
     next:
       targetState: NO_MATCH_PAGE_RFC
 
+FAILED_UPDATE_ADDRESS:
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_ADDRESS
+
 # Journey states
 
 CRI_TICF_BEFORE_NO_MATCH:
@@ -106,6 +111,15 @@ NO_MATCH_PAGE_RFC:
     type: page
     pageId: pyi-no-match
     context: repeatFraudCheck
+  events:
+    next:
+      targetState: RETURN_TO_RP
+
+NO_MATCH_PAGE_UPDATE_ADDRESS:
+  response:
+    type: page
+    pageId: pyi-no-match
+    context: updateAddress
   events:
     next:
       targetState: RETURN_TO_RP
