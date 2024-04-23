@@ -5,6 +5,38 @@ START:
     next:
       targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
 
+# Parent States
+
+CRI_STATE:
+  events:
+    not-found:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    fail-with-no-ci:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    access-denied:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    enhanced-verification:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    temporarily-unavailable:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    fail-with-ci:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    vcs-not-correlated:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+    alternate-doc-invalid-dl:
+      targetJourney: FAILED
+      targetState: FAILED_RFC
+
 # Journey States
 
 ADDRESS_AND_FRAUD_UPDATE_ADDRESS:
@@ -76,7 +108,7 @@ IPV_SUCCESS_PAGE_UPDATE_ADDRESS:
   response:
     type: page
     pageId: page-ipv-success
-    context: repeatFraudCheck
+    context: updateAddress
   events:
     next:
       targetState: RETURN_TO_RP
