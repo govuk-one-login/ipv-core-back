@@ -28,9 +28,9 @@ ADDRESS_AND_FRAUD:
 
 DCMAW_TRIAGE:
   entryEvents:
-    dcmaw:
+    appTriage:
       targetState: SELECT_DEVICE_PAGE
-    smartphone:
+    appTriage/smartphone:
       targetState: MAM_SELECT_SMARTPHONE
 
   nestedJourneyStates:
