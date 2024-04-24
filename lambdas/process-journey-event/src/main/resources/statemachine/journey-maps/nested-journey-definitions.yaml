@@ -26,7 +26,7 @@ ADDRESS_AND_FRAUD:
         enhanced-verification:
           exitEventToEmit: enhanced-verification
 
-DCMAW_TRIAGE:
+STRATEGIC_APP_TRIAGE:
   entryEvents:
     appTriage:
       targetState: SELECT_DEVICE_PAGE

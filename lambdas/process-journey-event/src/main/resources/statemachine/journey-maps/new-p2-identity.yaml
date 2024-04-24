@@ -120,7 +120,7 @@ IDENTITY_START_PAGE:
       targetState: CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE
+          targetState: STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
@@ -131,7 +131,7 @@ IDENTITY_START_PAGE:
       targetState: CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE
+          targetState: STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
@@ -145,8 +145,8 @@ IDENTITY_START_PAGE:
           targetJourney: INELIGIBLE
           targetState: INELIGIBLE
 
-DCMAW_TRIAGE:
-  nestedJourney: DCMAW_TRIAGE
+STRATEGIC_APP_TRIAGE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
   exitEvents:
     next:
       targetJourney: TECHNICAL_ERROR
@@ -317,7 +317,7 @@ PYI_CRI_ESCAPE:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -326,7 +326,7 @@ PYI_CRI_ESCAPE:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -352,7 +352,7 @@ PYI_CRI_ESCAPE_NO_F2F:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -361,7 +361,7 @@ PYI_CRI_ESCAPE_NO_F2F:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -741,7 +741,7 @@ MITIGATION_KBV_FAIL_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -750,7 +750,7 @@ MITIGATION_KBV_FAIL_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -805,7 +805,7 @@ PYI_KBV_DROPOUT_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -814,7 +814,7 @@ PYI_KBV_DROPOUT_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -855,7 +855,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: MITIGATION_01_DCMAW_TRIAGE
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -864,7 +864,7 @@ MITIGATION_01_IDENTITY_START_PAGE:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: MITIGATION_01_DCMAW_TRIAGE
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -876,8 +876,8 @@ MITIGATION_01_IDENTITY_START_PAGE:
           targetJourney: INELIGIBLE
           targetState: INELIGIBLE
 
-MITIGATION_01_DCMAW_TRIAGE:
-  nestedJourney: DCMAW_TRIAGE
+MITIGATION_01_STRATEGIC_APP_TRIAGE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
   exitEvents:
     next:
       targetJourney: TECHNICAL_ERROR
@@ -974,7 +974,7 @@ MITIGATION_02_OPTIONS:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -983,7 +983,7 @@ MITIGATION_02_OPTIONS:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -992,8 +992,8 @@ MITIGATION_02_OPTIONS:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
 
-DCMAW_TRIAGE_PYI_ESCAPE:
-  nestedJourney: DCMAW_TRIAGE
+STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
   exitEvents:
     next:
       targetJourney: TECHNICAL_ERROR
@@ -1065,7 +1065,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -1074,7 +1074,7 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -1102,7 +1102,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -1111,7 +1111,7 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
-          targetState: DCMAW_TRIAGE_PYI_ESCAPE
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
