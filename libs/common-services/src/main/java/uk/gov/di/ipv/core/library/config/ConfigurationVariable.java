@@ -12,7 +12,6 @@ public enum ConfigurationVariable {
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     COMPONENT_ID("self/componentId"),
-    CORE_FRONT_CALLBACK_URL("self/coreFrontCallbackUrl"),
     CORE_VTM_CLAIM("self/coreVtmClaim"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
     CRI_RESPONSE_TTL("self/criResponseTtl"),
