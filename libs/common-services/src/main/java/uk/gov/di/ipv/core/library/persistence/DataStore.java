@@ -24,6 +24,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.time.Instant;
 import java.util.List;
 
+import static software.amazon.awssdk.regions.Region.EU_WEST_2;
+
 public class DataStore<T extends DynamodbItem> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -43,7 +45,11 @@ public class DataStore<T extends DynamodbItem> {
 
     @ExcludeFromGeneratedCoverageReport
     public static DynamoDbEnhancedClient getClient() {
-        var client = DynamoDbClient.builder().httpClient(UrlConnectionHttpClient.create()).build();
+        var client =
+                DynamoDbClient.builder()
+                        .region(EU_WEST_2)
+                        .httpClient(UrlConnectionHttpClient.create())
+                        .build();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
