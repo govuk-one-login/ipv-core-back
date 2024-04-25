@@ -325,13 +325,12 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test // User returning after migration
-        void
-                shouldReturnJourneyOpProfileReuseResponseIfPCL200RequestedAndMetWhenNoVcInCurrentSession()
-                        throws Exception {
+        void shouldReturnJourneyOpProfileReuseResponseIfPCL200RequestedAndMetWhenNotInMigration()
+                throws Exception {
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, pcl200Vc));
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name(), Vot.PCL200.name()));
-            ipvSessionItem.setVcReceivedThisSession(List.of());
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -351,13 +350,12 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test // User returning after migration
-        void
-                shouldReturnJourneyOpProfileReuseResponseIfPCL250RequestedAndMetWhenNoVcInCurrentSession()
-                        throws Exception {
+        void shouldReturnJourneyOpProfileReuseResponseIfPCL250RequestedAndMetWhenNotInMigration()
+                throws Exception {
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, pcl250Vc));
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
-            ipvSessionItem.setVcReceivedThisSession(List.of());
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -383,7 +381,7 @@ class CheckExistingIdentityHandlerTest {
             when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(pcl250Vc));
 
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
-            ipvSessionItem.setVcReceivedThisSession(List.of());
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -400,15 +398,11 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test // User in process of migration
-        void
-                shouldReturnJourneyInMigrationReuseResponseIfPCL200RequestedAndMetWhenVcInCurrentSession()
-                        throws Exception {
+        void shouldReturnJourneyInMigrationReuseResponseIfPCL200RequestedAndMet() throws Exception {
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, pcl200Vc));
-            when(ipvSessionItem.getVcReceivedThisSession())
-                    .thenReturn(List.of(pcl200Vc.getVcString()));
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name(), Vot.PCL200.name()));
-            ipvSessionItem.setVcReceivedThisSession(List.of(pcl200Vc.getVcString()));
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -428,15 +422,12 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test // User in process of migration
-        void
-                shouldReturnJourneyInMigrationReuseResponseIfPCL250RequestedAndMetWhenVcInCurrentSession()
-                        throws Exception {
+        void shouldReturnJourneyInMigrationReuseResponseIfPCL250RequestedAndMet() throws Exception {
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, pcl250Vc));
-            when(ipvSessionItem.getVcReceivedThisSession())
-                    .thenReturn(List.of(pcl250Vc.getVcString()));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
 
             JourneyResponse journeyResponse =
                     toResponseClass(

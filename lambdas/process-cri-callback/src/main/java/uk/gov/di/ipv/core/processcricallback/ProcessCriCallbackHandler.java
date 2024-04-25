@@ -51,7 +51,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
@@ -131,7 +130,6 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         ciMitService,
                         new CiMitUtilityService(configService),
-                        new VerifiableCredentialService(configService),
                         sessionCredentialsService);
         criStoringService =
                 new CriStoringService(

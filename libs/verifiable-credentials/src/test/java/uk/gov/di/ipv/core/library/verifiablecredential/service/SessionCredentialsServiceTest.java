@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +15,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -28,11 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -50,36 +46,13 @@ class SessionCredentialsServiceTest {
     private static final String CRI_ID_1 = "criId1";
     private static final String CRI_ID_2 = "criId2";
     private static final String CRI_ID_3 = "criId3";
-    @Mock private static ConfigService mockConfigService;
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
     @InjectMocks private SessionCredentialsService sessionCredentialService;
 
     @Nested
-    class WritesWithFeatureFlagDisabled {
-        @BeforeEach
-        void setUp() {
-            when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)).thenReturn(false);
-        }
-
-        @Test
-        void persistCredentialsShouldNotCreateItemsInDataStore() throws Exception {
-            List<VerifiableCredential> credentialsToStore =
-                    List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
-            sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID, false);
-
-            verify(mockDataStore, never()).create(any(), any());
-        }
-    }
-
-    @Nested
-    class WritesWithFeatureFlagEnabled {
-        @BeforeEach
-        void setUp() {
-            when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)).thenReturn(true);
-        }
-
+    class Writes {
         @Test
         void persistCredentialsShouldStoreAllCredentials() throws Exception {
             List<VerifiableCredential> credentialsToStore =

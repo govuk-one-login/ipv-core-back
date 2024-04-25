@@ -29,12 +29,10 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SCORE_TYPE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -50,7 +48,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final IpvSessionService ipvSessionService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings("unused") // Used by tests through injection
@@ -60,13 +57,11 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             IpvSessionService ipvSessionService,
             UserIdentityService userIdentityService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ipvSessionService = ipvSessionService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
@@ -77,7 +72,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
@@ -154,7 +148,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private List<VerifiableCredential> getParsedCredentials(String ipvSessionId)
-            throws CredentialParseException, VerifiableCredentialException {
+            throws VerifiableCredentialException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -162,8 +156,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         String userId = clientOAuthSessionItem.getUserId();
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
-        return configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                ? sessionCredentialsService.getCredentials(ipvSessionId, userId)
-                : verifiableCredentialService.getVcs(userId);
+        return sessionCredentialsService.getCredentials(ipvSessionId, userId);
     }
 }

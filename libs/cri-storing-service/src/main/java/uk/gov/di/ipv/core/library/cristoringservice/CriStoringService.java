@@ -131,7 +131,6 @@ public class CriStoringService {
                 }
                 sessionCredentialsService.persistCredentials(
                         List.of(vc), ipvSessionItem.getIpvSessionId(), true);
-                ipvSessionItem.addVcReceivedThisSession(vc);
             }
         }
 

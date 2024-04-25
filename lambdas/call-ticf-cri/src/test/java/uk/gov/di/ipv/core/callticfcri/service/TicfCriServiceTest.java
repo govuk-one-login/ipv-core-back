@@ -41,17 +41,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 
@@ -94,7 +91,6 @@ class TicfCriServiceTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setVot(Vot.P2);
         ipvSessionItem.setIpvSessionId(SESSION_ID);
-        ipvSessionItem.setVcReceivedThisSession(List.of(M1A_EXPERIAN_FRAUD_VC.getVcString()));
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -104,10 +100,8 @@ class TicfCriServiceTest {
                         .build();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void getTicfVcShouldReturnASignedJwtForASuccessfulInvocation(boolean sessionCredentialsRead)
-            throws Exception {
+    @Test
+    void getTicfVcShouldReturnASignedJwtForASuccessfulInvocation() throws Exception {
         RestCriConfig ticfConfigWithApiKeyRequired =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -118,12 +112,8 @@ class TicfCriServiceTest {
         when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfConfigWithApiKeyRequired);
         when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
                 .thenReturn("api-key");
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS))
-                .thenReturn(sessionCredentialsRead);
-        if (sessionCredentialsRead) {
-            when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
-                    .thenReturn(List.of(M1B_DCMAW_VC));
-        }
+        when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
+                .thenReturn(List.of(M1B_DCMAW_VC));
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
@@ -146,12 +136,7 @@ class TicfCriServiceTest {
             assertEquals(TRUSTMARK, sentTicfCriDto.vtm());
             assertEquals(USER_ID, sentTicfCriDto.sub());
             assertEquals(GOVUK_JOURNEY_ID, sentTicfCriDto.govukSigninJourneyId());
-            assertEquals(
-                    List.of(
-                            sessionCredentialsRead
-                                    ? M1B_DCMAW_VC.getVcString()
-                                    : M1A_EXPERIAN_FRAUD_VC.getVcString()),
-                    sentTicfCriDto.credentials());
+            assertEquals(List.of(M1B_DCMAW_VC.getVcString()), sentTicfCriDto.credentials());
 
             verify(mockHttpClient).send(requestCaptor.capture(), any());
             assertEquals(
@@ -188,18 +173,7 @@ class TicfCriServiceTest {
     }
 
     @Test
-    void getTicfVcShouldThrowIfCanNotSerializeRequest() {
-        ipvSessionItem.setVcReceivedThisSession(mock(List.class));
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
-        // Jackson can't serialize mocks
-        assertThrows(
-                TicfCriServiceException.class,
-                () -> ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem));
-    }
-
-    @Test
     void getTicfVcShouldThrowIfErrorFetchingSessionCredentials() throws Exception {
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(true);
         when(mockSessionCredentialsService.getCredentials(any(), any(), anyBoolean()))
                 .thenThrow(
                         new VerifiableCredentialException(

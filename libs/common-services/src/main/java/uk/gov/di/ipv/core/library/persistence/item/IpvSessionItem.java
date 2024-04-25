@@ -6,13 +6,11 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +39,7 @@ public class IpvSessionItem implements DynamodbItem {
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
     private String featureSet;
-    private List<String> vcReceivedThisSession;
+    private boolean inheritedIdentityReceivedThisSession;
     private String riskAssessmentCredential;
 
     @DynamoDbPartitionKey
@@ -57,13 +55,6 @@ public class IpvSessionItem implements DynamodbItem {
     @DynamoDbSecondaryPartitionKey(indexNames = "accessToken")
     public String getAccessToken() {
         return accessToken;
-    }
-
-    public void addVcReceivedThisSession(VerifiableCredential vc) {
-        if (vcReceivedThisSession == null) {
-            vcReceivedThisSession = new ArrayList<>();
-        }
-        vcReceivedThisSession.add(vc.getVcString());
     }
 
     public List<String> getFeatureSetAsList() {

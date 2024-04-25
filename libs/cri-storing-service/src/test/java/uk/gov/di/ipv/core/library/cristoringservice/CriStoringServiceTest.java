@@ -158,7 +158,6 @@ class CriStoringServiceTest {
         verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -183,7 +182,6 @@ class CriStoringServiceTest {
                 .deleteSessionCredentialsForCri(mockIpvSessionItem.getIpvSessionId(), ADDRESS_CRI);
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -229,7 +227,6 @@ class CriStoringServiceTest {
 
         verify(mockSessionCredentialsService, never())
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -272,8 +269,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     @Test
@@ -296,8 +291,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     @Test
@@ -317,8 +310,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
