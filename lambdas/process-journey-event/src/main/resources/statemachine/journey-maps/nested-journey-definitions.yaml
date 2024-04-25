@@ -25,3 +25,75 @@ ADDRESS_AND_FRAUD:
           exitEventToEmit: next
         enhanced-verification:
           exitEventToEmit: enhanced-verification
+
+STRATEGIC_APP_TRIAGE:
+  entryEvents:
+    appTriage:
+      targetState: SELECT_DEVICE_PAGE
+    appTriageSmartphone:
+      targetState: MAM_SELECT_SMARTPHONE
+
+  nestedJourneyStates:
+    SELECT_DEVICE_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-select-device
+      events:
+        computer-or-tablet:
+          targetState: DAD_SELECT_SMARTPHONE
+        smartphone:
+          targetState: MAM_SELECT_SMARTPHONE
+
+    DAD_SELECT_SMARTPHONE:
+      response:
+        type: page
+        pageId: pyi-triage-select-smartphone
+      events:
+        iphone:
+          targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        android:
+          targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        end:
+          exitEventToEmit: end
+
+    MAM_SELECT_SMARTPHONE:
+      response:
+        type: page
+        pageId: pyi-triage-select-smartphone
+      events:
+        iphone:
+          targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        android:
+          targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        end:
+          exitEventToEmit: end
+
+    DESKTOP_IPHONE_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-desktop-download-app
+        context: iphone
+
+    DESKTOP_ANDROID_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-desktop-download-app
+        context: android
+
+    MOBILE_IPHONE_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-download-app
+        context: iphone
+      events:
+        next:
+          exitEventToEmit: next
+
+    MOBILE_ANDROID_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-download-app
+        context: android
+      events:
+        next:
+          exitEventToEmit: next

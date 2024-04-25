@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -128,10 +127,7 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var vcs =
-                    configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                            ? sessionCredentialsService.getCredentials(ipvSessionId, userId)
-                            : verifiableCredentialService.getVcs(userId);
+            var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
             if (!userIdentityService.areVcsCorrelated(vcs)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();

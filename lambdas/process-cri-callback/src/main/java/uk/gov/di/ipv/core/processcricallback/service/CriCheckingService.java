@@ -34,14 +34,12 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -78,7 +76,6 @@ public class CriCheckingService {
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final ConfigService configService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -88,14 +85,12 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
@@ -234,10 +229,8 @@ public class CriCheckingService {
         }
 
         if (!userIdentityService.areVcsCorrelated(
-                configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                        ? sessionCredentialsService.getCredentials(
-                                ipvSessionId, clientOAuthSessionItem.getUserId())
-                        : verifiableCredentialService.getVcs(clientOAuthSessionItem.getUserId()))) {
+                sessionCredentialsService.getCredentials(
+                        ipvSessionId, clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 

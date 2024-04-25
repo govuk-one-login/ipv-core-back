@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.auditing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -9,6 +10,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.GOVUK_SIGNIN_JOURNEY_
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
+@EqualsAndHashCode
 public class AuditEventUser {
 
     @JsonProperty(value = "user_id")

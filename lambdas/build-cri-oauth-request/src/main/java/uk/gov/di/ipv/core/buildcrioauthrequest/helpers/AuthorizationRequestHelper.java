@@ -17,6 +17,8 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.NinoSharedClaimsResponseDto;
@@ -24,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
@@ -35,13 +38,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 
 public class AuthorizationRequestHelper {
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String SHARED_CLAIMS = "shared_claims";
-
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
-
     private static final String CONTEXT = "context";
-
     private static final String SCOPE = "scope";
 
     private AuthorizationRequestHelper() {}
@@ -124,6 +124,7 @@ public class AuthorizationRequestHelper {
         try {
             signedJWT.sign(signer);
         } catch (JOSEException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to sign shared attributes", e));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_SIGN_SHARED_ATTRIBUTES);
         }

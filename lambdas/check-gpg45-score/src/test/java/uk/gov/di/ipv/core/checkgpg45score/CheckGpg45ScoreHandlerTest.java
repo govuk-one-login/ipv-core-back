@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,17 +25,15 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 
 @ExtendWith(MockitoExtension.class)
 class CheckGpg45ScoreHandlerTest {
@@ -57,7 +53,6 @@ class CheckGpg45ScoreHandlerTest {
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private UserIdentityService userIdentityService;
-    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @InjectMocks private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private IpvSessionItem ipvSessionItem;
@@ -94,27 +89,19 @@ class CheckGpg45ScoreHandlerTest {
                         .build();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void handlerShouldReturnJourneyMetPathIfThresholdMetFraud(boolean sessionCredentialsTableReads)
-            throws Exception {
+    @Test
+    void handlerShouldReturnJourneyMetPathIfThresholdMetFraud() throws Exception {
         request.getLambdaInput().put("scoreType", "fraud");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
-        when(configService.enabled(SESSION_CREDENTIALS_TABLE_READS))
-                .thenReturn(sessionCredentialsTableReads);
 
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
-        if (sessionCredentialsTableReads) {
-            verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
-        } else {
-            verify(mockVerifiableCredentialService).getVcs(TEST_USER_ID);
-        }
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -129,7 +116,7 @@ class CheckGpg45ScoreHandlerTest {
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -144,7 +131,7 @@ class CheckGpg45ScoreHandlerTest {
         Map<String, Object> journeyResponse =
                 checkGpg45ScoreHandler.handleRequest(request, context);
         assertEquals(JOURNEY_MET.toObjectMap(), journeyResponse);
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -161,11 +148,11 @@ class CheckGpg45ScoreHandlerTest {
                         checkGpg45ScoreHandler.handleRequest(request, context),
                         JourneyResponse.class);
         assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInRequest() {
+    void shouldReturn400IfSessionIdNotInRequest() throws Exception {
         ProcessRequest requestWithoutSessionId =
                 ProcessRequest.processRequestBuilder().ipAddress(TEST_CLIENT_SOURCE_IP).build();
 
@@ -176,7 +163,8 @@ class CheckGpg45ScoreHandlerTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
-        verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never())
+                .getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -196,8 +184,8 @@ class CheckGpg45ScoreHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 response.getMessage());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -216,8 +204,8 @@ class CheckGpg45ScoreHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getMessage(), response.getMessage());
-        verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService).getClientOAuthSession(any());
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

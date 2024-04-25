@@ -84,8 +84,6 @@ CRI_TICF_STATE:
       targetState: ERROR_NO_TICF
 
 # Journey states
-
-
 REPROVE_IDENTITY_START:
   response:
     type: page
@@ -110,8 +108,30 @@ IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next:
+    next: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+    appTriage:
+      targetState: CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+    appTriageSmartphone:
+      targetState: CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
@@ -124,6 +144,18 @@ IDENTITY_START_PAGE:
         f2f:
           targetJourney: INELIGIBLE
           targetState: INELIGIBLE
+
+STRATEGIC_APP_TRIAGE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
+  exitEvents:
+    next:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    end:
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
 
 F2F_START_PAGE:
   response:
@@ -168,15 +200,9 @@ CRI_F2F:
   parent: CRI_STATE
   events:
     next:
-      targetState: F2F_HANDOFF_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     enhanced-verification:
-      targetState: F2F_HANDOFF_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     access-denied:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_NO_TICF
@@ -275,8 +301,26 @@ PYI_CRI_ESCAPE:
     type: page
     pageId: pyi-cri-escape
   events:
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -292,8 +336,26 @@ PYI_CRI_ESCAPE_NO_F2F:
     type: page
     pageId: pyi-cri-escape-no-f2f
   events:
-    next:
+    next: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -308,13 +370,10 @@ EVALUATE_GPG45_SCORES:
     lambda: evaluate-gpg45-scores
   events:
     met:
-      targetState: IPV_SUCCESS_PAGE
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
-
     unmet:
       targetJourney: FAILED
       targetState: FAILED
@@ -364,10 +423,7 @@ CRI_TICF_BEFORE_SUCCESS:
   parent: CRI_TICF_STATE
   events:
     next:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
 
 CRI_TICF_BEFORE_F2F:
   response:
@@ -663,8 +719,26 @@ MITIGATION_KBV_FAIL_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after 5624
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -709,8 +783,26 @@ PYI_KBV_DROPOUT_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -737,14 +829,49 @@ MITIGATION_01_IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next:
+    next: # TODO: Remove after PYIC-5624
       targetState: MITIGATION_01_CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: MITIGATION_01_CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: MITIGATION_01_CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
     end:
       targetState: MITIGATION_01_F2F_START_PAGE
+      checkIfDisabled:
+        f2f:
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
+
+MITIGATION_01_STRATEGIC_APP_TRIAGE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
+  exitEvents:
+    next:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    end:
+      targetState: MITIGATION_01_PYI_POST_OFFICE
       checkIfDisabled:
         f2f:
           targetJourney: INELIGIBLE
@@ -821,8 +948,30 @@ MITIGATION_02_OPTIONS:
     pageId: pyi-suggest-other-options-no-f2f
     mitigationStart: enhanced-verification
   events:
-    next:
+    next: # TODO: Remove after PYIC-5624
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -830,6 +979,19 @@ MITIGATION_02_OPTIONS:
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
+
+STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
+  nestedJourney: STRATEGIC_APP_TRIAGE
+  exitEvents:
+    next:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR
+    end:
+      targetState: PYI_POST_OFFICE
+      checkIfDisabled:
+        f2f:
+          targetJourney: INELIGIBLE
+          targetState: INELIGIBLE
 
 CRI_DCMAW_PYI_ESCAPE:
   response:
@@ -881,8 +1043,26 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
@@ -900,8 +1080,26 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw:
+    dcmaw: # TODO: Remove after PYIC-5264
       targetState: CRI_DCMAW_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriage:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
       checkIfDisabled:
         dcmaw:
           targetJourney: TECHNICAL_ERROR

@@ -14,8 +14,6 @@ import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -53,7 +51,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -72,7 +69,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -80,7 +76,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
@@ -131,7 +126,6 @@ class BuildUserIdentityHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
-    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @InjectMocks private BuildUserIdentityHandler buildUserIdentityHandler;
 
@@ -184,10 +178,8 @@ class BuildUserIdentityHandlerTest {
                         .build();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest(
-            boolean sessionCredentialsReads) throws Exception {
+    @Test
+    void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
@@ -205,15 +197,8 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS))
-                .thenReturn(sessionCredentialsReads);
-        if (sessionCredentialsReads) {
-            when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                    .thenReturn(List.of(VC_ADDRESS));
-        } else {
-            when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
-                    .thenReturn(List.of(M1B_DCMAW_VC));
-        }
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(VC_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -252,10 +237,7 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService)
                 .generateUserIdentity(
-                        List.of(sessionCredentialsReads ? VC_ADDRESS : M1B_DCMAW_VC),
-                        TEST_USER_ID,
-                        Vot.P2,
-                        mockContraIndicators);
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
     }
 
     @Test
@@ -359,7 +341,6 @@ class BuildUserIdentityHandlerTest {
                                 TEST_USER_ID,
                                 "test-cri-id",
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(false);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
         // Act
         APIGatewayProxyResponseEvent response =
@@ -433,7 +414,6 @@ class BuildUserIdentityHandlerTest {
                                 TEST_USER_ID,
                                 "test-cri-id",
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(false);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
         // Act
         APIGatewayProxyResponseEvent response =
@@ -706,7 +686,6 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnErrorResponseOnSessionCredentialsReadFailure() throws Exception {
-        when(mockConfigService.enabled(SESSION_CREDENTIALS_TABLE_READS)).thenReturn(true);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))

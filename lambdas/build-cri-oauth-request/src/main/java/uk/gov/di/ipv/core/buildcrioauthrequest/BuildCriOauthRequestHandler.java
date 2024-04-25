@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -52,7 +51,6 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -67,7 +65,6 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_READS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
@@ -107,7 +104,6 @@ public class BuildCriOauthRequestHandler
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
 
     public BuildCriOauthRequestHandler(
@@ -118,7 +114,6 @@ public class BuildCriOauthRequestHandler
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
@@ -127,7 +122,6 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
@@ -141,7 +135,6 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         VcHelper.setConfigService(configService);
     }
@@ -308,10 +301,7 @@ public class BuildCriOauthRequestHandler
                     VerifiableCredentialException {
 
         var vcs =
-                configService.enabled(SESSION_CREDENTIALS_TABLE_READS)
-                        ? sessionCredentialsService.getCredentials(
-                                ipvSessionItem.getIpvSessionId(), userId)
-                        : getGpg45Vcs(userId);
+                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributesForUser(ipvSessionItem, vcs, criId);
@@ -370,13 +360,6 @@ public class BuildCriOauthRequestHandler
         }
 
         return new EvidenceRequest(minViableStrengthOpt.getAsInt());
-    }
-
-    private List<VerifiableCredential> getGpg45Vcs(String userId) throws CredentialParseException {
-        return VcHelper.filterVCBasedOnProfileType(
-                        verifiableCredentialService.getVcs(userId), ProfileType.GPG45)
-                .stream()
-                .toList();
     }
 
     @Tracing

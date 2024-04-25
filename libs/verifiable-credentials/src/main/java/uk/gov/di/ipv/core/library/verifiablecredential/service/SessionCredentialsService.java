@@ -18,23 +18,17 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SESSION_CREDENTIALS_TABLE_WRITES;
-
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String RECEIVED_THIS_SESSION = "receivedThisSession";
     private final DataStore<SessionCredentialItem> dataStore;
-    private final ConfigService configService;
 
-    public SessionCredentialsService(
-            DataStore<SessionCredentialItem> dataStore, ConfigService configService) {
+    public SessionCredentialsService(DataStore<SessionCredentialItem> dataStore) {
         this.dataStore = dataStore;
-        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SessionCredentialsService(ConfigService configService) {
-        this.configService = configService;
         this.dataStore =
                 new DataStore<>(
                         configService.getEnvironmentVariable(
@@ -82,12 +76,10 @@ public class SessionCredentialsService {
             boolean receivedThisSession)
             throws VerifiableCredentialException {
         try {
-            if (configService.enabled(SESSION_CREDENTIALS_TABLE_WRITES)) {
-                for (var credential : credentials) {
-                    dataStore.create(
-                            credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
-                            ConfigurationVariable.SESSION_CREDENTIALS_TTL);
-                }
+            for (var credential : credentials) {
+                dataStore.create(
+                        credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
+                        ConfigurationVariable.SESSION_CREDENTIALS_TTL);
             }
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error persisting session credential", e));

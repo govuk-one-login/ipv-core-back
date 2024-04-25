@@ -553,8 +553,6 @@ class ConfigServiceTest {
     @CsvSource({
         "MAX_ALLOWED_AUTH_CLIENT_TTL,",
         "MAX_ALLOWED_AUTH_CLIENT_TTL,FS01",
-        "CORE_FRONT_CALLBACK_URL,",
-        "CORE_FRONT_CALLBACK_URL,FS01",
         "CORE_VTM_CLAIM,",
         "CORE_VTM_CLAIM,FS02",
         "BACKEND_SESSION_TIMEOUT,",
@@ -587,10 +585,6 @@ class ConfigServiceTest {
                 "self/maxAllowedAuthClientTtl",
                 "aClientTokenTtl",
                 Map.of("FS01", "aDifferentClientTokenTtl")),
-        CORE_FRONT_CALLBACK_URL(
-                "self/coreFrontCallbackUrl",
-                "aCoreFrontCallbackUrl",
-                Map.of("FS01", "aDifferentCoreFrontCallbackUrl")),
         CORE_VTM_CLAIM(
                 "self/coreVtmClaim", "aCoreVtmClaim", Map.of("FS02", "aDifferentCoreVtmClaim")),
         BACKEND_SESSION_TIMEOUT(

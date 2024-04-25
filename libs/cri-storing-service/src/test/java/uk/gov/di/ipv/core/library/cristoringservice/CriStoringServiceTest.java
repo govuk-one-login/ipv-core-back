@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 
@@ -53,7 +52,6 @@ class CriStoringServiceTest {
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
-    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private CiMitService mockCiMitService;
     @Mock private IpvSessionItem mockIpvSessionItem;
@@ -157,11 +155,9 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockVerifiableCredentialService).persistUserCredentials(vc);
         verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -182,12 +178,10 @@ class CriStoringServiceTest {
                 mockIpvSessionItem);
 
         // Assert
-        verify(mockVerifiableCredentialService).persistUserCredentials(vc);
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForCri(mockIpvSessionItem.getIpvSessionId(), ADDRESS_CRI);
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -231,10 +225,8 @@ class CriStoringServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
 
-        verify(mockVerifiableCredentialService, never()).persistUserCredentials(vc);
         verify(mockSessionCredentialsService, never())
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
-        verify(mockIpvSessionItem, times(0)).addVcReceivedThisSession(vc);
         verify(mockIpvSessionItem).setRiskAssessmentCredential(vc.getVcString());
     }
 
@@ -277,8 +269,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     @Test
@@ -301,8 +291,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     @Test
@@ -322,8 +310,6 @@ class CriStoringServiceTest {
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
-
-        verify(mockIpvSessionItem, never()).setVcReceivedThisSession(any());
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
