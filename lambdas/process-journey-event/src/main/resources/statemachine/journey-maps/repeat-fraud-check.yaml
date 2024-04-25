@@ -96,12 +96,10 @@ EVALUATE_GPG45_SCORES_RFC:
     lambda: evaluate-gpg45-scores
   events:
     met:
-      targetState: IPV_SUCCESS_PAGE_RFC
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS_RFC
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
     unmet:
       targetJourney: FAILED
       targetState: FAILED_RFC
@@ -126,10 +124,7 @@ CRI_TICF_BEFORE_SUCCESS_RFC:
     lambda: call-ticf-cri
   events:
     next:
-      targetState: IPV_SUCCESS_PAGE_RFC
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF

@@ -200,15 +200,9 @@ CRI_F2F:
   parent: CRI_STATE
   events:
     next:
-      targetState: F2F_HANDOFF_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     enhanced-verification:
-      targetState: F2F_HANDOFF_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
     access-denied:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_NO_TICF
@@ -376,13 +370,10 @@ EVALUATE_GPG45_SCORES:
     lambda: evaluate-gpg45-scores
   events:
     met:
-      targetState: IPV_SUCCESS_PAGE
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_SUCCESS
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
-
     unmet:
       targetJourney: FAILED
       targetState: FAILED
@@ -432,10 +423,7 @@ CRI_TICF_BEFORE_SUCCESS:
   parent: CRI_TICF_STATE
   events:
     next:
-      targetState: IPV_SUCCESS_PAGE
-      checkFeatureFlag:
-        sessionCredentialsTableReads:
-          targetState: STORE_IDENTITY_BEFORE_SUCCESS
+      targetState: STORE_IDENTITY_BEFORE_SUCCESS
 
 CRI_TICF_BEFORE_F2F:
   response:
