@@ -470,20 +470,16 @@ public class CheckExistingIdentityHandler
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
-            // the only VC we should possibly have collected this session at this point is a
-            // migration VC
-            var vcReceivedThisSession = ipvSessionItem.getVcReceivedThisSession();
-            boolean isOpProfileReuse =
-                    vcReceivedThisSession == null || vcReceivedThisSession.isEmpty();
+            boolean isCurrentlyMigrating = ipvSessionItem.isInheritedIdentityReceivedThisSession();
 
             sessionCredentialsService.persistCredentials(
                     VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
                     auditEventUser.getSessionId(),
-                    !isOpProfileReuse);
+                    isCurrentlyMigrating);
 
-            return isOpProfileReuse
-                    ? JOURNEY_OPERATIONAL_PROFILE_REUSE
-                    : JOURNEY_IN_MIGRATION_REUSE;
+            return isCurrentlyMigrating
+                    ? JOURNEY_IN_MIGRATION_REUSE
+                    : JOURNEY_OPERATIONAL_PROFILE_REUSE;
         }
 
         sessionCredentialsService.persistCredentials(

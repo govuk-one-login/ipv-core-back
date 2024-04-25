@@ -80,6 +80,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -475,9 +476,7 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(PCL250_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
             verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
-            assertEquals(
-                    ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                    List.of(PCL250_MIGRATION_VC.getVcString()));
+            assertTrue(ipvSessionItem.isInheritedIdentityReceivedThisSession());
         }
 
         @Test
@@ -531,9 +530,7 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(PCL200_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
             verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
-            assertEquals(
-                    ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                    List.of(PCL200_MIGRATION_VC.getVcString()));
+            assertTrue(ipvSessionItem.isInheritedIdentityReceivedThisSession());
         }
 
         @Test
@@ -717,9 +714,7 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(PCL200_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
 
             verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
-            assertEquals(
-                    ipvSessionItemCaptor.getValue().getVcReceivedThisSession(),
-                    List.of(PCL200_MIGRATION_VC.getVcString()));
+            assertTrue(ipvSessionItem.isInheritedIdentityReceivedThisSession());
         }
 
         @Test

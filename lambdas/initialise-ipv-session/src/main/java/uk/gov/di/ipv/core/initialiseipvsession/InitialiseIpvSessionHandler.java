@@ -373,7 +373,7 @@ public class InitialiseIpvSessionHandler
             throws RecoverableJarValidationException, ParseException {
         try {
             verifiableCredentialService.persistUserCredentials(inheritedIdentityVc);
-            ipvSessionItem.addVcReceivedThisSession(inheritedIdentityVc);
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             ipvSessionService.updateIpvSession(ipvSessionItem);
             LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully persisted"));
         } catch (VerifiableCredentialException e) {
