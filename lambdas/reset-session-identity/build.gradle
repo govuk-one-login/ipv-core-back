@@ -21,8 +21,7 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.gson,
-			libs.junitJupiter,
+	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(":libs:common-services").sourceSets.test.output
 
