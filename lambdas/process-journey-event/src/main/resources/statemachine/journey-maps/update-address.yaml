@@ -11,31 +11,31 @@ CRI_STATE:
   events:
     not-found:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     fail-with-no-ci:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     access-denied:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     enhanced-verification:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     temporarily-unavailable:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
     fail-with-ci:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     vcs-not-correlated:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
     alternate-doc-invalid-dl:
       targetJourney: FAILED
-      targetState: FAILED_RFC
+      targetState: FAILED_UPDATE_ADDRESS
 
 # Journey States
 

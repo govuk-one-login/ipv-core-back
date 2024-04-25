@@ -37,9 +37,31 @@ FAILED_RFC:
 FAILED_UPDATE_ADDRESS:
   events:
     next:
-      targetState: NO_MATCH_PAGE_ADDRESS
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_UPDATE_ADDRESS
 
 # Journey states
+
+CRI_TICF_BEFORE_NO_MATCH_PAGE_UPDATE_ADDRESS:
+  response:
+    type: process
+    lambda: call-ticf-cri
+  events:
+    next:
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+    enhanced-verification:
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+    alternate-doc-invalid-dl:
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+    alternate-doc-invalid-passport:
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+    fail-with-ci:
+      targetState: NO_MATCH_PAGE_UPDATE_ADDRESS
+    error:
+      targetJourney: TECHNICAL_ERROR
+      targetState: ERROR_NO_TICF
 
 CRI_TICF_BEFORE_NO_MATCH:
   response:
