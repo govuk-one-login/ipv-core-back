@@ -108,7 +108,8 @@ IPV_SUCCESS_PAGE_UPDATE_ADDRESS:
   response:
     type: page
     pageId: page-ipv-success
-    context: updateAddress
+    # same page as RFC displayed so re-use this context
+    context: repeatFraudCheck
   events:
     next:
       targetState: RETURN_TO_RP
