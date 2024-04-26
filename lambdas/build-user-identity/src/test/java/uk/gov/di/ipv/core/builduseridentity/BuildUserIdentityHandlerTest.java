@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerTokenError;
@@ -64,6 +65,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -200,6 +202,77 @@ class BuildUserIdentityHandlerTest {
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
 
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        UserIdentity responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(4, responseBody.getVcs().size());
+        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+        AuditExtensionsUserIdentity extensions =
+                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+        assertEquals(Vot.P2, extensions.getLevelOfConfidence());
+        assertFalse(extensions.isCiFail());
+        assertTrue(extensions.isHasMitigations());
+        assertEquals(3, responseBody.getReturnCode().size());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+
+        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+
+        verify(mockUserIdentityService)
+                .generateUserIdentity(
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
+
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+    }
+
+    void
+            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
+                    throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(VC_ADDRESS));
+        doThrow(
+                        new VerifiableCredentialException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_DELETE_CREDENTIAL))
+                .when(mockSessionCredentialsService)
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
