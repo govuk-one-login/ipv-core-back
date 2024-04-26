@@ -5,6 +5,7 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
@@ -31,6 +32,9 @@ public class VerifiableCredential {
             this.claimsSet = signedJwt.getJWTClaimsSet();
             this.signedJwt = signedJwt;
             this.migrated = migrated;
+
+            // Attempt to parse into a proper VC class, but do nothing with it for now
+            VerifiableCredentialParser.parseCredential(signedJwt);
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
