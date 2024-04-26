@@ -245,6 +245,7 @@ class BuildUserIdentityHandlerTest {
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
 
+    @Test
     void
             shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
                     throws Exception {
