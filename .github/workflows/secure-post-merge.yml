@@ -75,6 +75,8 @@ jobs:
       - name: SAM build and test
         working-directory: ./deploy
         run: sam build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
