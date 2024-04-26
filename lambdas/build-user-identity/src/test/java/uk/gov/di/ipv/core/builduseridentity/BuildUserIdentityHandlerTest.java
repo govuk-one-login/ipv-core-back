@@ -272,7 +272,7 @@ class BuildUserIdentityHandlerTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_DELETE_CREDENTIAL))
                 .when(mockSessionCredentialsService)
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+                .deleteSessionCredentials(any());
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
