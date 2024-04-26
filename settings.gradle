@@ -1,3 +1,5 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
 rootProject.name = 'di-ipv-core-back'
 include "lambdas",
 		"lambdas:build-client-oauth-response",
@@ -36,3 +38,17 @@ include "lambdas",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
 		"local-running"
+
+dependencyResolutionManagement {
+	repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+	repositories {
+		mavenCentral()
+		maven {
+			url = uri("https://maven.pkg.github.com/govuk-one-login/data-vocab")
+			credentials {
+				username = System.getenv("USERNAME")
+				password = System.getenv("TOKEN")
+			}
+		}
+	}
+}

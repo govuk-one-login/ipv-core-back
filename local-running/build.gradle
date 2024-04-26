@@ -4,10 +4,6 @@ plugins {
 	id "com.diffplug.spotless"
 }
 
-repositories {
-	mavenCentral()
-}
-
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkSqs,

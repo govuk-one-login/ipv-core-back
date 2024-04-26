@@ -5,10 +5,6 @@ plugins {
 	id "jacoco"
 }
 
-repositories {
-	mavenCentral()
-}
-
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkUrlConnectionClient,
