@@ -1,9 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.IdentityAssertionCredential;
@@ -13,20 +11,20 @@ import uk.gov.di.model.SecurityCheckCredential;
 import uk.gov.di.model.VerifiableCredential;
 import uk.gov.di.model.VerifiableCredentialType;
 
+import java.text.ParseException;
 import java.util.List;
 
 public class VerifiableCredentialParser {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private VerifiableCredentialParser() {}
 
-    public static VerifiableCredential parseCredential(SignedJWT jwt) {
+    public static VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
+            throws CredentialParseException {
         try {
-            var vcClaim = jwt.getJWTClaimsSet().getJSONObjectClaim("vc");
-            var vcType = vcClaim.get("type");
+            var vcClaim = claimsSet.getJSONObjectClaim("vc");
 
-            if (vcType instanceof List<?> type) {
+            if (vcClaim != null && vcClaim.get("type") instanceof List<?> type) {
                 if (type.contains(VerifiableCredentialType.ADDRESS_CREDENTIAL.value())) {
                     return OBJECT_MAPPER.convertValue(vcClaim, AddressCredential.class);
                 }
@@ -45,11 +43,8 @@ public class VerifiableCredentialParser {
                 throw new CredentialParseException("Unknown VC type: " + type);
             }
             throw new CredentialParseException("VC does not contain type field");
-        } catch (Exception e) {
-            // For now, we just log a warning here that we can fix
-            // In future this should return a CredentialParseException instead
-            LOGGER.warn(LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
-            return null;
+        } catch (ParseException | IllegalArgumentException e) {
+            throw new CredentialParseException("Failed parse verifiable credential", e);
         }
     }
 }

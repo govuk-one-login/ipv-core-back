@@ -4,7 +4,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -16,12 +20,14 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String userId;
     private final String criId;
     private final String vcString;
     private final JWTClaimsSet claimsSet;
     private final SignedJWT signedJwt;
     private Instant migrated;
+    private uk.gov.di.model.VerifiableCredential vc;
 
     private VerifiableCredential(String userId, String criId, SignedJWT signedJwt, Instant migrated)
             throws CredentialParseException {
@@ -33,8 +39,15 @@ public class VerifiableCredential {
             this.signedJwt = signedJwt;
             this.migrated = migrated;
 
-            // Attempt to parse into a proper VC class, but do nothing with it for now
-            VerifiableCredentialParser.parseCredential(signedJwt);
+            try {
+                vc = VerifiableCredentialParser.parseCredential(claimsSet);
+            } catch (CredentialParseException e) {
+                // For now, we just log a warning here that we can fix
+                // In future this should return a CredentialParseException instead
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
+                vc = null;
+            }
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
