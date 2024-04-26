@@ -176,14 +176,8 @@ public class BuildUserIdentityHandler
                     ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
-            try {
-                sessionCredentialsService.deleteSessionCredentials(ipvSessionId);
-            } catch (VerifiableCredentialException e) {
-                // just log the error - it should get deleted after 2 hours anyway
-                LOGGER.error(
-                        LogHelper.buildLogMessage(
-                                "Failed to delete session credential from store"));
-            }
+
+            deleteSessionCredentials(ipvSessionId);
 
             var message =
                     new StringMapMessage()
@@ -208,6 +202,16 @@ public class BuildUserIdentityHandler
             return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
+        }
+    }
+
+    private void deleteSessionCredentials(String ipvSessionId) {
+        try {
+            sessionCredentialsService.deleteSessionCredentials(ipvSessionId);
+        } catch (VerifiableCredentialException e) {
+            // just log the error - it should get deleted after a fixed time period anyway
+            LOGGER.error(
+                    LogHelper.buildLogMessage("Failed to delete session credential from store"));
         }
     }
 
