@@ -108,14 +108,6 @@ IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW
-      checkIfDisabled:
-        dcmaw:
-          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
-          checkIfDisabled:
-            f2f:
-              targetState: MULTIPLE_DOC_CHECK_PAGE
     appTriage:
       targetState: CRI_DCMAW
       checkFeatureFlag:
@@ -301,12 +293,6 @@ PYI_CRI_ESCAPE:
     type: page
     pageId: pyi-cri-escape
   events:
-    dcmaw: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -336,12 +322,6 @@ PYI_CRI_ESCAPE_NO_F2F:
     type: page
     pageId: pyi-cri-escape-no-f2f
   events:
-    next: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -719,12 +699,6 @@ MITIGATION_KBV_FAIL_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw: # TODO: Remove after 5624
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -783,12 +757,6 @@ PYI_KBV_DROPOUT_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -829,16 +797,6 @@ MITIGATION_01_IDENTITY_START_PAGE:
     type: page
     pageId: page-ipv-identity-document-start
   events:
-    next: # TODO: Remove after PYIC-5624
-      targetState: MITIGATION_01_CRI_DCMAW
-      checkFeatureFlag:
-        strategicAppEnabled:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
@@ -948,16 +906,6 @@ MITIGATION_02_OPTIONS:
     pageId: pyi-suggest-other-options-no-f2f
     mitigationStart: enhanced-verification
   events:
-    next: # TODO: Remove after PYIC-5624
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkFeatureFlag:
-        strategicAppEnabled:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -1043,12 +991,6 @@ MITIGATION_02_OPTIONS_WITH_F2F:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
@@ -1080,12 +1022,6 @@ MITIGATION_02_OPTIONS_WITH_F2F_M2B:
       checkFeatureFlag:
         ticfCriBeta:
           targetState: CRI_TICF_BEFORE_F2F
-    dcmaw: # TODO: Remove after PYIC-5264
-      targetState: CRI_DCMAW_PYI_ESCAPE
-      checkIfDisabled:
-        dcmaw:
-          targetJourney: TECHNICAL_ERROR
-          targetState: ERROR
     appTriage:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
