@@ -238,6 +238,9 @@ class BuildUserIdentityHandlerTest {
         verify(mockUserIdentityService)
                 .generateUserIdentity(
                         List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
+
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
 
     @Test
@@ -314,6 +317,8 @@ class BuildUserIdentityHandlerTest {
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
 
     @Test
@@ -359,6 +364,8 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
         assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
         assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
 
     @Test
@@ -463,6 +470,8 @@ class BuildUserIdentityHandlerTest {
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
 
     @Test
@@ -489,6 +498,7 @@ class BuildUserIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
@@ -511,10 +521,12 @@ class BuildUserIdentityHandlerTest {
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsNull() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenTokenIsNull()
+            throws JsonProcessingException, VerifiableCredentialException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = new HashMap<>(Collections.emptyMap());
         headers.put("Authorization", null);
@@ -531,10 +543,12 @@ class BuildUserIdentityHandlerTest {
                 BearerTokenError.MISSING_TOKEN.getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix()
+            throws JsonProcessingException, VerifiableCredentialException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers =
                 Map.of("Authorization", "11111111", "ip-address", TEST_IP_ADDRESS);
@@ -551,10 +565,12 @@ class BuildUserIdentityHandlerTest {
                 BearerTokenError.INVALID_REQUEST.getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsMissing() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenTokenIsMissing()
+            throws JsonProcessingException, VerifiableCredentialException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = Map.of("ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
@@ -569,10 +585,12 @@ class BuildUserIdentityHandlerTest {
                 BearerTokenError.MISSING_TOKEN.getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
+            throws JsonProcessingException, VerifiableCredentialException {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.empty());
 
@@ -590,10 +608,12 @@ class BuildUserIdentityHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
+            throws JsonProcessingException, VerifiableCredentialException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
@@ -613,10 +633,12 @@ class BuildUserIdentityHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
-    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired() throws JsonProcessingException {
+    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
+            throws JsonProcessingException, VerifiableCredentialException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -636,6 +658,7 @@ class BuildUserIdentityHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
@@ -660,6 +683,7 @@ class BuildUserIdentityHandlerTest {
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockUserIdentityService, times(1)).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
@@ -682,6 +706,7 @@ class BuildUserIdentityHandlerTest {
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockUserIdentityService, times(1)).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
@@ -701,6 +726,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(valueOf(FAILED_TO_GET_CREDENTIAL.getCode()), responseBody.get("error"));
         assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), responseBody.get("error_description"));
         verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {

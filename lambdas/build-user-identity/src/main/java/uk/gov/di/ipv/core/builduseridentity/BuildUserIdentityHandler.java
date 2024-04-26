@@ -176,6 +176,14 @@ public class BuildUserIdentityHandler
                     ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
+            try {
+                sessionCredentialsService.deleteSessionCredentials(ipvSessionId);
+            } catch (VerifiableCredentialException e) {
+                // just log the error - it should get deleted after 2 hours anyway
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Failed to delete session credential from store"));
+            }
 
             var message =
                     new StringMapMessage()
