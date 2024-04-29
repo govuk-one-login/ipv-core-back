@@ -1185,13 +1185,13 @@ Resources:
       DefinitionSubstitutions:
         IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
         CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Alias
-        ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Alias
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
         CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
         StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Alias
+        ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1211,8 +1211,6 @@ Resources:
             FunctionName: !Ref IPVProcessJourneyEventFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckExistingIdentityFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ResetIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
@@ -1659,7 +1657,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
 
-
   ResetIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -1745,7 +1742,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ResetIdentityFunctionLogGroup
-
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -2595,6 +2591,80 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref StoreIdentityFunctionLogGroup
+
+  ResetSessionIdentityFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - ResetSessionIdentityFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "reset-session-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.resetipvsession.ResetIpvSessionHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/reset-session-identity
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+      AutoPublishAlias: live
+
+  ResetSessionIdentityFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/reset-session-identity-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  ResetSessionIdentityFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

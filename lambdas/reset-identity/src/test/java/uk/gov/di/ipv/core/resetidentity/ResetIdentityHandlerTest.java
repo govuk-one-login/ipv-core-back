@@ -63,6 +63,7 @@ class ResetIdentityHandlerTest {
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String TEST_JOURNEY = "journey/reset-identity";
+    private static final String DUMMY_TYPE = "dummyType";
 
     @Mock private Context context;
     @Mock private List<VerifiableCredential> vcs;
@@ -93,7 +94,7 @@ class ResetIdentityHandlerTest {
                         .state("test-state")
                         .responseType("code")
                         .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
+                        .govukSigninJourneyId(TEST_JOURNEY_ID)
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
@@ -178,12 +179,12 @@ class ResetIdentityHandlerTest {
                         Arrays.asList(
                                 new Name(
                                         Arrays.asList(
-                                                new NameParts("FirstNamePart1", "dummyType"),
-                                                new NameParts("FirstNamePart2", "dummyType"))),
+                                                new NameParts("FirstNamePart1", DUMMY_TYPE),
+                                                new NameParts("FirstNamePart2", DUMMY_TYPE))),
                                 new Name(
                                         Arrays.asList(
-                                                new NameParts("SecondNamePart1", "dummyType"),
-                                                new NameParts("SecondNamePart2", "dummyType")))),
+                                                new NameParts("SecondNamePart1", DUMMY_TYPE),
+                                                new NameParts("SecondNamePart2", DUMMY_TYPE)))),
                         Arrays.asList(new BirthDate()));
         when(userIdentityService.findIdentityClaim(vcs, false)).thenReturn(Optional.of(underTest));
 

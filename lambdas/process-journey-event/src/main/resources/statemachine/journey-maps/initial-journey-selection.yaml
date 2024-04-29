@@ -15,10 +15,6 @@ CHECK_EXISTING_IDENTITY:
     ipv-gpg45-medium:
       targetJourney: NEW_P2_IDENTITY
       targetState: START
-    reset-identity:
-      targetState: RESET_IDENTITY
-    reset-gpg45-identity:
-      targetState: RESET_GPG45_IDENTITY
     reuse:
       targetJourney: REUSE_EXISTING_IDENTITY
       targetState: START
@@ -34,8 +30,6 @@ CHECK_EXISTING_IDENTITY:
     fail-with-ci:
       targetJourney: FAILED
       targetState: FAILED
-    fail-with-ci-and-forced-reset:
-      targetState: RESET_FAILED_IDENTITY
     f2f-fail:
       targetJourney: F2F_FAILED
       targetState: FAILED
@@ -57,39 +51,6 @@ CHECK_EXISTING_IDENTITY:
     repeat-fraud-check:
       targetJourney: REPEAT_FRAUD_CHECK
       targetState: START
-
-RESET_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
+    reprove-identity:
       targetJourney: NEW_P2_IDENTITY
       targetState: REPROVE_IDENTITY
-
-RESET_GPG45_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-
-RESET_FAILED_IDENTITY:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: false
-  events:
-    next:
-      targetJourney: FAILED
-      targetState: FAILED

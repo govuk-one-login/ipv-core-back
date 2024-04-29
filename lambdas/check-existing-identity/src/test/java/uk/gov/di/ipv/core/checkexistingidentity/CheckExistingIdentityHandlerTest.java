@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -104,15 +103,13 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -134,10 +131,6 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
-    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
-    private static final JourneyResponse JOURNEY_RESET_GPG45_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_GPG45_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
@@ -215,36 +208,17 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyResetGpg45IdentityIfResetIdentityFeatureFlagIsEnabled()
-            throws Exception {
+    void shouldReturnJourneyResetGpg45Identity() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
-
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-    }
-
-    @Test
-    void shouldReturnJourneyResetIdentityIfReApproveFlagIsReceived() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        clientOAuthSessionItem.setReproveIdentity(true);
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
     }
@@ -553,12 +527,8 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
@@ -574,8 +544,6 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-
         clientOAuthSessionItem.setVtr((List<String>) votAndVtr.get("vtr"));
 
         JourneyResponse journeyResponse =
@@ -589,7 +557,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyResetIdentityResponseIfScoresDoNotSatisfyM1AGpg45Profile()
+    void shouldReturnJourneyIpvGpg45MediumResponseIfScoresDoNotSatisfyM1AGpg45Profile()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_FROM_STORE);
@@ -606,12 +574,8 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionItem, never()).setVot(any());
@@ -785,7 +749,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws CredentialParseException {
+    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F()
+            throws CredentialParseException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
@@ -797,7 +762,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -833,35 +798,6 @@ class CheckExistingIdentityHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturn500IfFailedToSendAuditEvent() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        doThrow(new SqsException("test error"))
-                .when(auditService)
-                .sendAuditEvent((AuditEvent) any());
-
-        JourneyErrorResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), journeyResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(),
-                journeyResponse.getMessage());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
@@ -1010,7 +946,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         JourneyResponse journeyResponse =
@@ -1039,7 +974,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyResetIdentityResponseIfCheckRequiresAdditionalEvidenceResponseTrue()
+    void shouldReturnJourneyIpvGpg45MediumResponseIfCheckRequiresAdditionalEvidenceResponseTrue()
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(VCS_FROM_STORE);
@@ -1054,12 +989,8 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
         verify(ipvSessionItem, never()).setVot(any());
@@ -1097,37 +1028,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldNotRemoveOperationalProfileIfMatchingGpg45ProfileIsNotPresent() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
-                .thenReturn(
-                        Stream.concat(
-                                        VCS_FROM_STORE.stream(),
-                                        Stream.of(vcHmrcMigrationPCL250NoEvidence()))
-                                .toList());
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(P2.getSupportedGpg45Profiles())))
-                .thenReturn(Optional.empty());
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-        assertEquals(JOURNEY_RESET_GPG45_IDENTITY, journeyResponse);
-        InOrder inOrder = inOrder(mockVerifiableCredentialService);
-        inOrder.verify(mockVerifiableCredentialService, never())
-                .deleteVcStoreItem(TEST_USER_ID, HMRC_MIGRATION_CRI);
-    }
-
-    @Test
     void
-            shouldReturnJourneyFailedWithCiAndForcedResetResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
+            shouldReturnJourneyFailedWithCiIfTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
                     throws Exception {
         var testContraIndicators = ContraIndicators.builder().build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1135,7 +1037,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
                 .thenReturn(Optional.empty());
@@ -1145,14 +1046,13 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH, journeyResponse.getJourney());
+        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, journeyResponse.getJourney());
     }
 
     @Test
     void
             shouldReturnMitigationJourneyStepResponseIfResetIdentityTrueCiMitigationJourneyStepPresentAndMitigationJourneyStepPresent()
                     throws Exception {
-        var testJourneyResponse = "/journey/test-response";
         var testContraIndicators = ContraIndicators.builder().build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1162,14 +1062,14 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
-                .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH)));
 
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(testJourneyResponse, journeyResponse.getJourney());
+        assertEquals(JOURNEY_REPROVE_IDENTITY_PATH, journeyResponse.getJourney());
     }
 
     @Test

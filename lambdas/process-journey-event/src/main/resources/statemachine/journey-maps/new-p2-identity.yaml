@@ -8,17 +8,17 @@ START:
 ENHANCED_VERIFICATION:
   events:
     next:
-      targetState: MITIGATION_01
+      targetState: MITIGATION_01_IDENTITY_START_PAGE
 
 ALTERNATE_DOC_PASSPORT:
   events:
     next:
-      targetState: MITIGATION_04
+      targetState: MITIGATION_04_DL_NO_MATCH_PAGE
 
 ALTERNATE_DOC_DL:
   events:
     next:
-      targetState: MITIGATION_06
+      targetState: MITIGATION_06_PASSPORT_NO_MATCH_PAGE
 
 ENHANCED_VERIFICATION_F2F_FAIL:
   events:
@@ -92,13 +92,12 @@ REPROVE_IDENTITY_START:
     next:
       targetState: IDENTITY_START_PAGE
 
-RESET_IDENTITY:
+RESET_SESSION_IDENTITY:
   response:
     type: process
-    lambda: reset-identity
+    lambda: reset-session-identity
     lambdaInput:
       isUserInitiated: false
-      deleteOnlyGPG45VCs: true
   events:
     next:
       targetState: IDENTITY_START_PAGE
@@ -283,7 +282,7 @@ PYI_ESCAPE:
     pageId: pyi-escape
   events:
     next:
-      targetState: RESET_IDENTITY
+      targetState: RESET_SESSION_IDENTITY
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_SKIP_MESSAGE
@@ -744,7 +743,7 @@ PYI_ESCAPE_ABANDON_M2B:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE_SKIP_MESSAGE
     next:
-      targetState: RESET_IDENTITY
+      targetState: RESET_SESSION_IDENTITY
 
 PYI_KBV_DROPOUT_M2B:
   response:
@@ -780,22 +779,11 @@ PYI_KBV_DROPOUT_M2B:
       targetState: INELIGIBLE
 
 # Mitigation journey (01)
-MITIGATION_01:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-    mitigationStart: enhanced-verification
-  events:
-    next:
-      targetState: MITIGATION_01_IDENTITY_START_PAGE
-
 MITIGATION_01_IDENTITY_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-document-start
+    mitigationStart: enhanced-verification
   events:
     appTriage:
       targetState: MITIGATION_01_CRI_DCMAW
@@ -1069,17 +1057,6 @@ MITIGATION_03_OPTIONS:
       targetState: INELIGIBLE_SKIP_MESSAGE
 
 # Mitigation journey (04) separate session - invalid-dl
-MITIGATION_04:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetState: MITIGATION_04_DL_NO_MATCH_PAGE
-
 MITIGATION_04_DL_NO_MATCH_PAGE:
   response:
     type: page
@@ -1140,17 +1117,6 @@ MITIGATION_05_OPTIONS:
       targetState: INELIGIBLE_SKIP_MESSAGE
 
 # Mitigation journey (06) separate session - invalid-passport
-MITIGATION_06:
-  response:
-    type: process
-    lambda: reset-identity
-    lambdaInput:
-      isUserInitiated: false
-      deleteOnlyGPG45VCs: true
-  events:
-    next:
-      targetState: MITIGATION_06_PASSPORT_NO_MATCH_PAGE
-
 MITIGATION_06_PASSPORT_NO_MATCH_PAGE:
   response:
     type: page
@@ -1264,6 +1230,6 @@ F2F_FAILED_MITIGATION_PAGE:
     pageId: pyi-f2f-technical
   events:
     next:
-      targetState: MITIGATION_01
+      targetState: MITIGATION_01_IDENTITY_START_PAGE
     end:
       targetState: RETURN_TO_RP

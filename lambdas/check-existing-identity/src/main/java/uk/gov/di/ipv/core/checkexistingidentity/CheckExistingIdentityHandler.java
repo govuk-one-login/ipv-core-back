@@ -75,15 +75,13 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCE
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_GPG45_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 /** Check Existing Identity response Lambda */
@@ -104,16 +102,12 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
             new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH);
-    private static final JourneyResponse JOURNEY_RESET_GPG45_IDENTITY =
-            new JourneyResponse(JOURNEY_RESET_GPG45_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
@@ -228,14 +222,14 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             var ciScoringCheckResponse = checkForCIScoringFailure(contraIndicators);
-
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
-            if (reproveIdentity.orElse(false)) {
-                return buildForceResetResponse(ciScoringCheckResponse.orElse(null));
-            } else if (configService.enabled(RESET_IDENTITY)) {
-                return buildForceGpg45ResetResponse(ciScoringCheckResponse.orElse(null));
+            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "resetIdentity flag is enabled, reset users identity."));
+                return JOURNEY_REPROVE_IDENTITY;
             }
 
             if (ciScoringCheckResponse.isPresent()) {
@@ -268,7 +262,7 @@ public class CheckExistingIdentityHandler
             return isF2FComplete
                     ? buildF2FNoMatchResponse(
                             areGpg45VcsCorrelated, auditEventUser, contraIndicators)
-                    : buildNoMatchResponse(vcs, auditEventUser, contraIndicators);
+                    : buildNoMatchResponse(contraIndicators);
 
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e.getErrorResponse(), e);
@@ -289,38 +283,6 @@ public class CheckExistingIdentityHandler
         } catch (MitigationRouteException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         }
-    }
-
-    @Tracing
-    private JourneyResponse buildForceResetResponse(JourneyResponse ciScoringCheckResponse) {
-        LOGGER.info(
-                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
-        if (ciScoringCheckResponse != null) {
-            if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
-                // forces a reset of the user's identity if the CI breached and no
-                // possible mitigation
-                return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
-            }
-            // sends the user on mitigation journey if the CI breached and mitigation is possible
-            return ciScoringCheckResponse;
-        }
-        return JOURNEY_RESET_IDENTITY;
-    }
-
-    @Tracing
-    private JourneyResponse buildForceGpg45ResetResponse(JourneyResponse ciScoringCheckResponse) {
-        LOGGER.info(
-                LogHelper.buildLogMessage("resetIdentity flag is enabled, reset users identity."));
-        if (ciScoringCheckResponse != null) {
-            if (JOURNEY_FAIL_WITH_CI.equals(ciScoringCheckResponse)) {
-                // forces a reset of the user's identity if the CI breached and no
-                // possible mitigation
-                return JOURNEY_FAIL_WITH_CI_AND_FORCED_RESET;
-            }
-            // sends the user on mitigation journey if the CI breached and mitigation is possible
-            return ciScoringCheckResponse;
-        }
-        return JOURNEY_RESET_GPG45_IDENTITY;
     }
 
     @Tracing
@@ -419,11 +381,8 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private JourneyResponse buildNoMatchResponse(
-            List<VerifiableCredential> verifiableCredentials,
-            AuditEventUser auditEventUser,
-            ContraIndicators contraIndicators)
-            throws SqsException, ConfigException, MitigationRouteException {
+    private JourneyResponse buildNoMatchResponse(ContraIndicators contraIndicators)
+            throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
@@ -435,13 +394,6 @@ public class CheckExistingIdentityHandler
                                             String.format(
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));
-        }
-        if (!VcHelper.filterVCBasedOnProfileType(verifiableCredentials, GPG45).isEmpty()) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Failed to match profile so resetting identity."));
-            sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_RESET, auditEventUser);
-
-            return JOURNEY_RESET_GPG45_IDENTITY;
         }
         LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
         return JOURNEY_IPV_GPG45_MEDIUM;
