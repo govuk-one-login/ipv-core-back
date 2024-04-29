@@ -1191,6 +1191,7 @@ Resources:
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
         CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
         StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Alias
+        ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
