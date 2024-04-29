@@ -1223,6 +1223,8 @@ Resources:
             FunctionName: !Ref CallTicfCriFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref StoreIdentityFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ResetSessionIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
