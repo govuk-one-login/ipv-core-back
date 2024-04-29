@@ -81,6 +81,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 /** Check Existing Identity response Lambda */
@@ -105,6 +106,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
     public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
@@ -226,7 +229,7 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 "resetIdentity flag is enabled, reset users identity."));
-                return JOURNEY_IPV_GPG45_MEDIUM;
+                return JOURNEY_REPROVE_IDENTITY;
             }
 
             if (ciScoringCheckResponse.isPresent()) {

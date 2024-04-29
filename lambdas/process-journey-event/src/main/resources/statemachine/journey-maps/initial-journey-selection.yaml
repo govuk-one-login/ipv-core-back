@@ -51,3 +51,6 @@ CHECK_EXISTING_IDENTITY:
     repeat-fraud-check:
       targetJourney: REPEAT_FRAUD_CHECK
       targetState: START
+    reprove-identity:
+      targetJourney: NEW_P2_IDENTITY
+      targetState: REPROVE_IDENTITY
