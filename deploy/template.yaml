@@ -2603,7 +2603,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "reset-session-identity-${Environment}"
-      Handler: uk.gov.di.ipv.core.resetipvsession.ResetIpvSessionHandler::handleRequest
+      Handler: uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/reset-session-identity
       Tracing: Active
