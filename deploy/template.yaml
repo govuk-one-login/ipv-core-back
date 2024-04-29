@@ -1109,7 +1109,7 @@ Resources:
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
