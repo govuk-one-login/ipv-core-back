@@ -177,7 +177,7 @@ F2F_PYI_POST_OFFICE:
 BANK_ACCOUNT_START_PAGE:
   response:
     type: page
-    pageId: page-ipv-bank-account-start
+    pageId: prove-identity-bank-account
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_M2B
@@ -691,7 +691,7 @@ MITIGATION_KBV_FAIL_M2B:
   response:
     mitigationStart: enhanced-verification
     type: page
-    pageId: pyi-kbv-escape-m2b
+    pageId: no-photo-id-security-questions-find-another-way
   events:
     f2f:
       targetState: CRI_F2F
@@ -723,7 +723,7 @@ MITIGATION_KBV_FAIL_M2B:
 PYI_ESCAPE_M2B:
   response:
     type: page
-    pageId: pyi-escape-m2b
+    pageId: no-photo-id-exit-find-another-way
   events:
     next:
       targetState: IDENTITY_START_PAGE
@@ -737,7 +737,7 @@ PYI_ESCAPE_ABANDON_M2B:
   response:
     type: page
     context: abandon
-    pageId: pyi-escape-m2b
+    pageId: no-photo-id-exit-find-another-way
   events:
     end:
       targetJourney: INELIGIBLE
@@ -748,7 +748,7 @@ PYI_ESCAPE_ABANDON_M2B:
 PYI_KBV_DROPOUT_M2B:
   response:
     type: page
-    pageId: pyi-kbv-escape-m2b
+    pageId: no-photo-id-security-questions-find-another-way
     context: dropout
   events:
     f2f:
