@@ -32,6 +32,10 @@ STRATEGIC_APP_TRIAGE:
       targetState: SELECT_DEVICE_PAGE
     appTriageSmartphone:
       targetState: MAM_SELECT_SMARTPHONE
+    appTriageSmartphoneIphone:
+      targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+    appTriageSmartphoneAndroid:
+      targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
 
   nestedJourneyStates:
     SELECT_DEVICE_PAGE:
