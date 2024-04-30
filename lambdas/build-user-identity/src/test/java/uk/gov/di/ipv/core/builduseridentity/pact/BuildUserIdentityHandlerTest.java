@@ -82,8 +82,7 @@ class BuildUserIdentityHandlerTest {
 
     @PactBrokerConsumerVersionSelectors
     public static SelectorBuilder consumerVersionSelectors() {
-        return new SelectorBuilder().branch("origin/AUT-2711/Indicate_Forced_Password_Reset_For_Audit_Events");
-        //qq:DCC .mainBranch().deployedOrReleased();
+        return new SelectorBuilder().mainBranch().deployedOrReleased();
     }
 
     @BeforeEach
