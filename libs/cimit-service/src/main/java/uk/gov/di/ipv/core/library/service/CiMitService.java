@@ -99,7 +99,6 @@ public class CiMitService {
                         .qualifier(LIVE_ALIAS)
                         .build();
 
-
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         var response = lambdaClient.invoke(invokeRequest);
 
