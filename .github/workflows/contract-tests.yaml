@@ -35,8 +35,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
-      - name: Run contract tests
-        run: ./gradlew --parallel contractTests
+      - name: Run consumer contract tests
+        run: ./gradlew --parallel pactConsumerTests
       - name: Upload pacts to broker with gradle
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
         run: ./gradlew pactPublish
+      - name: Verify pacts
+        run: ./gradlew pactProviderTests
