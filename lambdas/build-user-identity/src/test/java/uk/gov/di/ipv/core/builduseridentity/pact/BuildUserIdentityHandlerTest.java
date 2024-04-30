@@ -8,13 +8,11 @@ import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,7 +31,7 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -64,11 +62,13 @@ class BuildUserIdentityHandlerTest {
 
     private static final int PORT = 5050;
 
+    private static final String IPV_SESSION_ID = "dummyIpvSessionId";
+
     private LambdaHttpServer httpServer;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
-    @Mock private DataStore<VcStoreItem> mockVcStore;
+    @Mock private DataStore<SessionCredentialItem> mockSessionCredentialItemStore;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
@@ -114,28 +114,21 @@ class BuildUserIdentityHandlerTest {
         // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
         Instant theFuture = Instant.ofEpochSecond(1577836800);
 
-        List<VcStoreItem> vcs = new ArrayList<>();
         var passportVcBuilder =
                 new PactJwtBuilder(
                         VC_HEADER, VALID_UK_PASSPORT_VC_BODY, VALID_UK_PASSPORT_VC_SIGNATURE);
         var addressVcBuilder =
                 new PactJwtBuilder(VC_HEADER, VALID_ADDRESS_VC_BODY, VALID_ADDRESS_VC_SIGNATURE);
-        var passportItem = new VcStoreItem();
-        passportItem.setUserId("dummyOAuthUserId");
-        passportItem.setCredential(passportVcBuilder.buildJwt());
-        passportItem.setCredentialIssuer(DCMAW_CRI);
-        passportItem.setDateCreated(thePast);
-        passportItem.setExpirationTime(theFuture);
-        vcs.add(passportItem);
-        var addressItem = new VcStoreItem();
-        addressItem.setUserId("dummyOAuthUserId");
-        addressItem.setCredential(addressVcBuilder.buildJwt());
-        addressItem.setCredentialIssuer(ADDRESS_CRI);
-        addressItem.setDateCreated(thePast);
-        addressItem.setExpirationTime(theFuture);
-        vcs.add(addressItem);
 
-        when(mockVcStore.getItems("dummyOAuthUserId")).thenReturn(vcs);
+        List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
+        var passportCredential = new SessionCredentialItem(IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
+        var addressCredential = new SessionCredentialItem(IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
+        sessionCredentials.add(passportCredential);
+        sessionCredentials.add(addressCredential);
+
+        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID)).thenReturn(sessionCredentials);
+
+        var sessionCredentialService = new SessionCredentialsService(mockSessionCredentialItemStore);
 
         // Set up the web server for the tests
         var handler =
@@ -147,7 +140,7 @@ class BuildUserIdentityHandlerTest {
                         clientOAuthSessionDetailsService,
                         mockCiMitService,
                         mockCiMitUtilityService,
-                        mockSessionCredentialsService);
+                        sessionCredentialService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity", PORT);
         httpServer.startServer();
@@ -167,7 +160,7 @@ class BuildUserIdentityHandlerTest {
     public void setAccessToken() {
         var accessTokenMetaData = new AccessTokenMetadata();
         var ipvSession = new IpvSessionItem();
-        ipvSession.setIpvSessionId("dummyIpvSessionId");
+        ipvSession.setIpvSessionId(IPV_SESSION_ID);
         ipvSession.setClientOAuthSessionId("dummyClientOAuthSessionId");
         ipvSession.setVot(Vot.P2);
 
