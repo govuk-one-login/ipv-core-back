@@ -43,6 +43,11 @@ test {
 	finalizedBy jacocoTestReport
 }
 
+task pactProviderTests (type: Test) {
+	useJUnitPlatform()
+	include 'uk/gov/di/ipv/core/builduseridentity/pact/**'
+}
+
 jacocoTestReport {
 	dependsOn test
 	reports {
