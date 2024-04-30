@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -8,17 +10,22 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_STACK;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public enum LogField {
         LOG_ACCESS_TOKEN("accessToken"),
@@ -37,6 +44,7 @@ public class LogHelper {
         LOG_ERROR("error"),
         LOG_ERROR_CODE("errorCode"),
         LOG_ERROR_DESCRIPTION("errorDescription"),
+        LOG_ERROR_STACK("errorStack"),
         LOG_ERROR_JOURNEY_RESPONSE("errorJourneyResponse"),
         LOG_FEATURE_SET("featureSet"),
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
@@ -140,7 +148,14 @@ public class LogHelper {
     }
 
     public static StringMapMessage buildErrorMessage(String message, Exception e) {
-        return buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
+        var mapMessage = buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
+        if (LOGGER.isDebugEnabled()) {
+            var sw = new StringWriter();
+            var pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            mapMessage = mapMessage.with(LOG_ERROR_STACK.getFieldName(), sw.toString());
+        }
+        return mapMessage;
     }
 
     public static StringMapMessage buildErrorMessage(String message, ErrorObject err) {

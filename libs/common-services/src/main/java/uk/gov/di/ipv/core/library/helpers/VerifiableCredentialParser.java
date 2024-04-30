@@ -44,7 +44,8 @@ public class VerifiableCredentialParser {
             }
             throw new CredentialParseException("VC does not contain type field");
         } catch (ParseException | IllegalArgumentException e) {
-            throw new CredentialParseException("Failed parse verifiable credential", e);
+            throw new CredentialParseException(
+                    "Failed parse verifiable credential: " + e.getMessage(), e);
         }
     }
 }
