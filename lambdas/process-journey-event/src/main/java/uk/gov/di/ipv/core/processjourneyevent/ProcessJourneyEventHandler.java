@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.isCoiSubjourneyEvent;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
@@ -127,6 +129,10 @@ public class ProcessJourneyEventHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
+            if (isCoiSubjourneyEvent(journeyEvent)) {
+                saveCoiJourneyType(journeyEvent, ipvSessionItem);
+            }
+
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -160,6 +166,12 @@ public class ProcessJourneyEventHandler
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
+    }
+
+    private void saveCoiJourneyType(String journeyEvent, IpvSessionItem ipvSessionItem) {
+        CoiSubjourneyTypes coiJourneyType = CoiSubjourneyTypes.fromString(journeyEvent);
+
+        ipvSessionItem.setCoiSubjourneyTypes(coiJourneyType);
     }
 
     @Tracing

@@ -88,6 +88,14 @@ states:
           coiEnabled:
             targetState: IDENTITY_REUSE_PAGE_COI
 
+  RESET_SESSION_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+    events:
+      next:
+        targetState: DETAILS_DELETED_PAGE
+
   CONFIRM_DELETE_DETAILS_PAGE:
     response:
       type: page
@@ -101,13 +109,30 @@ states:
           coiEnabled:
             targetState: IDENTITY_REUSE_PAGE_COI
 
-  RESET_SESSION_IDENTITY:
+  UPDATE_DETAILS_PAGE:
     response:
-      type: process
-      lambda: reset-session-identity
+      type: page
+      pageId: update-details
     events:
-      next:
-        targetState: DETAILS_DELETED_PAGE
+      address-only:
+        targetJourney: UPDATE_ADDRESS
+        targetState: START
+      given-names-only:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
+      family-name-only:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
+      given-names-and-address:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITH_ADDRESS_START
+      family-name-and-address:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITH_ADDRESS_START
+      names-dob:
+        targetState: UPDATE_NAME_DOB_PAGE
+      cancel:
+        targetState: RETURN_TO_RP
 
   DETAILS_DELETED_PAGE:
     response:
@@ -117,27 +142,6 @@ states:
       next:
         targetJourney: NEW_P2_IDENTITY
         targetState: START
-
-  UPDATE_DETAILS_PAGE:
-    response:
-      type: page
-      pageId: update-details
-    events:
-      address:
-        targetJourney: UPDATE_ADDRESS
-        targetState: START
-      name:
-        # TODO replace with UPDATE_NAME_ADDRESS when it is complete
-        targetJourney: UPDATE_ADDRESS
-        targetState: START
-      name-address:
-        # TODO replace with UPDATE_NAME_ADDRESS when it is complete
-        targetJourney: UPDATE_ADDRESS
-        targetState: START
-      names-dob:
-        targetState: UPDATE_NAME_DOB_PAGE
-      cancel:
-        targetState: RETURN_TO_RP
 
   UPDATE_NAME_DOB_PAGE:
     response:

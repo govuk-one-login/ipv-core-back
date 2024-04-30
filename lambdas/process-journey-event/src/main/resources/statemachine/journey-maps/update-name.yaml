@@ -79,7 +79,7 @@ POST_DCMAW_SUCCESS_PAGE_NAME_ONLY:
   response:
     type: page
     pageId: page-dcmaw-success
-    context: coi-no-address
+    context: no-address
   events:
     next:
       targetState: FRAUD_CHECK_UPDATE_NAME
@@ -91,7 +91,7 @@ FRAUD_CHECK_UPDATE_NAME:
   parent: CRI_STATE
   events:
     next:
-      #      targetState: COI_CHECK_LAMBDA
+#      targetState: COI_CHECK_LAMBDA
       targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
     enhanced-verification:
       # REPLACE WITH CUSTOM FAILURE
@@ -133,7 +133,7 @@ POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS:
   response:
     type: page
     pageId: page-dcmaw-success
-    context: coi-address
+    context: address
   events:
     next:
       targetState: ADDRESS_AND_FRAUD_UPDATE
@@ -142,7 +142,7 @@ ADDRESS_AND_FRAUD_UPDATE:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      #      targetState: COI_CHECK_LAMBDA
+#      targetState: COI_CHECK_LAMBDA
       targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
     enhanced-verification:
       # REPLACE WITH CUSTOM FAILURE

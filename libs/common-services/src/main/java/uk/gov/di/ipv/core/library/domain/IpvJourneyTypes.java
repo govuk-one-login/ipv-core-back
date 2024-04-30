@@ -16,7 +16,6 @@ public enum IpvJourneyTypes {
     REUSE_EXISTING_IDENTITY("reuse-existing-identity"),
     NEW_P2_IDENTITY("new-p2-identity"),
     REPEAT_FRAUD_CHECK("repeat-fraud-check"),
-    UPDATE_ADDRESS("update-address"),
 
     // Unsuccessful journeys
     INELIGIBLE("ineligible"),
@@ -30,7 +29,11 @@ public enum IpvJourneyTypes {
 
     // Operational profile journeys
     OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),
-    OPERATIONAL_PROFILE_REUSE("operational-profile-reuse");
+    OPERATIONAL_PROFILE_REUSE("operational-profile-reuse"),
+
+    // Continuity of Identity journeys
+    UPDATE_ADDRESS("update-address"),
+    UPDATE_NAME("update-name");
 
     private final String path;
 

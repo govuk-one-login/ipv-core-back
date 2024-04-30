@@ -4,8 +4,8 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -17,6 +17,14 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.ADDRESS_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.FAMILY_NAME_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.GIVEN_NAMES_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -79,12 +87,53 @@ public class SessionCredentialsService {
             for (var credential : credentials) {
                 dataStore.create(
                         credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
-                        ConfigurationVariable.SESSION_CREDENTIALS_TTL);
+                        SESSION_CREDENTIALS_TTL);
             }
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error persisting session credential", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+        }
+    }
+
+    public void deleteSessionCredentialsForSubjourneyType(
+            String ipvSessionId, CoiSubjourneyTypes coiSubjourneyTypes)
+            throws VerifiableCredentialException {
+        try {
+            List<SessionCredentialItem> sessionCredentialItems = dataStore.getItems(ipvSessionId);
+
+            List<SessionCredentialItem> vcsToDelete;
+
+            if (isAddressOnlyJourney(coiSubjourneyTypes)) {
+                vcsToDelete =
+                        sessionCredentialItems.stream()
+                                .filter(
+                                        item ->
+                                                item.getCriId().equals(ADDRESS_CRI)
+                                                        || item.getCriId()
+                                                                .equals(EXPERIAN_FRAUD_CRI))
+                                .collect(Collectors.toList());
+
+            } else if (isNameOnlyJourney(coiSubjourneyTypes)) {
+                vcsToDelete =
+                        sessionCredentialItems.stream()
+                                .filter(item -> !item.getCriId().equals(ADDRESS_CRI))
+                                .collect(Collectors.toList());
+            } else {
+                // if name change & address OR not a COJ journey then delete all session VCs
+                vcsToDelete = sessionCredentialItems;
+            }
+
+            dataStore.delete(vcsToDelete);
+        } catch (Exception e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            String.format(
+                                    "Error deleting session credentials for subjourney: %s",
+                                    coiSubjourneyTypes),
+                            e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
         }
     }
 
@@ -118,5 +167,16 @@ public class SessionCredentialsService {
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
         }
+    }
+
+    private static boolean isNameOnlyJourney(CoiSubjourneyTypes coiSubjourneyTypes) {
+        return coiSubjourneyTypes != null
+                && (coiSubjourneyTypes.getPath().equals(GIVEN_NAMES_ONLY.getPath())
+                        || coiSubjourneyTypes.getPath().equals(FAMILY_NAME_ONLY.getPath()));
+    }
+
+    private static boolean isAddressOnlyJourney(CoiSubjourneyTypes coiSubjourneyTypes) {
+        return coiSubjourneyTypes != null
+                && coiSubjourneyTypes.getPath().equals(ADDRESS_ONLY.getPath());
     }
 }
