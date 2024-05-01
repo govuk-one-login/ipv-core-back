@@ -13,7 +13,6 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.jacksonDatabind,
 			libs.mockitoJunit,
-			libs.nimbusdsOauth2OidcSdk,
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services')
 
