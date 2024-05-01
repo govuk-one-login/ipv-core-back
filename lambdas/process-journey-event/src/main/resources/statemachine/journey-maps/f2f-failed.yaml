@@ -1,24 +1,28 @@
-# Entry points
+NAME: NAME
+DESCRIPTION: DESC
 
-FAILED:
-  events:
-    next:
-      targetState: F2F_FAILED_PAGE
+STATES:
+  # Entry points
 
-# Journey states
+  FAILED:
+    events:
+      next:
+        targetState: F2F_FAILED_PAGE
 
-F2F_FAILED_PAGE:
-  response:
-    type: page
-    pageId: pyi-f2f-technical
-  events:
-    next:
-      targetJourney: NEW_P2_IDENTITY
-      targetState: START
-    end:
-      targetState: RETURN_TO_RP
+  # Journey states
 
-RETURN_TO_RP:
-  response:
-    type: process
-    lambda: build-client-oauth-response
+  F2F_FAILED_PAGE:
+    response:
+      type: page
+      pageId: pyi-f2f-technical
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: START
+      end:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

@@ -240,13 +240,13 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy, nestedJourneys);
     }
-    expandParents(journeyMapCopy);
+    expandParents(journeyMapCopy.STATES);
 
     const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
-        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy) }
-        : renderTransitions(journeyMapCopy, formData);
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.STATES) }
+        : renderTransitions(journeyMapCopy.STATES, formData);
 
-    const { statesMermaid } = renderStates(journeyMapCopy, states);
+    const { statesMermaid } = renderStates(journeyMapCopy.STATES, states);
 
     // These styles should be kept in sync with the key in style.css
     const mermaid =

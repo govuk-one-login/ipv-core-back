@@ -67,6 +67,7 @@ const loadJourneyMaps = async () => {
     await Promise.all(Object.keys(JOURNEY_TYPES).map(async (journeyType) => {
         const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
         journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
+        console.log(journeyType, journeyMaps[journeyType]);
     }));
     const nestedResponse = await fetch('./nested-journey-definitions.yaml');
     nestedJourneys = yaml.parse(await nestedResponse.text());
