@@ -45,6 +45,8 @@ IDENTITY_REUSE_PAGE:
   events:
     next:
       targetState: RETURN_TO_RP
+    update-details:
+      targetState: UPDATE_DETAILS_PAGE
 
 IDENTITY_REUSE_PAGE_TEST:
   response:
@@ -53,6 +55,8 @@ IDENTITY_REUSE_PAGE_TEST:
   events:
     next:
       targetState: NEW_DETAILS_PAGE
+    update-details:
+      targetState: UPDATE_DETAILS_PAGE
 
 NEW_DETAILS_PAGE:
   response:
@@ -90,6 +94,35 @@ DETAILS_DELETED_PAGE:
     next:
       targetJourney: NEW_P2_IDENTITY
       targetState: START
+
+UPDATE_DETAILS_PAGE:
+  response:
+    type: page
+    pageId: update-details
+  events:
+    address:
+      targetJourney: UPDATE_ADDRESS
+      targetState: START
+    name:
+      # TODO replace with UPDATE_NAME_ADDRESS when it is complete
+      targetJourney: UPDATE_ADDRESS
+      targetState: START
+    name-address:
+      # TODO replace with UPDATE_NAME_ADDRESS when it is complete
+      targetJourney: UPDATE_ADDRESS
+      targetState: START
+    names-dob:
+      targetState: UPDATE_NAME_DOB_PAGE
+    cancel:
+      targetState: RETURN_TO_RP
+
+UPDATE_NAME_DOB_PAGE:
+  response:
+    type: page
+    pageId: update-name-date-birth
+  events:
+    end:
+      targetState: UPDATE_DETAILS_PAGE
 
 RETURN_TO_RP:
   response:
