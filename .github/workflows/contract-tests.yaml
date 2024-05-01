@@ -10,7 +10,7 @@ env:
   # The branch name for a pull request is in a property that only exists on pull request runs. If it doesn't exist
   # fall back to the branch name property for pushes.
   GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
-  CONSUMER_APP_VERSION: ${{ github.sha }}
+  GIT_SHA: ${{ github.sha }}
 
 on:
   push:

@@ -7,8 +7,6 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
-import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
-import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -76,13 +74,7 @@ class BuildUserIdentityHandlerTest {
 
     @BeforeAll
     static void setupServer() {
-        System.setProperty("pact.verifier.publishResults", "true");
         System.setProperty("pact.content_type.override.application/jwt", "text");
-    }
-
-    @PactBrokerConsumerVersionSelectors
-    public static SelectorBuilder consumerVersionSelectors() {
-        return new SelectorBuilder().mainBranch().deployedOrReleased();
     }
 
     @BeforeEach
@@ -121,14 +113,20 @@ class BuildUserIdentityHandlerTest {
                 new PactJwtBuilder(VC_HEADER, VALID_ADDRESS_VC_BODY, VALID_ADDRESS_VC_SIGNATURE);
 
         List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
-        var passportCredential = new SessionCredentialItem(IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
-        var addressCredential = new SessionCredentialItem(IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
+        var passportCredential =
+                new SessionCredentialItem(
+                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
+        var addressCredential =
+                new SessionCredentialItem(
+                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
         sessionCredentials.add(passportCredential);
         sessionCredentials.add(addressCredential);
 
-        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID)).thenReturn(sessionCredentials);
+        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID))
+                .thenReturn(sessionCredentials);
 
-        var sessionCredentialService = new SessionCredentialsService(mockSessionCredentialItemStore);
+        var sessionCredentialService =
+                new SessionCredentialsService(mockSessionCredentialItemStore);
 
         // Set up the web server for the tests
         var handler =
