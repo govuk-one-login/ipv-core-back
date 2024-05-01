@@ -50,10 +50,16 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 
+// To run these tests locally you need to:
+// - Obtain the relevant pact file (from the pact broker or another team) and put it in
+//   /lambdas/build-user-identity/pacts
+// - Comment out the @PactBroker annotation below
+// - Uncomment @PactFolder annotation below
 @Provider("IpvCoreBackUserIdentityProvider")
 @PactBroker(
         url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
         authentication = @PactBrokerAuth(username = "${PACT_USER}", password = "${PACT_PASSWORD}"))
+// @PactFolder("pacts")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BuildUserIdentityHandlerTest {
