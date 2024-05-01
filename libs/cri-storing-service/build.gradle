@@ -9,8 +9,7 @@ repositories {
 }
 
 dependencies {
-	implementation libs.nimbusdsOauth2OidcSdk,
-			libs.powertoolsLogging,
+	implementation libs.powertoolsLogging,
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),

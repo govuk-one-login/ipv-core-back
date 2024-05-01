@@ -129,6 +129,28 @@ IDENTITY_START_PAGE:
           checkIfDisabled:
             f2f:
               targetState: MULTIPLE_DOC_CHECK_PAGE
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+    appTriageSmartphoneAndroid:
+      targetState: CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
     end:
       targetState: F2F_START_PAGE
       checkIfDisabled:
@@ -310,6 +332,24 @@ PYI_CRI_ESCAPE:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     f2f:
       targetState: CRI_F2F
       checkFeatureFlag:
@@ -331,6 +371,24 @@ PYI_CRI_ESCAPE_NO_F2F:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
     appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
@@ -377,10 +435,20 @@ STORE_IDENTITY_BEFORE_F2F_HANDOFF:
     lambda: store-identity
   events:
     identity-stored:
-      targetState: F2F_HANDOFF_PAGE
+      targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
+
+RESET_SESSION_BEFORE_F2F_HANDOFF:
+  response:
+    type: process
+    lambda: reset-session-identity
+  events:
+    next:
+      targetState: F2F_HANDOFF_PAGE
+    error:
+      targetState: F2F_HANDOFF_PAGE
 
 IPV_SUCCESS_PAGE:
   response:
@@ -716,6 +784,24 @@ MITIGATION_KBV_FAIL_M2B:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -774,6 +860,24 @@ PYI_KBV_DROPOUT_M2B:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -795,6 +899,24 @@ MITIGATION_01_IDENTITY_START_PAGE:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
     appTriageSmartphone:
+      targetState: MITIGATION_01_CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: MITIGATION_01_CRI_DCMAW
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
       targetState: MITIGATION_01_CRI_DCMAW
       checkFeatureFlag:
         strategicAppEnabled:
@@ -912,6 +1034,24 @@ MITIGATION_02_OPTIONS:
         dcmaw:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
     end:
       targetJourney: INELIGIBLE
       targetState: INELIGIBLE
@@ -989,6 +1129,24 @@ MITIGATION_02_OPTIONS_WITH_F2F:
           targetJourney: TECHNICAL_ERROR
           targetState: ERROR
     appTriageSmartphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneIphone:
+      targetState: CRI_DCMAW_PYI_ESCAPE
+      checkFeatureFlag:
+        strategicAppEnabled:
+          targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+      checkIfDisabled:
+        dcmaw:
+          targetJourney: TECHNICAL_ERROR
+          targetState: ERROR
+    appTriageSmartphoneAndroid:
       targetState: CRI_DCMAW_PYI_ESCAPE
       checkFeatureFlag:
         strategicAppEnabled:
