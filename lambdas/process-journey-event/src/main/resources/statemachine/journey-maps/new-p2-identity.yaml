@@ -435,10 +435,20 @@ STORE_IDENTITY_BEFORE_F2F_HANDOFF:
     lambda: store-identity
   events:
     identity-stored:
-      targetState: F2F_HANDOFF_PAGE
+      targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
     error:
       targetJourney: TECHNICAL_ERROR
       targetState: ERROR
+
+RESET_SESSION_BEFORE_F2F_HANDOFF:
+  response:
+    type: process
+    lambda: reset-session-identity
+  events:
+    next:
+      targetState: F2F_HANDOFF_PAGE
+    error:
+      targetState: F2F_HANDOFF_PAGE
 
 IPV_SUCCESS_PAGE:
   response:
