@@ -42,3 +42,9 @@ jobs:
         run: ./gradlew pactPublish
       - name: Verify pacts
         run: ./gradlew pactProviderTests
+      - name: Upload build-user-identity provider pact test report
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-user-identity provider pact test report
+          path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/build-user-identity/build/reports/tests/pactProviderTests/
