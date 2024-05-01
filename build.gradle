@@ -46,7 +46,7 @@ pact {
 		pactBrokerUrl = "${System.env.PACT_URL}?testSource=${System.env.PACT_BROKER_SOURCE_SECRET_DEV}"
 		pactBrokerUsername = "${System.env.PACT_USER}"
 		pactBrokerPassword = "${System.env.PACT_PASSWORD}"
-		consumerVersion = "${System.env.CONSUMER_APP_VERSION}"
+		consumerVersion = "${System.env.GIT_SHA}"
 		consumerBranch = "${System.env.GIT_BRANCH}"
 	}
 }

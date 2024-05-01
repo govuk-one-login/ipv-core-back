@@ -47,6 +47,10 @@ test {
 task pactProviderTests (type: Test) {
 	useJUnitPlatform()
 	include 'uk/gov/di/ipv/core/builduseridentity/pact/**'
+	systemProperties['pact.verifier.publishResults'] = "true"
+	systemProperties['pact.provider.branch'] = "${System.env.GIT_BRANCH}"
+	systemProperties['pact.provider.version'] = "${System.env.GIT_SHA}"
+	systemProperties['pact.consumerversionselectors.rawjson'] = "{ \"mainBranch\": true, \"deployedOrReleased\": true }"
 }
 
 jacocoTestReport {
