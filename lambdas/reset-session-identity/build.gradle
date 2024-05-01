@@ -12,7 +12,6 @@ repositories {
 dependencies {
 	implementation libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
-			libs.nimbusdsOauth2OidcSdk,
 			project(":libs:common-services"),
 			project(":libs:journey-uris"),
 			project(":libs:verifiable-credentials")
