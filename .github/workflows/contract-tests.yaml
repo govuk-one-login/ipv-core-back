@@ -42,7 +42,7 @@ jobs:
         run: ./gradlew pactPublish
       # The initial call to the pact broker starts a 30 second timer where calls will succeed. As uploading the pacts and
       # verifying the pacts together takes over 30s we need to wait for the timer to expire so that the pact verification
-      # call starts it's own timer.
+      # call starts its own timer.
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
@@ -54,3 +54,9 @@ jobs:
         with:
           name: build-user-identity provider pact test report
           path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/build-user-identity/build/reports/tests/pactProviderTests/
+      - name: Upload issue-client-access-token provider pact test report
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-client-access-token provider pact test report
+          path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/issue-client-access-token/build/reports/tests/pactProviderTests/
