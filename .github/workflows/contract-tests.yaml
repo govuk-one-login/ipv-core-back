@@ -43,6 +43,7 @@ jobs:
       - name: Verify pacts
         run: ./gradlew pactProviderTests
       - name: Upload build-user-identity provider pact test report
+        if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
           name: build-user-identity provider pact test report
