@@ -33,6 +33,9 @@ FAILED_RFC:
   events:
     next:
       targetState: NO_MATCH_PAGE_RFC
+      checkFeatureFlag:
+        ticfCriBeta:
+          targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
 
 FAILED_UPDATE_ADDRESS:
   events:
