@@ -121,14 +121,20 @@ class BuildUserIdentityHandlerTest {
                 new PactJwtBuilder(VC_HEADER, VALID_ADDRESS_VC_BODY, VALID_ADDRESS_VC_SIGNATURE);
 
         List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
-        var passportCredential = new SessionCredentialItem(IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
-        var addressCredential = new SessionCredentialItem(IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
+        var passportCredential =
+                new SessionCredentialItem(
+                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
+        var addressCredential =
+                new SessionCredentialItem(
+                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
         sessionCredentials.add(passportCredential);
         sessionCredentials.add(addressCredential);
 
-        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID)).thenReturn(sessionCredentials);
+        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID))
+                .thenReturn(sessionCredentials);
 
-        var sessionCredentialService = new SessionCredentialsService(mockSessionCredentialItemStore);
+        var sessionCredentialService =
+                new SessionCredentialsService(mockSessionCredentialItemStore);
 
         // Set up the web server for the tests
         var handler =
