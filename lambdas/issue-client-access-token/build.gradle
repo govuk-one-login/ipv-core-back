@@ -14,7 +14,6 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
-			libs.nimbusdsOauth2OidcSdk,
 			project(":libs:common-services")
 
 	aspect libs.powertoolsLogging,

@@ -14,7 +14,6 @@ dependencies {
 			libs.awsSdkLambda,
 			libs.awsSdkUrlConnectionClient,
 			libs.jacksonDatabind,
-			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

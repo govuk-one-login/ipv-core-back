@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+	api libs.nimbusdsOauth2OidcSdk
 	implementation platform(libs.awsSdkBom),
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
@@ -17,7 +18,6 @@ dependencies {
 			libs.awsSdkLambda,
 			libs.commonsCodec,
 			libs.jacksonDatabind,
-			libs.nimbusdsOauth2OidcSdk,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:journey-uris")

@@ -13,7 +13,6 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
-			libs.nimbusdsOauth2OidcSdk,
 			project(":libs:common-services"),
 			project(":libs:journey-uris"),
 			project(":libs:cri-response-service"),
