@@ -40,6 +40,12 @@ jobs:
       - name: Upload pacts to broker with gradle
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
         run: ./gradlew pactPublish
+      # The initial call to the pact broker starts a 30 second timer where calls will succeed. As uploading the pacts and
+      # verifying the pacts together takes over 30s we need to wait for the timer to expire so that the pact verification
+      # call starts it's own timer.
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
       - name: Verify pacts
         run: ./gradlew pactProviderTests
       - name: Upload build-user-identity provider pact test report
