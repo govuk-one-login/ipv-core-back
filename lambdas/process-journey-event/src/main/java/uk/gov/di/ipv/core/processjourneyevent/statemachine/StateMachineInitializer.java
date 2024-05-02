@@ -48,7 +48,7 @@ public class StateMachineInitializer {
 
         initializeJourneyStates();
 
-        return journey.states();
+        return journeyStates;
     }
 
     private void initializeJourneyStates() {

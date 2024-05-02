@@ -132,7 +132,6 @@ const updateView = async () => {
     return renderSvg(selectedJourney);
 };
 
-
 // Render the journey map SVG
 const renderSvg = async (selectedJourney) => {
     const diagram = render(journeyMaps[selectedJourney], nestedJourneys, new FormData(form));
