@@ -1,3 +1,7 @@
+name: Failed Journey
+
+description: A user fails part of the identity journey. For example, they answer knowledge-based verification questions incorrectly.
+
 states:
 
   # Entry points

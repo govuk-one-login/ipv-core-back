@@ -1,3 +1,7 @@
+name: Technical Error
+
+description: A user cannot complete their identity journey because of a technical error.
+
 states:
   # Entry points
 
