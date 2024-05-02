@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
-import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -51,10 +51,10 @@ class StateMachineInitializerTest {
         var stateMachineInitializer =
                 new StateMachineInitializer(journeyTypeMock, StateMachineInitializerMode.TEST);
 
-        var jsonParseException =
-                assertThrows(JsonParseException.class, stateMachineInitializer::initialize);
+        var jsonMappingException =
+                assertThrows(JsonMappingException.class, stateMachineInitializer::initialize);
 
-        assertTrue(jsonParseException.getMessage().contains("Duplicate field 'DUPLICATE_PAGE'"));
+        assertTrue(jsonMappingException.getMessage().contains("Duplicate field 'DUPLICATE_PAGE'"));
     }
 
     @java.lang.SuppressWarnings("java:S5961") // Too many assertions

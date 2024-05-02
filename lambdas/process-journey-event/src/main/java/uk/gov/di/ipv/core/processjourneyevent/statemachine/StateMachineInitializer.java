@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.Journey;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
@@ -40,13 +41,14 @@ public class StateMachineInitializer {
     private final IpvJourneyTypes journeyType;
 
     public Map<String, State> initialize() throws IOException {
-        journeyStates = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
+        Journey journey = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
+        journeyStates = journey.states();
         nestedJourneyDefinitions =
                 yamlOm.readValue(getNestedJourneyDefinitionsConfig(), new TypeReference<>() {});
 
         initializeJourneyStates();
 
-        return journeyStates;
+        return journey.states();
     }
 
     private void initializeJourneyStates() {

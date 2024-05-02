@@ -204,7 +204,8 @@ const renderState = (state, definition) => {
 
 const renderStates = (journeyMap, states) => {
     const mermaids = states.flatMap((state) => {
-        const definition = journeyMap[state];
+        const definition = journeyMap.states[state];
+
         return [
             renderState(state, definition),
             renderClickHandler(state, definition),
@@ -240,13 +241,13 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy, nestedJourneys);
     }
-    expandParents(journeyMapCopy.STATES);
+    expandParents(journeyMapCopy.states);
 
     const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
-        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.STATES) }
-        : renderTransitions(journeyMapCopy.STATES, formData);
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.states) }
+        : renderTransitions(journeyMapCopy.states, formData);
 
-    const { statesMermaid } = renderStates(journeyMapCopy.STATES, states);
+    const { statesMermaid } = renderStates(journeyMapCopy, states);
 
     // These styles should be kept in sync with the key in style.css
     const mermaid =

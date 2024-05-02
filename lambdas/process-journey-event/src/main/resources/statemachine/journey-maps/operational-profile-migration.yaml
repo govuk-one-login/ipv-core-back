@@ -1,7 +1,7 @@
-NAME: NAME
-DESCRIPTION: DESC
+name: Operational Profile Migration
+description: A user has an operational profile from a government service to prove their identity.
 
-STATES:
+states:
   # Entry points
 
   START:

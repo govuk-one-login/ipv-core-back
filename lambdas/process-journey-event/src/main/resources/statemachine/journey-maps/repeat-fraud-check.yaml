@@ -1,7 +1,7 @@
-NAME: NAME
-DESCRIPTION: DESC
+name: Repeat Fraud Check
+description: The route a returning user must take whose last fraud check was more than 6 months ago.
 
-STATES:
+states:
 # Entry points
 
   START:

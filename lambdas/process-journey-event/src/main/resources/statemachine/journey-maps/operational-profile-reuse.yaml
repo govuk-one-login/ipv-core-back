@@ -1,7 +1,7 @@
-NAME: NAME
-DESCRIPTION: DESC
+name: Operational Profile Reuse
+description: A user returns to GOV.UK One Login after proving their identity with an operational profile in another user session.
 
-STATES:
+states:
   # Entry points
 
   START:

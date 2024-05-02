@@ -1,8 +1,8 @@
-NAME: NAME
-DESCRIPTION: DESC
+name: New P2 Identity
+description: >-
+  The routes the user is restricted to when they need to mitigate a contra-indicator from the web-based verification process.
 
-STATES:
-
+states:
   # Entry points
 
   START:

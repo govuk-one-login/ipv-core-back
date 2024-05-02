@@ -1,7 +1,7 @@
-NAME: NAME
-DESCRIPTION: DESC
+name: Reuse Existing Identity
+description: A user returns to GOV.UK One Login after proving their identity in another user session.
 
-STATES:
+states:
   # Entry points
 
   START:

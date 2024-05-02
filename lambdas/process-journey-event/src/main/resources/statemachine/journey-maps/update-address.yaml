@@ -1,7 +1,7 @@
-NAME: UPDATE_ADDRESS
-DESCRIPTION: Upate address of user
+name: Update Address
+description: Upate address of user
 
-STATES:
+states:
   # Entry points
 
   START:

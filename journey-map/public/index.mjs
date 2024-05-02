@@ -54,6 +54,8 @@ const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
 const stateSearch = document.getElementById('state-search');
+const journeyDesc = document.getElementById('journeyDesc');
+const journeyName = document.getElementById('journeyName');
 
 let svgPanZoomInstance = null;
 let journeyMaps = {};
@@ -67,7 +69,6 @@ const loadJourneyMaps = async () => {
     await Promise.all(Object.keys(JOURNEY_TYPES).map(async (journeyType) => {
         const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
         journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
-        console.log(journeyType, journeyMaps[journeyType]);
     }));
     const nestedResponse = await fetch('./nested-journey-definitions.yaml');
     nestedJourneys = yaml.parse(await nestedResponse.text());
@@ -79,7 +80,7 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 const switchJourney = async (journeyType) => {
     window.history.pushState(undefined, undefined, getJourneyUrl(journeyType));
     selectedState = null;
-    await renderSvg();
+    await updateView();
 };
 
 const setupHeader = () => {
@@ -97,7 +98,7 @@ const setupHeader = () => {
 
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
-        await renderSvg();
+        await updateView();
     });
 };
 
@@ -124,9 +125,16 @@ const setupOptions = (name, options, fieldset, labels) => {
     }
 };
 
-// Render the journey map SVG
-const renderSvg = async () => {
+const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
+    journeyName.innerText = journeyMaps[selectedJourney].name || "";
+    journeyDesc.innerText = journeyMaps[selectedJourney].description || "";
+    return renderSvg(selectedJourney);
+};
+
+
+// Render the journey map SVG
+const renderSvg = async (selectedJourney) => {
     const diagram = render(journeyMaps[selectedJourney], nestedJourneys, new FormData(form));
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
@@ -176,6 +184,7 @@ const setupMermaidClickHandlers = () => {
     };
 
     window.onStateClick = async (state, encodedDef) => {
+
         const def = JSON.parse(atob(encodedDef));
 
         // Clicking a node twice opens the link
@@ -268,10 +277,10 @@ const initialize = async () => {
     setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
         event.preventDefault();
-        await renderSvg();
+        await updateView();
     });
     setupSearchHandler();
-    await renderSvg();
+    await updateView();
 }
 
 await initialize();
