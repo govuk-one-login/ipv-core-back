@@ -33,9 +33,9 @@ STRATEGIC_APP_TRIAGE:
     appTriageSmartphone:
       targetState: MAM_SELECT_SMARTPHONE
     appTriageSmartphoneIphone:
-      targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+      targetState: MOBILE_IPHONE_CONFIRM_PAGE
     appTriageSmartphoneAndroid:
-      targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+      targetState: MOBILE_ANDROID_CONFIRM_PAGE
 
   nestedJourneyStates:
     SELECT_DEVICE_PAGE:
@@ -84,6 +84,16 @@ STRATEGIC_APP_TRIAGE:
         pageId: pyi-triage-desktop-download-app
         context: android
 
+    MOBILE_IPHONE_CONFIRM_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-confirm
+      events:
+        next:
+          targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        end:
+          exitEventToEmit: end
+
     MOBILE_IPHONE_DOWNLOAD_PAGE:
       response:
         type: page
@@ -92,6 +102,16 @@ STRATEGIC_APP_TRIAGE:
       events:
         next:
           exitEventToEmit: next
+
+    MOBILE_ANDROID_CONFIRM_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-confirm
+      events:
+        next:
+          targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        end:
+          exitEventToEmit: end
 
     MOBILE_ANDROID_DOWNLOAD_PAGE:
       response:
