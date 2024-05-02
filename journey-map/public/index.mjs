@@ -127,7 +127,7 @@ const setupOptions = (name, options, fieldset, labels) => {
 
 const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
-    journeyName.innerText = journeyMaps[selectedJourney].name || "";
+    journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
     journeyDesc.innerText = journeyMaps[selectedJourney].description || "";
     return renderSvg(selectedJourney);
 };
@@ -184,7 +184,6 @@ const setupMermaidClickHandlers = () => {
     };
 
     window.onStateClick = async (state, encodedDef) => {
-
         const def = JSON.parse(atob(encodedDef));
 
         // Clicking a node twice opens the link
