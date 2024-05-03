@@ -1,9 +1,8 @@
 name: Session Timeout
 
-description:
-  CORE_SESSION_TIMEOUT: >-
-    A user’s session either expired or they ended
-    their session without proving their identity.
+description: >-
+  A user’s session either expired or they ended
+  their session without proving their identity.
 
 states:
   # Entry points

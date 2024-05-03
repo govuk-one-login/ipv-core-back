@@ -1,11 +1,10 @@
 name: Face to Face Failed
-description:
-  FAILED: |
-    A user chose to prove their identity at the Post Office but their attempt failed. For example:
+description: |
+  A user chose to prove their identity at the Post Office but their attempt failed. For example:
 
-      - the user might have taken the wrong document
-      - the name they entered in GOV.UK One Login did not match the name on their document
-      - a technical error might have occurred
+    - the user might have taken the wrong document
+    - the name they entered in GOV.UK One Login did not match the name on their document
+    - a technical error might have occurred
 
 states:
   # Entry points

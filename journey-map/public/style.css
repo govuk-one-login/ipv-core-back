@@ -130,14 +130,6 @@ form fieldset p {
     flex-direction: column;
     gap: 8px;
 }
-#journeyDescDetail {
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    padding-left: 32px;
-    padding-right: 32px;
-    padding-top: 16px;
-    padding-bottom: 16px;
-}
 #key {
     flex: 0 1 525px;
     padding: 16px 32px;

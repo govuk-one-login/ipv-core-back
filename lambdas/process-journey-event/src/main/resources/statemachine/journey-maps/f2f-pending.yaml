@@ -1,10 +1,9 @@
 name: Face to Face Pending
-description:
-  PENDING: |
-    A user chose to prove their identity at the Post Office in a previous session but returns to GOV.UK One Login before either:
+description: |
+  A user chose to prove their identity at the Post Office in a previous session but returns to GOV.UK One Login before either:
 
-    - they have visited the Post Office for in-person checks
-    - their in-person checks have been processed
+  - they have visited the Post Office for in-person checks
+  - their in-person checks have been processed
 
 states:
   # Entry points

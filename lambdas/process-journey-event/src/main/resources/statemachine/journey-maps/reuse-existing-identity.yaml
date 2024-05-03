@@ -1,8 +1,7 @@
 name: Reuse Existing Identity
-description:
-  START: >-
-    A user returns to GOV.UK One Login after proving
-    their identity in another user session.
+description: >-
+  A user returns to GOV.UK One Login after proving
+  their identity in another user session.
 
 states:
   # Entry points
