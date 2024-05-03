@@ -18,6 +18,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 public class JourneyRequest {
     private String ipvSessionId;
     private String ipAddress;
+    private String deviceInformation;
     private String clientOAuthSessionId;
     private String journey;
     private String featureSet;

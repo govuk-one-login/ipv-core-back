@@ -234,6 +234,7 @@ public class ProcessCriCallbackHandler
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
             callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
+            callbackRequest.setDeviceInformation(input.getHeaders().get("Txma-Audit-Encoded"));
 
             return callbackRequest;
         } catch (JsonProcessingException e) {
@@ -331,6 +332,7 @@ public class ProcessCriCallbackHandler
             criStoringService.storeVcs(
                     callbackRequest.getCredentialIssuerId(),
                     callbackRequest.getIpAddress(),
+                    callbackRequest.getDeviceInformation(),
                     vcs,
                     clientOAuthSessionItem,
                     ipvSessionItem);

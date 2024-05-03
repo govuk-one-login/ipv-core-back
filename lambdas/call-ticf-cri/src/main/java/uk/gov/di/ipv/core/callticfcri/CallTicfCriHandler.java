@@ -156,7 +156,12 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
 
         criStoringService.storeVcs(
-                TICF_CRI, request.getIpAddress(), ticfVcs, clientOAuthSessionItem, ipvSessionItem);
+                TICF_CRI,
+                request.getIpAddress(),
+                request.getDeviceInformation(),
+                ticfVcs,
+                clientOAuthSessionItem,
+                ipvSessionItem);
 
         ContraIndicators cis =
                 ciMitService.getContraIndicators(

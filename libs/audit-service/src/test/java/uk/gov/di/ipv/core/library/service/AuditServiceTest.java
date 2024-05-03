@@ -55,7 +55,7 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
 
         // Arrange
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, null);
+        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
 
         // Act
         auditService.sendAuditEvent(event);

@@ -30,6 +30,7 @@ public class JourneyEngineHandler {
     public static final String JOURNEY = "journey";
     public static final String IPV_SESSION_ID = "ipv-session-id";
     public static final String IP_ADDRESS = "ip-address";
+    public static final String ENCODED_DEVICE_INFORMATION = "Txma-Audit-Encoded";
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
 
@@ -124,6 +125,7 @@ public class JourneyEngineHandler {
         return JourneyRequest.builder()
                 .ipvSessionId(request.headers(IPV_SESSION_ID))
                 .ipAddress(request.headers(IP_ADDRESS))
+                .deviceInformation(request.headers(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
                 .featureSet(request.headers(FEATURE_SET))
                 .journey(journey)
@@ -135,6 +137,7 @@ public class JourneyEngineHandler {
         return ProcessRequest.processRequestBuilder()
                 .ipvSessionId(request.headers(IPV_SESSION_ID))
                 .ipAddress(request.headers(IP_ADDRESS))
+                .deviceInformation(request.headers(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
                 .featureSet(request.headers(FEATURE_SET))
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
