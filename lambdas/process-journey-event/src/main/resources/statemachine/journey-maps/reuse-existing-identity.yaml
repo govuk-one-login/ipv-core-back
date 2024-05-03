@@ -9,6 +9,8 @@ START:
           targetState: CRI_TICF_BEFORE_REUSE
         deleteDetailsEnabled:
           targetState: IDENTITY_REUSE_PAGE_TEST
+        coiEnabled:
+          targetState: IDENTITY_REUSE_PAGE_COI
 
 # Journey states
 
@@ -76,6 +78,9 @@ NEW_DETAILS_PAGE:
       targetState: CONFIRM_DELETE_DETAILS_PAGE
     end:
       targetState: IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        coiEnabled:
+          targetState: IDENTITY_REUSE_PAGE_COI
 
 CONFIRM_DELETE_DETAILS_PAGE:
   response:
@@ -86,6 +91,9 @@ CONFIRM_DELETE_DETAILS_PAGE:
       targetState: RESET_SESSION_IDENTITY
     end:
       targetState: IDENTITY_REUSE_PAGE
+      checkFeatureFlag:
+        coiEnabled:
+          targetState: IDENTITY_REUSE_PAGE_COI
 
 RESET_SESSION_IDENTITY:
   response:
