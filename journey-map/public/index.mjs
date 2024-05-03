@@ -128,13 +128,28 @@ const setupOptions = (name, options, fieldset, labels) => {
 const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
     journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
-    journeyDesc.innerText = journeyMaps[selectedJourney].description || "";
-    return renderSvg(selectedJourney);
+    journeyDesc.innerHTML = "";
+    const desc = journeyMaps[selectedJourney].description;
+
+    const formData = new FormData(form);
+
+    if (desc && formData.has('showJourneyDesc')) {
+        const entries = Object.entries(desc);
+        const elem = document.createElement(entries.length == 1 ? "div" : "ul");
+        elem.id = "journeyDescDetail"
+        for (const [key, value] of entries) {
+            const child = document.createElement(entries.length == 1 ? "p" : "li");
+            child.innerText = entries.length == 1 ? value : key + ": " + value;
+            elem.appendChild(child);
+        }
+        journeyDesc.appendChild(elem);
+    }
+    return renderSvg(selectedJourney, formData);
 };
 
 // Render the journey map SVG
-const renderSvg = async (selectedJourney) => {
-    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, new FormData(form));
+const renderSvg = async (selectedJourney, formData) => {
+    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
@@ -263,6 +278,10 @@ const setupSearchHandler = () => {
         });
         svgPanZoomInstance.zoom(currentZoom);
     })
+}
+
+const hideDescription = () => {
+    console.log("hideDescription");
 }
 
 const initialize = async () => {

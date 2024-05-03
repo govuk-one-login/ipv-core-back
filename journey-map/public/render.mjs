@@ -238,9 +238,11 @@ const calcOrphanStates = (journeyMap) => {
 export const render = (journeyMap, nestedJourneys, formData = new FormData()) => {
     // Copy to avoid mutating the input
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
+
     if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy, nestedJourneys);
     }
+
     expandParents(journeyMapCopy.states);
 
     const { transitionsMermaid, states } = formData.has('onlyOrphanStates')

@@ -1,5 +1,8 @@
 name: Operational Profile Migration
-description: A user has an operational profile from a government service to prove their identity.
+description:
+  START: >-
+    A user has an operational profile from a government service
+    to prove their identity.
 
 states:
   # Entry points

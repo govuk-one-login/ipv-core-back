@@ -1,6 +1,24 @@
 name: New P2 Identity
-description: >-
-  The routes the user is restricted to when they need to mitigate a contra-indicator from the web-based verification process.
+description:
+  START: >-
+    The routes a user can take to prove their identity to a medium
+    confidence level (P2).
+  ENHANCED_VERIFICATION: >-
+    The routes the user is restricted to when they need to mitigate
+    a contra-indicator from the web-based verification process.
+  ALTERNATE_DOC_PASSPORT: >-
+    The routes the user is restricted to when they need to mitigate
+    a contra-indicator from the web-based document checking process.
+  ALTERNATE_DOC_DL: >-
+    The routes the user is restricted to when they need to mitigate
+    a contra-indicator from the web-based document checking process.
+  ENHANCED_VERIFICATION_F2F_FAIL: >-
+    The routes a user is restricted to when they need to mitigate a
+    contra-indicator from the web-based verification process but have
+    tried, and failed, to mitigate it using face-to-face verification.
+  REPROVE_IDENTITY: >-
+    The route a user must take to reprove their identity after an
+    account intervention.
 
 states:
   # Entry points

@@ -1,5 +1,8 @@
 name: Update Address
-description: Upate address of user
+description:
+  START: >-
+    The route a returning user must take to update
+    their address
 
 states:
   # Entry points

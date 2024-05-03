@@ -20,10 +20,13 @@ import java.io.InputStream;
 import java.util.Map;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 public class StateMachineInitializer {
     private static final ObjectMapper yamlOm =
-            new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
+            new ObjectMapper(new YAMLFactory())
+                    .configure(STRICT_DUPLICATE_DETECTION, true)
+                    .configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static final ObjectMapper om = new ObjectMapper();
     private Map<String, State> journeyStates;
     private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
