@@ -228,14 +228,13 @@ public class ProcessCriCallbackHandler
     }
 
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
-            throws ParseCriCallbackRequestException {
+            throws ParseCriCallbackRequestException, HttpResponseExceptionWithErrorBody {
         try {
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
-            callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
+            callbackRequest.setIpvSessionId(RequestHelper.getIpvSessionId(input));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
-            callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
-            callbackRequest.setDeviceInformation(input.getHeaders().get("Txma-Audit-Encoded"));
-
+            callbackRequest.setIpAddress(RequestHelper.getIpAddress(input));
+            callbackRequest.setDeviceInformation(RequestHelper.getEncodedDeviceInformation(input));
             return callbackRequest;
         } catch (JsonProcessingException e) {
             throw new ParseCriCallbackRequestException(e);
