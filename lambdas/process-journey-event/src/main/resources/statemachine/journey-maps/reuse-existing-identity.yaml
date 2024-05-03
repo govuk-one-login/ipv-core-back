@@ -22,6 +22,8 @@ CRI_TICF_BEFORE_REUSE:
       checkFeatureFlag:
         deleteDetailsEnabled:
           targetState: IDENTITY_REUSE_PAGE_TEST
+        coiEnabled:
+          targetState: IDENTITY_REUSE_PAGE_COI
     enhanced-verification:
       targetJourney: FAILED
       targetState: FAILED_NO_TICF
@@ -45,6 +47,15 @@ IDENTITY_REUSE_PAGE:
   events:
     next:
       targetState: RETURN_TO_RP
+
+IDENTITY_REUSE_PAGE_COI:
+  response:
+    type: page
+    pageId: page-ipv-reuse
+    context: coi
+  events:
+    next:
+      targetState: RETURN_TO_RP
     update-details:
       targetState: UPDATE_DETAILS_PAGE
 
@@ -55,8 +66,6 @@ IDENTITY_REUSE_PAGE_TEST:
   events:
     next:
       targetState: NEW_DETAILS_PAGE
-    update-details:
-      targetState: UPDATE_DETAILS_PAGE
 
 NEW_DETAILS_PAGE:
   response:
