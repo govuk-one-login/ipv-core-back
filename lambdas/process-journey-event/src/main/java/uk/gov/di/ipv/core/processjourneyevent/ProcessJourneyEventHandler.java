@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -110,6 +111,7 @@ public class ProcessJourneyEventHandler
             // Extract variables
             String ipvSessionId = RequestHelper.getIpvSessionId(journeyRequest);
             String ipAddress = RequestHelper.getIpAddress(journeyRequest);
+            String deviceInformation = journeyRequest.getDeviceInformation();
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
             String currentPage = RequestHelper.getJourneyParameter(journeyRequest, CURRENT_PAGE);
             configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
@@ -151,10 +153,16 @@ public class ProcessJourneyEventHandler
                             ipAddress);
 
             StepResponse stepResponse =
-                    executeJourneyEvent(journeyEvent, ipvSessionItem, auditEventUser, currentPage);
+                    executeJourneyEvent(
+                            journeyEvent,
+                            ipvSessionItem,
+                            auditEventUser,
+                            deviceInformation,
+                            currentPage);
 
             if (stepResponse.getMitigationStart() != null) {
-                sendMitigationStartAuditEvent(auditEventUser, stepResponse.getMitigationStart());
+                sendMitigationStartAuditEvent(
+                        auditEventUser, stepResponse.getMitigationStart(), deviceInformation);
             }
 
             return stepResponse.value();
@@ -175,11 +183,15 @@ public class ProcessJourneyEventHandler
             String journeyEvent,
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
+            String deviceInformation,
             String currentPage)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(
-                    ipvSessionItem.getUserState(), ipvSessionItem, auditEventUser);
+                    ipvSessionItem.getUserState(),
+                    ipvSessionItem,
+                    auditEventUser,
+                    deviceInformation);
             journeyEvent = NEXT_EVENT;
         }
 
@@ -197,7 +209,8 @@ public class ProcessJourneyEventHandler
                                         journeyChangeState.getInitialState()));
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
-                sendSubJourneyStartAuditEvent(auditEventUser, journeyChangeState.getJourneyType());
+                sendSubJourneyStartAuditEvent(
+                        auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
                 newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, null);
             }
 
@@ -287,13 +300,16 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private void updateUserSessionForTimeout(
-            String oldState, IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser)
+            String oldState,
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser,
+            String deviceInformation)
             throws SqsException {
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         updateUserState(oldState, CORE_SESSION_TIMEOUT_STATE, "timeout", ipvSessionItem);
-        sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT);
+        sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
     }
 
     @Tracing
@@ -324,7 +340,8 @@ public class ProcessJourneyEventHandler
         return stateMachinesMap;
     }
 
-    private void sendMitigationStartAuditEvent(AuditEventUser auditEventUser, String mitigationType)
+    private void sendMitigationStartAuditEvent(
+            AuditEventUser auditEventUser, String mitigationType, String deviceInformation)
             throws SqsException {
 
         auditService.sendAuditEvent(
@@ -332,16 +349,19 @@ public class ProcessJourneyEventHandler
                         AuditEventTypes.IPV_MITIGATION_START,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionMitigationType(mitigationType)));
+                        new AuditExtensionMitigationType(mitigationType),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
     private void sendSubJourneyStartAuditEvent(
-            AuditEventUser auditEventUser, IpvJourneyTypes journeyType) throws SqsException {
+            AuditEventUser auditEventUser, IpvJourneyTypes journeyType, String deviceInformation)
+            throws SqsException {
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionSubjourneyType(journeyType)));
+                        new AuditExtensionSubjourneyType(journeyType),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 }
