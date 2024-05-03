@@ -16,6 +16,8 @@ states:
             targetState: CRI_TICF_BEFORE_REUSE
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
+          coiEnabled:
+            targetState: IDENTITY_REUSE_PAGE_COI
 
   # Journey states
 
@@ -29,6 +31,8 @@ states:
         checkFeatureFlag:
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
+          coiEnabled:
+            targetState: IDENTITY_REUSE_PAGE_COI
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
@@ -53,6 +57,17 @@ states:
       next:
         targetState: RETURN_TO_RP
 
+  IDENTITY_REUSE_PAGE_COI:
+    response:
+      type: page
+      pageId: page-ipv-reuse
+      context: coi
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      update-details:
+        targetState: UPDATE_DETAILS_PAGE
+
   IDENTITY_REUSE_PAGE_TEST:
     response:
       type: page
@@ -70,6 +85,9 @@ states:
         targetState: CONFIRM_DELETE_DETAILS_PAGE
       end:
         targetState: IDENTITY_REUSE_PAGE
+        checkFeatureFlag:
+          coiEnabled:
+            targetState: IDENTITY_REUSE_PAGE_COI
 
   CONFIRM_DELETE_DETAILS_PAGE:
     response:
@@ -80,6 +98,9 @@ states:
         targetState: RESET_SESSION_IDENTITY
       end:
         targetState: IDENTITY_REUSE_PAGE
+        checkFeatureFlag:
+          coiEnabled:
+            targetState: IDENTITY_REUSE_PAGE_COI
 
   RESET_SESSION_IDENTITY:
     response:
@@ -97,6 +118,36 @@ states:
       next:
         targetJourney: NEW_P2_IDENTITY
         targetState: START
+
+  UPDATE_DETAILS_PAGE:
+    response:
+      type: page
+      pageId: update-details
+    events:
+      address:
+        targetJourney: UPDATE_ADDRESS
+        targetState: START
+      name:
+        # TODO replace with UPDATE_NAME_ADDRESS when it is complete
+        targetJourney: UPDATE_ADDRESS
+        targetState: START
+      name-address:
+        # TODO replace with UPDATE_NAME_ADDRESS when it is complete
+        targetJourney: UPDATE_ADDRESS
+        targetState: START
+      names-dob:
+        targetState: UPDATE_NAME_DOB_PAGE
+      cancel:
+        targetState: RETURN_TO_RP
+
+  UPDATE_NAME_DOB_PAGE:
+    response:
+      type: page
+      pageId: update-name-date-birth
+      context: coi
+    events:
+      end:
+        targetState: UPDATE_DETAILS_PAGE
 
   RETURN_TO_RP:
     response:
