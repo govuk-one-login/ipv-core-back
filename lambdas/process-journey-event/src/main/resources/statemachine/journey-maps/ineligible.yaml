@@ -1,6 +1,8 @@
 name: Ineligible Journey
 
-description: A user does not have the correct evidence to prove their identity.
+description: >-
+  A user does not have (or chose not to use) a piece
+  of evidence needed to prove their identity.
 
 states:
   # Entry points
