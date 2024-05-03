@@ -137,6 +137,7 @@ UPDATE_NAME_DOB_PAGE:
   response:
     type: page
     pageId: update-name-date-birth
+    context: coi
   events:
     end:
       targetState: UPDATE_DETAILS_PAGE
