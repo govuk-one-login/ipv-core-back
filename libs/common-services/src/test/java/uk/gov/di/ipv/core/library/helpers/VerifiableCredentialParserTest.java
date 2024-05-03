@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.IdentityAssertionCredential;
 import uk.gov.di.model.IdentityCheck;
@@ -23,6 +24,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialParserTest {
@@ -106,6 +108,24 @@ class VerifiableCredentialParserTest {
         var evidence = ((SecurityCheckCredential) vc).getEvidence().get(0);
         assertEquals("SecurityCheck", evidence.getType());
         assertEquals("XX", evidence.getContraIndicator().get(0).getCode());
+    }
+
+    @Test
+    void shouldAllowAdditionalProperties() throws Exception {
+        var claimsSet = getTestClaimsSet("/AdditionalPropertyCredential.json");
+
+        var vc = VerifiableCredentialParser.parseCredential(claimsSet);
+
+        assertInstanceOf(AddressCredential.class, vc);
+    }
+
+    @Test
+    void shouldThrowOnInvalidTypes() throws Exception {
+        var claimsSet = getTestClaimsSet("/InvalidTypeCredential.json");
+
+        assertThrows(
+                CredentialParseException.class,
+                () -> VerifiableCredentialParser.parseCredential(claimsSet));
     }
 
     private JWTClaimsSet getTestClaimsSet(String resource)
