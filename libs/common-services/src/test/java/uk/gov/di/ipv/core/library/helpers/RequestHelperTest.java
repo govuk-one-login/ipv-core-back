@@ -24,10 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_INFORMATION_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getEncodedDeviceInformation;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getHeaderByKey;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -162,6 +164,14 @@ class RequestHelperTest {
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
                 exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getEncodedDeviceInformationShouldReturnDeviceInformation() {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of(ENCODED_DEVICE_INFORMATION_HEADER, "test-device-information"));
+
+        assertEquals("test-device-information", getEncodedDeviceInformation(event));
     }
 
     @Test
