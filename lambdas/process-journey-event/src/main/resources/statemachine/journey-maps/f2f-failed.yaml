@@ -1,7 +1,7 @@
 name: Face to Face Failed
 description: >-
   A user chose to prove their identity at the Post Office
-  but their attempt failed. For example: the user might
+  but their attempt failed. For example, they might
   have taken the wrong document or the name they entered
   did not match the name on their document.
 
