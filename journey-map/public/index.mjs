@@ -54,6 +54,8 @@ const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
 const stateSearch = document.getElementById('state-search');
+const journeyDesc = document.getElementById('journeyDesc');
+const journeyName = document.getElementById('journeyName');
 
 let svgPanZoomInstance = null;
 let journeyMaps = {};
@@ -78,7 +80,7 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 const switchJourney = async (journeyType) => {
     window.history.pushState(undefined, undefined, getJourneyUrl(journeyType));
     selectedState = null;
-    await renderSvg();
+    await updateView();
 };
 
 const setupHeader = () => {
@@ -96,7 +98,7 @@ const setupHeader = () => {
 
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
-        await renderSvg();
+        await updateView();
     });
 };
 
@@ -123,10 +125,23 @@ const setupOptions = (name, options, fieldset, labels) => {
     }
 };
 
-// Render the journey map SVG
-const renderSvg = async () => {
+const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
-    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, new FormData(form));
+    journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
+    const desc = journeyMaps[selectedJourney].description;
+    const formData = new FormData(form);
+    if (desc && formData.has('showJourneyDesc')) {
+        journeyDesc.innerText = desc;
+    } else {
+        journeyDesc.innerText = '';
+    }
+
+    return renderSvg(selectedJourney, formData);
+};
+
+// Render the journey map SVG
+const renderSvg = async (selectedJourney, formData) => {
+    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
@@ -267,10 +282,10 @@ const initialize = async () => {
     setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
         event.preventDefault();
-        await renderSvg();
+        await updateView();
     });
     setupSearchHandler();
-    await renderSvg();
+    await updateView();
 }
 
 await initialize();

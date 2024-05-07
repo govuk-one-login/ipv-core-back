@@ -48,10 +48,16 @@
                             <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
                             <span>Show all states within <strong>nested journeys</strong></span>
                         </label>
+                        <label>
+                            <input id="showJourneyDescInput" name="showJourneyDesc" type="checkbox" checked>
+                            <span>Show journey <strong>descriptions</strong></span>
+                        </label>
                     </fieldset>
                 </form>
                 <div id="nodeInfo">
-                    <h2>Details</h2>
+                    <h2 id="journeyName"></h2>
+                    <p id="journeyDesc"></p>
+                    <hr />
                     <h3 id="nodeTitle"></h3>
                     <pre id="nodeDef"></pre>
                     <div id="nodeDesc">

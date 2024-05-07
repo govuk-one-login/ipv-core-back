@@ -1,107 +1,108 @@
-# This file is for simple config to easily test the state machine initializer
-PARENT_STATE:
-  events:
-    parentEvent:
-      targetState: CRI_STATE
+states:
+  # This file is for simple config to easily test the state machine initializer
+  PARENT_STATE:
+    events:
+      parentEvent:
+        targetState: CRI_STATE
 
-PAGE_STATE:
-  response:
-    type: page
-    pageId: page-id-for-some-page
-    context: test
-  parent: PARENT_STATE
-  events:
-    eventOne:
-      targetState: JOURNEY_STATE
-    eventTwo:
-      targetState: CRI_STATE
-      checkIfDisabled:
-        aCriId:
-          targetState: ERROR_STATE
+  PAGE_STATE:
+    response:
+      type: page
+      pageId: page-id-for-some-page
+      context: test
+    parent: PARENT_STATE
+    events:
+      eventOne:
+        targetState: JOURNEY_STATE
+      eventTwo:
+        targetState: CRI_STATE
+        checkIfDisabled:
+          aCriId:
+            targetState: ERROR_STATE
 
-CRI_STATE:
-  response:
-    type: cri
-    criId: aCriId
-  events:
-    enterNestedJourneyAtStateOne:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
-    testWithContext:
-      targetState: CRI_STATE_WITH_CONTEXT
-    testWithScope:
-      targetState: CRI_STATE_WITH_SCOPE
-    testWithContextAndScope:
-      targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
-    testWithMitigationStart:
-      targetState: PAGE_STATE_AT_START_OF_MITIGATION
-    testJourneyStep:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR
+  CRI_STATE:
+    response:
+      type: cri
+      criId: aCriId
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
+      testWithContext:
+        targetState: CRI_STATE_WITH_CONTEXT
+      testWithScope:
+        targetState: CRI_STATE_WITH_SCOPE
+      testWithContextAndScope:
+        targetState: CRI_STATE_WITH_CONTEXT_AND_SCOPE
+      testWithMitigationStart:
+        targetState: PAGE_STATE_AT_START_OF_MITIGATION
+      testJourneyStep:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
-CRI_STATE_WITH_CONTEXT:
-  response:
-    type: cri
-    criId: aCriId
-    context: test_context
-  events:
-    enterNestedJourneyAtStateOne:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
+  CRI_STATE_WITH_CONTEXT:
+    response:
+      type: cri
+      criId: aCriId
+      context: test_context
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
 
-CRI_STATE_WITH_SCOPE:
-  response:
-    type: cri
-    criId: aCriId
-    scope: test_scope
-  events:
-    enterNestedJourneyAtStateOne:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
+  CRI_STATE_WITH_SCOPE:
+    response:
+      type: cri
+      criId: aCriId
+      scope: test_scope
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
 
-CRI_STATE_WITH_CONTEXT_AND_SCOPE:
-  response:
-    type: cri
-    criId: aCriId
-    context: test_context
-    scope: test_scope
-  events:
-    enterNestedJourneyAtStateOne:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
+  CRI_STATE_WITH_CONTEXT_AND_SCOPE:
+    response:
+      type: cri
+      criId: aCriId
+      context: test_context
+      scope: test_scope
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
 
-PAGE_STATE_AT_START_OF_MITIGATION:
-  response:
-    type: page
-    pageId: page-id-for-some-page
-    mitigationStart: a-mitigation-type
-  events:
-    enterNestedJourneyAtStateOne:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
+  PAGE_STATE_AT_START_OF_MITIGATION:
+    response:
+      type: page
+      pageId: page-id-for-some-page
+      mitigationStart: a-mitigation-type
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
 
-ERROR_STATE:
-  response:
-    type: error
-    pageId: page-error
-    statusCode: 500
-  events:
-    enterNestedJourneyAtStateTwo:
-      targetState: NESTED_JOURNEY_INVOKE_STATE
+  ERROR_STATE:
+    response:
+      type: error
+      pageId: page-error
+      statusCode: 500
+    events:
+      enterNestedJourneyAtStateTwo:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
 
-PROCESS_STATE:
-  response:
-    type: process
-    lambda: a-lambda-to-invoke
-    lambdaInput:
-      input1: the-first-input
-      input2: 2
-      input3: true
-  events:
-    met:
-      targetState: CRI_STATE
-    unmet:
-      targetState: ERROR_STATE
+  PROCESS_STATE:
+    response:
+      type: process
+      lambda: a-lambda-to-invoke
+      lambdaInput:
+        input1: the-first-input
+        input2: 2
+        input3: true
+    events:
+      met:
+        targetState: CRI_STATE
+      unmet:
+        targetState: ERROR_STATE
 
-NESTED_JOURNEY_INVOKE_STATE:
-  nestedJourney: NESTED_JOURNEY_DEFINITION
-  exitEvents:
-    exitEventFromNestedStateTwo:
-      targetState: JOURNEY_STATE
-    exitEventFromDoublyNestedInvokeState:
-      targetState: ERROR_STATE
+  NESTED_JOURNEY_INVOKE_STATE:
+    nestedJourney: NESTED_JOURNEY_DEFINITION
+    exitEvents:
+      exitEventFromNestedStateTwo:
+        targetState: JOURNEY_STATE
+      exitEventFromDoublyNestedInvokeState:
+        targetState: ERROR_STATE

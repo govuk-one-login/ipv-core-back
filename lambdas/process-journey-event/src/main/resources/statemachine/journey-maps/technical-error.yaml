@@ -1,49 +1,56 @@
-# Entry points
+name: Technical Error
 
-ERROR:
-  events:
-    next:
-      targetState: ERROR_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_ERROR
+description: >-
+  A user cannot complete their identity journey
+  because of a technical error.
 
-ERROR_NO_TICF:
-  events:
-    next:
-      targetState: ERROR_PAGE
+states:
+  # Entry points
 
-# Journey states
+  ERROR:
+    events:
+      next:
+        targetState: ERROR_PAGE
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_ERROR
 
-CRI_TICF_BEFORE_ERROR:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: ERROR_PAGE
-    enhanced-verification:
-      targetState: ERROR_PAGE
-    alternate-doc-invalid-dl:
-      targetState: ERROR_PAGE
-    alternate-doc-invalid-passport:
-      targetState: ERROR_PAGE
-    fail-with-ci:
-      targetJourney: FAILED
-      targetState: FAILED_NO_TICF
-    error:
-      targetState: ERROR_PAGE
+  ERROR_NO_TICF:
+    events:
+      next:
+        targetState: ERROR_PAGE
 
-ERROR_PAGE:
-  response:
-    type: error
-    pageId: pyi-technical
-    statusCode: 500
-  events:
-    next:
-      targetState: RETURN_TO_RP
+  # Journey states
 
-RETURN_TO_RP:
-  response:
-    type: process
-    lambda: build-client-oauth-response
+  CRI_TICF_BEFORE_ERROR:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: ERROR_PAGE
+      enhanced-verification:
+        targetState: ERROR_PAGE
+      alternate-doc-invalid-dl:
+        targetState: ERROR_PAGE
+      alternate-doc-invalid-passport:
+        targetState: ERROR_PAGE
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetState: ERROR_PAGE
+
+  ERROR_PAGE:
+    response:
+      type: error
+      pageId: pyi-technical
+      statusCode: 500
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response
