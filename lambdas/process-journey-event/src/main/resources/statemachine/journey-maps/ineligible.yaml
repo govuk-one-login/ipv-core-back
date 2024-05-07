@@ -1,7 +1,7 @@
 name: Ineligible Journey
 
 description: >-
-  A user does not have (or chose not to use) a piece
+  A user does not have or chose not to use a piece
   of evidence needed to prove their identity.
 
 states:
