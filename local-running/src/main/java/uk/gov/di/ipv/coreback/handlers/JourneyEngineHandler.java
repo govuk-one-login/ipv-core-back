@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
+import uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
@@ -40,6 +41,7 @@ public class JourneyEngineHandler {
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private final EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private final CallTicfCriHandler callTicfCriHandler;
+    private final StoreIdentityHandler storeIdentityHandler;
 
     public JourneyEngineHandler() throws IOException {
         this.processJourneyEventHandler = new ProcessJourneyEventHandler();
@@ -50,6 +52,7 @@ public class JourneyEngineHandler {
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
         this.callTicfCriHandler = new CallTicfCriHandler();
+        this.storeIdentityHandler = new StoreIdentityHandler();
     }
 
     private final Route journeyEngine =
@@ -102,6 +105,8 @@ public class JourneyEngineHandler {
             case "/journey/check-gpg45-scores" -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
+                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+            case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
