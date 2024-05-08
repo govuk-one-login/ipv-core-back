@@ -967,22 +967,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -1004,22 +988,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -1040,22 +1008,6 @@ Resources:
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
@@ -1185,22 +1137,6 @@ Resources:
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
@@ -1666,22 +1602,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -1848,22 +1768,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -1884,22 +1788,6 @@ Resources:
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
@@ -2144,22 +2032,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -2181,22 +2053,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -2217,22 +2073,6 @@ Resources:
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
@@ -2347,22 +2187,6 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-                - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
@@ -2383,22 +2207,6 @@ Resources:
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
