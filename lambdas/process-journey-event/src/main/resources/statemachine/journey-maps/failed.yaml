@@ -16,6 +16,14 @@ states:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_NO_MATCH
 
+  FAILED_COI:
+    events:
+      next:
+        targetState: COULD_NOT-CONFIRM-DETAILS
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH
+
   FAILED_BAV:
     events:
       next:
@@ -131,6 +139,14 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+
+  COULD_NOT-CONFIRM-DETAILS_PAGE:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-details
+    events:
+      end:
+        targetState: RETURN_TO_RP
 
   NO_MATCH_PAGE:
     response:
