@@ -22,7 +22,7 @@ export const getOptions = (journeyMaps) => {
     const featureFlagOptions = [];
 
     Object.values(journeyMaps).forEach((journeyMap) => {
-        Object.values(journeyMap).forEach((definition) => {
+        Object.values(journeyMap.states).forEach((definition) => {
             const events = definition.events || definition.exitEvents || {};
             Object.values(events).forEach((def) => {
                 addDefinitionOptions(def, disabledOptions, featureFlagOptions);
