@@ -1,3 +1,10 @@
+name: Initial Journey Selection
+
+description: >-
+  The entry point for all journeys. We check everything we
+  already know about the user and route them on to the
+  correct journey
+
 states:
   # Entry points
 
