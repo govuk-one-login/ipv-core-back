@@ -164,12 +164,10 @@ states:
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
         checkFeatureFlag:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
-          sessionCredentialsTableReads:
-            targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
       unmet:
         targetJourney: FAILED
         targetState: FAILED_COI
@@ -194,10 +192,7 @@ states:
       lambda: call-ticf-cri
     events:
       next:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
-        checkFeatureFlag:
-          sessionCredentialsTableReads:
-            targetState: STORE_IDENTITY_BEFORE_SUCCESS
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF

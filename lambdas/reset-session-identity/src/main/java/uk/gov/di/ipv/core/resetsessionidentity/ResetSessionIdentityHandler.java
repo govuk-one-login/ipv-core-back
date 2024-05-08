@@ -74,7 +74,7 @@ public class ResetSessionIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             sessionCredentialsService.deleteSessionCredentialsForSubjourneyType(
-                    ipvSessionId, ipvSessionItem.getCoiSubjourneyTypes());
+                    ipvSessionId, ipvSessionItem.getCoiSubjourneyType());
 
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 

@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -17,12 +17,11 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
-import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.ADDRESS_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.FAMILY_NAME_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes.GIVEN_NAMES_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.ADDRESS_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.FAMILY_NAME_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.GIVEN_NAMES_ONLY;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
 
@@ -97,28 +96,27 @@ public class SessionCredentialsService {
     }
 
     public void deleteSessionCredentialsForSubjourneyType(
-            String ipvSessionId, CoiSubjourneyTypes coiSubjourneyTypes)
+            String ipvSessionId, CoiSubjourneyType coiSubjourneyType)
             throws VerifiableCredentialException {
         try {
             List<SessionCredentialItem> sessionCredentialItems = dataStore.getItems(ipvSessionId);
 
             List<SessionCredentialItem> vcsToDelete;
 
-            if (isAddressOnlyJourney(coiSubjourneyTypes)) {
+            if (isAddressOnlyJourney(coiSubjourneyType)) {
                 vcsToDelete =
                         sessionCredentialItems.stream()
                                 .filter(
                                         item ->
-                                                item.getCriId().equals(ADDRESS_CRI)
-                                                        || item.getCriId()
-                                                                .equals(EXPERIAN_FRAUD_CRI))
-                                .collect(Collectors.toList());
+                                                List.of(ADDRESS_CRI, EXPERIAN_FRAUD_CRI)
+                                                        .contains(item.getCriId()))
+                                .toList();
 
-            } else if (isNameOnlyJourney(coiSubjourneyTypes)) {
+            } else if (isNameOnlyJourney(coiSubjourneyType)) {
                 vcsToDelete =
                         sessionCredentialItems.stream()
                                 .filter(item -> !item.getCriId().equals(ADDRESS_CRI))
-                                .collect(Collectors.toList());
+                                .toList();
             } else {
                 // if name change & address OR not a COJ journey then delete all session VCs
                 vcsToDelete = sessionCredentialItems;
@@ -130,7 +128,7 @@ public class SessionCredentialsService {
                     LogHelper.buildErrorMessage(
                             String.format(
                                     "Error deleting session credentials for subjourney: %s",
-                                    coiSubjourneyTypes),
+                                    coiSubjourneyType),
                             e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DELETE_CREDENTIAL);
@@ -169,14 +167,12 @@ public class SessionCredentialsService {
         }
     }
 
-    private static boolean isNameOnlyJourney(CoiSubjourneyTypes coiSubjourneyTypes) {
-        return coiSubjourneyTypes != null
-                && (coiSubjourneyTypes.getPath().equals(GIVEN_NAMES_ONLY.getPath())
-                        || coiSubjourneyTypes.getPath().equals(FAMILY_NAME_ONLY.getPath()));
+    private static boolean isNameOnlyJourney(CoiSubjourneyType coiSubjourneyType) {
+        return coiSubjourneyType != null
+                && List.of(GIVEN_NAMES_ONLY, FAMILY_NAME_ONLY).contains(coiSubjourneyType);
     }
 
-    private static boolean isAddressOnlyJourney(CoiSubjourneyTypes coiSubjourneyTypes) {
-        return coiSubjourneyTypes != null
-                && coiSubjourneyTypes.getPath().equals(ADDRESS_ONLY.getPath());
+    private static boolean isAddressOnlyJourney(CoiSubjourneyType coiSubjourneyType) {
+        return ADDRESS_ONLY.equals(coiSubjourneyType);
     }
 }

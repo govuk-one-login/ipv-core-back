@@ -1,20 +1,15 @@
-name: Update Name
-
+name: Update Address
 description: >-
-  The journey for users who wish to change their address after starting a reuse identity journey
+  The route a returning user must take to update
+  their address.
 
 states:
-
   # Entry points
-  UPDATE_NAME_WITH_ADDRESS_START:
-    events:
-      next:
-        targetState: RESET_IDENTITY_WITH_ADDRESS
 
-  UPDATE_NAME_WITHOUT_ADDRESS_START:
+  START:
     events:
       next:
-        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+        targetState: RESET_IDENTITY_ADDRESS_CHANGE
 
   # Parent States
 
@@ -22,154 +17,52 @@ states:
     events:
       not-found:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
 
   # Journey States
 
-  #### WITHOUT ADDRESS ####
-
-  RESET_IDENTITY_WITHOUT_ADDRESS:
+  RESET_IDENTITY_ADDRESS_CHANGE:
     response:
       type: process
       lambda: reset-session-identity
     events:
       next:
-        targetState: DCMAW_UPDATE_NAME_ONLY
+        targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
 
-  DCMAW_UPDATE_NAME_ONLY:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ONLY
-      not-found:
-        targetJourney: FAILED
-        targetState: FAILED
-      access-denied:
-        targetJourney: FAILED
-        targetState: FAILED
-      temporarily-unavailable:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  POST_DCMAW_SUCCESS_PAGE_NAME_ONLY:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-      context: coi-no-address
-    events:
-      next:
-        targetState: FRAUD_CHECK_UPDATE_NAME
-
-  FRAUD_CHECK_UPDATE_NAME:
-    response:
-      type: cri
-      criId: fraud
-    parent: CRI_STATE
-    events:
-      next:
-        #      targetState: COI_CHECK_LAMBDA
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
-      enhanced-verification:
-        # REPLACE WITH CUSTOM FAILURE
-        targetJourney: FAILED
-        targetState: FAILED
-
-  #### WITH ADDRESS ####
-
-  RESET_IDENTITY_WITH_ADDRESS:
-    response:
-      type: process
-      lambda: reset-session-identity
-    events:
-      next:
-        targetState: DCMAW_UPDATE_NAME_ADDRESS
-
-  DCMAW_UPDATE_NAME_ADDRESS:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS
-      not-found:
-        targetJourney: FAILED
-        targetState: FAILED
-      access-denied:
-        targetJourney: FAILED
-        targetState: FAILED
-      temporarily-unavailable:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-      context: coi-address
-    events:
-      next:
-        targetState: ADDRESS_AND_FRAUD_UPDATE
-
-  ADDRESS_AND_FRAUD_UPDATE:
+  ADDRESS_AND_FRAUD_UPDATE_ADDRESS:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        #      targetState: COI_CHECK_LAMBDA
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
+        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
       enhanced-verification:
-        # REPLACE WITH CUSTOM FAILURE
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_UPDATE_ADDRESS
 
-  #### SHARED STATES ####
-
-  #COI_CHECK_LAMBDA:
-  #  response:
-  #    type: process
-  #    lambda: coi-check
-  #  events:
-  #    success:
-  #      targetState:
-  #        EVALUATE_GPG45_SCORES_UPDATE_NAME
-  #    failed:
-  #      targetJourney: FAILED
-  #      targetState: FAILED
-
-  EVALUATE_GPG45_SCORES_UPDATE_NAME:
+  EVALUATE_GPG45_SCORES_UPDATE_ADDRESS:
     response:
       type: process
       lambda: evaluate-gpg45-scores
@@ -180,15 +73,15 @@ states:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
           sessionCredentialsTableReads:
-            targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
+            targetState: STORE_IDENTITY_BEFORE_SUCCESS
       unmet:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_ADDRESS
 
-  STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME:
+  STORE_IDENTITY_BEFORE_SUCCESS:
     response:
       type: process
       lambda: store-identity
@@ -229,6 +122,8 @@ states:
     response:
       type: page
       pageId: page-ipv-success
+      # same page as RFC displayed so re-use this context
+      context: repeatFraudCheck
     events:
       next:
         targetState: RETURN_TO_RP

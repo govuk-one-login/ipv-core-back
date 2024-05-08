@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -78,7 +78,7 @@ class ResetSessionIdentityHandlerTest {
     @Test
     void handleRequestShouldDeleteUsersSessionVcsAndReturnNext() throws Exception {
         // Arrange
-        ipvSessionItem.setCoiSubjourneyTypes(CoiSubjourneyTypes.ADDRESS_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.ADDRESS_ONLY);
 
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -101,7 +101,7 @@ class ResetSessionIdentityHandlerTest {
         // Assert
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
-                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyTypes.ADDRESS_ONLY);
+                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
@@ -109,7 +109,7 @@ class ResetSessionIdentityHandlerTest {
     @Test
     void handleRequestShouldDeleteUsersSessionVcsWithExceptionAndReturnNext() throws Exception {
         // Arrange
-        ipvSessionItem.setCoiSubjourneyTypes(CoiSubjourneyTypes.ADDRESS_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.ADDRESS_ONLY);
 
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -132,7 +132,7 @@ class ResetSessionIdentityHandlerTest {
         // Assert
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
-                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyTypes.ADDRESS_ONLY);
+                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 
@@ -160,7 +160,7 @@ class ResetSessionIdentityHandlerTest {
     @Test
     void shouldReturnAnErrorJourneyIfCantDeleteSessionCredentials() throws Exception {
         // Arrange
-        ipvSessionItem.setCoiSubjourneyTypes(CoiSubjourneyTypes.ADDRESS_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.ADDRESS_ONLY);
 
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -168,7 +168,7 @@ class ResetSessionIdentityHandlerTest {
         doThrow(new VerifiableCredentialException(418, FAILED_TO_DELETE_CREDENTIAL))
                 .when(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
-                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyTypes.ADDRESS_ONLY);
+                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)

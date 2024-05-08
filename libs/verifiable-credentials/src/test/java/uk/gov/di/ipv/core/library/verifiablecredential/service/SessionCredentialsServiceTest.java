@@ -11,7 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyTypes;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator;
@@ -231,7 +231,7 @@ class SessionCredentialsServiceTest {
                     .thenReturn(List.of(sessionFraudCredentialItem, sessionAddressCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyTypes.GIVEN_NAMES_ONLY);
+                    SESSION_ID, CoiSubjourneyType.GIVEN_NAMES_ONLY);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionFraudCredentialItem));
@@ -269,7 +269,7 @@ class SessionCredentialsServiceTest {
                                     sessionHmrcKbvCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyTypes.ADDRESS_ONLY);
+                    SESSION_ID, CoiSubjourneyType.ADDRESS_ONLY);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore)
@@ -308,7 +308,7 @@ class SessionCredentialsServiceTest {
                                     sessionHmrcKbvCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyTypes.GIVEN_NAMES_AND_ADDRESS);
+                    SESSION_ID, CoiSubjourneyType.GIVEN_NAMES_AND_ADDRESS);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore)
