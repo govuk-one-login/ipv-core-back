@@ -79,7 +79,7 @@ POST_DCMAW_SUCCESS_PAGE_NAME_ONLY:
   response:
     type: page
     pageId: page-dcmaw-success
-    context: no-address
+    context: coi-no-address
   events:
     next:
       targetState: FRAUD_CHECK_UPDATE_NAME
@@ -133,7 +133,7 @@ POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS:
   response:
     type: page
     pageId: page-dcmaw-success
-    context: address
+    context: coi-address
   events:
     next:
       targetState: ADDRESS_AND_FRAUD_UPDATE
