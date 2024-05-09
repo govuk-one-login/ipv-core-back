@@ -15,6 +15,7 @@ dependencies {
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services')
+	implementation 'org.projectlombok:lombok:1.18.28'
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit

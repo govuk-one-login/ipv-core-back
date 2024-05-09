@@ -64,8 +64,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BuildUserIdentityHandlerTest {
 
-    private static final int PORT = 5050;
-
     private static final String IPV_SESSION_ID = "dummyIpvSessionId";
 
     private LambdaHttpServer httpServer;
@@ -146,10 +144,10 @@ class BuildUserIdentityHandlerTest {
                         mockCiMitUtilityService,
                         sessionCredentialService);
 
-        httpServer = new LambdaHttpServer(handler, "/user-identity", PORT);
+        httpServer = new LambdaHttpServer(handler, "/user-identity");
         httpServer.startServer();
 
-        context.setTarget(new HttpTestTarget("localhost", PORT));
+        context.setTarget(new HttpTestTarget("localhost", httpServer.getPort()));
     }
 
     @AfterEach

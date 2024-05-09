@@ -53,8 +53,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 @MockitoSettings(strictness = Strictness.LENIENT)
 class IssueClientAccessTokenHandlerTest {
 
-    private static final int PORT = 5050;
-
     private LambdaHttpServer httpServer;
     private IpvSessionItem ipvSessionItem;
     @Mock private ConfigService configService;
@@ -102,10 +100,10 @@ class IssueClientAccessTokenHandlerTest {
                         clientOAuthSessionService,
                         tokenRequestValidator);
 
-        httpServer = new LambdaHttpServer(handler, "/token", PORT);
+        httpServer = new LambdaHttpServer(handler, "/token");
         httpServer.startServer();
 
-        context.setTarget(new HttpTestTarget("localhost", PORT));
+        context.setTarget(new HttpTestTarget("localhost", httpServer.getPort()));
     }
 
     @AfterEach

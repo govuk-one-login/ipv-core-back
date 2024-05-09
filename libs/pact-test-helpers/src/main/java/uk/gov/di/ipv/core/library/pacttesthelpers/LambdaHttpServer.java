@@ -28,13 +28,15 @@ import java.util.stream.Collectors;
 @ExcludeFromGeneratedCoverageReport
 public class LambdaHttpServer {
     private final HttpServer server;
+    @lombok.Getter private final int port;
 
     public LambdaHttpServer(
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler,
-            String path,
-            int port)
+            String path)
             throws IOException {
-        server = HttpServer.create(new InetSocketAddress(port), 0);
+        var socketAddress = new InetSocketAddress(0);
+        port = socketAddress.getPort();
+        server = HttpServer.create(socketAddress, 0);
         server.createContext(path, new LambdaHandlerWrapper(handler));
         server.setExecutor(Executors.newCachedThreadPool()); // creates a default executor
     }
