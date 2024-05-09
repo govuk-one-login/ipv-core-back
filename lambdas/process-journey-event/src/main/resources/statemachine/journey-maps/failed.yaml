@@ -1,165 +1,208 @@
-# Entry points
+name: Failed Journey
 
-FAILED:
-  events:
-    next:
-      targetState: NO_MATCH_PAGE
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH
+description: >-
+  A user fails part of the identity journey. For example, they answer
+  knowledge-based verification questions incorrectly.
 
-FAILED_BAV:
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_BAV
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
+states:
 
-FAILED_NINO:
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_NINO
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH_NINO
+  # Entry points
 
-FAILED_NO_TICF:
-  events:
-    next:
-      targetState: NO_MATCH_PAGE
+  FAILED:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH
 
-FAILED_RFC:
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_RFC
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
+  FAILED_COI:
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
 
-FAILED_UPDATE_ADDRESS:
-  events:
-    next:
-      # same page as RFC displayed so re-use this state
-      targetState: NO_MATCH_PAGE_RFC
-      checkFeatureFlag:
-        ticfCriBeta:
-          targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
+  FAILED_BAV:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_BAV
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
 
-# Journey states
+  FAILED_NINO:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_NINO
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH_NINO
 
-CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_RFC
-    enhanced-verification:
-      targetState: NO_MATCH_PAGE_RFC
-    alternate-doc-invalid-dl:
-      targetState: NO_MATCH_PAGE_RFC
-    alternate-doc-invalid-passport:
-      targetState: NO_MATCH_PAGE_RFC
-    fail-with-ci:
-      targetState: NO_MATCH_PAGE_RFC
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR_NO_TICF
+  FAILED_NO_TICF:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE
 
-CRI_TICF_BEFORE_NO_MATCH:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: NO_MATCH_PAGE
-    enhanced-verification:
-      targetState: NO_MATCH_PAGE
-    alternate-doc-invalid-dl:
-      targetState: NO_MATCH_PAGE
-    alternate-doc-invalid-passport:
-      targetState: NO_MATCH_PAGE
-    fail-with-ci:
-      targetState: NO_MATCH_PAGE
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR_NO_TICF
+  FAILED_RFC:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_RFC
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
 
-CRI_TICF_BEFORE_NO_MATCH_BAV:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_BAV
-    enhanced-verification:
-      targetState: NO_MATCH_PAGE_BAV
-    alternate-doc-invalid-dl:
-      targetState: NO_MATCH_PAGE_BAV
-    alternate-doc-invalid-passport:
-      targetState: NO_MATCH_PAGE_BAV
-    fail-with-ci:
-      targetState: NO_MATCH_PAGE_BAV
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR_NO_TICF
+  FAILED_UPDATE_ADDRESS:
+    events:
+      next:
+        # same page as RFC displayed so re-use this state
+        targetState: NO_MATCH_PAGE_RFC
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
 
-CRI_TICF_BEFORE_NO_MATCH_NINO:
-  response:
-    type: process
-    lambda: call-ticf-cri
-  events:
-    next:
-      targetState: NO_MATCH_PAGE_NINO
-    enhanced-verification:
-      targetState: NO_MATCH_PAGE_NINO
-    alternate-doc-invalid-dl:
-      targetState: NO_MATCH_PAGE_NINO
-    alternate-doc-invalid-passport:
-      targetState: NO_MATCH_PAGE_NINO
-    fail-with-ci:
-      targetState: NO_MATCH_PAGE_NINO
-    error:
-      targetJourney: TECHNICAL_ERROR
-      targetState: ERROR_NO_TICF
+  # Journey states
 
-NO_MATCH_PAGE:
-  response:
-    type: page
-    pageId: pyi-no-match
-  events:
-    next:
-      targetState: RETURN_TO_RP
+  CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_RFC
+      enhanced-verification:
+        targetState: NO_MATCH_PAGE_RFC
+      alternate-doc-invalid-dl:
+        targetState: NO_MATCH_PAGE_RFC
+      alternate-doc-invalid-passport:
+        targetState: NO_MATCH_PAGE_RFC
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_RFC
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
-NO_MATCH_PAGE_RFC:
-  response:
-    type: page
-    pageId: pyi-no-match
-    context: repeatFraudCheck
-  events:
-    next:
-      targetState: RETURN_TO_RP
+  CRI_TICF_BEFORE_NO_MATCH:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: NO_MATCH_PAGE
+      enhanced-verification:
+        targetState: NO_MATCH_PAGE
+      alternate-doc-invalid-dl:
+        targetState: NO_MATCH_PAGE
+      alternate-doc-invalid-passport:
+        targetState: NO_MATCH_PAGE
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
-NO_MATCH_PAGE_BAV:
-  response:
-    type: page
-    pageId: pyi-no-match
-    context: bankAccount
-  events:
-    next:
-      targetState: RETURN_TO_RP
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      enhanced-verification:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
-NO_MATCH_PAGE_NINO:
-  response:
-    type: page
-    pageId: pyi-no-match
-    context: nino
-  events:
-    next:
-      targetState: RETURN_TO_RP
+  CRI_TICF_BEFORE_NO_MATCH_BAV:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_BAV
+      enhanced-verification:
+        targetState: NO_MATCH_PAGE_BAV
+      alternate-doc-invalid-dl:
+        targetState: NO_MATCH_PAGE_BAV
+      alternate-doc-invalid-passport:
+        targetState: NO_MATCH_PAGE_BAV
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_BAV
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
-RETURN_TO_RP:
-  response:
-    type: process
-    lambda: build-client-oauth-response
+  CRI_TICF_BEFORE_NO_MATCH_NINO:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_NINO
+      enhanced-verification:
+        targetState: NO_MATCH_PAGE_NINO
+      alternate-doc-invalid-dl:
+        targetState: NO_MATCH_PAGE_NINO
+      alternate-doc-invalid-passport:
+        targetState: NO_MATCH_PAGE_NINO
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_NINO
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  COULD_NOT_CONFIRM_DETAILS_PAGE:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-details
+    events:
+      end:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE:
+    response:
+      type: page
+      pageId: pyi-no-match
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_RFC:
+    response:
+      type: page
+      pageId: pyi-no-match
+      context: repeatFraudCheck
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_BAV:
+    response:
+      type: page
+      pageId: pyi-no-match
+      context: bankAccount
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_NINO:
+    response:
+      type: page
+      pageId: pyi-no-match
+      context: nino
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

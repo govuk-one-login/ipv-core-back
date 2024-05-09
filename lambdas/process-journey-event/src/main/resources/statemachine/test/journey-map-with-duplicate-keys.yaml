@@ -1,9 +1,10 @@
-DUPLICATE_PAGE:
-  response:
-    type: page
-    pageId: duplicate-page
+states:
+  DUPLICATE_PAGE:
+    response:
+      type: page
+      pageId: duplicate-page
 
-DUPLICATE_PAGE:
-  response:
-    type: page
-    pageId: this-seems-familiar
+  DUPLICATE_PAGE:
+    response:
+      type: page
+      pageId: this-seems-familiar

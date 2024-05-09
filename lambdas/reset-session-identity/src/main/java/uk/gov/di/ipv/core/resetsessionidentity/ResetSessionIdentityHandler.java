@@ -62,6 +62,7 @@ public class ResetSessionIdentityHandler
     public Map<String, Object> handleRequest(ProcessRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(input));
+
         try {
             String ipvSessionId = getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -72,7 +73,8 @@ public class ResetSessionIdentityHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            sessionCredentialsService.deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
+            sessionCredentialsService.deleteSessionCredentialsForSubjourneyType(
+                    ipvSessionId, ipvSessionItem.getCoiSubjourneyType());
 
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 

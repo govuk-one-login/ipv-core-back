@@ -22,7 +22,7 @@ export const getOptions = (journeyMaps) => {
     const featureFlagOptions = [];
 
     Object.values(journeyMaps).forEach((journeyMap) => {
-        Object.values(journeyMap).forEach((definition) => {
+        Object.values(journeyMap.states).forEach((definition) => {
             const events = definition.events || definition.exitEvents || {};
             Object.values(events).forEach((def) => {
                 addDefinitionOptions(def, disabledOptions, featureFlagOptions);
@@ -204,7 +204,8 @@ const renderState = (state, definition) => {
 
 const renderStates = (journeyMap, states) => {
     const mermaids = states.flatMap((state) => {
-        const definition = journeyMap[state];
+        const definition = journeyMap.states[state];
+
         return [
             renderState(state, definition),
             renderClickHandler(state, definition),
@@ -237,14 +238,16 @@ const calcOrphanStates = (journeyMap) => {
 export const render = (journeyMap, nestedJourneys, formData = new FormData()) => {
     // Copy to avoid mutating the input
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
+
     if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy, nestedJourneys);
     }
-    expandParents(journeyMapCopy);
+
+    expandParents(journeyMapCopy.states);
 
     const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
-        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy) }
-        : renderTransitions(journeyMapCopy, formData);
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.states) }
+        : renderTransitions(journeyMapCopy.states, formData);
 
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 

@@ -967,7 +967,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -988,7 +988,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1009,7 +1009,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1138,7 +1138,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1602,7 +1602,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1768,7 +1768,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1789,7 +1789,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -2032,7 +2032,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -2053,7 +2053,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -2074,7 +2074,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -2187,7 +2187,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -2208,7 +2208,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
                   - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
