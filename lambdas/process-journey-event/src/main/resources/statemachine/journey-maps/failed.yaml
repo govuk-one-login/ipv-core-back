@@ -16,6 +16,14 @@ states:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_NO_MATCH
 
+  FAILED_COI:
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+
   FAILED_BAV:
     events:
       next:
@@ -94,6 +102,25 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      enhanced-verification:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   CRI_TICF_BEFORE_NO_MATCH_BAV:
     response:
       type: process
@@ -131,6 +158,14 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+
+  COULD_NOT_CONFIRM_DETAILS_PAGE:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-details
+    events:
+      end:
+        targetState: RETURN_TO_RP
 
   NO_MATCH_PAGE:
     response:

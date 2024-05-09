@@ -9,7 +9,7 @@ states:
   START:
     events:
       next:
-        targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
+        targetState: RESET_IDENTITY_ADDRESS_CHANGE
 
   # Parent States
 
@@ -45,6 +45,14 @@ states:
 
   # Journey States
 
+  RESET_IDENTITY_ADDRESS_CHANGE:
+    response:
+      type: process
+      lambda: reset-session-identity
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
+
   ADDRESS_AND_FRAUD_UPDATE_ADDRESS:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -60,12 +68,10 @@ states:
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
         checkFeatureFlag:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
-          sessionCredentialsTableReads:
-            targetState: STORE_IDENTITY_BEFORE_SUCCESS
       unmet:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_ADDRESS
@@ -90,10 +96,7 @@ states:
       lambda: call-ticf-cri
     events:
       next:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
-        checkFeatureFlag:
-          sessionCredentialsTableReads:
-            targetState: STORE_IDENTITY_BEFORE_SUCCESS
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
