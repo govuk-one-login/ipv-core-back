@@ -150,7 +150,8 @@ states:
       context: coi
     events:
       end:
-        targetState: UPDATE_DETAILS_PAGE
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: START
 
   RETURN_TO_RP:
     response:
