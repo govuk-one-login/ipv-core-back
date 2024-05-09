@@ -53,7 +53,7 @@ test {
 	exclude 'uk/gov/di/ipv/core/processcricallback/pact/**'
 }
 
-task contractTests (type: Test) {
+task pactConsumerTests (type: Test) {
 	useJUnitPlatform()
 	include 'uk/gov/di/ipv/core/processcricallback/pact/**'
 	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"

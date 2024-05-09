@@ -5,12 +5,12 @@ import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
+import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -39,14 +39,19 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
-@PactFolder("pacts")
-@Disabled("PACT tests should not be run in build pipelines at this time")
+// To run these tests locally you need to:
+// - Obtain the relevant pact file (from the pact broker or another team) and put it in
+//   /lambdas/build-user-identity/pacts
+// - Comment out the @PactBroker annotation below
+// - Uncomment @PactFolder annotation below
 @Provider("IpvCoreBackTokenProvider")
+@PactBroker(
+        url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
+        authentication = @PactBrokerAuth(username = "${PACT_USER}", password = "${PACT_PASSWORD}"))
+// @PactFolder("pacts")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class IssueClientAccessTokenHandlerTest {
-
-    private static final int PORT = 5050;
 
     private LambdaHttpServer httpServer;
     private IpvSessionItem ipvSessionItem;
@@ -95,10 +100,10 @@ class IssueClientAccessTokenHandlerTest {
                         clientOAuthSessionService,
                         tokenRequestValidator);
 
-        httpServer = new LambdaHttpServer(handler, "/token", PORT);
+        httpServer = new LambdaHttpServer(handler, "/token");
         httpServer.startServer();
 
-        context.setTarget(new HttpTestTarget("localhost", PORT));
+        context.setTarget(new HttpTestTarget("localhost", httpServer.getPort()));
     }
 
     @AfterEach

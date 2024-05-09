@@ -10,7 +10,7 @@ env:
   # The branch name for a pull request is in a property that only exists on pull request runs. If it doesn't exist
   # fall back to the branch name property for pushes.
   GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
-  CONSUMER_APP_VERSION: ${{ github.sha }}
+  GIT_SHA: ${{ github.sha }}
 
 on:
   push:
@@ -35,8 +35,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'gradle'
-      - name: Run contract tests
-        run: ./gradlew --parallel contractTests
+      - name: Run consumer contract tests
+        run: ./gradlew --parallel pactConsumerTests
       - name: Upload pacts to broker with gradle
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
         run: ./gradlew pactPublish
+      # The initial call to the pact broker starts a 30 second timer where calls will succeed. As uploading the pacts and
+      # verifying the pacts together takes over 30s we need to wait for the timer to expire so that the pact verification
+      # call starts its own timer.
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+      - name: Verify pacts
+        run: ./gradlew pactProviderTests
+      - name: Upload build-user-identity provider pact test report
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-user-identity provider pact test report
+          path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/build-user-identity/build/reports/tests/pactProviderTests/
+      - name: Upload issue-client-access-token provider pact test report
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-client-access-token provider pact test report
+          path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/issue-client-access-token/build/reports/tests/pactProviderTests/

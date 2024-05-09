@@ -31,12 +31,15 @@ public class LambdaHttpServer {
 
     public LambdaHttpServer(
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler,
-            String path,
-            int port)
+            String path)
             throws IOException {
-        server = HttpServer.create(new InetSocketAddress(port), 0);
+        server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext(path, new LambdaHandlerWrapper(handler));
         server.setExecutor(Executors.newCachedThreadPool()); // creates a default executor
+    }
+
+    public int getPort() {
+        return server.getAddress().getPort();
     }
 
     public void startServer() {
