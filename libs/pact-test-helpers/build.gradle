@@ -15,10 +15,6 @@ dependencies {
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services')
-	implementation 'org.projectlombok:lombok:1.18.28'
-
-	compileOnly libs.lombok
-	annotationProcessor libs.lombok
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit

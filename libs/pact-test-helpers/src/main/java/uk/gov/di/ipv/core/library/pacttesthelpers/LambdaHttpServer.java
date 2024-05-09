@@ -33,8 +33,7 @@ public class LambdaHttpServer {
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler,
             String path)
             throws IOException {
-        var socketAddress = new InetSocketAddress(0);
-        server = HttpServer.create(socketAddress, 0);
+        server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext(path, new LambdaHandlerWrapper(handler));
         server.setExecutor(Executors.newCachedThreadPool()); // creates a default executor
     }
