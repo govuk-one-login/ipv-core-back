@@ -229,7 +229,7 @@ public class ProcessCriCallbackHandler
 
     @ExcludeFromGeneratedCoverageReport
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
-            throws ParseCriCallbackRequestException, HttpResponseExceptionWithErrorBody {
+            throws ParseCriCallbackRequestException {
         try {
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));

@@ -8,9 +8,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 public class DeviceInformation {
     @JsonProperty("encoded")
-    private String encoded = "";
+    private final String encoded;
 
     public DeviceInformation(@JsonProperty(value = "encoded", required = true) String encoded) {
-        this.encoded = encoded;
+        this.encoded = encoded != null ? encoded : "";
     }
 }
