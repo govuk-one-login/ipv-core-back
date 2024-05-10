@@ -99,7 +99,7 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coi-no-address
+      context: coiNoAddress
     events:
       next:
         targetState: FRAUD_CHECK_UPDATE_NAME
@@ -166,7 +166,7 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coi-address
+      context: coiAddress
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_UPDATE
