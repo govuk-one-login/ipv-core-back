@@ -10,12 +10,12 @@ states:
   UPDATE_NAME_WITH_ADDRESS_START:
     events:
       next:
-        targetState: RESET_IDENTITY_WITH_ADDRESS
+        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS
 
   UPDATE_NAME_WITHOUT_ADDRESS_START:
     events:
       next:
-        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS
 
   # Parent States
 
@@ -51,7 +51,20 @@ states:
 
   # Journey States
 
-  # WITHOUT ADDRESS
+   # WITHOUT ADDRESS
+
+  UPDATE_NAME_PAGE_WITHOUT_ADDRESS:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      page-ipv-reuse:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: START
 
   RESET_IDENTITY_WITHOUT_ADDRESS:
     response:
@@ -86,7 +99,7 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coi-no-address
+      context: coiNoAddress
     events:
       next:
         targetState: FRAUD_CHECK_UPDATE_NAME
@@ -106,6 +119,19 @@ states:
         targetState: FAILED_COI
 
   # WITH ADDRESS
+
+  UPDATE_NAME_PAGE_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_WITH_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      page-ipv-reuse:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: START
 
   RESET_IDENTITY_WITH_ADDRESS:
     response:
@@ -140,7 +166,7 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coi-address
+      context: coiAddress
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_UPDATE
