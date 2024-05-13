@@ -9,6 +9,8 @@ const JOURNEY_TYPES = {
     INITIAL_JOURNEY_SELECTION: 'Initial journey selection',
     NEW_P2_IDENTITY: 'New P2 identity',
     REUSE_EXISTING_IDENTITY: 'Reuse existing identity',
+    UPDATE_NAME: 'Update name',
+    UPDATE_ADDRESS: 'Update address',
     INELIGIBLE: 'Ineligible journey',
     FAILED: 'Failed journey',
     TECHNICAL_ERROR: 'Technical error',
@@ -18,7 +20,6 @@ const JOURNEY_TYPES = {
     F2F_FAILED: 'F2F failed',
     OPERATIONAL_PROFILE_MIGRATION: 'Operational profile migration',
     OPERATIONAL_PROFILE_REUSE: 'Operational profile reuse',
-    UPDATE_ADDRESS: 'Update Address',
 };
 
 const CRI_NAMES = {
