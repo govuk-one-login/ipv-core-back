@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
+import static software.amazon.awssdk.utils.StringUtils.isBlank;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class RequestHelper {
@@ -52,7 +53,7 @@ public class RequestHelper {
 
     public static String getIpvSessionId(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
-        return getIpvSessionId(event.getHeaders(), false);
+        return getIpvSessionId(event.getHeaders());
     }
 
     public static String getIpvSessionId(JourneyRequest event)
@@ -60,7 +61,7 @@ public class RequestHelper {
         return getIpvSessionId(event, false);
     }
 
-    public static String getIpvSessionIdAllowNull(JourneyRequest event)
+    public static String getIpvSessionIdAllowBlank(JourneyRequest event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpvSessionId(event, true);
     }
@@ -90,16 +91,6 @@ public class RequestHelper {
                                 "Client session id missing in header.");
         validateClientOAuthSessionId(clientSessionId, message);
         return StringUtils.isBlank(clientSessionId) ? null : clientSessionId;
-    }
-
-    public static String getIpvSessionId(JourneyRequest request, boolean allowNull)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = request.getIpvSessionId();
-
-        validateIpvSessionId(ipvSessionId, "ipvSessionId not present in request", allowNull);
-
-        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
-        return ipvSessionId;
     }
 
     public static List<String> getFeatureSet(JourneyRequest request) {
@@ -189,22 +180,32 @@ public class RequestHelper {
         return value;
     }
 
-    private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
+    private static String getIpvSessionId(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
         String message = String.format("%s not present in header", IPV_SESSION_ID_HEADER);
 
-        validateIpvSessionId(ipvSessionId, message, allowNull);
+        validateIpvSessionId(ipvSessionId, message, false);
+
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+        return ipvSessionId;
+    }
+
+    private static String getIpvSessionId(JourneyRequest request, boolean allowBlank)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipvSessionId = request.getIpvSessionId();
+
+        validateIpvSessionId(ipvSessionId, "ipvSessionId not present in request", allowBlank);
 
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
     }
 
     private static void validateIpvSessionId(
-            String ipvSessionId, String errorMessage, boolean allowNull)
+            String ipvSessionId, String errorMessage, boolean allowBlank)
             throws HttpResponseExceptionWithErrorBody {
-        if (ipvSessionId == null) {
-            if (allowNull) {
+        if (isBlank(ipvSessionId)) {
+            if (allowBlank) {
                 LOGGER.warn(LogHelper.buildLogMessage(errorMessage));
             } else {
                 LOGGER.error(LogHelper.buildLogMessage(errorMessage));

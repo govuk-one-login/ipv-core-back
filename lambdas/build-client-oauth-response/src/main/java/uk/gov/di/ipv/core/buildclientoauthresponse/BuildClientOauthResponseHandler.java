@@ -51,7 +51,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowBlank;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler
@@ -93,7 +93,7 @@ public class BuildClientOauthResponseHandler
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = getIpvSessionIdAllowNull(input);
+            String ipvSessionId = getIpvSessionIdAllowBlank(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
             List<String> featureSet = getFeatureSet(input);
