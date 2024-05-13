@@ -9,5 +9,8 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 public record AuditRestrictedInheritedIdentity(
-        List<Name> name, List<BirthDate> birthDate, List<SocialSecurityRecord> socialSecurityRecord)
+        List<Name> name,
+        List<BirthDate> birthDate,
+        List<SocialSecurityRecord> socialSecurityRecord,
+        AuditRestrictedDeviceInformation deviceInformation)
         implements AuditRestricted {}

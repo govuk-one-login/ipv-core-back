@@ -126,6 +126,7 @@ class CriStoringServiceTest {
         criStoringService.storeVcs(
                 callbackRequest.getCredentialIssuerId(),
                 callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
@@ -173,6 +174,7 @@ class CriStoringServiceTest {
         criStoringService.storeVcs(
                 ADDRESS_CRI,
                 callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
@@ -196,6 +198,7 @@ class CriStoringServiceTest {
         criStoringService.storeVcs(
                 TICF_CRI,
                 callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
@@ -240,6 +243,7 @@ class CriStoringServiceTest {
         criStoringService.storeVcs(
                 callbackRequest.getCredentialIssuerId(),
                 callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
                 List.of(),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
@@ -266,6 +270,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
+                                callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
@@ -288,6 +293,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
+                                callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
@@ -307,6 +313,7 @@ class CriStoringServiceTest {
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuerId(),
                                 callbackRequest.getIpAddress(),
+                                callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem));
