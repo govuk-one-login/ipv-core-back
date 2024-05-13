@@ -32,7 +32,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getHeaderByKey;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowBlank;
 
 class RequestHelperTest {
     private final String TEST_IPV_SESSION_ID = "a-session-id";
@@ -74,7 +74,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIpvSessionIdShouldReturnSessionIdFromJourney()
+    void getIpvSessionIdShouldReturnSessionIdFromJourneyEvent()
             throws HttpResponseExceptionWithErrorBody {
         var event =
                 JourneyRequest.builder()
@@ -89,7 +89,49 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIpvSessionIdShouldThrowIfSessionIdIsNull() {
+    void getIpvSessionIdShouldThrowIfSessionIdIsNullInJourneyEvent() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(null)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .build();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class, () -> getIpvSessionId(event));
+
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getIpvSessionIdShouldThrowIfSessionIdIsEmptyStringInJourneyEvent() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId("")
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .build();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class, () -> getIpvSessionId(event));
+
+        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getIpvSessionIdShouldThrowIfSessionIdIsNullInEvent() {
         var event = new APIGatewayProxyRequestEvent();
         HashMap<String, String> headers = new HashMap<>();
         headers.put(IPV_SESSION_ID_HEADER, null);
@@ -107,7 +149,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIpvSessionIdShouldThrowIfSessionIdIsEmptyString() {
+    void getIpvSessionIdShouldThrowIfSessionIdIsEmptyStringInEvent() {
         var event = new APIGatewayProxyRequestEvent();
 
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, ""));
@@ -216,7 +258,7 @@ class RequestHelperTest {
                         .featureSet(featureSet)
                         .build();
 
-        assertNull(getIpvSessionIdAllowNull(event));
+        assertNull(getIpvSessionIdAllowBlank(event));
     }
 
     @Test
