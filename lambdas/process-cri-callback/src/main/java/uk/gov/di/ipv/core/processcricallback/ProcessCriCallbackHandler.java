@@ -227,7 +227,6 @@ public class ProcessCriCallbackHandler
         }
     }
 
-    @ExcludeFromGeneratedCoverageReport
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
             throws ParseCriCallbackRequestException {
         try {
@@ -235,7 +234,7 @@ public class ProcessCriCallbackHandler
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
             callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
-            callbackRequest.setDeviceInformation(input.getHeaders().get("Txma-Audit-Encoded"));
+
             return callbackRequest;
         } catch (JsonProcessingException e) {
             throw new ParseCriCallbackRequestException(e);
@@ -332,7 +331,6 @@ public class ProcessCriCallbackHandler
             criStoringService.storeVcs(
                     callbackRequest.getCredentialIssuerId(),
                     callbackRequest.getIpAddress(),
-                    callbackRequest.getDeviceInformation(),
                     vcs,
                     clientOAuthSessionItem,
                     ipvSessionItem);

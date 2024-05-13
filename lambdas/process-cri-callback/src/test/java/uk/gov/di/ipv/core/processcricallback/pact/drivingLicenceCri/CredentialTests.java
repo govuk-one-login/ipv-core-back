@@ -584,7 +584,6 @@ class CredentialTests {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyDeviceInformation",
                 List.of("dummyFeatureSet"));
     }
 

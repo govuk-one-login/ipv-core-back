@@ -17,18 +17,11 @@ public class ProcessRequest extends JourneyRequest {
     public ProcessRequest(
             String ipvSessionId,
             String ipAddress,
-            String deviceInformation,
             String clientOAuthSessionId,
             String journey,
             String featureSet,
             Map<String, Object> lambdaInput) {
-        super(
-                ipvSessionId,
-                ipAddress,
-                deviceInformation,
-                clientOAuthSessionId,
-                journey,
-                featureSet);
+        super(ipvSessionId, ipAddress, clientOAuthSessionId, journey, featureSet);
         this.lambdaInput = lambdaInput;
     }
 }

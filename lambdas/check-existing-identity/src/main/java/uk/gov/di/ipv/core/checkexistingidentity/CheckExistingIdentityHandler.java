@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -180,7 +179,6 @@ public class CheckExistingIdentityHandler
         try {
             String ipvSessionId = getIpvSessionId(event);
             String ipAddress = getIpAddress(event);
-            String deviceInformation = event.getDeviceInformation();
             configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -190,8 +188,7 @@ public class CheckExistingIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            return getJourneyResponse(
-                            ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
+            return getJourneyResponse(ipvSessionItem, clientOAuthSessionItem, ipAddress)
                     .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
@@ -205,8 +202,7 @@ public class CheckExistingIdentityHandler
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String ipAddress,
-            String deviceInformation) {
+            String ipAddress) {
         try {
             var ipvSessionId = ipvSessionItem.getIpvSessionId();
             var userId = clientOAuthSessionItem.getUserId();
@@ -251,7 +247,6 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             auditEventUser,
-                            deviceInformation,
                             vcs,
                             areGpg45VcsCorrelated);
             if (profileMatchResponse.isPresent()) {
@@ -266,10 +261,7 @@ public class CheckExistingIdentityHandler
             // No profile match
             return isF2FComplete
                     ? buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated,
-                            auditEventUser,
-                            deviceInformation,
-                            contraIndicators)
+                            areGpg45VcsCorrelated, auditEventUser, contraIndicators)
                     : buildNoMatchResponse(contraIndicators);
 
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
@@ -332,7 +324,6 @@ public class CheckExistingIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
-            String deviceInformation,
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
@@ -343,7 +334,6 @@ public class CheckExistingIdentityHandler
                         clientOAuthSessionItem.getVtr(),
                         vcs,
                         auditEventUser,
-                        deviceInformation,
                         areGpg45VcsCorrelated);
 
         // vot achieved for vtr
@@ -353,8 +343,7 @@ public class CheckExistingIdentityHandler
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
                             vcs,
-                            auditEventUser,
-                            deviceInformation));
+                            auditEventUser));
         }
 
         return Optional.empty();
@@ -363,7 +352,6 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildF2FNoMatchResponse(
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
-            String deviceInformation,
             ContraIndicators contraIndicators)
             throws SqsException, ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
@@ -371,8 +359,7 @@ public class CheckExistingIdentityHandler
                 !areGpg45VcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
                         : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventUser,
-                deviceInformation);
+                auditEventUser);
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
             var mitigationJourney =
@@ -416,8 +403,7 @@ public class CheckExistingIdentityHandler
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            AuditEventUser auditEventUser)
             throws SqsException, VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
@@ -430,8 +416,7 @@ public class CheckExistingIdentityHandler
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
-        sendAuditEvent(
-                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser, deviceInformation);
+        sendAuditEvent(AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser);
 
         ipvSessionItem.setVot(attainedVot);
         ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -473,17 +458,13 @@ public class CheckExistingIdentityHandler
         return false;
     }
 
-    private void sendAuditEvent(
-            AuditEventTypes auditEventTypes,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+    private void sendAuditEvent(AuditEventTypes auditEventTypes, AuditEventUser auditEventUser)
             throws SqsException {
         auditService.sendAuditEvent(
                 new AuditEvent(
                         auditEventTypes,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
+                        auditEventUser));
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
@@ -497,7 +478,6 @@ public class CheckExistingIdentityHandler
             List<String> vtr,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
-            String deviceInformation,
             boolean areGpg45VcsCorrelated)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
@@ -515,8 +495,7 @@ public class CheckExistingIdentityHandler
                             achievedWithGpg45Profile(
                                     requestedVot,
                                     VcHelper.filterVCBasedOnProfileType(vcs, GPG45),
-                                    auditEventUser,
-                                    deviceInformation);
+                                    auditEventUser);
                 }
             } else {
                 requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);
@@ -530,10 +509,7 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean achievedWithGpg45Profile(
-            Vot requestedVot,
-            List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            Vot requestedVot, List<VerifiableCredential> vcs, AuditEventUser auditEventUser)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
 
@@ -558,11 +534,7 @@ public class CheckExistingIdentityHandler
                 }
             }
             sendProfileMatchedAuditEvent(
-                    matchedGpg45Profile.get(),
-                    gpg45Scores,
-                    gpg45Credentials,
-                    auditEventUser,
-                    deviceInformation);
+                    matchedGpg45Profile.get(), gpg45Scores, gpg45Credentials, auditEventUser);
 
             return true;
         }
@@ -598,8 +570,7 @@ public class CheckExistingIdentityHandler
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            AuditEventUser auditEventUser)
             throws SqsException {
         var auditEvent =
                 new AuditEvent(
@@ -609,8 +580,7 @@ public class CheckExistingIdentityHandler
                         new AuditExtensionGpg45ProfileMatched(
                                 gpg45Profile,
                                 gpg45Scores,
-                                VcHelper.extractTxnIdsFromCredentials(vcs)),
-                        new AuditRestrictedDeviceInformation(deviceInformation));
+                                VcHelper.extractTxnIdsFromCredentials(vcs)));
         auditService.sendAuditEvent(auditEvent);
     }
 }

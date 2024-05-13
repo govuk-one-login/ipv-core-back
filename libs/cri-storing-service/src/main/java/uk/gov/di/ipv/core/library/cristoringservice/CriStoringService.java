@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCriResRetrieved;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -92,16 +91,12 @@ public class CriStoringService {
                 CriResponseService.STATUS_PENDING);
 
         sendAuditEventForProcessedVcResponse(
-                CriResourceRetrievedType.PENDING.getType(),
-                criId,
-                auditEventUser,
-                callbackRequest.getDeviceInformation());
+                CriResourceRetrievedType.PENDING.getType(), criId, auditEventUser);
     }
 
     public void storeVcs(
             String criId,
             String ipAddress,
-            String deviceInformation,
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
@@ -121,8 +116,7 @@ public class CriStoringService {
                             AuditEventTypes.IPV_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
-                            new AuditRestrictedDeviceInformation(deviceInformation)));
+                            getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc))));
 
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
@@ -145,15 +139,11 @@ public class CriStoringService {
                         ? CriResourceRetrievedType.EMPTY.getType()
                         : CriResourceRetrievedType.VC.getType(),
                 criId,
-                auditEventUser,
-                deviceInformation);
+                auditEventUser);
     }
 
     private void sendAuditEventForProcessedVcResponse(
-            String criResourceRetrievedType,
-            String criId,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            String criResourceRetrievedType, String criId, AuditEventUser auditEventUser)
             throws SqsException {
         LOGGER.info(
                 new StringMapMessage()
@@ -169,7 +159,6 @@ public class CriStoringService {
                         AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
+                        new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType)));
     }
 }

@@ -120,7 +120,6 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyDeviceInformation",
                                 List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
@@ -214,7 +213,6 @@ class ContractTest {
                                 null,
                                 null,
                                 "dummyIpAddress",
-                                "dummyDeviceInformation",
                                 List.of("dummyFeatureSet")),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
@@ -302,7 +300,6 @@ class ContractTest {
                                             null,
                                             null,
                                             "dummyIpAddress",
-                                            "dummyDeviceInformation",
                                             List.of("dummyFeatureSet")),
                                     new CriOAuthSessionItem(
                                             "dummySessionId",

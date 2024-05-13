@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -99,7 +98,6 @@ public class CriCheckingService {
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException {
         var ipAddress = callbackRequest.getIpAddress();
-        var deviceInformation = callbackRequest.getDeviceInformation();
         var errorCode = callbackRequest.getError();
         var errorDescription =
                 Objects.toString(
@@ -122,8 +120,7 @@ public class CriCheckingService {
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        extensions,
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
+                        extensions));
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(errorCode)) {
             LOGGER.warn(LogHelper.buildLogMessage("Unknown Oauth error code received"));
