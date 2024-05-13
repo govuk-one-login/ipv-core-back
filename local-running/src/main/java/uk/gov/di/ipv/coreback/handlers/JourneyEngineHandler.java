@@ -102,7 +102,7 @@ public class JourneyEngineHandler {
                     .handleRequest(buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
             case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/check-gpg45-scores" -> checkGpg45ScoreHandler.handleRequest(
+            case "/journey/check-gpg45-score" -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
