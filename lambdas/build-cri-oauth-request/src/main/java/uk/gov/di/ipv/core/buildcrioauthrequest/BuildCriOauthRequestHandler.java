@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -209,8 +208,7 @@ public class BuildCriOauthRequestHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+                            auditEventUser));
 
             var message =
                     new StringMapMessage()

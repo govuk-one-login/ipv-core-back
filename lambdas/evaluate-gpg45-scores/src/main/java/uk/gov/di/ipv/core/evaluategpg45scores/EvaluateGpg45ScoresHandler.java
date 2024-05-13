@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -135,12 +134,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             boolean hasMatchingGpg45Profile =
-                    hasMatchingGpg45Profile(
-                            vcs,
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            ipAddress,
-                            event.getDeviceInformation());
+                    hasMatchingGpg45Profile(vcs, ipvSessionItem, clientOAuthSessionItem, ipAddress);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
                     && hasMatchingGpg45Profile) {
@@ -178,8 +172,7 @@ public class EvaluateGpg45ScoresHandler
             List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String ipAddress,
-            String deviceInformation)
+            String ipAddress)
             throws UnknownEvidenceTypeException, SqsException, CredentialParseException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
@@ -196,8 +189,7 @@ public class EvaluateGpg45ScoresHandler
                                 matchedProfile.get(),
                                 gpg45Scores,
                                 vcs,
-                                ipAddress,
-                                deviceInformation));
+                                ipAddress));
                 ipvSessionItem.setVot(Vot.P2);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -224,8 +216,7 @@ public class EvaluateGpg45ScoresHandler
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> credentials,
-            String ipAddress,
-            String deviceInformation) {
+            String ipAddress) {
         AuditEventUser auditEventUser =
                 new AuditEventUser(
                         clientOAuthSessionItem.getUserId(),
@@ -239,7 +230,6 @@ public class EvaluateGpg45ScoresHandler
                 new AuditExtensionGpg45ProfileMatched(
                         gpg45Profile,
                         gpg45Scores,
-                        VcHelper.extractTxnIdsFromCredentials(credentials)),
-                new AuditRestrictedDeviceInformation(deviceInformation));
+                        VcHelper.extractTxnIdsFromCredentials(credentials)));
     }
 }

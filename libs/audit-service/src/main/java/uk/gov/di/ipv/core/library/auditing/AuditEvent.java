@@ -62,12 +62,4 @@ public class AuditEvent {
             AuditExtensions extensions) {
         this(eventName, componentId, user, extensions, null);
     }
-
-    public AuditEvent(
-            AuditEventTypes eventName,
-            String componentId,
-            AuditEventUser user,
-            AuditRestricted restricted) {
-        this(eventName, componentId, user, null, restricted);
-    }
 }

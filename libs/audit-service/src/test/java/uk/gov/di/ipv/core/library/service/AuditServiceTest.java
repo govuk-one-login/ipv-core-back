@@ -53,14 +53,8 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
 
-        // Arrange
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
-
-        // Act
-        auditService.sendAuditEvent(event);
-
-        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -76,8 +70,6 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionErrorParams() throws Exception {
-
-        // Arrange
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
@@ -85,13 +77,8 @@ class AuditServiceTest {
                         .setErrorCode(errorCode)
                         .setErrorDescription(errorDescription)
                         .build();
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
-
-        // Act
-        auditService.sendAuditEvent(event);
-
-        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -114,8 +101,6 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToQueueWithExtensionsAndUser() throws Exception {
-
-        // Arrange
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
@@ -131,13 +116,8 @@ class AuditServiceTest {
                         "someGovukSigninJourneyId",
                         "someIp.Address");
 
-        var event =
-                new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, auditEventUser, extensions);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions, auditEventUser);
 
-        // Act
-        auditService.sendAuditEvent(event);
-
-        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -166,14 +146,9 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithoutExitCode()
             throws JsonProcessingException, SqsException {
-
-        // Arrange
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, null);
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
-
-        // Act
-        auditService.sendAuditEvent(event);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -194,8 +169,6 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithFailureCodes()
             throws JsonProcessingException, SqsException {
-
-        // Arrange
         List<AuditEventReturnCode> auditEventReturnCodes =
                 List.of(
                         new AuditEventReturnCode(
@@ -206,12 +179,8 @@ class AuditServiceTest {
                         new AuditEventReturnCode("V", List.of("https://review-k.account.gov.uk")));
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, auditEventReturnCodes);
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
-        // Act
-        auditService.sendAuditEvent(event);
-
-        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());

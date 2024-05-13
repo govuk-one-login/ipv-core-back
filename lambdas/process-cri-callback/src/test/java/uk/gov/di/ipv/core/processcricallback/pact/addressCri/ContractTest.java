@@ -504,7 +504,6 @@ class ContractTest {
                 null,
                 null,
                 "dummyIpAddress",
-                "dummyDeviceInformation",
                 List.of("dummyFeatureSet"));
     }
 

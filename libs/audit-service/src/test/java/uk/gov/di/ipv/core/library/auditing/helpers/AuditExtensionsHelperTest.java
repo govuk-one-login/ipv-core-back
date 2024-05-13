@@ -96,8 +96,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void getAuditRestrictedInheritedIdentityShouldReturnTheRightStuff() throws Exception {
-        var restricted =
-                getRestrictedAuditDataForInheritedIdentity(vcHmrcMigration(), "test_device_data");
+        var restricted = getRestrictedAuditDataForInheritedIdentity(vcHmrcMigration());
 
         assertEquals(
                 "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
@@ -108,8 +107,5 @@ class AuditExtensionsHelperTest {
         assertEquals(
                 "[{\"personalNumber\":\"AB123456C\"}]",
                 OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
-        assertEquals(
-                "{\"device_information\":{\"encoded\":\"test_device_data\"}}",
-                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
 }

@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionVot;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -107,8 +106,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                                     ipvSessionItem.getIpvSessionId(),
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
                                     input.getIpAddress()),
-                            new AuditExtensionVot(vot.equals(P0) ? null : vot),
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+                            new AuditExtensionVot(vot.equals(P0) ? null : vot)));
 
             return JOURNEY_IDENTITY_STORED;
 
