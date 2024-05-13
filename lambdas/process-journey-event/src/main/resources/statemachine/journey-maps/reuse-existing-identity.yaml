@@ -18,6 +18,11 @@ states:
           coiEnabled:
             targetState: IDENTITY_REUSE_PAGE_COI
 
+  UPDATE_DETAILS_START:
+    events:
+      next:
+        targetState: UPDATE_DETAILS_PAGE
+
   # Journey states
 
   CRI_TICF_BEFORE_REUSE:
@@ -150,8 +155,7 @@ states:
       context: coi
     events:
       end:
-        targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: START
+        targetState: UPDATE_DETAILS_PAGE
 
   RETURN_TO_RP:
     response:

@@ -62,9 +62,9 @@ states:
         targetState: RESET_IDENTITY_WITHOUT_ADDRESS
       end:
         targetState: RETURN_TO_RP
-      page-ipv-reuse:
+      back:
         targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: START
+        targetState: UPDATE_DETAILS_START
 
   RESET_IDENTITY_WITHOUT_ADDRESS:
     response:
@@ -129,9 +129,9 @@ states:
         targetState: RESET_IDENTITY_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
-      page-ipv-reuse:
+      back:
         targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: START
+        targetState: UPDATE_DETAILS_START
 
   RESET_IDENTITY_WITH_ADDRESS:
     response:
