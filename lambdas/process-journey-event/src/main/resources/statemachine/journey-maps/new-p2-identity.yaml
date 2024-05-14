@@ -133,7 +133,7 @@ states:
       pageId: update-name-date-birth
     events:
       end:
-        targetState: REPROVE_IDENTITY_START
+        targetState: REPROVE_IDENTITY_START_COI
 
   RESET_SESSION_IDENTITY:
     response:
