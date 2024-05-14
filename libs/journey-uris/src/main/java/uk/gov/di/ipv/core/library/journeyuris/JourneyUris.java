@@ -31,4 +31,6 @@ public class JourneyUris {
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
     public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
     public static final String JOURNEY_REPROVE_IDENTITY_PATH = "/journey/reprove-identity";
+    public static final String JOURNEY_CONTINUING_IDENTITY_CHECK_PASS_PATH =
+            "/journey/continuing-identity-check-pass";
 }

@@ -293,7 +293,7 @@ public class UserIdentityService {
                 <= 1;
     }
 
-    private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VerifiableCredential> vcs)
+    public List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (var vc : vcs) {
@@ -667,5 +667,17 @@ public class UserIdentityService {
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), error)
                         .with(LOG_CRI_ISSUER.getFieldName(), vc.getCriId());
         LOGGER.warn(logMessage);
+    }
+
+    public String getNormalizedName(IdentityClaim identity, String namePartType) {
+        StringBuilder givenName = new StringBuilder();
+        for (var name : identity.getName()) {
+            for (var namePart : name.getNameParts()) {
+                if (namePart.getType().equals(namePartType)) {
+                    givenName.append(namePart.getValue());
+                }
+            }
+        }
+        return Normalizer.normalize(givenName.toString(), Normalizer.Form.NFD);
     }
 }

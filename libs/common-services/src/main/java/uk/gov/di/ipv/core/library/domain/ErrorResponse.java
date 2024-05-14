@@ -88,7 +88,8 @@ public enum ErrorResponse {
     FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
     FAILED_TO_GET_CREDENTIAL(1072, "Failed to get credential"),
     INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input"),
-    FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity");
+    FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity"),
+    IDENTITY_CONTINUITY_CHECK_FAILED(1075, "Failed Continuity Identity check");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
