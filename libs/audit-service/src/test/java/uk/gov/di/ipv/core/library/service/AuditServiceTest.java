@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -25,6 +28,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -228,6 +232,70 @@ class AuditServiceTest {
         JsonNode returnCodeJson = auditExtensionsUserIdentity.get(RETURN_CODE_KEY);
         assertEquals(2, returnCodeJson.size());
         assertEquals(OBJECT_MAPPER.readTree(FAILURE_RETURN_CODES_TEST), returnCodeJson);
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithoutRestricted()
+            throws JsonProcessingException, SqsException {
+
+        // Arrange
+        var event =
+                new AuditEvent(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        null,
+                        null,
+                        null,
+                        new AuditRestrictedDeviceInformation("TEST_DEVICE"));
+        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(false);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
+
+        AuditEvent messageBody =
+                OBJECT_MAPPER.readValue(
+                        sqsSendMessageRequestCaptor.getValue().messageBody(), AuditEvent.class);
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
+        assertNull(messageBody.getRestricted());
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithRestrictedDeviceInfo() throws Exception {
+        // Arrange
+        var event =
+                new AuditEvent(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        null,
+                        null,
+                        null,
+                        new AuditRestrictedDeviceInformation("TEST_DEVICE"));
+        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(true);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
+
+        String json = sqsSendMessageRequestCaptor.getValue().messageBody();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonParser parser = mapper.createParser(json);
+        JsonNode node = mapper.readTree(parser);
+
+        assertTrue(node.has("restricted"));
+        assertTrue(node.get("restricted").has("device_information"));
     }
 
     @Test
