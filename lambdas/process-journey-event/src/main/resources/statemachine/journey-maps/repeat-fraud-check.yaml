@@ -10,6 +10,9 @@ states:
     events:
       next:
         targetState: CONFIRM_NAME_DOB
+        checkFeatureFlag:
+          coiEnabled:
+            targetState: CONFIRM_DETAILS
 
   # Parent States
 
@@ -45,6 +48,31 @@ states:
 
   # Journey States
 
+  CONFIRM_DETAILS:
+    response:
+      type: page
+      pageId: confirm-your-details
+    events:
+      address-only:
+        targetJourney: UPDATE_ADDRESS
+        targetState: START
+      names-dob:
+        targetState: UPDATE_NAME_DOB
+      given-names-only:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
+      family-name-only:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
+      given-names-and-address:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITH_ADDRESS_START
+      family-name-and-address:
+        targetJourney: UPDATE_NAME
+        targetState: UPDATE_NAME_WITH_ADDRESS_START
+      next:
+        targetState: FRAUD_CHECK_RFC
+
   CONFIRM_NAME_DOB:
     response:
       type: page
@@ -74,6 +102,9 @@ states:
     events:
       end:
         targetState: CONFIRM_NAME_DOB
+        checkFeatureFlag:
+          coiEnabled:
+            targetState: CONFIRM_DETAILS
 
   FRAUD_CHECK_RFC:
     response:

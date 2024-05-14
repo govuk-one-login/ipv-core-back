@@ -35,9 +35,6 @@ states:
     events:
       next:
         targetState: REPROVE_IDENTITY_START
-        checkFeatureFlag:
-          coiEnabled:
-            targetState: REPROVE_IDENTITY_START_COI
 
   # Parent states
 
@@ -100,40 +97,6 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
-
-  REPROVE_IDENTITY_START_COI:
-    response:
-      type: page
-      pageId: reprove-identity-start
-      context: coi
-    events:
-      address-only:
-        targetJourney: UPDATE_ADDRESS
-        targetState: START
-      names-dob:
-        targetState: UPDATE_NAME_DOB
-      given-names-only:
-        targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
-      family-name-only:
-        targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_START
-      given-names-and-address:
-        targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_START
-      family-name-and-address:
-        targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_START
-      next:
-        targetState: IDENTITY_START_PAGE
-
-  UPDATE_NAME_DOB:
-    response:
-      type: page
-      pageId: update-name-date-birth
-    events:
-      end:
-        targetState: REPROVE_IDENTITY_START_COI
 
   RESET_SESSION_IDENTITY:
     response:
