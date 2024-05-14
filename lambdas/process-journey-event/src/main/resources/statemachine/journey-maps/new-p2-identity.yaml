@@ -104,7 +104,7 @@ states:
   REPROVE_IDENTITY_START_COI:
     response:
       type: page
-      pageId: reprove-identity-start
+      pageId: reprove-identity-start-coi
       context: coi
     events:
       address-only:
