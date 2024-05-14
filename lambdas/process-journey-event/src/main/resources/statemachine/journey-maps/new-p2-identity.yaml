@@ -35,6 +35,9 @@ states:
     events:
       next:
         targetState: REPROVE_IDENTITY_START
+        checkFeatureFlag:
+          coiEnabled:
+            targetState: REPROVE_IDENTITY_START_COI
 
   # Parent states
 
@@ -94,6 +97,15 @@ states:
     response:
       type: page
       pageId: reprove-identity-start
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+
+  REPROVE_IDENTITY_START_COI:
+    response:
+      type: page
+      pageId: reprove-identity-start
+      context: coi
     events:
       address-only:
         targetJourney: UPDATE_ADDRESS
