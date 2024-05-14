@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -30,9 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
-import static uk.gov.di.ipv.core.library.domain.CoiSubJourneyTypes.ADDRESS_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CoiSubJourneyTypes.FAMILY_NAME_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CoiSubJourneyTypes.GIVEN_NAMES_ONLY;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CONTINUING_IDENTITY_CHECK_PASS_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.FAMILY_NAME_PROPERTY_NAME;
@@ -119,20 +117,23 @@ public class IdentityContinuityCheckHandler
                 }
                 BiPredicate<IdentityClaim, IdentityClaim> continuityCheck;
 
-                var changeType = ipvSessionItem.getCoiSubJourneyType();
+                var changeType = ipvSessionItem.getCoiSubjourneyType();
 
-                continuityCheck = switch (changeType) {
-                    case GIVEN_NAMES_ONLY -> this::isIdentityContinuityMatchGivenName;
-                    case FAMILY_NAME_ONLY -> this::isIdentityContinuityMatchFamilyName;
-                    case ADDRESS_ONLY -> this::isIdentityContinuityMatchIntervention;
-                    default -> throw new IllegalArgumentException("Invalid change type: " + changeType);
-                };
+                continuityCheck =
+                        switch (changeType) {
+                            case GIVEN_NAMES_ONLY -> this::isIdentityContinuityMatchFamilyName;
+                            case FAMILY_NAME_ONLY -> this::isIdentityContinuityMatchGivenName;
+                            case ADDRESS_ONLY -> this::isIdentityContinuityMatchIntervention;
+                            default -> throw new IllegalArgumentException(
+                                    "Invalid change type: " + changeType);
+                        };
 
-                if (!continuityCheck.test(sessionCredentialsIdentityClaim, verifiableCredentialsIdentityClaim)) {
+                if (!continuityCheck.test(
+                        sessionCredentialsIdentityClaim, verifiableCredentialsIdentityClaim)) {
                     return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            ErrorResponse.IDENTITY_CONTINUITY_CHECK_FAILED.getCode(),
-                            ErrorResponse.IDENTITY_CONTINUITY_CHECK_FAILED)
+                                    JOURNEY_ERROR_PATH,
+                                    ErrorResponse.IDENTITY_CONTINUITY_CHECK_FAILED.getCode(),
+                                    ErrorResponse.IDENTITY_CONTINUITY_CHECK_FAILED)
                             .toObjectMap();
                 }
 
@@ -162,24 +163,38 @@ public class IdentityContinuityCheckHandler
     //    types of changes
     public boolean isIdentityContinuityMatchGivenName(
             IdentityClaim currentIdentity, IdentityClaim newIdentity) {
+        int coiIdentityVerificationCount = Integer.parseInt(
+                configService.getSsmParameter(
+                        ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME));
 
         String currentGivenName =
                 userIdentityService.getNormalizedName(currentIdentity, GIVEN_NAME_PROPERTY_NAME);
         String newGivenName =
                 userIdentityService.getNormalizedName(newIdentity, GIVEN_NAME_PROPERTY_NAME);
 
-        return currentGivenName.equals(newGivenName);
+        int shortestName = Math.min(currentGivenName.length(), newGivenName.length());
+        int checkLength = Math.min(shortestName, coiIdentityVerificationCount);
+
+        return currentGivenName.substring(0, checkLength)
+                .equals(newGivenName.substring(0, checkLength));
     }
 
     public boolean isIdentityContinuityMatchFamilyName(
             IdentityClaim currentIdentity, IdentityClaim newIdentity) {
+        int coiIdentityVerificationCount = Integer.parseInt(
+                configService.getSsmParameter(
+                        ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_FAMILY_NAME));
 
         String currentFamilyName =
                 userIdentityService.getNormalizedName(currentIdentity, FAMILY_NAME_PROPERTY_NAME);
         String newFamilyName =
                 userIdentityService.getNormalizedName(newIdentity, FAMILY_NAME_PROPERTY_NAME);
 
-        return currentFamilyName.substring(0, 3).equals(newFamilyName.substring(0, 3));
+        int shortestName = Math.min(currentFamilyName.length(), newFamilyName.length());
+        int checkLength = Math.min(shortestName, coiIdentityVerificationCount);
+
+        return currentFamilyName.substring(0, checkLength)
+                .equals(newFamilyName.substring(0, checkLength));
     }
 
     public boolean isIdentityContinuityMatchIntervention(

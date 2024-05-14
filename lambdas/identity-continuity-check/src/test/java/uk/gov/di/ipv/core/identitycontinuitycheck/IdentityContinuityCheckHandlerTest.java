@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.identitycontinuitycheck;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,16 +31,15 @@ import java.util.Optional;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.domain.CoiSubJourneyTypes.FAMILY_NAME_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CoiSubJourneyTypes.GIVEN_NAMES_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.ADDRESS_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.FAMILY_NAME_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.GIVEN_NAMES_ONLY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
-import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -123,17 +121,6 @@ class IdentityContinuityCheckHandlerTest {
         clientOAuthSessionItem.setGovukSigninJourneyId(GOVUK_JOURNEY_ID);
     }
 
-//    @BeforeEach
-//    void setUpBeforeEach() throws Exception {
-//
-//        when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
-//                .thenReturn(clientOAuthSessionItem);
-//        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
-//        when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(VCS);
-//        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-//                .thenReturn(COMPONENT_ID);
-//    }
-
     @Test
     void shouldReturnErrorJourneyIfIpvSessionIdMissing() throws Exception {
 
@@ -172,12 +159,12 @@ class IdentityContinuityCheckHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyContinuingIdentityCheckPassIfIdentityContinuityMatchGivenName()
+    void shouldReturnJourneyContinuingIdentityCheckPassIfIdentityContinuityCheckGivenNameOnlyAndMatchGivenName()
             throws Exception {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
-        ipvSessionItem.setCoiSubJourneyType(GIVEN_NAMES_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(GIVEN_NAMES_ONLY);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
@@ -185,13 +172,15 @@ class IdentityContinuityCheckHandlerTest {
         when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(VCS);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_FAMILY_NAME))
+                .thenReturn("121");
         when(mockUserIdentityService.findIdentityClaim(VCS))
                 .thenReturn(Optional.of(IDENTITY_CLAIM_1));
         when(mockUserIdentityService.findIdentityClaim(VCS))
-                .thenReturn(Optional.of(IDENTITY_CLAIM_1));
+                .thenReturn(Optional.of(IDENTITY_CLAIM_2));
         when(mockUserIdentityService.getNormalizedName(any(), any()))
-                .thenReturn("FirstName")
-                .thenReturn("FirstName");
+                .thenReturn("LastName")
+                .thenReturn("LastName");
 
         var response = identityContinuityCheckHandler.handleRequest(PROCESS_REQUEST, mockContext);
 
@@ -199,15 +188,19 @@ class IdentityContinuityCheckHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyIfIdentityContinuityCheckFailsIdentityContinuityMatchGivenName()
+    void shouldReturnErrorJourneyIfIdentityContinuityCheckFailsIdentityContinuityCheckFamilyNameOnlyAndNotMatchGivenName()
             throws Exception {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
-        ipvSessionItem.setCoiSubJourneyType(FAMILY_NAME_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(FAMILY_NAME_ONLY);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn(COMPONENT_ID);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME))
+                .thenReturn("121");
         when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
         when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(VCS);
         when(mockUserIdentityService.findIdentityClaim(VCS))
@@ -224,11 +217,40 @@ class IdentityContinuityCheckHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyIfIdentityContinuityCheckDifferentBirthDate() throws Exception {
+    void shouldReturnJourneyContinuingIdentityCheckPassIfIdentityContinuityCheckFamilyNameOnlyAndMatchGivenName()
+            throws Exception {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
-        ipvSessionItem.setCoiSubJourneyType(GIVEN_NAMES_ONLY);
+        ipvSessionItem.setCoiSubjourneyType(FAMILY_NAME_ONLY);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn(COMPONENT_ID);
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME))
+                .thenReturn("121");
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
+        when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(VCS);
+        when(mockUserIdentityService.findIdentityClaim(VCS))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_1));
+        when(mockUserIdentityService.findIdentityClaim(VCS))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_1));
+        when(mockUserIdentityService.getNormalizedName(any(), any()))
+                .thenReturn("FirstName")
+                .thenReturn("FirstName");
+
+        var response = identityContinuityCheckHandler.handleRequest(PROCESS_REQUEST, mockContext);
+
+        assertEquals(JOURNEY_CONTINUING_IDENTITY_CHECK_PASS_PATH, response.get(JOURNEY));
+    }
+
+    @Test
+    void shouldReturnErrorJourneyIfIdentityContinuityCheckAnyAndDifferentBirthDate() throws Exception {
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SESSION_ID);
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
+        ipvSessionItem.setCoiSubjourneyType(any());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
@@ -242,8 +264,49 @@ class IdentityContinuityCheckHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorJourneyIfIdentityContinuityCheckAddressOnlyAndNotMatchDetails()
+            throws Exception {
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SESSION_ID);
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
+        ipvSessionItem.setCoiSubjourneyType(ADDRESS_ONLY);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockUserIdentityService.findIdentityClaim(any()))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_1))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_2));
+
+        var response = identityContinuityCheckHandler.handleRequest(PROCESS_REQUEST, mockContext);
+
+        assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
+    }
+
+    @Test
+    void
+            shouldReturnJournalContinuingIdentityCheckPassIfIdentityContinuityCheckAddressOnlyAndMatchDetails()
+                    throws Exception {
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SESSION_ID);
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
+        ipvSessionItem.setCoiSubjourneyType(ADDRESS_ONLY);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockUserIdentityService.findIdentityClaim(any()))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_1))
+                .thenReturn(Optional.of(IDENTITY_CLAIM_1));
+
+        var response = identityContinuityCheckHandler.handleRequest(PROCESS_REQUEST, mockContext);
+
+        assertEquals(JOURNEY_CONTINUING_IDENTITY_CHECK_PASS_PATH, response.get(JOURNEY));
+    }
+
+    @Test
     @MockitoSettings(strictness = LENIENT)
     void shouldReturnTrueWhenBirthDateAndFullNameAreSame() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME))
+                .thenReturn("121");
         when(mockUserIdentityService.getNormalizedName(IDENTITY_CLAIM_1, GIVEN_NAME_PROPERTY_NAME))
                 .thenReturn("FirstName");
         when(mockUserIdentityService.getNormalizedName(IDENTITY_CLAIM_1, FAMILY_NAME_PROPERTY_NAME))
@@ -258,37 +321,19 @@ class IdentityContinuityCheckHandlerTest {
 
     @Test
     @MockitoSettings(strictness = LENIENT)
-    void shouldReturnFalseWhenBirthDateIsDifferent() {
+    void shouldReturnTrueWhenFullNameHasDiacriticsButIsSame() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME))
+                .thenReturn("121");
+
         when(mockUserIdentityService.getNormalizedName(IDENTITY_CLAIM_1, GIVEN_NAME_PROPERTY_NAME))
-                .thenReturn("FirstName");
+                .thenReturn("Jöhn Döe");
         when(mockUserIdentityService.getNormalizedName(IDENTITY_CLAIM_1, FAMILY_NAME_PROPERTY_NAME))
-                .thenReturn("SecondName");
+                .thenReturn("John Doe");
+
         boolean result =
                 identityContinuityCheckHandler.isIdentityContinuityMatchGivenName(
-                        IDENTITY_CLAIM_1, IDENTITY_CLAIM_3);
+                        IDENTITY_CLAIM_1, IDENTITY_CLAIM_1);
 
-        assertFalse(result);
+        assertTrue(result);
     }
-
-    //    @Test
-    //    void shouldReturnFalseWhenFullNameIsDifferent() {
-    //        IdentityClaim currentIdentity = new IdentityClaim("John Doe", "2000-01-01");
-    //        IdentityClaim newIdentity = new IdentityClaim("Jane Doe", "2000-01-01");
-    //
-    //        boolean result =
-    // identityContinuityCheckHandler.isIdentityContinuityGivenName(currentIdentity, newIdentity);
-    //
-    //        assertFalse(result);
-    //    }
-    //
-    //    @Test
-    //    void shouldReturnTrueWhenFullNameHasDiacriticsButIsSame() {
-    //        IdentityClaim currentIdentity = new IdentityClaim("John Doe", "2000-01-01");
-    //        IdentityClaim newIdentity = new IdentityClaim("Jöhn Döe", "2000-01-01");
-    //
-    //        boolean result =
-    // identityContinuityCheckHandler.isIdentityContinuityGivenName(currentIdentity, newIdentity);
-    //
-    //        assertTrue(result);
-    //    }
 }

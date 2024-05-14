@@ -11,6 +11,8 @@ public enum ConfigurationVariable {
     CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
+    COI_IDENTITY_VERIFICATION_COUNT_FAMILY_NAME("self/coiIdentityVerificationCountFamilyName"),
+    COI_IDENTITY_VERIFICATION_COUNT_GIVEN_NAME("self/coiIdentityVerificationCountGivenName"),
     COMPONENT_ID("self/componentId"),
     CORE_VTM_CLAIM("self/coreVtmClaim"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
