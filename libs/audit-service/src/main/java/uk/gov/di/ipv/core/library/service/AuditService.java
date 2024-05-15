@@ -48,7 +48,8 @@ public class AuditService {
                         new AuditEvent(
                                 auditEvent.getEventName(),
                                 auditEvent.getComponentId(),
-                                auditEvent.getUser());
+                                auditEvent.getUser(),
+                                auditEvent.getExtensions());
             }
             sqs.sendMessage(
                     SendMessageRequest.builder()
