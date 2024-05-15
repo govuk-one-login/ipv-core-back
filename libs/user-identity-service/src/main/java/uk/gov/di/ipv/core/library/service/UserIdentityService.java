@@ -229,7 +229,9 @@ public class UserIdentityService {
             }
         }
         if (!checkNamesForCorrelation(
-                getGivenNames(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+                getNameProperty(
+                        getIdentityClaimsForNameCorrelation(successfulVcs),
+                        GIVEN_NAME_PROPERTY_NAME))) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -436,33 +438,8 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> getGivenNames(List<IdentityClaim> identityClaims) {
-        return identityClaims.stream()
-                .map(IdentityClaim::getNameParts)
-                .map(
-                        nameParts ->
-                                nameParts.stream()
-                                        .filter(
-                                                namePart ->
-                                                        GIVEN_NAME_PROPERTY_NAME.equals(
-                                                                namePart.getType()))
-                                        .map(NameParts::getValue)
-                                        .collect(Collectors.joining(" ")))
-                .toList();
-    }
-
     private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return identityClaims.stream()
-                .map(IdentityClaim::getNameParts)
-                .map(
-                        nameParts ->
-                                nameParts.stream()
-                                        .filter(
-                                                namePart ->
-                                                        FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                namePart.getType()))
-                                        .map(NameParts::getValue)
-                                        .collect(Collectors.joining(" ")))
+        return getNameProperty(identityClaims, FAMILY_NAME_PROPERTY_NAME).stream()
                 .map(
                         familyName ->
                                 StringUtils.substring(
@@ -471,6 +448,18 @@ public class UserIdentityService {
                                         Integer.parseInt(
                                                 configService.getSsmParameter(
                                                         COI_CHECK_FAMILY_NAME_CHARS))))
+                .toList();
+    }
+
+    private List<String> getNameProperty(List<IdentityClaim> identityClaims, String nameProperty) {
+        return identityClaims.stream()
+                .map(IdentityClaim::getNameParts)
+                .map(
+                        nameParts ->
+                                nameParts.stream()
+                                        .filter(namePart -> nameProperty.equals(namePart.getType()))
+                                        .map(NameParts::getValue)
+                                        .collect(Collectors.joining(" ")))
                 .toList();
     }
 
