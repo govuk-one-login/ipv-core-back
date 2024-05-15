@@ -111,9 +111,7 @@ states:
     parent: CRI_STATE
     events:
       next:
-  # TODO: Integrate with COI Check Lambda
-  #     targetState: COI_CHECK_LAMBDA
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
+        targetState: CHECK_COI_UPDATE_NAME
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_COI
@@ -175,14 +173,26 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        # TODO: Integrate with COI Check Lambda
-  #      targetState: COI_CHECK_LAMBDA
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
+        targetState: CHECK_COI_UPDATE_NAME
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_COI
 
   # SHARED STATES
+
+  CHECK_COI_UPDATE_NAME:
+    response:
+      type: process
+      lambda: check-coi
+    events:
+      coi-check-passed:
+        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED_COI
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   EVALUATE_GPG45_SCORES_UPDATE_NAME:
     response:

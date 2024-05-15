@@ -1192,6 +1192,7 @@ Resources:
         CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
         StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Alias
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Alias
+        CheckCoiFunctionArn: !Ref CheckCoiFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1225,6 +1226,8 @@ Resources:
             FunctionName: !Ref StoreIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ResetSessionIdentityFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckCoiFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

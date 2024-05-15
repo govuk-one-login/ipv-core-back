@@ -7,6 +7,7 @@ import spark.Route;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler;
+import uk.gov.di.ipv.core.checkcoi.CheckCoiHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
@@ -43,6 +44,7 @@ public class JourneyEngineHandler {
     private final EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private final CallTicfCriHandler callTicfCriHandler;
     private final StoreIdentityHandler storeIdentityHandler;
+    private final CheckCoiHandler checkCoiHandler;
 
     public JourneyEngineHandler() throws IOException {
         this.processJourneyEventHandler = new ProcessJourneyEventHandler();
@@ -54,6 +56,7 @@ public class JourneyEngineHandler {
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
         this.callTicfCriHandler = new CallTicfCriHandler();
         this.storeIdentityHandler = new StoreIdentityHandler();
+        this.checkCoiHandler = new CheckCoiHandler();
     }
 
     private final Route journeyEngine =
@@ -108,6 +111,8 @@ public class JourneyEngineHandler {
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
+                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+            case "/journey/check-coi" -> checkCoiHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
