@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -219,6 +220,82 @@ public class UserIdentityService {
         return true;
     }
 
+    public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        var successfulVcs = new ArrayList<VerifiableCredential>();
+        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
+            if (VcHelper.isSuccessfulVc(vc)) {
+                successfulVcs.add(vc);
+            }
+        }
+        if (!checkNamesForCorrelation(
+                getNameProperty(
+                        getIdentityClaimsForNameCorrelation(successfulVcs),
+                        GIVEN_NAME_PROPERTY_NAME))) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
+
+            return false;
+        }
+
+        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
+
+            return false;
+        }
+        return true;
+    }
+
+    public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        var successfulVcs = new ArrayList<VerifiableCredential>();
+        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
+            if (VcHelper.isSuccessfulVc(vc)) {
+                successfulVcs.add(vc);
+            }
+        }
+        if (!checkNamesForCorrelation(
+                getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
+
+            return false;
+        }
+
+        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
+
+            return false;
+        }
+        return true;
+    }
+
     private void buildUserIdentityBasedOnProfileType(
             Vot vot,
             ContraIndicators contraIndicators,
@@ -358,6 +435,31 @@ public class UserIdentityService {
                             return givenNames + " " + familyNames;
                         })
                 .map(String::trim)
+                .toList();
+    }
+
+    private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
+        return getNameProperty(identityClaims, FAMILY_NAME_PROPERTY_NAME).stream()
+                .map(
+                        familyName ->
+                                StringUtils.substring(
+                                        familyName,
+                                        0,
+                                        Integer.parseInt(
+                                                configService.getSsmParameter(
+                                                        COI_CHECK_FAMILY_NAME_CHARS))))
+                .toList();
+    }
+
+    private List<String> getNameProperty(List<IdentityClaim> identityClaims, String nameProperty) {
+        return identityClaims.stream()
+                .map(IdentityClaim::getNameParts)
+                .map(
+                        nameParts ->
+                                nameParts.stream()
+                                        .filter(namePart -> nameProperty.equals(namePart.getType()))
+                                        .map(NameParts::getValue)
+                                        .collect(Collectors.joining(" ")))
                 .toList();
     }
 
