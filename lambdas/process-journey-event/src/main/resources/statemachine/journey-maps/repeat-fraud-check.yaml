@@ -17,31 +17,31 @@ states:
     events:
       not-found:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
 
   # Journey States
 
@@ -85,7 +85,7 @@ states:
         targetState: EVALUATE_GPG45_SCORES_RFC
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
 
   ADDRESS_AND_FRAUD_RFC:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -94,7 +94,7 @@ states:
         targetState: EVALUATE_GPG45_SCORES_RFC
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
 
   EVALUATE_GPG45_SCORES_RFC:
     response:
@@ -108,10 +108,10 @@ states:
             targetState: CRI_TICF_BEFORE_SUCCESS_RFC
       unmet:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_RFC
+        targetState: FAILED_CONFIRM_DETAILS
 
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:

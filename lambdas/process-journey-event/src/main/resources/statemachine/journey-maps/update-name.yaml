@@ -23,31 +23,31 @@ states:
     events:
       not-found:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   # Journey States
 
@@ -84,16 +84,16 @@ states:
         targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ONLY
       not-found:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_NAME_ONLY:
     response:
@@ -114,7 +114,7 @@ states:
         targetState: CHECK_COI_UPDATE_NAME
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   # WITH ADDRESS
 
@@ -149,16 +149,16 @@ states:
         targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS
       not-found:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS:
     response:
@@ -176,7 +176,7 @@ states:
         targetState: CHECK_COI_UPDATE_NAME
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   # SHARED STATES
 
@@ -189,7 +189,7 @@ states:
         targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -206,10 +206,10 @@ states:
             targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
       unmet:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_COI
+        targetState: FAILED_CONFIRM_DETAILS
 
   STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME:
     response:

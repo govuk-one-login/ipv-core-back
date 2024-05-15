@@ -16,7 +16,7 @@ states:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_NO_MATCH
 
-  FAILED_COI:
+  FAILED_CONFIRM_DETAILS:
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
@@ -45,43 +45,7 @@ states:
       next:
         targetState: NO_MATCH_PAGE
 
-  FAILED_RFC:
-    events:
-      next:
-        targetState: NO_MATCH_PAGE_RFC
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
-
-  FAILED_UPDATE_ADDRESS:
-    events:
-      next:
-        # same page as RFC displayed so re-use this state
-        targetState: NO_MATCH_PAGE_RFC
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC
-
   # Journey states
-
-  CRI_TICF_BEFORE_NO_MATCH_PAGE_RFC:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: NO_MATCH_PAGE_RFC
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE_RFC
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE_RFC
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE_RFC
-      fail-with-ci:
-        targetState: NO_MATCH_PAGE_RFC
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
 
   CRI_TICF_BEFORE_NO_MATCH:
     response:
@@ -171,15 +135,6 @@ states:
     response:
       type: page
       pageId: pyi-no-match
-    events:
-      next:
-        targetState: RETURN_TO_RP
-
-  NO_MATCH_PAGE_RFC:
-    response:
-      type: page
-      pageId: pyi-no-match
-      context: repeatFraudCheck
     events:
       next:
         targetState: RETURN_TO_RP
