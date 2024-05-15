@@ -59,6 +59,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/store-identity",
           "Next": "StoreIdentityLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/check-coi",
+          "Next": "CheckCoiLambda"
         }
       ],
       "Default": "Success"
@@ -152,6 +157,15 @@
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "CheckCoiLambda": {
+      "Type": "Task",
+      "Resource": "${CheckCoiFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet"
       },
       "Next": "ProcessNextJourney"
