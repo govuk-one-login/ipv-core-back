@@ -25,6 +25,7 @@ public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
+    public static final String ENCODED_DEVICE_INFORMATION_HEADER = "Txma-Audit-Encoded";
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String IS_USER_INITIATED = "isUserInitiated";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
@@ -68,6 +69,10 @@ public class RequestHelper {
     public static String getIpAddress(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpAddress(event.getHeaders());
+    }
+
+    public static String getEncodedDeviceInformation(APIGatewayProxyRequestEvent event) {
+        return RequestHelper.getHeaderByKey(event.getHeaders(), ENCODED_DEVICE_INFORMATION_HEADER);
     }
 
     public static String getIpAddress(JourneyRequest request)

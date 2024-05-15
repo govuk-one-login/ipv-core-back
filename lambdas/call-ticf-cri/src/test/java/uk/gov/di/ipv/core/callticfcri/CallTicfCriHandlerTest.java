@@ -56,6 +56,7 @@ class CallTicfCriHandlerTest {
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
                     .ipAddress("an-ip-address")
+                    .deviceInformation("device-information")
                     .clientOAuthSessionId("an-oauth-session-id")
                     .journey("a-journey")
                     .lambdaInput(Map.of("journeyType", "ipv"))
@@ -93,6 +94,7 @@ class CallTicfCriHandlerTest {
                 .storeVcs(
                         TICF_CRI,
                         "an-ip-address",
+                        "device-information",
                         List.of(mockVerifiableCredential),
                         clientOAuthSessionItem,
                         mockIpvSessionItem);
@@ -117,7 +119,7 @@ class CallTicfCriHandlerTest {
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-        verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any());
+        verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any(), any());
         verify(mockCiMitService, never()).getContraIndicators(any(), any(), any());
 
         InOrder inOrder = inOrder(mockIpvSessionService);
@@ -217,7 +219,9 @@ class CallTicfCriHandlerTest {
                     .thenReturn(new ClientOAuthSessionItem());
             when(mockTicfCriService.getTicfVc(any(), any()))
                     .thenReturn(List.of(mockVerifiableCredential));
-            doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any());
+            doThrow(e)
+                    .when(mockCriStoringService)
+                    .storeVcs(any(), any(), any(), any(), any(), any());
 
             Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
@@ -236,6 +240,7 @@ class CallTicfCriHandlerTest {
                         CriStoringService.class
                                 .getMethod(
                                         "storeVcs",
+                                        String.class,
                                         String.class,
                                         String.class,
                                         List.class,

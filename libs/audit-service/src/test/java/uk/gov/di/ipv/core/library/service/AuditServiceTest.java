@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,15 +17,22 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
+import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -53,8 +61,14 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
 
+        // Arrange
+        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -70,6 +84,8 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionErrorParams() throws Exception {
+
+        // Arrange
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
@@ -77,8 +93,13 @@ class AuditServiceTest {
                         .setErrorCode(errorCode)
                         .setErrorDescription(errorDescription)
                         .build();
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
+        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -101,6 +122,8 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToQueueWithExtensionsAndUser() throws Exception {
+
+        // Arrange
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
@@ -116,8 +139,13 @@ class AuditServiceTest {
                         "someGovukSigninJourneyId",
                         "someIp.Address");
 
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions, auditEventUser);
+        var event =
+                new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, auditEventUser, extensions);
 
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -146,9 +174,14 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithoutExitCode()
             throws JsonProcessingException, SqsException {
+
+        // Arrange
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, null);
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
+        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+
+        // Act
+        auditService.sendAuditEvent(event);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -169,6 +202,8 @@ class AuditServiceTest {
     @Test
     void shouldSendMessageToSqsQueueWithAuditExtensionsUserIdentityWithFailureCodes()
             throws JsonProcessingException, SqsException {
+
+        // Arrange
         List<AuditEventReturnCode> auditEventReturnCodes =
                 List.of(
                         new AuditEventReturnCode(
@@ -179,8 +214,12 @@ class AuditServiceTest {
                         new AuditEventReturnCode("V", List.of("https://review-k.account.gov.uk")));
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, auditEventReturnCodes);
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
+        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
         verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
@@ -197,6 +236,103 @@ class AuditServiceTest {
         JsonNode returnCodeJson = auditExtensionsUserIdentity.get(RETURN_CODE_KEY);
         assertEquals(2, returnCodeJson.size());
         assertEquals(OBJECT_MAPPER.readTree(FAILURE_RETURN_CODES_TEST), returnCodeJson);
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithoutRestricted()
+            throws JsonProcessingException, SqsException {
+
+        // Arrange
+        var event =
+                new AuditEvent(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        null,
+                        null,
+                        null,
+                        new AuditRestrictedDeviceInformation("TEST_DEVICE"));
+        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(false);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
+
+        AuditEvent messageBody =
+                OBJECT_MAPPER.readValue(
+                        sqsSendMessageRequestCaptor.getValue().messageBody(), AuditEvent.class);
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
+        assertNull(messageBody.getRestricted());
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithRestrictedDeviceInfo() throws Exception {
+        // Arrange
+        var event =
+                new AuditEvent(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        null,
+                        null,
+                        null,
+                        new AuditRestrictedDeviceInformation("TEST_DEVICE"));
+        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(true);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
+
+        String json = sqsSendMessageRequestCaptor.getValue().messageBody();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonParser parser = mapper.createParser(json);
+        JsonNode node = mapper.readTree(parser);
+
+        assertTrue(node.has("restricted"));
+        assertTrue(node.get("restricted").has("device_information"));
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithRestrictedF2F() throws Exception {
+        // Arrange
+        List<Name> name = List.of(new Name(List.of(new NameParts("first_name", "TestUser"))));
+        var event =
+                new AuditEvent(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        null,
+                        null,
+                        null,
+                        new AuditRestrictedF2F(name));
+        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(true);
+
+        // Act
+        auditService.sendAuditEvent(event);
+
+        // Assert
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
+
+        String json = sqsSendMessageRequestCaptor.getValue().messageBody();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonParser parser = mapper.createParser(json);
+        JsonNode node = mapper.readTree(parser);
+
+        assertTrue(node.has("restricted"));
+        assertFalse(node.get("restricted").has("device_information"));
     }
 
     @Test

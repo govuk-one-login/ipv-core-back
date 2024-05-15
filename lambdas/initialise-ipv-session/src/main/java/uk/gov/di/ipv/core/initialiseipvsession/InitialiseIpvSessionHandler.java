@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -137,6 +138,7 @@ public class InitialiseIpvSessionHandler
 
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
+            String deviceInformation = RequestHelper.getEncodedDeviceInformation(input);
             configService.setFeatureSet(RequestHelper.getFeatureSet(input));
             Map<String, String> sessionParams =
                     OBJECT_MAPPER.readValue(input.getBody(), new TypeReference<>() {});
@@ -196,7 +198,8 @@ public class InitialiseIpvSessionHandler
                             inheritedIdentityJwtClaim.get(),
                             claimsSet,
                             ipvSessionItem,
-                            auditEventUser);
+                            auditEventUser,
+                            deviceInformation);
                 }
             }
 
@@ -213,7 +216,8 @@ public class InitialiseIpvSessionHandler
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            extensionsIpvJourneyStart);
+                            extensionsIpvJourneyStart,
+                            new AuditRestrictedDeviceInformation(deviceInformation));
 
             auditService.sendAuditEvent(auditEvent);
 
@@ -306,13 +310,15 @@ public class InitialiseIpvSessionHandler
             InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
-            AuditEventUser auditEventUser)
+            AuditEventUser auditEventUser,
+            String deviceInformation)
             throws RecoverableJarValidationException, ParseException, CredentialParseException,
                     SqsException {
         try {
             var inheritedIdentityVc =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
-            sendInheritedIdentityReceivedAuditEvent(inheritedIdentityVc, auditEventUser);
+            sendInheritedIdentityReceivedAuditEvent(
+                    inheritedIdentityVc, auditEventUser, deviceInformation);
             if (!isHmrcInheritedIdentityWithStrongerVotPresent(inheritedIdentityVc, userId)) {
                 storeHmrcInheritedIdentity(claimsSet, ipvSessionItem, inheritedIdentityVc);
             }
@@ -418,7 +424,9 @@ public class InitialiseIpvSessionHandler
     }
 
     private void sendInheritedIdentityReceivedAuditEvent(
-            VerifiableCredential inheritedIdentityVc, AuditEventUser auditEventUser)
+            VerifiableCredential inheritedIdentityVc,
+            AuditEventUser auditEventUser,
+            String deviceInformation)
             throws SqsException, CredentialParseException, UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
@@ -427,7 +435,8 @@ public class InitialiseIpvSessionHandler
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             getExtensionsForAudit(inheritedIdentityVc, null),
-                            getRestrictedAuditDataForInheritedIdentity(inheritedIdentityVc)));
+                            getRestrictedAuditDataForInheritedIdentity(
+                                    inheritedIdentityVc, deviceInformation)));
         } catch (IllegalArgumentException e) {
             throw new CredentialParseException(
                     "Encountered a parsing error while attempting to parse or compare credentials",

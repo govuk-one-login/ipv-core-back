@@ -219,6 +219,7 @@ class TokenTests {
                 null,
                 null,
                 "dummyIpAddress",
+                "dummyDeviceInformation",
                 List.of("dummyFeatureSet"));
     }
 

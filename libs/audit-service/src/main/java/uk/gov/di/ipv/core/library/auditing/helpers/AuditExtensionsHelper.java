@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
@@ -96,7 +97,7 @@ public class AuditExtensionsHelper {
     }
 
     public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
-            VerifiableCredential vc) throws CredentialParseException {
+            VerifiableCredential vc, String deviceInformation) throws CredentialParseException {
         var credentialSubject =
                 OBJECT_MAPPER
                         .valueToTree(vc.getClaimsSet())
@@ -111,7 +112,8 @@ public class AuditExtensionsHelper {
                             credentialSubject.path(VC_BIRTH_DATE), LIST_BIRTH_DATE_TYPE),
                     OBJECT_MAPPER.treeToValue(
                             credentialSubject.path(VC_SOCIAL_SECURITY_RECORD),
-                            LIST_SOCIAL_SECURITY_RECORD_TYPE));
+                            LIST_SOCIAL_SECURITY_RECORD_TYPE),
+                    new AuditRestrictedDeviceInformation(deviceInformation));
         } catch (JsonProcessingException e) {
             throw new CredentialParseException("Unable to parse VC for inherited ID audit data", e);
         }
