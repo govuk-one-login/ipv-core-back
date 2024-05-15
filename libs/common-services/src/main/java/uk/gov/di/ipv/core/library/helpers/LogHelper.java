@@ -28,6 +28,7 @@ public class LogHelper {
         LOG_COMPONENT_ID("componentId"),
         LOG_CONNECTION("connection"),
         LOG_CONTEXT("context"),
+        LOG_COI_SUBJOURNEY_TYPE("coiSubjourneyType"),
         LOG_CRI_ID("criId"),
         LOG_CRI_ISSUER("criIssuer"),
         LOG_CRI_OAUTH_SESSION_ID("criOAuthSessionId"),

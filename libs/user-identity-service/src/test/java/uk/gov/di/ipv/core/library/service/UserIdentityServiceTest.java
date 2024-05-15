@@ -11,12 +11,15 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -54,7 +57,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -85,10 +90,8 @@ class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static ECDSASigner jwtSigner;
-    @Mock private ConfigService mockConfigService;
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().usersContraIndicators(List.of()).build();
-    private UserIdentityService userIdentityService;
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
@@ -102,6 +105,9 @@ class UserIdentityServiceTest {
                     RETURN_CODES_NON_CI_BREACHING_P0,
                     "🐧");
     public static OauthCriConfig claimedIdentityConfig;
+
+    @Mock private ConfigService mockConfigService;
+    @InjectMocks private UserIdentityService userIdentityService;
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
@@ -119,11 +125,6 @@ class UserIdentityServiceTest {
                         .requiresApiKey(true)
                         .requiresAdditionalEvidence(false)
                         .build();
-    }
-
-    @BeforeEach
-    void setUp() {
-        userIdentityService = new UserIdentityService(mockConfigService);
     }
 
     @Test
@@ -598,6 +599,369 @@ class UserIdentityServiceTest {
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
+    }
+
+    @Nested
+    class AreGivenNamesAndDobCorrelated {
+        @Test
+        void shouldReturnTrueForCorrelatedGivenNames() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Bones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertTrue(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfGivenNamesDiffer() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Bones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfExtraGivenName() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Dimbo", "Bones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfDobDiffers() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Bones", "2000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void shouldThrowIfMissingGivenName(String missingName) throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            missingName, "Bones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act
+            HttpResponseExceptionWithErrorBody thrownError =
+                    assertThrows(
+                            HttpResponseExceptionWithErrorBody.class,
+                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+
+            // Assert
+            assertEquals(500, thrownError.getResponseCode());
+            assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void shouldThrowIfMissingDob(String missingDob) throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Bones", missingDob)));
+            mockCredentialIssuerConfig();
+
+            // Act
+            HttpResponseExceptionWithErrorBody thrownError =
+                    assertThrows(
+                            HttpResponseExceptionWithErrorBody.class,
+                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+
+            // Assert
+            assertEquals(500, thrownError.getResponseCode());
+            assertEquals(
+                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION, thrownError.getErrorResponse());
+        }
+    }
+
+    @Nested
+    class AreFamilyNameAndDobCorrelated {
+        @BeforeEach
+        void setup() {
+            when(mockConfigService.getSsmParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
+        }
+
+        @Test
+        void shouldReturnTrueForCorrelatedFamilyNames() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Jones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
+        }
+
+        @Test
+        void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
+            // Arrange
+            when(mockConfigService.getSsmParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Jones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfFamilyNameDiffers() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Bones", "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfDobDiffers() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Jones", "2000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act & Assert
+            assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
+        }
+
+        @MockitoSettings(strictness = LENIENT)
+        @ParameterizedTest
+        @NullAndEmptySource
+        void shouldThrowIfMissingFamilyName(String missingName) throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", missingName, "1000-01-01")));
+            mockCredentialIssuerConfig();
+
+            // Act
+            HttpResponseExceptionWithErrorBody thrownError =
+                    assertThrows(
+                            HttpResponseExceptionWithErrorBody.class,
+                            () ->
+                                    userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
+                                            vcs));
+
+            // Assert
+            assertEquals(500, thrownError.getResponseCode());
+            assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void shouldThrowIfMissingDob(String missingDob) throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            TestFixtures.createVerifiableCredential(
+                                    USER_ID_1,
+                                    DCMAW_CRI,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Dimbo", "Jones", missingDob)));
+            mockCredentialIssuerConfig();
+
+            // Act
+            HttpResponseExceptionWithErrorBody thrownError =
+                    assertThrows(
+                            HttpResponseExceptionWithErrorBody.class,
+                            () ->
+                                    userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
+                                            vcs));
+
+            // Assert
+            assertEquals(500, thrownError.getResponseCode());
+            assertEquals(
+                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION, thrownError.getErrorResponse());
+        }
     }
 
     @Test
