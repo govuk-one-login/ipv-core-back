@@ -52,7 +52,6 @@ states:
     response:
       type: page
       pageId: confirm-your-details
-      context: coi
     events:
       address-only:
         targetJourney: UPDATE_ADDRESS
