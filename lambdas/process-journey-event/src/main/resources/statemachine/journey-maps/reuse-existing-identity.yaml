@@ -138,6 +138,8 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
       cancel:
         targetState: RETURN_TO_RP
+      back:
+        targetState: IDENTITY_REUSE_PAGE_COI
 
   DETAILS_DELETED_PAGE:
     response:
