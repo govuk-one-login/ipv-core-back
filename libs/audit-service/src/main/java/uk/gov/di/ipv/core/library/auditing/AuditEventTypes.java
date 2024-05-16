@@ -28,4 +28,6 @@ public enum AuditEventTypes {
     IPV_VC_RESTORED,
     IPV_VC_REVOKED,
     IPV_VC_REVOKED_FAILURE,
+    IPV_COI_CHECK_SUCCESS,
+    IPV_COI_CHECK_FAILED,
 }
