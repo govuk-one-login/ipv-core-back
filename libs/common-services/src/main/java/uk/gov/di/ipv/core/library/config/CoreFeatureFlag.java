@@ -8,8 +8,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
     TICF_CRI_BETA("ticfCriBeta"),
     EVCS_WRITE_ENABLED("evcsWriteEnabled"),
-    EVCS_READ_ENABLED("evcsReadEnabled"),
-    DEVICE_INFORMATION("deviceInformationEnabled");
+    EVCS_READ_ENABLED("evcsReadEnabled");
 
     private final String name;
 
