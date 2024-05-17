@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -29,7 +28,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -239,38 +237,6 @@ class AuditServiceTest {
     }
 
     @Test
-    void shouldSendMessageToSqsQueueWithoutRestricted()
-            throws JsonProcessingException, SqsException {
-
-        // Arrange
-        var event =
-                new AuditEvent(
-                        AuditEventTypes.IPV_JOURNEY_START,
-                        null,
-                        null,
-                        null,
-                        new AuditRestrictedDeviceInformation("TEST_DEVICE"));
-        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(false);
-
-        // Act
-        auditService.sendAuditEvent(event);
-
-        // Assert
-        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
-                ArgumentCaptor.forClass(SendMessageRequest.class);
-        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
-
-        assertEquals(
-                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().queueUrl());
-
-        AuditEvent messageBody =
-                OBJECT_MAPPER.readValue(
-                        sqsSendMessageRequestCaptor.getValue().messageBody(), AuditEvent.class);
-        assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
-        assertNull(messageBody.getRestricted());
-    }
-
-    @Test
     void shouldSendMessageToSqsQueueWithRestrictedDeviceInfo() throws Exception {
         // Arrange
         var event =
@@ -280,7 +246,6 @@ class AuditServiceTest {
                         null,
                         null,
                         new AuditRestrictedDeviceInformation("TEST_DEVICE"));
-        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(true);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -313,7 +278,6 @@ class AuditServiceTest {
                         null,
                         null,
                         new AuditRestrictedF2F(name));
-        when(mockConfigService.enabled(CoreFeatureFlag.DEVICE_INFORMATION)).thenReturn(true);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -332,7 +296,7 @@ class AuditServiceTest {
         JsonNode node = mapper.readTree(parser);
 
         assertTrue(node.has("restricted"));
-        assertFalse(node.get("restricted").has("device_information"));
+        assertTrue(node.get("restricted").has("name"));
     }
 
     @Test
