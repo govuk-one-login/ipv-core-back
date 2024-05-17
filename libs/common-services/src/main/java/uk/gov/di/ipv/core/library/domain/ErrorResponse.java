@@ -97,7 +97,8 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_EVCS_RESPONSE(1079, "Failed to parse EVCS response"),
     FAILED_TO_PARSE_EVCS_REQUEST_BODY(1080, "Failed to parse EVCS request body"),
     FAILED_TO_PARSE_EVCS_VC(1081, "Failed to parse a vc from EVCS"),
-    FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS");
+    FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS"),
+    ERROR_CALLING_DCMAW_ASYNC_CRI(1076, "Error calling the DCMAW Async CRI");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
@@ -40,6 +41,8 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
+// qq:DCC what's going on here? We are storing a CriResponse, but not using a single bit of the
+// actual response in these methods?
 public class CriStoringService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -65,18 +68,50 @@ public class CriStoringService {
     }
 
     public void storeCriResponse(
+            JourneyRequest journeyRequest,
+            String criId,
+            String criOAuthSessionId,
+            ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException, JsonProcessingException {
+
+        storeCriResponse(
+                criId,
+                criOAuthSessionId,
+                journeyRequest.getIpvSessionId(),
+                journeyRequest.getIpAddress(),
+                journeyRequest.getDeviceInformation(),
+                clientOAuthSessionItem);
+    }
+
+    public void storeCriResponse(
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException, JsonProcessingException {
+
+        storeCriResponse(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getState(),
+                callbackRequest.getIpvSessionId(),
+                callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
+                clientOAuthSessionItem);
+    }
+
+    private void storeCriResponse(
+            String criId,
+            String criOAuthSessionId,
+            String ipvSessionId,
+            String ipAddress,
+            String deviceInformation,
+            ClientOAuthSessionItem clientOAuthSessionItem)
             throws JsonProcessingException, SqsException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var criOAuthSessionId = callbackRequest.getState();
         var userId = clientOAuthSessionItem.getUserId();
 
         var auditEventUser =
                 new AuditEventUser(
                         userId,
-                        callbackRequest.getIpvSessionId(),
+                        ipvSessionId,
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        callbackRequest.getIpAddress());
+                        ipAddress);
 
         var vcResponseDto =
                 VerifiableCredentialResponseDto.builder()
@@ -95,7 +130,7 @@ public class CriStoringService {
                 CriResourceRetrievedType.PENDING.getType(),
                 criId,
                 auditEventUser,
-                callbackRequest.getDeviceInformation());
+                deviceInformation);
     }
 
     public void storeVcs(

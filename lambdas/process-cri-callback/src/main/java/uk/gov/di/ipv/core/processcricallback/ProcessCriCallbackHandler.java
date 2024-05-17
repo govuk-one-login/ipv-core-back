@@ -284,7 +284,7 @@ public class ProcessCriCallbackHandler
         var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
         var vcResponse =
                 criApiService.fetchVerifiableCredential(
-                        accessToken, callbackRequest, criOAuthSessionItem);
+                        accessToken, callbackRequest.getCredentialIssuerId(), criOAuthSessionItem);
         var vcs =
                 validateAndStoreResponse(
                         callbackRequest,

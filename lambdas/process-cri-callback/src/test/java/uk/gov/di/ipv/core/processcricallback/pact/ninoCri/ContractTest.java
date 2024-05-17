@@ -108,7 +108,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsNinoIdentityCheckIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesAValidIdentityCheckVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -126,7 +127,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        NINO_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -221,7 +222,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsNinoIdentityCheckResponseWithCi")
     void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesANinoIdentityCheckVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -239,7 +241,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        NINO_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -330,7 +332,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsNinoIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesAValidVc(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -348,7 +350,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        NINO_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -430,7 +432,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsNinoResponseWithCi")
     void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesANinoVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -448,7 +451,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        NINO_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -548,7 +551,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode"),
+                                        NINO_CRI,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

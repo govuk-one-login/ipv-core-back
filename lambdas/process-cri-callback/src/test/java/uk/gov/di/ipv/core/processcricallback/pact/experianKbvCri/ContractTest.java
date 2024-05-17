@@ -531,7 +531,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -549,7 +550,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        EXPERIAN_KBV_CRI,
                         getCriOAuthSessionItem());
 
         // Assert
@@ -670,7 +671,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithFailedAnswer")
     void
             fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVcWithFailedAnswer(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -688,7 +690,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        EXPERIAN_KBV_CRI,
                         getCriOAuthSessionItem());
 
         // Assert
@@ -801,7 +803,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode"),
+                                        EXPERIAN_KBV_CRI,
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -854,7 +856,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithCi")
     void fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -872,7 +875,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        EXPERIAN_KBV_CRI,
                         getCriOAuthSessionItem());
 
         // Assert

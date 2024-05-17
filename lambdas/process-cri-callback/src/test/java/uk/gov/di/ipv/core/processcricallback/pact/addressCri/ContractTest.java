@@ -245,7 +245,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsExperianIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstAddressCri_retrievesAnExperianAddressVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -274,7 +275,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCriCallbackRequest("dummyAuthCode"),
+                        ADDRESS_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
@@ -356,7 +357,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedAddressCredential")
     void fetchVerifiableCredential_whenCalledAgainstAddressCri_retrievesAnAddressVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -385,7 +387,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCriCallbackRequest("dummyAuthCode"),
+                        ADDRESS_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
@@ -481,7 +483,7 @@ class ContractTest {
                         () -> {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
-                                    getCriCallbackRequest("dummyAuthCode"),
+                                    ADDRESS_CRI,
                                     CRI_OAUTH_SESSION_ITEM);
                         });
 

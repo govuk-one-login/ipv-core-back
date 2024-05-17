@@ -6,6 +6,7 @@ import spark.Response;
 import spark.Route;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
+import uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler;
 import uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler;
 import uk.gov.di.ipv.core.checkcoi.CheckCoiHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
@@ -43,6 +44,7 @@ public class JourneyEngineHandler {
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private final EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private final CallTicfCriHandler callTicfCriHandler;
+    private final CallDcmawAsyncCriHandler callDcmawAsyncHandler;
     private final StoreIdentityHandler storeIdentityHandler;
     private final CheckCoiHandler checkCoiHandler;
 
@@ -55,6 +57,7 @@ public class JourneyEngineHandler {
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
         this.callTicfCriHandler = new CallTicfCriHandler();
+        this.callDcmawAsyncHandler = new CallDcmawAsyncCriHandler();
         this.storeIdentityHandler = new StoreIdentityHandler();
         this.checkCoiHandler = new CheckCoiHandler();
     }
@@ -109,6 +112,8 @@ public class JourneyEngineHandler {
             case "/journey/check-gpg45-score" -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
+                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+            case "/journey/call-dcmaw-async-cri" -> callDcmawAsyncHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
                     buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);

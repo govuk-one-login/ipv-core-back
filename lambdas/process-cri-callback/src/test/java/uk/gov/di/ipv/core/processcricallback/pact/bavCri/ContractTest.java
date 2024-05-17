@@ -129,7 +129,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsBavIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstBavCri_retrievesAValidVc(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -146,9 +146,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken(VALID_ACCESS_TOKEN),
-                        getCallbackRequest(VALID_AUTH_CODE),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken(VALID_ACCESS_TOKEN), BAV_CRI, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -248,7 +246,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsBavResponseWithCi")
     void fetchVerifiableCredential_whenCalledAgainstBavCri_retrievesAVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -266,7 +265,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(VALID_ACCESS_TOKEN_FOR_CI),
-                        getCallbackRequest(VALID_AUTH_CODE),
+                        BAV_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -363,7 +362,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest(VALID_AUTH_CODE),
+                                        BAV_CRI,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
