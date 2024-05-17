@@ -35,6 +35,7 @@ public class CriOAuthSessionService {
         return dataStore.getItem(criOAuthSessionId);
     }
 
+    // qq:DCC only place a CriOAuthSessionItem is created
     public CriOAuthSessionItem persistCriOAuthSession(
             String state, String criId, String clientOAuthSessionId, String connection) {
 

@@ -181,6 +181,11 @@ public class ConfigService {
                 criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
     }
 
+    public String getCriOAuthClientSecret(CriOAuthSessionItem criOAuthSessionItem) {
+        return getOAuthClientSecretFromSecretManager(
+                criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
+    }
+
     public OauthCriConfig getOauthCriActiveConnectionConfig(String credentialIssuerId) {
         return getOauthCriConfigForConnection(
                 getActiveConnection(credentialIssuerId), credentialIssuerId);
@@ -325,6 +330,27 @@ public class ConfigService {
                     criId);
             return null;
         }
+    }
+
+    private String getOAuthClientSecretFromSecretManager(String criId, String connection) {
+        String secretId =
+                String.format(
+                        "/%s/credential-issuers/%s/connections/%s/oauth-client-secret",
+                        getEnvironmentVariable(ENVIRONMENT), criId, connection);
+
+        String secretValue = getSecretValue(secretId);
+
+        if (secretValue == null) {
+            LOGGER.warn(
+                    (new StringMapMessage())
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "OAuth secret value not found")
+                            .with(LOG_CRI_ID.getFieldName(), criId)
+                            .with(LOG_CONNECTION.getFieldName(), connection));
+        }
+
+        return secretValue;
     }
 
     private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {

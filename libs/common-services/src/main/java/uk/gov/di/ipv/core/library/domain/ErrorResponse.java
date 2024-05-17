@@ -84,14 +84,16 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1066, "Failed to parse cri callback request."),
     ERROR_PROCESSING_TICF_CRI_RESPONSE(1067, "Error processing response from the TICF CRI"),
     MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER(1068, "Missing deleteOnlyGPG45VCs in request"),
+    MITIGATION_ROUTE_CONFIG_NOT_FOUND(
+            1069, "No mitigation journey route event found in cimit config"),
+    // qq:DCC what's happened here? two 1070 codes
+    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1070, "Error parsing evidenceRequest for cri oauth request"),
     FAILED_TO_FIND_MITIGATION_ROUTE(1070, "Failed to find mitigation route"),
     FAILED_TO_DELETE_CREDENTIAL(1071, "Failed to delete credential"),
     FAILED_TO_GET_CREDENTIAL(1072, "Failed to get credential"),
     INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input"),
     FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity"),
-    MITIGATION_ROUTE_CONFIG_NOT_FOUND(
-            1069, "No mitigation journey route event found in cimit config"),
-    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1070, "Error parsing evidenceRequest for cri oauth request");
+    ERROR_CALLING_DCMAW_ASYNC_CRI(1076, "Error calling the DCMAW Async CRI");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

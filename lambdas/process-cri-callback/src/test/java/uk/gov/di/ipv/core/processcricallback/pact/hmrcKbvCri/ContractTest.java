@@ -104,7 +104,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstHmrcKbvCri_retrievesAValidVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -122,7 +123,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        HMRC_KBV_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -200,7 +201,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithFailedAnswer")
     void fetchVerifiableCredential_whenCalledAgainstHmrcKbvCri_retrievesAValidVcWithFailedAnswer(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -218,7 +220,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        HMRC_KBV_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -326,7 +328,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode"),
+                                        HMRC_KBV_CRI,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -366,7 +368,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithCi")
     void fetchVerifiableCredential_whenCalledAgainstHmrcKbvCri_retrievesAValidVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -384,7 +387,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode"),
+                        HMRC_KBV_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert

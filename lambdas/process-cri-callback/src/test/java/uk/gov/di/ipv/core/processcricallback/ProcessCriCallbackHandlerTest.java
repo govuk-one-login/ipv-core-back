@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processcricallback;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.Test;
@@ -88,7 +89,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockVerifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any()))
@@ -146,7 +147,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
                         List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID))
@@ -203,7 +204,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -250,7 +251,7 @@ class ProcessCriCallbackHandlerTest {
 
     @Test
     void getJourneyResponseShouldThrowWhenVerifiableCredentialCannotBeFetched()
-            throws CriApiException {
+            throws CriApiException, JsonProcessingException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var ipvSessionItem = buildValidIpvSessionItem();
@@ -275,7 +276,7 @@ class ProcessCriCallbackHandlerTest {
                 .when(mockCriApiService)
                 .fetchVerifiableCredential(
                         any(BearerAccessToken.class),
-                        eq(callbackRequest),
+                        eq(TEST_CRI_ID),
                         any(CriOAuthSessionItem.class));
 
         // Act & Assert

@@ -120,7 +120,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstCicCri_retrievesAValidVc(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -138,7 +138,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(CIC_ACCESS_TOKEN),
-                        getCallbackRequest(CIC_AUTH_CODE),
+                        CLAIMED_IDENTITY_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -201,7 +201,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void fetchVerifiableCredential_whenCalledAgainstCicCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -222,7 +222,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest(CIC_AUTH_CODE),
+                                        CLAIMED_IDENTITY_CRI,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

@@ -7,6 +7,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
@@ -92,7 +93,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "issueCredentialsUri_returnsValidPendingVc")
     void testCallToDummyPassportIssueCredential(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
 
@@ -112,17 +113,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(DUMMY_ACCESS_TOKEN),
-                        new CriCallbackRequest(
-                                "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
-                                F2F_CRI,
-                                "dummySessionId",
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
-                                "dummyState",
-                                null,
-                                null,
-                                "dummyIpAddress",
-                                "dummyDeviceInformation",
-                                List.of("dummyFeatureSet")),
+                        F2F_CRI,
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
