@@ -31,7 +31,7 @@ public class JourneyEngineHandler {
     public static final String JOURNEY = "journey";
     public static final String IPV_SESSION_ID = "ipv-session-id";
     public static final String IP_ADDRESS = "ip-address";
-    public static final String ENCODED_DEVICE_INFORMATION = "Txma-Audit-Encoded";
+    public static final String ENCODED_DEVICE_INFORMATION = "txma-audit-encoded";
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
 

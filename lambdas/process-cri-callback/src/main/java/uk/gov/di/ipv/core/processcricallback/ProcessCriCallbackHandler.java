@@ -235,7 +235,7 @@ public class ProcessCriCallbackHandler
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
             callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
-            callbackRequest.setDeviceInformation(input.getHeaders().get("Txma-Audit-Encoded"));
+            callbackRequest.setDeviceInformation(input.getHeaders().get("txma-audit-encoded"));
             return callbackRequest;
         } catch (JsonProcessingException e) {
             throw new ParseCriCallbackRequestException(e);
