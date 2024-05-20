@@ -709,7 +709,9 @@ states:
     response:
       type: cri
       criId: nino
-      scope: identityCheck
+      evidenceRequest:
+        scoringPolicy: gpg45
+        strengthScore: 2
     parent: CRI_STATE
     events:
       next:
