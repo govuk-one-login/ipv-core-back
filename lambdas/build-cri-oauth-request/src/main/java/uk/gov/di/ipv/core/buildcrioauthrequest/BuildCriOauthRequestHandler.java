@@ -367,7 +367,7 @@ public class BuildCriOauthRequestHandler
             return null;
         }
 
-        return new EvidenceRequest(null, minViableStrengthOpt.getAsInt());
+        return new EvidenceRequest("gpg45", minViableStrengthOpt.getAsInt());
     }
 
     @Tracing
