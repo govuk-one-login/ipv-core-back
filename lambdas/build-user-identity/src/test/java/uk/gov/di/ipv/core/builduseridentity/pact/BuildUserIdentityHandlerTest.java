@@ -29,7 +29,7 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -38,17 +38,17 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
@@ -65,12 +65,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 class BuildUserIdentityHandlerTest {
 
     private static final String IPV_SESSION_ID = "dummyIpvSessionId";
+    private static final String TEST_USER_ID = "dummyOAuthUserId";
 
     private LambdaHttpServer httpServer;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
-    @Mock private DataStore<SessionCredentialItem> mockSessionCredentialItemStore;
+    @Mock private DataStore<VcStoreItem> mockVcStoreItemStore;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
@@ -87,6 +88,7 @@ class BuildUserIdentityHandlerTest {
 
         var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore);
+        var verifiableCredentialService = new VerifiableCredentialService(mockVcStoreItemStore);
         var clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
 
@@ -94,8 +96,7 @@ class BuildUserIdentityHandlerTest {
         var jwtBuilder =
                 new PactJwtBuilder(VC_HEADER, CIMIT_VC_NO_CIS_BODY, CIMIT_VC_NO_CIS_SIGNATURE);
         var cimitVc = VerifiableCredential.fromValidJwt(null, null, jwtBuilder.buildSignedJwt());
-        when(mockCiMitService.getContraIndicatorsVc(
-                        "dummyOAuthUserId", "dummySigninJourneyId", null))
+        when(mockCiMitService.getContraIndicatorsVc(TEST_USER_ID, "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
         var contraIndicators = ContraIndicators.builder().usersContraIndicators(List.of()).build();
@@ -110,27 +111,31 @@ class BuildUserIdentityHandlerTest {
         // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
         Instant theFuture = Instant.ofEpochSecond(1577836800);
 
-        var passportVcBuilder =
+        var passportVc =
                 new PactJwtBuilder(
-                        VC_HEADER, VALID_UK_PASSPORT_VC_BODY, VALID_UK_PASSPORT_VC_SIGNATURE);
-        var addressVcBuilder =
-                new PactJwtBuilder(VC_HEADER, VALID_ADDRESS_VC_BODY, VALID_ADDRESS_VC_SIGNATURE);
+                                VC_HEADER,
+                                VALID_UK_PASSPORT_VC_BODY,
+                                VALID_UK_PASSPORT_VC_SIGNATURE)
+                        .buildSignedJwt()
+                        .serialize();
+        var addressVc =
+                new PactJwtBuilder(VC_HEADER, VALID_ADDRESS_VC_BODY, VALID_ADDRESS_VC_SIGNATURE)
+                        .buildSignedJwt()
+                        .serialize();
 
-        List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
-        var passportCredential =
-                new SessionCredentialItem(
-                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
-        var addressCredential =
-                new SessionCredentialItem(
-                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
-        sessionCredentials.add(passportCredential);
-        sessionCredentials.add(addressCredential);
-
-        when(mockSessionCredentialItemStore.getItems(IPV_SESSION_ID))
-                .thenReturn(sessionCredentials);
-
-        var sessionCredentialService =
-                new SessionCredentialsService(mockSessionCredentialItemStore);
+        when(mockVcStoreItemStore.getItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                VcStoreItem.builder()
+                                        .userId(TEST_USER_ID)
+                                        .credentialIssuer(PASSPORT_CRI)
+                                        .credential(passportVc)
+                                        .build(),
+                                VcStoreItem.builder()
+                                        .userId(TEST_USER_ID)
+                                        .credentialIssuer(ADDRESS_CRI)
+                                        .credential(addressVc)
+                                        .build()));
 
         // Set up the web server for the tests
         var handler =
@@ -142,7 +147,8 @@ class BuildUserIdentityHandlerTest {
                         clientOAuthSessionDetailsService,
                         mockCiMitService,
                         mockCiMitUtilityService,
-                        sessionCredentialService);
+                        mockSessionCredentialsService,
+                        verifiableCredentialService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity");
         httpServer.startServer();
@@ -167,7 +173,7 @@ class BuildUserIdentityHandlerTest {
         ipvSession.setVot(Vot.P2);
 
         var oAuthSession = new ClientOAuthSessionItem();
-        oAuthSession.setUserId("dummyOAuthUserId");
+        oAuthSession.setUserId(TEST_USER_ID);
         oAuthSession.setClientId("dummyOAuthClientId");
         oAuthSession.setGovukSigninJourneyId("dummySigninJourneyId");
         when(mockOAuthSessionStore.getItem("dummyClientOAuthSessionId")).thenReturn(oAuthSession);

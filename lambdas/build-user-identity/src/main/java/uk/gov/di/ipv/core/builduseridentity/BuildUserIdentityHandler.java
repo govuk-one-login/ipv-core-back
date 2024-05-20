@@ -46,13 +46,17 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
+import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
@@ -69,6 +73,7 @@ public class BuildUserIdentityHandler
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final VerifiableCredentialService verifiableCredentialService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildUserIdentityHandler(
@@ -79,7 +84,8 @@ public class BuildUserIdentityHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            VerifiableCredentialService verifiableCredentialService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -88,6 +94,7 @@ public class BuildUserIdentityHandler
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.verifiableCredentialService = verifiableCredentialService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -100,6 +107,7 @@ public class BuildUserIdentityHandler
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
     @Override
@@ -161,7 +169,11 @@ public class BuildUserIdentityHandler
 
             var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
 
-            var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
+            var vcs =
+                    P2.equals(ipvSessionItem.getVot())
+                            ? VcHelper.filterVCBasedOnProfileType(
+                                    verifiableCredentialService.getVcs(userId), GPG45)
+                            : sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
