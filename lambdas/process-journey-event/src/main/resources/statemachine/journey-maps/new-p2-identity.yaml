@@ -1301,7 +1301,7 @@ states:
         targetState: MITIGATION_PP_CRI_UK_PASSPORT
       returnToRp:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
 
   # Address and Fraud journey (MITIGATION)
   MITIGATION_PP_ADDRESS_AND_FRAUD:
@@ -1375,7 +1375,7 @@ states:
         targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
       returnToRp:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
 
   MITIGATION_DL_ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
