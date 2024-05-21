@@ -566,7 +566,8 @@ states:
       f2f:
         targetState: F2F_PYI_POST_OFFICE
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   ADDRESS_AND_FRAUD_J2:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -613,7 +614,8 @@ states:
       f2f:
         targetState: F2F_PYI_POST_OFFICE
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   ADDRESS_AND_FRAUD_J3:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -1298,7 +1300,8 @@ states:
       back:
         targetState: MITIGATION_PP_CRI_UK_PASSPORT
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetJourney: FAILED
+        targetState: FAILED
 
   # Address and Fraud journey (MITIGATION)
   MITIGATION_PP_ADDRESS_AND_FRAUD:
@@ -1371,7 +1374,8 @@ states:
       back:
         targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetJourney: FAILED
+        targetState: FAILED
 
   MITIGATION_DL_ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
