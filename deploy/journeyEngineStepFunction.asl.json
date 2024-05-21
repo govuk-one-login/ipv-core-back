@@ -8,7 +8,8 @@
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessJourneyStepResult"
     },
@@ -76,7 +77,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -88,7 +90,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -100,7 +103,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -112,7 +116,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -124,7 +129,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -136,7 +142,8 @@
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet",
-        "lambdaInput.$": "$.lambdaInput"
+        "lambdaInput.$": "$.lambdaInput",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -147,7 +154,8 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
@@ -157,7 +165,8 @@
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
     },
