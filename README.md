@@ -64,6 +64,19 @@ See the [Deployment Documentation](deploy/README.md) for information on deployin
 The di-ipv-core-back has a number of different tests:
 * Unit Tests - Each lambda contains unit tests which test a classes functionality in isolation. These tests can be found within the `lambda\*\src\test` folder.
 * Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
+* Pact tests - Contract tests that ensure that we're providing and consuming the correct JSON in our integrations with other services
+
+#### Running provider pact tests locally
+To run provider pact tests locally you will need to have a local copy of the pact file. You will need an account with the pact broker - ask in the #introduce-contract-testing Slack channel for help with this.
+1. Visit the production pact broker at https://pactbroker-onelogin.account.gov.uk/
+1. Find the row for the Consumer/Provider combination you're interested in
+1. View its pact matrix (small grid icon)
+1. Click the timestamp in the "Pact Published" column
+1. Click the three dots icon and "View in API Browser"
+1. Copy the JSON in the "Response Body" section
+1. Save it in a file with a `.json` suffix in `lambdas/<lambda-name>/pacts`
+1. Ensure the test class is annotated with `@PactFolder("pacts")` and any `@PactBroker` annotation is removed
+1. Run the tests
 
 ## Code structure
 The application is configured as a Gradle project with a sub-project for each Lambda. The following are the main folders and their use:

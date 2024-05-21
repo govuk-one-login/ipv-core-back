@@ -52,7 +52,8 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
-//   /lambdas/build-user-identity/pacts
+//   /lambdas/build-user-identity/pacts. See the `Running provider pact tests locally` section of
+//   the README for details on how to get the pact file
 // - Comment out the @PactBroker annotation below
 // - Uncomment @PactFolder annotation below
 @Provider("IpvCoreBackUserIdentityProvider")
