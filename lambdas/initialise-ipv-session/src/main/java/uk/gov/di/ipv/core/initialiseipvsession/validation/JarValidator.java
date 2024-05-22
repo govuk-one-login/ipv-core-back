@@ -218,7 +218,7 @@ public class JarValidator {
                                 .with(LOG_REDIRECT_URI.getFieldName(), redirectUri));
                 throw new JarValidationException(
                         OAuth2Error.INVALID_GRANT.setDescription(
-                                "Invalid redirct_uri claim provided for configured client"));
+                                "Invalid redirect_uri claim provided for configured client"));
             }
             return redirectUri;
         } catch (ParseException e) {

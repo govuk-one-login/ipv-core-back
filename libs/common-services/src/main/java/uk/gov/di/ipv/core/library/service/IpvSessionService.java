@@ -86,7 +86,10 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem generateIpvSession(
-            String clientOAuthSessionId, ErrorObject errorObject, String emailAddress) {
+            String clientOAuthSessionId,
+            ErrorObject errorObject,
+            String emailAddress,
+            boolean isReverification) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
@@ -98,7 +101,11 @@ public class IpvSessionService {
         ipvSessionItem.setVot(Vot.P0);
 
         if (errorObject == null) {
-            ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            if (isReverification) {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.MFA_RESET);
+            } else {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            }
             ipvSessionItem.setUserState(START_STATE);
         } else {
             ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);

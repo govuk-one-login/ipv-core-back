@@ -33,11 +33,21 @@ public enum IpvJourneyTypes {
 
     // Continuity of Identity journeys
     UPDATE_ADDRESS("update-address"),
-    UPDATE_NAME("update-name");
+    UPDATE_NAME("update-name"),
+
+    // MFA reset journey
+    MFA_RESET("mfa-reset", "reverification");
 
     private final String path;
+    private final String type;
 
     IpvJourneyTypes(String path) {
         this.path = path;
+        this.type = "ipv";
+    }
+
+    IpvJourneyTypes(String path, String type) {
+        this.path = path;
+        this.type = type;
     }
 }

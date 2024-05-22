@@ -236,7 +236,7 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
-                "Invalid redirct_uri claim provided for configured client",
+                "Invalid redirect_uri claim provided for configured client",
                 errorObject.getDescription());
     }
 
@@ -444,7 +444,7 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
-                "Invalid redirct_uri claim provided for configured client",
+                "Invalid redirect_uri claim provided for configured client",
                 errorObject.getDescription());
     }
 

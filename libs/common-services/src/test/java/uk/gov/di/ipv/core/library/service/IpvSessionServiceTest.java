@@ -109,7 +109,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, false);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -128,7 +128,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItemWithEmail() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, "test@test.com");
+                        SecureTokenHelper.getInstance().generate(), null, "test@test.com", false);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -149,7 +149,7 @@ class IpvSessionServiceTest {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), testErrorObject, null);
+                        SecureTokenHelper.getInstance().generate(), testErrorObject, null, false);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -236,5 +236,25 @@ class IpvSessionServiceTest {
                         .getValue()
                         .getAccessTokenMetadata()
                         .getRevokedAtDateTime());
+    }
+
+    @Test
+    void shouldCreateSessionItemWithMfaResetJourney() {
+        IpvSessionItem ipvSessionItem =
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.getInstance().generate(), null, null, true);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore)
+                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
+        assertEquals(
+                IpvJourneyTypes.MFA_RESET,
+                ipvSessionItemArgumentCaptor.getValue().getJourneyType());
     }
 }

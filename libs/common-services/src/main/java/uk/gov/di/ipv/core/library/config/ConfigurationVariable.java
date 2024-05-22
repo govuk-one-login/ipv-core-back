@@ -10,6 +10,7 @@ public enum ConfigurationVariable {
     CI_CONFIG("self/ci-config"),
     CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
     CLIENT_ISSUER("clients/%s/issuer"),
+    CLIENT_VALID_JOURNEY_TYPES("clients/%s/validJourneyTypes"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     COI_CHECK_FAMILY_NAME_CHARS("self/coi/familyNameChars"),
     COMPONENT_ID("self/componentId"),
