@@ -13,7 +13,7 @@ Param = namedtuple("Param", "name value")
 DevAccount = namedtuple("DevAccount", "account_id number")
 
 
-def get_local_running_params(environment, dev_account):
+def get_local_running_params(environment, client_id_suffix):
     return [
         Param(f"/{environment}/core/clients/orchestrator/validRedirectUrls", "http://localhost:3000/callback"),
 
@@ -35,7 +35,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3003/authorize",
             "tokenUrl":"http://host.docker.internal:3003/token",
             "credentialUrl":"http://host.docker.internal:3003/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://dcmaw-cri.stubs.account.gov.uk",
@@ -48,7 +48,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3004/authorize",
             "tokenUrl":"http://host.docker.internal:3004/token",
             "credentialUrl":"http://host.docker.internal:3004/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://address-cri.stubs.account.gov.uk",
@@ -61,7 +61,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3005/authorize",
             "tokenUrl":"http://host.docker.internal:3005/token",
             "credentialUrl":"http://host.docker.internal:3005/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://fraud-cri.stubs.account.gov.uk",
@@ -74,7 +74,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3008/authorize",
             "tokenUrl":"http://host.docker.internal:3008/token",
             "credentialUrl":"http://host.docker.internal:3008/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://kbv-cri.stubs.account.gov.uk",
@@ -87,7 +87,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3007/authorize",
             "tokenUrl":"http://host.docker.internal:3007/token",
             "credentialUrl":"http://host.docker.internal:3007/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://passport-cri.stubs.account.gov.uk",
@@ -100,7 +100,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3006/authorize",
             "tokenUrl":"http://host.docker.internal:3006/token",
             "credentialUrl":"http://host.docker.internal:3006/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://driving-licence-cri.stubs.account.gov.uk",
@@ -113,7 +113,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3009/authorize",
             "tokenUrl":"http://host.docker.internal:3009/token",
             "credentialUrl":"http://host.docker.internal:3009/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "componentId":"https://claimed-identity-cri.stubs.account.gov.uk",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
@@ -126,7 +126,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3010/authorize",
             "tokenUrl":"http://host.docker.internal:3010/token",
             "credentialUrl":"http://host.docker.internal:3010/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://f2f-cri.stubs.account.gov.uk",
@@ -139,7 +139,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3011/authorize",
             "tokenUrl":"http://host.docker.internal:3011/token",
             "credentialUrl":"http://host.docker.internal:3011/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://nino-cri.stubs.account.gov.uk",
@@ -152,7 +152,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3012/authorize",
             "tokenUrl":"http://host.docker.internal:3012/token",
             "credentialUrl":"http://host.docker.internal:3012/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://hmrcKbv-cri.stubs.account.gov.uk",
@@ -165,7 +165,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3013/authorize",
             "tokenUrl":"http://host.docker.internal:3013/token",
             "credentialUrl":"http://host.docker.internal:3013/credentials/issue",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://bav-cri.stubs.account.gov.uk",
@@ -178,7 +178,7 @@ def get_local_running_params(environment, dev_account):
             "authorizeUrl":"http://localhost:3014/authorize",
             "tokenUrl":"http://host.docker.internal:3014/token",
             "credentialUrl":"http://host.docker.internal:3014/credential",
-            "clientId":"ipv-core-dev{dev_account}",
+            "clientId":"ipv-core-dev{client_id_suffix}",
             "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
             "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
             "componentId":"https://dcmaw-async-cri.stubs.account.gov.uk",
@@ -309,7 +309,7 @@ if __name__ == "__main__":
     devAccount = determine_dev_account()
     if args.local_or_cloud == 'local':
         delete_async_lambda_event_source_mapping(args.environment, devAccount.account_id, args.dry_run)
-        local_params = get_local_running_params(args.environment, devAccount.number)
+        local_params = get_local_running_params(args.environment, "" if devAccount.number == "02" else devAccount.number)
         write_params(local_params, args.dry_run)
     elif args.local_or_cloud == 'cloud':
         create_async_lambda_event_source_mapping(args.environment, devAccount.account_id, args.dry_run)
