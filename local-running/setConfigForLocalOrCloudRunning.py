@@ -268,7 +268,7 @@ def delete_async_lambda_event_source_mapping(environment, account_id, dry_run):
     event_mapping_uuid = get_event_mapping_uuid_result.stdout.strip()
     print(f"Found event mapping with UUID: {event_mapping_uuid}")
 
-    if not dry_run:
+    if not dry_run and event_mapping_uuid != "None":
         delete_event_mapping_return_code = subprocess.run(
             ['aws', 'lambda', 'delete-event-source-mapping', '--uuid', f'{event_mapping_uuid}'],
             stdout=subprocess.DEVNULL,
