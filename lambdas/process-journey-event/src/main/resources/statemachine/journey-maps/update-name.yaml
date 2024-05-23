@@ -7,15 +7,25 @@ description: >-
 states:
 # Entry points
 
-  UPDATE_NAME_WITH_ADDRESS_START:
+  UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS
+        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_REUSE
 
-  UPDATE_NAME_WITHOUT_ADDRESS_START:
+  UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS
+        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_RFC
+
+  UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START:
+    events:
+      next:
+        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_REUSE
+
+  UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START:
+    events:
+      next:
+        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_RFC
 
   # Parent States
 
@@ -53,7 +63,7 @@ states:
 
    # WITHOUT ADDRESS
 
-  UPDATE_NAME_PAGE_WITHOUT_ADDRESS:
+  UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
@@ -65,6 +75,19 @@ states:
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
+
+  UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_RFC:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REPEAT_FRAUD_CHECK
+        targetState: START
 
   RESET_IDENTITY_WITHOUT_ADDRESS:
     response:
@@ -118,7 +141,7 @@ states:
 
   # WITH ADDRESS
 
-  UPDATE_NAME_PAGE_WITH_ADDRESS:
+  UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
@@ -130,6 +153,19 @@ states:
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
+
+  UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_RFC:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_WITH_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REPEAT_FRAUD_CHECK
+        targetState: START
 
   RESET_IDENTITY_WITH_ADDRESS:
     response:
