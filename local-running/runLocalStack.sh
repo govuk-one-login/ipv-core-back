@@ -10,27 +10,28 @@ Help()
    echo "p     Specifies the AWS profile to use with the script"
    echo
 }
-#
-## Set variables
-#Env="build"
-#Profile="None"
-#
+
 # Script options
-while getopts ":he:n:p:" option; do
+while getopts "he:n:p:" option; do
    case $option in
       h) # display Help
          Help
          exit 1
+         ;;
       e) # Enter an environment
-         env=$OPTARG;;
+         env=$OPTARG
+         ;;
       n) # Enter a dev account number
-         dev_no=$OPTARG;;
+         dev_no=$OPTARG
+         ;;
       p) # Enter an AWS profile
-         profile=$OPTARG;;
+         profile=$OPTARG
+         ;;
       *) # Invalid option
          echo "Error: Invalid option"
          Help
          exit 1
+         ;;
    esac
 done
 
@@ -55,4 +56,4 @@ fi
 
 export ENVIRONMENT=$env
 export DEV_ACCOUNT_NUM=$dev_no
-aws-vault exec $profile -- docker compose up --attach core-back
+aws-vault exec $profile -- docker compose up
