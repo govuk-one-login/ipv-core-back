@@ -35,7 +35,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -93,8 +92,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_JOURNEY_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
@@ -125,6 +122,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String CLAIMS = "claims";
     private static final String USER_INFO = "userInfo";
     private static final String VALUES = "values";
+    private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
     private static final APIGatewayProxyRequestEvent validEvent = new APIGatewayProxyRequestEvent();
     private static final JWTClaimsSet.Builder claimsBuilder =
@@ -140,6 +138,7 @@ class InitialiseIpvSessionHandlerTest {
                     .claim(STATE, "test-state")
                     .claim(CLIENT_ID, "test-client")
                     .claim(VTR, List.of("P2", "PCL200"))
+                    .claim(SCOPE, "openid")
                     .claim(
                             CLAIMS,
                             Map.of(
@@ -216,7 +215,6 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    @MockitoSettings(strictness = LENIENT)
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         // Arrange
@@ -226,8 +224,6 @@ class InitialiseIpvSessionHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
-        when(mockConfigService.getSsmParameter(eq(CLIENT_VALID_JOURNEY_TYPES), any()))
-                .thenReturn("ipv,test");
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -383,33 +379,6 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
-    }
-
-    @Test
-    @MockitoSettings(strictness = LENIENT)
-    void shouldReturn403IfClientNotAllowedToInitiateJourney()
-            throws JsonProcessingException, JarValidationException, ParseException {
-        // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(signedJWT.getJWTClaimsSet());
-        when(mockConfigService.getSsmParameter(eq(CLIENT_VALID_JOURNEY_TYPES), any()))
-                .thenReturn("non-existant-journey-types");
-
-        // Act
-        APIGatewayProxyResponseEvent response =
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
-
-        // Assert
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_JOURNEY_EVENT.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.INVALID_JOURNEY_EVENT.getMessage(), responseBody.get("message"));
     }
 
     @Test

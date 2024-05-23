@@ -37,6 +37,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_I
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SCOPE;
 
 public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -73,6 +74,7 @@ public class JarValidator {
 
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         URI redirectUri = validateRedirectUri(jwtClaimsSet, clientId);
+        validateScope(clientId, jwtClaimsSet);
 
         try {
             return getValidatedClaimSet(signedJWT, clientId);
@@ -84,6 +86,46 @@ public class JarValidator {
                     jwtClaimsSet.getStringClaim("state"),
                     jwtClaimsSet.getStringClaim("govuk_signin_journey_id"),
                     e);
+        }
+    }
+
+    private void validateScope(String clientId, JWTClaimsSet claimsSet)
+            throws JarValidationException {
+        try {
+            String scope = claimsSet.getStringClaim("scope");
+            var validScopes = configService.getValidClientScopes(clientId);
+            if (validScopes.size() == 0 || !validScopes.contains(scope)) {
+                LOGGER.error(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "client not allowed to issue a request with this scope")
+                                .with(LOG_SCOPE.getFieldName(), scope)
+                                .with(LOG_CLIENT_ID.getFieldName(), clientId));
+                throw new JarValidationException(
+                        OAuth2Error.ACCESS_DENIED.setDescription(
+                                "Client not allowed to issue a request with this scope"));
+            }
+            LogHelper.attachClientIdToLogs(clientId);
+        } catch (ParameterNotFoundException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "allowed scopes not found for client.")
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_CLIENT.setDescription(
+                            "Allowed scopes not found for client"));
+        } catch (ParseException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Scope not found in JWT claims.")
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_SCOPE.setDescription("Missing scope"));
         }
     }
 

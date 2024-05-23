@@ -58,7 +58,7 @@ public class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
-    private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
+    private static final String LIST_VALUE_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
     private static final String CORE_BASE_PATH = "/%s/core/";
     private static final Logger LOGGER = LogManager.getLogger();
@@ -167,9 +167,19 @@ public class ConfigService {
     }
 
     public List<String> getClientRedirectUrls(String clientId) {
-        String redirectUrlStrings =
-                getSsmParameter(ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
-        return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
+        return getListValueForClient(ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
+    }
+
+    public List<String> getValidClientScopes(String clientId) {
+        return getListValueForClient(ConfigurationVariable.CLIENT_VALID_SCOPES, clientId);
+    }
+
+    private List<String> getListValueForClient(ConfigurationVariable configVar, String clientId) {
+        String stringVal = getSsmParameter(configVar, clientId);
+        if (stringVal == null) {
+            stringVal = "";
+        }
+        return Arrays.asList(stringVal.split(LIST_VALUE_SEPARATOR));
     }
 
     public String getCriPrivateApiKeyForActiveConnection(String criId) {

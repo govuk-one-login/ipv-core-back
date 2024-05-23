@@ -58,7 +58,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +66,6 @@ import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CL
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_JOURNEY_TYPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -83,6 +81,7 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
     private static final String REQUEST_SCOPE_KEY = "scope";
+    private static final String REVERIFICATION_SCOPE = "reverification";
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
     private static final ErrorObject INVALID_INHERITED_IDENTITY_ERROR_OBJECT =
             new ErrorObject("invalid_inherited_identity");
@@ -161,7 +160,6 @@ public class InitialiseIpvSessionHandler
                             JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)),
                             configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
 
-            String clientId = sessionParams.get(CLIENT_ID_PARAM_KEY);
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
@@ -173,8 +171,8 @@ public class InitialiseIpvSessionHandler
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
-            String scope = sessionParams.get(REQUEST_SCOPE_KEY);
-            isReverification = "reverification".equals(scope);
+            String requestScope = claimsSet.getStringClaim(REQUEST_SCOPE_KEY);
+            isReverification = REVERIFICATION_SCOPE.equals(requestScope);
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -186,17 +184,6 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
-
-            // validate that client is allowed to initiate a journey of this type
-            error = validateJourneyType(ipvSessionItem.getJourneyType().getType(), clientId);
-            if (error.isPresent()) {
-                LOGGER.error(
-                        LogHelper.buildErrorMessage(
-                                "Validation of the journey type failed.",
-                                error.get().getMessage()));
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_FORBIDDEN, error.get());
-            }
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -469,14 +456,6 @@ public class InitialiseIpvSessionHandler
                     "Encountered a parsing error while attempting to parse or compare credentials",
                     e);
         }
-    }
-
-    private Optional<ErrorResponse> validateJourneyType(String type, String clientId) {
-        String journeyTypes = configService.getSsmParameter(CLIENT_VALID_JOURNEY_TYPES, clientId);
-        if (journeyTypes != null && !Arrays.asList(journeyTypes.split(",")).contains(type)) {
-            return Optional.of(ErrorResponse.INVALID_JOURNEY_EVENT);
-        }
-        return Optional.empty();
     }
 
     @Tracing

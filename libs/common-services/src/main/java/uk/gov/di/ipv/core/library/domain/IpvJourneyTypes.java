@@ -36,18 +36,11 @@ public enum IpvJourneyTypes {
     UPDATE_NAME("update-name"),
 
     // MFA reset journey
-    MFA_RESET("mfa-reset", "reverification");
+    MFA_RESET("mfa-reset");
 
     private final String path;
-    private final String type;
 
     IpvJourneyTypes(String path) {
         this.path = path;
-        this.type = "ipv";
-    }
-
-    IpvJourneyTypes(String path, String type) {
-        this.path = path;
-        this.type = type;
     }
 }

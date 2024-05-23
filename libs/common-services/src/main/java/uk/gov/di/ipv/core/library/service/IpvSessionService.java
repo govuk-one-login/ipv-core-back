@@ -101,11 +101,10 @@ public class IpvSessionService {
         ipvSessionItem.setVot(Vot.P0);
 
         if (errorObject == null) {
-            if (isReverification) {
-                ipvSessionItem.setJourneyType(IpvJourneyTypes.MFA_RESET);
-            } else {
-                ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
-            }
+            ipvSessionItem.setJourneyType(
+                    isReverification
+                            ? IpvJourneyTypes.MFA_RESET
+                            : IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
             ipvSessionItem.setUserState(START_STATE);
         } else {
             ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);
