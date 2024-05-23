@@ -76,11 +76,20 @@ public class CriApiService {
     public BearerAccessToken fetchAccessToken(
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
-        var criId = callbackRequest.getCredentialIssuerId();
+        return fetchAccessToken(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getAuthorizationCode(),
+                criOAuthSessionItem);
+    }
+
+    public BearerAccessToken fetchAccessToken(
+            String criId, String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
+            throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
 
         try {
-            var httpRequest = buildFetchAccessTokenRequest(callbackRequest, criOAuthSessionItem);
+            var httpRequest =
+                    buildFetchAccessTokenRequest(criId, authorisationCode, criOAuthSessionItem);
             var httpResponse = httpRequest.send();
             var tokenResponse = TokenResponse.parse(httpResponse);
 
@@ -113,10 +122,8 @@ public class CriApiService {
     }
 
     public HTTPRequest buildFetchAccessTokenRequest(
-            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
+            String criId, String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var authorisationCode = callbackRequest.getAuthorizationCode();
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
         var authorizationCode = new AuthorizationCode(authorisationCode);
