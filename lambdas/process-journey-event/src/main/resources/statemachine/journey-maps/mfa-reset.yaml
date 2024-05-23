@@ -1,8 +1,9 @@
 name: MFA Reset
 
 description: >-
-  The routes a user can take to reset their
-  two factor authentication
+  The routes a user can take to validate their
+  account so that they can reset their two
+  factor authentication mechanism.
 
 states:
   # Entry points
