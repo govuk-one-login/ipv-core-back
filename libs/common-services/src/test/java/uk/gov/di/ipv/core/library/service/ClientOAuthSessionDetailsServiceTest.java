@@ -79,6 +79,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("state", "test-state")
                         .claim("govuk_signin_journey_id", "test-journey-id")
                         .claim("reprove_identity", false)
+                        .claim("scope", "test-scope")
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -108,6 +109,9 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getScope(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getScope());
         assertFalse(clientOAuthSessionItem.getReproveIdentity());
     }
 

@@ -83,6 +83,7 @@ class JarValidatorTest {
     private final String clientIdClaim = "test-client-id";
     private final String redirectUriClaim = "https://example.com";
     private final String stateClaim = "af0ifjsldkj";
+    private final String scopeClaim = "test-scope";
 
     @BeforeEach
     void setUp() {
@@ -716,6 +717,7 @@ class JarValidatorTest {
         validClaims.put(JWTClaimNames.AUDIENCE, audienceClaim);
         validClaims.put(JWTClaimNames.ISSUER, issuerClaim);
         validClaims.put(JWTClaimNames.SUBJECT, subjectClaim);
+        validClaims.put("scope", scopeClaim);
         validClaims.put("response_type", responseTypeClaim);
         validClaims.put("client_id", clientIdClaim);
         validClaims.put("redirect_uri", redirectUriClaim);
