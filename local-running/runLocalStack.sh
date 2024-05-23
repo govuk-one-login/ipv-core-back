@@ -8,11 +8,14 @@ Help()
    echo "e     Specifies your dev environment (e.g. dev-danc)"
    echo "n     Specifies the account number of your dev environment (e.g. 01)"
    echo "p     Specifies the AWS profile to use with the script"
+   echo "a     Specifies a container to attach to (optional)"
    echo
 }
 
+attach=''
+
 # Script options
-while getopts "he:n:p:" option; do
+while getopts "he:n:p:a:" option; do
    case $option in
       h) # display Help
          Help
@@ -27,8 +30,11 @@ while getopts "he:n:p:" option; do
       p) # Enter an AWS profile
          profile=$OPTARG
          ;;
+      a) # Container to  attach to
+         attach="--attach $OPTARG"
+         ;;
       *) # Invalid option
-         echo "Error: Invalid option"
+         echo 'Error: Invalid option'
          Help
          exit 1
          ;;
@@ -36,7 +42,7 @@ while getopts "he:n:p:" option; do
 done
 
 if [ -z "$env" ] || [ -z "$dev_no" ] || [ -z "$profile" ]; then
-        echo 'All parameters are required' >&2
+        echo 'e, n, and p parameters are required' >&2
         Help
         exit 1
 fi
@@ -56,4 +62,4 @@ fi
 
 export ENVIRONMENT=$env
 export DEV_ACCOUNT_NUM=$dev_no
-aws-vault exec $profile -- docker compose up
+aws-vault exec $profile -- docker compose up $attach
