@@ -171,8 +171,8 @@ public class InitialiseIpvSessionHandler
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
-            String requestScope = claimsSet.getStringClaim(REQUEST_SCOPE_KEY);
-            isReverification = REVERIFICATION_SCOPE.equals(requestScope);
+            isReverification =
+                    REVERIFICATION_SCOPE.equals(claimsSet.getStringClaim(REQUEST_SCOPE_KEY));
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
