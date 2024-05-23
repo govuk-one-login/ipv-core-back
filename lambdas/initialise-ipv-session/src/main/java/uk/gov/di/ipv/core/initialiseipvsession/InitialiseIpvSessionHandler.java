@@ -212,17 +212,17 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            Optional<InheritedIdentityJwtClaim> inheritedIdentityJwtClaim;
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
-                    && (inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet))
-                            .isPresent()) {
-                validateAndStoreHMRCInheritedIdentity(
-                        clientOAuthSessionItem.getUserId(),
-                        inheritedIdentityJwtClaim.get(),
-                        claimsSet,
-                        ipvSessionItem,
-                        auditEventUser,
-                        deviceInformation);
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
+                if (inheritedIdentityJwtClaim.isPresent()) {
+                    validateAndStoreHMRCInheritedIdentity(
+                            clientOAuthSessionItem.getUserId(),
+                            inheritedIdentityJwtClaim.get(),
+                            claimsSet,
+                            ipvSessionItem,
+                            auditEventUser,
+                            deviceInformation);
+                }
             }
 
             Boolean reproveIdentity =
