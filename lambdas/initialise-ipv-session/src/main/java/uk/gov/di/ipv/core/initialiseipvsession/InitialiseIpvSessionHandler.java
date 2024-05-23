@@ -175,8 +175,7 @@ public class InitialiseIpvSessionHandler
 
             String scope = sessionParams.get(REQUEST_SCOPE_KEY);
             isReverification = "reverification".equals(scope);
-            if (!isReverification
-                    && (vtr == null || vtr.isEmpty() || vtr.stream().allMatch(String::isEmpty))) {
+            if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
@@ -212,26 +211,19 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
-                if (inheritedIdentityJwtClaim.isPresent()) {
-                    validateAndStoreHMRCInheritedIdentity(
-                            clientOAuthSessionItem.getUserId(),
-                            inheritedIdentityJwtClaim.get(),
-                            claimsSet,
-                            ipvSessionItem,
-                            auditEventUser,
-                            deviceInformation);
-                }
+            var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
+            if (inheritedIdentityJwtClaim.isPresent()) {
+                validateAndStoreHMRCInheritedIdentity(
+                        clientOAuthSessionItem.getUserId(),
+                        inheritedIdentityJwtClaim.get(),
+                        claimsSet,
+                        ipvSessionItem,
+                        auditEventUser,
+                        deviceInformation);
             }
 
-            Boolean reproveIdentity =
-                    configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
-                            ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
-                            : null;
-
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
-                    new AuditExtensionsIpvJourneyStart(reproveIdentity, vtr);
+                    new AuditExtensionsIpvJourneyStart(isReproveIdentity(claimsSet), vtr);
 
             AuditEvent auditEvent =
                     new AuditEvent(
@@ -309,8 +301,11 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    private static Optional<InheritedIdentityJwtClaim> getInheritedIdentityClaim(
-            JWTClaimsSet claimsSet) throws ParseException, RecoverableJarValidationException {
+    private Optional<InheritedIdentityJwtClaim> getInheritedIdentityClaim(JWTClaimsSet claimsSet)
+            throws ParseException, RecoverableJarValidationException {
+        if (!configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+            return Optional.empty();
+        }
         try {
             return Optional.ofNullable(
                             OBJECT_MAPPER.convertValue(
@@ -324,6 +319,16 @@ public class InitialiseIpvSessionHandler
                     claimsSet,
                     e);
         }
+    }
+
+    private Boolean isReproveIdentity(JWTClaimsSet claimsSet) throws ParseException {
+        return configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
+                ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
+                : null;
+    }
+
+    private Boolean isListEmpty(List<String> list) {
+        return list == null || list.isEmpty() || list.stream().allMatch(String::isEmpty);
     }
 
     @Tracing
