@@ -26,6 +26,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
@@ -39,8 +41,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
