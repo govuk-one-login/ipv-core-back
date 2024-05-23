@@ -6,7 +6,6 @@ import lombok.Builder;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
-@Builder
 public class ReverificationFailedResponse extends ReverificationBaseResponse {
     @JsonProperty private final String error_code;
     @JsonProperty private final String error_description;

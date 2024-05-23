@@ -90,6 +90,7 @@ class BuildUserIdentityHandlerTest {
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
     private static final String VTM = "http://www.example.com/vtm";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String USER_IDENTITY_REQUEST = "/user-identity";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ContraIndicators CONTRA_INDICATORS =
@@ -177,6 +178,7 @@ class BuildUserIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .govukSigninJourneyId("test-journey-id")
+                        .scope("openid")
                         .build();
     }
 
@@ -813,6 +815,7 @@ class BuildUserIdentityHandlerTest {
                         "ip-address",
                         TEST_IP_ADDRESS);
         event.setHeaders(headers);
+        event.setPath(USER_IDENTITY_REQUEST);
         return event;
     }
 }
