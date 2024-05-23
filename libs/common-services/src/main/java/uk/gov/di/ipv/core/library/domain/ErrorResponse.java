@@ -90,8 +90,8 @@ public enum ErrorResponse {
     INVALID_JOURNEY_EVENT(1073, "Invalid journey event in input"),
     FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity"),
     MITIGATION_ROUTE_CONFIG_NOT_FOUND(
-            1069, "No mitigation journey route event found in cimit config"),
-    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1070, "Error parsing evidenceRequest for cri oauth request");
+            1075, "No mitigation journey route event found in cimit config"),
+    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1076, "Error parsing evidenceRequest for cri oauth request");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
