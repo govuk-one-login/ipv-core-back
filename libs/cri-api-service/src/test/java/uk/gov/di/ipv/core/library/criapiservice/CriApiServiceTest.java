@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.criapiservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -25,7 +26,6 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -243,6 +243,7 @@ class CriApiServiceTest {
     @Test
     void buildFetchAccessTokenRequestShouldHandleJOSEException() throws Exception {
         // Arrange
+        var callbackRequest = getValidCallbackRequest();
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
                     .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
@@ -250,8 +251,6 @@ class CriApiServiceTest {
             when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
             when(mockKmsEs256SignerFactory.getSigner(any()))
                     .thenReturn(new ECDSASigner(getPrivateKey()));
-
-            var callbackRequest = getValidCallbackRequest();
 
             // Act & Assert
             assertThrows(
