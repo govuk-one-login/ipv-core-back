@@ -327,7 +327,7 @@ public class InitialiseIpvSessionHandler
                 : null;
     }
 
-    private static Boolean isListEmpty(List<String> list) {
+    private static boolean isListEmpty(List<String> list) {
         return list == null || list.isEmpty() || list.stream().allMatch(String::isEmpty);
     }
 
