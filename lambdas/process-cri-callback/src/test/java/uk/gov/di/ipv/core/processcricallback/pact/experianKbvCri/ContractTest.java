@@ -408,8 +408,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        getCallbackRequest("dummyAuthCode"), getCriOAuthSessionItem());
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -482,8 +481,7 @@ class ContractTest {
                         CriApiException.class,
                         () ->
                                 underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyInvalidAuthCode"),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -551,7 +549,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -690,7 +688,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -803,7 +801,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyAuthCode"),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -874,7 +872,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1003,11 +1001,10 @@ class ContractTest {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                EXPERIAN_KBV_CRI,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=kbv",
                 "dummyState",

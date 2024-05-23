@@ -145,8 +145,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -214,8 +213,7 @@ class ContractTest {
                         CriApiException.class,
                         () ->
                                 underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyInvalidAuthCode"),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -281,8 +279,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -407,8 +404,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -530,8 +526,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -656,8 +651,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -783,8 +777,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -912,8 +905,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1038,8 +1030,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1157,8 +1148,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1276,8 +1266,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1397,8 +1386,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1513,8 +1501,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1632,8 +1619,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1755,8 +1741,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest(
-                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef", credentialIssuerConfig),
+                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1865,9 +1850,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest(
-                                                "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
-                                                credentialIssuerConfig),
+                                        getCallbackRequest("c6af9ac6-7b61-11e6-9a41-93e8deadbeef"),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -1878,11 +1861,10 @@ class ContractTest {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                DCMAW_CRI,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw",
                 "dummyState",

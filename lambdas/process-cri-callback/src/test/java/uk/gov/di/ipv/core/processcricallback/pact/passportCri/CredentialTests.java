@@ -112,7 +112,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -207,7 +207,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -310,7 +310,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        getCallbackRequest("dummyAuthCode"),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -420,7 +420,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyAuthCode"),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -442,11 +442,10 @@ class CredentialTests {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                PASSPORT_CRI,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
                 "dummyState",
