@@ -94,7 +94,7 @@ public class JarValidator {
         try {
             String scope = claimsSet.getStringClaim("scope");
             var validScopes = configService.getValidClientScopes(clientId);
-            if (validScopes.size() == 0 || !validScopes.contains(scope)) {
+            if (validScopes.isEmpty() || !validScopes.contains(scope)) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
