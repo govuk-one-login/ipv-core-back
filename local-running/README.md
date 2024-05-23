@@ -38,11 +38,12 @@ time.
 aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw local
 ```
 
-Next, spin up the containers with Docker compose. You need to have your dev env and the number of your dev account (01
-or 02), set as env vars, and be auth'd to your AWS account. Here's how I do it.
+Next, spin up the containers with Docker compose, there is a shell script to sort out some bits that vary between dev
+environments. You will need to provide your dev env, the number of your dev account (01 or 02), and an AWS profile.
+Here's how I do it.
 
 ```
-ENVIRONMENT=dev-chrisw DEV_ACCOUNT_NUM=01 aws-vault exec core-dev01 -- docker-compose up --attach core-back
+./runLocalStack.sh -e dev-chrisw -n 01 -p core-dev01
 ```
 
 You can now visit the orch-stub at http://localhost:3000 and start a journey.
