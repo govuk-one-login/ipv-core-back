@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -113,7 +114,7 @@ class ContractTest {
                         new BearerAccessToken(DUMMY_ACCESS_TOKEN),
                         new CriCallbackRequest(
                                 "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
-                                credentialIssuerConfig.getClientId(),
+                                F2F_CRI,
                                 "dummySessionId",
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
                                 "dummyState",

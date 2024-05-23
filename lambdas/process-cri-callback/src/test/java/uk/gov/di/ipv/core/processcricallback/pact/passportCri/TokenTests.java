@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -124,8 +125,7 @@ class TokenTests {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        CRI_OAUTH_SESSION_ITEM);
+                        getCallbackRequest("dummyAuthCode"), CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -198,8 +198,7 @@ class TokenTests {
                         CriApiException.class,
                         () ->
                                 underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyInvalidAuthCode"),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -208,11 +207,10 @@ class TokenTests {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                PASSPORT_CRI,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
                 "dummyState",
