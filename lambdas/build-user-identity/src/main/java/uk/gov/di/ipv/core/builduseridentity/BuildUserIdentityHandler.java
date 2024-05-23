@@ -28,7 +28,10 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.domain.reverification.ReverificationFailedResponse;
+import uk.gov.di.ipv.core.library.domain.reverification.ReverificationSuccessResponse;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -49,6 +52,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,6 +64,9 @@ public class BuildUserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
+
+    private static final String REVERIFICATION_SCOPE = "reverification";
+    private static final String OPENID_SCOPE = "openid";
 
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
@@ -159,35 +166,80 @@ public class BuildUserIdentityHandler
                     ciMitService.getContraIndicatorsVc(
                             userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
-            var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
+            var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
 
-            var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
+            if (input.getPath().contains("/reverification")) {
 
-            UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(
-                            vcs, userId, ipvSessionItem.getVot(), contraIndicators);
-            userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
-            if (configService.enabled(TICF_CRI_BETA)
-                    && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
-                userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
+                if (!Arrays.asList(scopeClaims).contains(REVERIFICATION_SCOPE)) {
+                    return getAccessDeniedApiGatewayProxyResponseEvent();
+                }
+
+                if (ipvSessionItem.getVot().equals(Vot.P2)) {
+                    ipvSessionService.revokeAccessToken(ipvSessionItem);
+                    deleteSessionCredentials(ipvSessionId);
+
+                    ReverificationSuccessResponse successResponse =
+                            ReverificationSuccessResponse.successResponseBuilder()
+                                    .sub(userId)
+                                    .build();
+
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HTTPResponse.SC_OK, successResponse);
+                } else {
+                    ipvSessionService.revokeAccessToken(ipvSessionItem);
+                    deleteSessionCredentials(ipvSessionId);
+
+                    ReverificationFailedResponse failedResponse =
+                            ReverificationFailedResponse.failedResponseBuilder()
+                                    .sub(userId)
+                                    .error_code(ipvSessionItem.getErrorCode())
+                                    .error_description(ipvSessionItem.getErrorDescription())
+                                    .build();
+
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HTTPResponse.SC_OK, failedResponse);
+                }
+
+            } else if (input.getPath().contains("/user-identity")) {
+
+                if (!Arrays.asList(scopeClaims).contains(OPENID_SCOPE)) {
+                    return getAccessDeniedApiGatewayProxyResponseEvent();
+                }
+
+                var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
+
+                var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
+
+                UserIdentity userIdentity =
+                        userIdentityService.generateUserIdentity(
+                                vcs, userId, ipvSessionItem.getVot(), contraIndicators);
+                userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
+                if (configService.enabled(TICF_CRI_BETA)
+                        && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
+                    userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
+                }
+
+                sendIdentityIssuedAuditEvent(
+                        ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
+
+                ipvSessionService.revokeAccessToken(ipvSessionItem);
+
+                deleteSessionCredentials(ipvSessionId);
+
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_LAMBDA_RESULT.getFieldName(),
+                                        "Successfully generated user identity response.")
+                                .with(LOG_VOT.getFieldName(), ipvSessionItem.getVot());
+                LOGGER.info(message);
+
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HTTPResponse.SC_OK, userIdentity);
             }
 
-            sendIdentityIssuedAuditEvent(
-                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
+            return getAccessDeniedApiGatewayProxyResponseEvent();
 
-            ipvSessionService.revokeAccessToken(ipvSessionItem);
-
-            deleteSessionCredentials(ipvSessionId);
-
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_LAMBDA_RESULT.getFieldName(),
-                                    "Successfully generated user identity response.")
-                            .with(LOG_VOT.getFieldName(), ipvSessionItem.getVot());
-            LOGGER.info(message);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -320,6 +372,18 @@ public class BuildUserIdentityHandler
                 OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
                 OAuth2Error.SERVER_ERROR
                         .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                        .toJSONObject());
+    }
+
+    private APIGatewayProxyResponseEvent getAccessDeniedApiGatewayProxyResponseEvent() {
+        LOGGER.error(
+                LogHelper.buildLogMessage(
+                        "Access denied. Access was attempted from an invalid endpoint or journey."));
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - Access was attempted from an invalid endpoint or journey")
                         .toJSONObject());
     }
 }
