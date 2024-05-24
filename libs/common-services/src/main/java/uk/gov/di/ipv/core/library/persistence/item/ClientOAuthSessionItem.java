@@ -20,6 +20,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private String clientOAuthSessionId;
     private String responseType;
     private String clientId;
+    private String scope;
     private String redirectUri;
     private String state;
     private String userId;
