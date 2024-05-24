@@ -13,6 +13,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -90,7 +91,6 @@ class BuildUserIdentityHandlerTest {
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
     private static final String VTM = "http://www.example.com/vtm";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
-    private static final String USER_IDENTITY_REQUEST = "/user-identity";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ContraIndicators CONTRA_INDICATORS =
@@ -119,7 +119,6 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-f.account.gov.uk"))
                                             .build()))
                     .build();
-    private static final APIGatewayProxyRequestEvent testEvent = getEventWithAuthAndIpHeaders();
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -167,437 +166,587 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot(Vot.P2);
         ipvSessionItem.setFeatureSet("someCoolNewThing");
-
-        clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
-                        .state("test-state")
-                        .responseType("code")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId(TEST_USER_ID)
-                        .clientId("test-client")
-                        .govukSigninJourneyId("test-journey-id")
-                        .scope("openid")
-                        .build();
     }
 
-    @Test
-    void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest() throws Exception {
-        // Arrange
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
-        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
-        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+    @Nested
+    class UserIdentityEndpoint {
+        private static final String USER_IDENTITY_REQUEST = "/user-identity";
+        private static final String OPENID_SCOPE = "openid";
+        private static final APIGatewayProxyRequestEvent testEvent =
+                getEventWithAuthIpHeadersAndPath(USER_IDENTITY_REQUEST);
 
-        // Act
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        @BeforeEach
+        void setUp() throws Exception {
+            clientOAuthSessionItem = getClientAuthSessionItemWithScope(OPENID_SCOPE);
+        }
 
-        // Assert
-        assertEquals(200, response.getStatusCode());
+        @Test
+        void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest() throws Exception {
+            // Arrange
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenReturn(userIdentity);
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+            ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+            when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+            when(mockContraIndicators.hasMitigations()).thenReturn(true);
+            when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+            when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                    .thenReturn(List.of(VC_ADDRESS));
 
-        UserIdentity responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-        assertEquals(4, responseBody.getVcs().size());
-        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+            // Assert
+            assertEquals(200, response.getStatusCode());
 
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            UserIdentity responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+            assertEquals(4, responseBody.getVcs().size());
+            assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+            assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+            assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+            assertEquals(
+                    userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+            assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
 
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        AuditExtensionsUserIdentity extensions =
-                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(Vot.P2, extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertTrue(extensions.isHasMitigations());
-        assertEquals(3, responseBody.getReturnCode().size());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
-        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
-        verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
+            AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+            AuditExtensionsUserIdentity extensions =
+                    (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+            assertEquals(Vot.P2, extensions.getLevelOfConfidence());
+            assertFalse(extensions.isCiFail());
+            assertTrue(extensions.isHasMitigations());
+            assertEquals(3, responseBody.getReturnCode().size());
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
-        verify(mockSessionCredentialsService, times(1))
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
+            verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
-    @Test
-    void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
-                    throws Exception {
-        // Arrange
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
-        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
-        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
-        doThrow(
-                        new VerifiableCredentialException(
-                                HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_DELETE_CREDENTIAL))
-                .when(mockSessionCredentialsService)
-                .deleteSessionCredentials(any());
-        // Act
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            verify(mockUserIdentityService)
+                    .generateUserIdentity(
+                            List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
 
-        // Assert
-        assertEquals(200, response.getStatusCode());
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
 
-        UserIdentity responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        @Test
+        void
+                shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
+                        throws Exception {
+            // Arrange
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenReturn(userIdentity);
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+            ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+            when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+            when(mockContraIndicators.hasMitigations()).thenReturn(true);
+            when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+            when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                    .thenReturn(List.of(VC_ADDRESS));
+            doThrow(
+                            new VerifiableCredentialException(
+                                    HTTPResponse.SC_SERVER_ERROR,
+                                    ErrorResponse.FAILED_TO_DELETE_CREDENTIAL))
+                    .when(mockSessionCredentialsService)
+                    .deleteSessionCredentials(any());
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-        assertEquals(4, responseBody.getVcs().size());
-        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+            // Assert
+            assertEquals(200, response.getStatusCode());
 
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            UserIdentity responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+            assertEquals(4, responseBody.getVcs().size());
+            assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+            assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+            assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+            assertEquals(
+                    userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+            assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
 
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        AuditExtensionsUserIdentity extensions =
-                (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
-        assertEquals(Vot.P2, extensions.getLevelOfConfidence());
-        assertFalse(extensions.isCiFail());
-        assertTrue(extensions.isHasMitigations());
-        assertEquals(3, responseBody.getReturnCode().size());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
-        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
-        verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
+            AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+            AuditExtensionsUserIdentity extensions =
+                    (AuditExtensionsUserIdentity) capturedAuditEvent.getExtensions();
+            assertEquals(Vot.P2, extensions.getLevelOfConfidence());
+            assertFalse(extensions.isCiFail());
+            assertTrue(extensions.isHasMitigations());
+            assertEquals(3, responseBody.getReturnCode().size());
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
-        verify(mockSessionCredentialsService, times(1))
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
+            verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
-    @Test
-    void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndOnlyNotFoundReturnCodeInCiConfigForAuditEventReturnCodes()
-                    throws Exception {
-        // Arrange
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(
-                        Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        ipvSessionItem.setVot(Vot.P0);
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        // Act
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            verify(mockUserIdentityService)
+                    .generateUserIdentity(
+                            List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
 
-        // Assert
-        assertEquals(200, response.getStatusCode());
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
 
-        UserIdentity responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        @Test
+        void
+                shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseAndOnlyNotFoundReturnCodeInCiConfigForAuditEventReturnCodes()
+                        throws Exception {
+            // Arrange
+            when(mockConfigService.getContraIndicatorConfigMap())
+                    .thenReturn(
+                            Map.of(
+                                    "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
+                                    "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                    "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+            when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+            ipvSessionItem.setVot(Vot.P0);
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenReturn(userIdentity);
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-        assertEquals(4, responseBody.getVcs().size());
-        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+            // Assert
+            assertEquals(200, response.getStatusCode());
 
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            UserIdentity responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+            assertEquals(4, responseBody.getVcs().size());
+            assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+            assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+            assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+            assertEquals(
+                    userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+            assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+            assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
 
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        var expectedExtension =
-                new AuditExtensionsUserIdentity(
-                        Vot.P0,
-                        false,
-                        false,
-                        List.of(
-                                new AuditEventReturnCode("1", List.of()),
-                                new AuditEventReturnCode(
-                                        "2",
-                                        List.of(
-                                                "https://review-q.account.gov.uk",
-                                                "https://review-f.account.gov.uk")),
-                                new AuditEventReturnCode(
-                                        "3",
-                                        List.of(
-                                                "https://review-z.account.gov.uk",
-                                                "https://review-f.account.gov.uk"))));
-        assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
-        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
-        verify(mockSessionCredentialsService, times(1))
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
+            AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+            var expectedExtension =
+                    new AuditExtensionsUserIdentity(
+                            Vot.P0,
+                            false,
+                            false,
+                            List.of(
+                                    new AuditEventReturnCode("1", List.of()),
+                                    new AuditEventReturnCode(
+                                            "2",
+                                            List.of(
+                                                    "https://review-q.account.gov.uk",
+                                                    "https://review-f.account.gov.uk")),
+                                    new AuditEventReturnCode(
+                                            "3",
+                                            List.of(
+                                                    "https://review-z.account.gov.uk",
+                                                    "https://review-f.account.gov.uk"))));
+            assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
 
-    @Test
-    void shouldReturnRiskAssessmentCredentialsWhenTicfIsEnabled() throws Exception {
-        // Arrange
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(
-                        Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        ipvSessionItem.setVot(Vot.P0);
-        ipvSessionItem.setRiskAssessmentCredential(vcTicf().getVcString());
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
-        // Act
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
-        // Assert
-        assertEquals(200, response.getStatusCode());
+            verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
 
-        UserIdentity responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        @Test
+        void shouldReturnRiskAssessmentCredentialsWhenTicfIsEnabled() throws Exception {
+            // Arrange
+            when(mockConfigService.getContraIndicatorConfigMap())
+                    .thenReturn(
+                            Map.of(
+                                    "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
+                                    "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
+                                    "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+            when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+            ipvSessionItem.setVot(Vot.P0);
+            ipvSessionItem.setRiskAssessmentCredential(vcTicf().getVcString());
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenReturn(userIdentity);
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+            when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-        assertEquals(5, responseBody.getVcs().size());
-        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
-        verify(mockSessionCredentialsService, times(1))
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
+            // Assert
+            assertEquals(200, response.getStatusCode());
 
-    @Test
-    void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseCiConfigForAuditEventReturnCodesAndCheckedDuplicateIssuers()
-                    throws Exception {
-        ContraIndicators contraIndicators =
-                ContraIndicators.builder()
-                        .usersContraIndicators(
-                                List.of(
-                                        ContraIndicator.builder()
-                                                .code("X01")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-d.account.gov.uk",
-                                                                "https://review-f.account.gov.uk"))
-                                                .build(),
-                                        ContraIndicator.builder()
-                                                .code("X02")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-d.account.gov.uk",
-                                                                "https://review-f.account.gov.uk"))
-                                                .build(),
-                                        ContraIndicator.builder()
-                                                .code("Z03")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-w.account.gov.uk",
-                                                                "https://review-x.account.gov.uk"))
-                                                .build()))
-                        .build();
+            UserIdentity responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        // Arrange
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(
-                        Map.of(
-                                "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
-                                "X02", new ContraIndicatorConfig("X02", 4, -3, "1"),
-                                "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
-        ipvSessionItem.setVot(Vot.P0);
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
-        // Act
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            assertEquals(5, responseBody.getVcs().size());
+            assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+            assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+            assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+            assertEquals(
+                    userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+            assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+            assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
 
-        // Assert
-        assertEquals(200, response.getStatusCode());
+        @Test
+        void
+                shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseCiConfigForAuditEventReturnCodesAndCheckedDuplicateIssuers()
+                        throws Exception {
+            ContraIndicators contraIndicators =
+                    ContraIndicators.builder()
+                            .usersContraIndicators(
+                                    List.of(
+                                            ContraIndicator.builder()
+                                                    .code("X01")
+                                                    .issuers(
+                                                            List.of(
+                                                                    "https://review-d.account.gov.uk",
+                                                                    "https://review-f.account.gov.uk"))
+                                                    .build(),
+                                            ContraIndicator.builder()
+                                                    .code("X02")
+                                                    .issuers(
+                                                            List.of(
+                                                                    "https://review-d.account.gov.uk",
+                                                                    "https://review-f.account.gov.uk"))
+                                                    .build(),
+                                            ContraIndicator.builder()
+                                                    .code("Z03")
+                                                    .issuers(
+                                                            List.of(
+                                                                    "https://review-w.account.gov.uk",
+                                                                    "https://review-x.account.gov.uk"))
+                                                    .build()))
+                            .build();
 
-        UserIdentity responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            // Arrange
+            when(mockConfigService.getContraIndicatorConfigMap())
+                    .thenReturn(
+                            Map.of(
+                                    "X01", new ContraIndicatorConfig("X01", 4, -3, "1"),
+                                    "X02", new ContraIndicatorConfig("X02", 4, -3, "1"),
+                                    "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
+            when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+            ipvSessionItem.setVot(Vot.P0);
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenReturn(userIdentity);
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicators(any())).thenReturn(contraIndicators);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+            when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-        assertEquals(4, responseBody.getVcs().size());
-        assertEquals(userIdentity.getVcs(), responseBody.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
+            // Assert
+            assertEquals(200, response.getStatusCode());
 
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            UserIdentity responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+            assertEquals(4, responseBody.getVcs().size());
+            assertEquals(userIdentity.getVcs(), responseBody.getVcs());
+            assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+            assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+            assertEquals(
+                    userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+            assertEquals(userIdentity.getNinoClaim(), responseBody.getNinoClaim());
+            assertEquals(userIdentity.getReturnCode().size(), responseBody.getReturnCode().size());
 
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-        assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
-        var expectedExtension =
-                new AuditExtensionsUserIdentity(
-                        Vot.P0,
-                        false,
-                        false,
-                        List.of(
-                                new AuditEventReturnCode(
-                                        "1",
-                                        List.of(
-                                                "https://review-d.account.gov.uk",
-                                                "https://review-f.account.gov.uk")),
-                                new AuditEventReturnCode("2", List.of()),
-                                new AuditEventReturnCode(
-                                        "3",
-                                        List.of(
-                                                "https://review-w.account.gov.uk",
-                                                "https://review-x.account.gov.uk"))));
-        assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
-        verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
-        verify(mockSessionCredentialsService, times(1))
-                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
+            AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_IDENTITY_ISSUED, capturedAuditEvent.getEventName());
+            var expectedExtension =
+                    new AuditExtensionsUserIdentity(
+                            Vot.P0,
+                            false,
+                            false,
+                            List.of(
+                                    new AuditEventReturnCode(
+                                            "1",
+                                            List.of(
+                                                    "https://review-d.account.gov.uk",
+                                                    "https://review-f.account.gov.uk")),
+                                    new AuditEventReturnCode("2", List.of()),
+                                    new AuditEventReturnCode(
+                                            "3",
+                                            List.of(
+                                                    "https://review-w.account.gov.uk",
+                                                    "https://review-x.account.gov.uk"))));
+            assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
 
-    @Test
-    void shouldReturnErrorResponseWhenUserIdentityGenerationFails() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenThrow(
-                        new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
 
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        @Test
+        void shouldReturnErrorResponseWhenUserIdentityGenerationFails() throws Exception {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenThrow(
+                            new HttpResponseExceptionWithErrorBody(
+                                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals(
-                valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
-                responseBody.get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
-    @Test
-    void shouldReturnErrorResponseOnCIRetrievalException() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenThrow(new CiRetrievalException("Lambda execution failed"));
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            assertEquals(500, response.getStatusCode());
+            assertEquals(
+                    valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
+                    responseBody.get("error"));
+            assertEquals(
+                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Error when fetching CIs from storage system. Lambda execution failed",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        @Test
+        void shouldReturnErrorResponseOnCIRetrievalException() throws Exception {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenThrow(new CiRetrievalException("Lambda execution failed"));
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(500, response.getStatusCode());
+            assertEquals("server_error", responseBody.get("error"));
+            assertEquals(
+                    "Unexpected server error - Error when fetching CIs from storage system. Lambda execution failed",
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
+                throws JsonProcessingException, VerifiableCredentialException {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.empty());
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            Map<String, Object> responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(403, response.getStatusCode());
+            assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+            assertEquals(
+                    OAuth2Error.ACCESS_DENIED
+                            .appendDescription(
+                                    " - The supplied access token was not found in the database")
+                            .getDescription(),
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
+                throws JsonProcessingException, VerifiableCredentialException {
+            AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
+            revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
+            ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            Map<String, Object> responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(403, response.getStatusCode());
+            assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+            assertEquals(
+                    OAuth2Error.ACCESS_DENIED
+                            .appendDescription(" - The supplied access token has been revoked")
+                            .getDescription(),
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
+                throws JsonProcessingException, VerifiableCredentialException {
+            AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
+            expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
+            ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            Map<String, Object> responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(403, response.getStatusCode());
+            assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+            assertEquals(
+                    OAuth2Error.ACCESS_DENIED
+                            .appendDescription(" - The supplied access token has expired")
+                            .getDescription(),
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturnErrorResponseOnCredentialParseException() throws Exception {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenThrow(
+                            new CredentialParseException(
+                                    "Encountered a parsing error while attempting to purchase successful VC Store items."));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(500, response.getStatusCode());
+            assertEquals("server_error", responseBody.get("error"));
+            assertEquals(
+                    "Unexpected server error - Failed to parse successful VC Store items. Encountered a parsing error while attempting to purchase successful VC Store items.",
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockUserIdentityService, times(1))
+                    .generateUserIdentity(any(), any(), any(), any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturnErrorResponseOnUnrecognisedCiException() throws Exception {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                    .thenThrow(new UnrecognisedCiException("This shouldn't really happen"));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(500, response.getStatusCode());
+            assertEquals("server_error", responseBody.get("error"));
+            assertEquals(
+                    "Unexpected server error - CI error. This shouldn't really happen",
+                    responseBody.get("error_description"));
+            verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockUserIdentityService, times(1))
+                    .generateUserIdentity(any(), any(), any(), any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+
+        @Test
+        void shouldReturnErrorResponseOnSessionCredentialsReadFailure() throws Exception {
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                    .thenThrow(new VerifiableCredentialException(418, FAILED_TO_GET_CREDENTIAL));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(418, response.getStatusCode());
+            assertEquals(valueOf(FAILED_TO_GET_CREDENTIAL.getCode()), responseBody.get("error"));
+            assertEquals(
+                    FAILED_TO_GET_CREDENTIAL.getMessage(), responseBody.get("error_description"));
+            verify(mockUserIdentityService, never())
+                    .generateUserIdentity(any(), any(), any(), any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
     }
 
     @Test
@@ -664,148 +813,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
-    @Test
-    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
-            throws JsonProcessingException, VerifiableCredentialException {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.empty());
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(403, response.getStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(
-                                " - The supplied access token was not found in the database")
-                        .getDescription(),
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
-            throws JsonProcessingException, VerifiableCredentialException {
-        AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
-        revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
-        ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(403, response.getStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(" - The supplied access token has been revoked")
-                        .getDescription(),
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
-            throws JsonProcessingException, VerifiableCredentialException {
-        AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
-        expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
-        ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(403, response.getStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(" - The supplied access token has expired")
-                        .getDescription(),
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseOnCredentialParseException() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenThrow(
-                        new CredentialParseException(
-                                "Encountered a parsing error while attempting to purchase successful VC Store items."));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Failed to parse successful VC Store items. Encountered a parsing error while attempting to purchase successful VC Store items.",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockUserIdentityService, times(1)).generateUserIdentity(any(), any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseOnUnrecognisedCiException() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
-                .thenThrow(new UnrecognisedCiException("This shouldn't really happen"));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - CI error. This shouldn't really happen",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockUserIdentityService, times(1)).generateUserIdentity(any(), any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseOnSessionCredentialsReadFailure() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenThrow(new VerifiableCredentialException(418, FAILED_TO_GET_CREDENTIAL));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(418, response.getStatusCode());
-        assertEquals(valueOf(FAILED_TO_GET_CREDENTIAL.getCode()), responseBody.get("error"));
-        assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), responseBody.get("error_description"));
-        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {
+    private static APIGatewayProxyRequestEvent getEventWithAuthIpHeadersAndPath(String path) {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -815,7 +823,21 @@ class BuildUserIdentityHandlerTest {
                         "ip-address",
                         TEST_IP_ADDRESS);
         event.setHeaders(headers);
-        event.setPath(USER_IDENTITY_REQUEST);
+        event.setPath(path);
         return event;
+    }
+
+    private static ClientOAuthSessionItem getClientAuthSessionItemWithScope(String scope) {
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                .state("test-state")
+                .responseType("code")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId(TEST_USER_ID)
+                .clientId("test-client")
+                .govukSigninJourneyId("test-journey-id")
+                .scope(scope)
+                .build();
     }
 }
