@@ -1154,12 +1154,19 @@ Resources:
                         - !Ref AWS::AccountId
                         - cimitEnvironment
       Events:
-        IPVCoreExternalAPI:
+        IPVCoreExternalAPIUserIdentity:
           Type: Api
           Properties:
             RestApiId:
               Ref: IPVCoreExternalAPI
             Path: /user-identity
+            Method: GET
+        IPVCoreExternalAPIReverification:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreExternalAPI
+            Path: /reverification
             Method: GET
       AutoPublishAlias: live
 
