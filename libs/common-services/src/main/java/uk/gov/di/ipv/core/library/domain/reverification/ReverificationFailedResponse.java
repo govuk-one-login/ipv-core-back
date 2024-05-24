@@ -3,9 +3,11 @@ package uk.gov.di.ipv.core.library.domain.reverification;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
+@Getter
 public class ReverificationFailedResponse extends ReverificationBaseResponse {
     @JsonProperty private final String error_code;
     @JsonProperty private final String error_description;
@@ -13,7 +15,7 @@ public class ReverificationFailedResponse extends ReverificationBaseResponse {
     @JsonCreator
     @Builder(builderMethodName = "failedResponseBuilder")
     public ReverificationFailedResponse(
-            String sub,
+            @JsonProperty("sub") String sub,
             @JsonProperty("error_code") String error_code,
             @JsonProperty("error_description") String error_description) {
         super(sub, false);

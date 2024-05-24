@@ -383,7 +383,7 @@ public class BuildUserIdentityHandler
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED
                         .appendDescription(
-                                " - Access was attempted from an invalid endpoint or journey")
+                                " - Access was attempted from an invalid endpoint or journey.")
                         .toJSONObject());
     }
 }

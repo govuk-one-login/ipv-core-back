@@ -36,6 +36,8 @@ import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.reverification.ReverificationFailedResponse;
+import uk.gov.di.ipv.core.library.domain.reverification.ReverificationSuccessResponse;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -171,7 +173,7 @@ class BuildUserIdentityHandlerTest {
     @Nested
     class UserIdentityEndpoint {
         private static final String USER_IDENTITY_REQUEST = "/user-identity";
-        private static final String OPENID_SCOPE = "openid";
+        private static final String OPENID_SCOPE = "openid email phone";
         private static final APIGatewayProxyRequestEvent testEvent =
                 getEventWithAuthIpHeadersAndPath(USER_IDENTITY_REQUEST);
 
@@ -747,6 +749,176 @@ class BuildUserIdentityHandlerTest {
                     .generateUserIdentity(any(), any(), any(), any());
             verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
         }
+
+        @Test
+        void shouldReturnErrorResponseWhenOnInvalidJourney() throws Exception {
+            String invalidScope = "invalidScope phone email";
+            clientOAuthSessionItem = getClientAuthSessionItemWithScope(invalidScope);
+
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+            assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+            assertEquals(
+                    OAuth2Error.ACCESS_DENIED
+                            .appendDescription(
+                                    " - Access was attempted from an invalid endpoint or journey.")
+                            .getDescription(),
+                    responseBody.get("error_description"));
+
+            verify(mockUserIdentityService, never())
+                    .generateUserIdentity(any(), any(), any(), any());
+            verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+        }
+    }
+
+    @Nested
+    class ReverificationEndpoint {
+        private static final String REVERIFICATION_REQUEST = "/reverification";
+        private static final String REVERIFICATION_SCOPE = "reverification phone email";
+        private static final APIGatewayProxyRequestEvent testEvent =
+                getEventWithAuthIpHeadersAndPath(REVERIFICATION_REQUEST);
+
+        @BeforeEach
+        void setUp() throws Exception {
+            clientOAuthSessionItem = getClientAuthSessionItemWithScope(REVERIFICATION_SCOPE);
+        }
+
+        @Test
+        void shouldReturnSuccessResponseOnSuccessfulReverification() throws Exception {
+            // Arrange
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+            // Assert
+            assertEquals(200, response.getStatusCode());
+
+            ReverificationSuccessResponse successResponse =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            assertEquals(true, successResponse.getSuccess());
+            assertEquals(TEST_USER_ID, successResponse.getSub());
+
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
+
+        @Test
+        void shouldReturnFailedResponseOnFailedVerification() throws Exception {
+            // Arrange
+            ipvSessionItem.setVot(Vot.P0);
+            ipvSessionItem.setErrorCode("");
+            ipvSessionItem.setErrorDescription("Failed verification.");
+
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+            // Assert
+            assertEquals(200, response.getStatusCode());
+
+            ReverificationFailedResponse failedResponse =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            assertEquals(false, failedResponse.getSuccess());
+            assertEquals(TEST_USER_ID, failedResponse.getSub());
+            assertEquals("", failedResponse.getError_code());
+            assertEquals("Failed verification.", failedResponse.getError_description());
+
+            verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+            verify(mockSessionCredentialsService, times(1))
+                    .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+        }
+
+        @Test
+        void shouldReturnErrorResponseWhenOnInvalidJourney() throws Exception {
+            // Arrange
+            String invalidScope = "invalidScope phone email";
+            clientOAuthSessionItem = getClientAuthSessionItemWithScope(invalidScope);
+
+            when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                    .thenReturn(Optional.ofNullable(ipvSessionItem));
+            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                    .thenReturn(
+                            VerifiableCredential.fromValidJwt(
+                                    TEST_USER_ID,
+                                    "test-cri-id",
+                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+            // Assert
+            assertEquals(403, response.getStatusCode());
+
+            responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+            assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+            assertEquals(
+                    OAuth2Error.ACCESS_DENIED
+                            .appendDescription(
+                                    " - Access was attempted from an invalid endpoint or journey.")
+                            .getDescription(),
+                    responseBody.get("error_description"));
+        }
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenAccessedFromInvalidEndpoint() throws Exception {
+        String invalidEndpoint = "/invalid-endpoint";
+        APIGatewayProxyRequestEvent testEvent = getEventWithAuthIpHeadersAndPath(invalidEndpoint);
+
+        clientOAuthSessionItem = getClientAuthSessionItemWithScope("openid phone");
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - Access was attempted from an invalid endpoint or journey.")
+                        .getDescription(),
+                responseBody.get("error_description"));
+
+        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
     @Test
