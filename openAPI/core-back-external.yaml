@@ -33,6 +33,29 @@ paths:
                 type: "array"
                 items:
                   type: "object"
+        403:
+          description: "403 Response"
+          content: {}
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildUserIdentityFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+
+  /reverification:
+    get:
+      description: "Returns a success or failure response based on the results of the reverification journey"
+      responses:
+        200:
+          description: "Reverification success or failure response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+        403:
+          description: "403 Response"
+          content: {}
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "POST"
