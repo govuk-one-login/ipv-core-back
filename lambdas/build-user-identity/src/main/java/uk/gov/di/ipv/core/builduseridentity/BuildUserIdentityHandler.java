@@ -66,7 +66,9 @@ public class BuildUserIdentityHandler
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
     private static final String REVERIFICATION_SCOPE = "reverification";
+    private static final String REVERIFICATION_ENDPOINT = "/reverification";
     private static final String OPENID_SCOPE = "openid";
+    private static final String USER_IDENTITY_ENDPOINT = "/user-identity";
 
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
@@ -168,7 +170,7 @@ public class BuildUserIdentityHandler
 
             var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
 
-            if (input.getPath().contains("/reverification")) {
+            if (input.getPath().contains(REVERIFICATION_ENDPOINT)) {
 
                 if (!Arrays.asList(scopeClaims).contains(REVERIFICATION_SCOPE)) {
                     return getAccessDeniedApiGatewayProxyResponseEvent();
@@ -200,7 +202,7 @@ public class BuildUserIdentityHandler
                             HTTPResponse.SC_OK, failedResponse);
                 }
 
-            } else if (input.getPath().contains("/user-identity")) {
+            } else if (input.getPath().contains(USER_IDENTITY_ENDPOINT)) {
 
                 if (!Arrays.asList(scopeClaims).contains(OPENID_SCOPE)) {
                     return getAccessDeniedApiGatewayProxyResponseEvent();
