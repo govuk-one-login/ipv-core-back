@@ -82,7 +82,8 @@ public class DcmawAsyncCriService {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
 
         var accessToken =
-                criApiService.fetchAccessToken(criConfig.getClientId(), dcmawAsyncClientSecret, criOAuthSessionItem);
+                criApiService.fetchAccessToken(
+                        criConfig.getClientId(), dcmawAsyncClientSecret, criOAuthSessionItem);
 
         var credentialRequestBody =
                 new CredentialRequestBodyDto(
