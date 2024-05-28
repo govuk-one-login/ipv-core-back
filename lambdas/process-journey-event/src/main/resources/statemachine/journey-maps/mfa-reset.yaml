@@ -9,11 +9,15 @@ states:
   START:
     events:
       next:
-        targetState: IDENTITY_START_PAGE
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: IDENTITY_START_PAGE
         checkIfDisabled:
           dcmaw:
-            targetJourney: FAILED
-            targetState: FAILED
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR_NO_TICF
 
   # Parent states
   CRI_STATE:
@@ -148,10 +152,7 @@ states:
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_CHECK_COI
+        targetState: CRI_TICF_BEFORE_CHECK_COI
       unmet:
         targetJourney: FAILED
         targetState: FAILED
