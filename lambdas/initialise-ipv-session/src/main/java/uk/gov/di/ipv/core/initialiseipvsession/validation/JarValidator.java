@@ -25,8 +25,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -253,10 +252,8 @@ public class JarValidator {
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
         String maxAllowedTtl = configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
-        LocalDateTime maximumExpirationTime =
-                LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
-        LocalDateTime expirationTime =
-                LocalDateTime.ofInstant(claimsSet.getExpirationTime().toInstant(), ZoneOffset.UTC);
+        Instant maximumExpirationTime = Instant.now().plusSeconds(Long.parseLong(maxAllowedTtl));
+        Instant expirationTime = claimsSet.getExpirationTime().toInstant();
 
         if (expirationTime.isAfter(maximumExpirationTime)) {
             LOGGER.error(

@@ -34,6 +34,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Collections;
@@ -62,8 +63,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class JarValidatorTest {
-    public static final String CLAIMS_CLAIM = "claims";
+    private static final String CLAIMS_CLAIM = "claims";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String TWENTY_FIVE_MINUTES_IN_SECONDS = "1500";
+
     @Mock private ConfigService configService;
     @Mock private KmsRsaDecrypter kmsRsaDecrypter;
     private JarValidator jarValidator;
@@ -118,7 +121,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("60");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
         when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
@@ -177,7 +181,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("60");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
         when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
@@ -203,7 +208,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("60");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -229,7 +235,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("60");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -254,7 +261,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("60");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -561,7 +569,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -691,10 +700,10 @@ class JarValidatorTest {
     }
 
     private static long fifteenMinutesFromNow() {
-        return OffsetDateTime.now().plusSeconds(15 * 60).toEpochSecond();
+        return Instant.now().plusSeconds(15 * 60).getEpochSecond();
     }
 
     private static long fifteenMinutesInPast() {
-        return OffsetDateTime.now().minusSeconds(15 * 60).toEpochSecond();
+        return Instant.now().minusSeconds(15 * 60).getEpochSecond();
     }
 }
