@@ -115,8 +115,6 @@ public class CallDcmawAsyncCriHandler
                     request, DCMAW_ASYNC_CRI, oauthState, clientOAuthSessionItem);
 
             return JOURNEY_NEXT;
-
-            // qq:DCC check this error handling - it's just copied from somewhere else
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error calling DCMAW Async CRI", e));
             return new JourneyErrorResponse(
@@ -136,7 +134,6 @@ public class CallDcmawAsyncCriHandler
         }
     }
 
-    // qq:DCC copied from CriCheckingService, maybe commonise?
     private void validatePendingVcResponse(
             VerifiableCredentialResponse vcResponse, ClientOAuthSessionItem clientOAuthSessionItem)
             throws VerifiableCredentialException {

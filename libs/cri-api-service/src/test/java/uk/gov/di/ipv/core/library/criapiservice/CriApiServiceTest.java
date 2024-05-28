@@ -62,6 +62,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 @ExtendWith(MockitoExtension.class)
 class CriApiServiceTest {
     private static final String TEST_CRI_ID = "test-cri-id";
+    private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
@@ -107,7 +108,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -136,7 +137,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -294,7 +295,7 @@ class CriApiServiceTest {
                         TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
-        assertTrue(request.getQuery().contains("code=" + TEST_AUTHORISATION_CODE));
+        assertTrue(request.getBody().contains("code=" + TEST_AUTHORISATION_CODE));
     }
 
     @Test
@@ -310,7 +311,7 @@ class CriApiServiceTest {
                         TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
-        assertTrue(request.getQuery().contains("redirect_uri="));
+        assertTrue(request.getBody().contains("redirect_uri="));
     }
 
     @Test
@@ -467,7 +468,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"), TEST_CRI_ID, null));
+                                        new BearerAccessToken("validToken"), DCMAW_CRI_ID, null));
 
         assertEquals(HTTPResponse.SC_NOT_FOUND, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -525,9 +526,6 @@ class CriApiServiceTest {
     @Test
     void buildFetchVerifiableCredentialRequestShouldSetCorrectCredentialUrl(
             WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
-        // Arrange
-        var callbackRequest = getValidCallbackRequest();
-
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(

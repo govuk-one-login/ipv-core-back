@@ -56,6 +56,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE
 public class CriApiService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final KmsEs256SignerFactory signerFactory;
@@ -271,8 +272,7 @@ public class CriApiService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            var responseContentType =
-                    response.getHeaderValue("Content-Type"); // qq:DCC replace with constant
+            var responseContentType = response.getHeaderValue(HEADER_CONTENT_TYPE);
 
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
@@ -330,7 +330,8 @@ public class CriApiService {
             request.setBody(bodyString);
         } else {
             request.setHeader(
-                    "Content-Type", ""); // remove the default, no request body so we don't need
+                    HEADER_CONTENT_TYPE,
+                    ""); // remove the default, no request body so we don't need
         }
 
         if (apiKey != null) {

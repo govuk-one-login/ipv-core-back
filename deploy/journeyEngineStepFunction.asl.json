@@ -65,6 +65,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/check-coi",
           "Next": "CheckCoiLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/call-dcmaw-async-cri",
+          "Next": "CallDcmawAsyncCriLambda"
         }
       ],
       "Default": "Success"
@@ -150,6 +155,18 @@
     "CallTicfCriLambda": {
       "Type": "Task",
       "Resource": "${CallTicfCriLambdaArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "CallDcmawAsyncCriLambda": {
+      "Type": "Task",
+      "Resource": "${CallDcmawAsyncCriLambdaArn}",
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",

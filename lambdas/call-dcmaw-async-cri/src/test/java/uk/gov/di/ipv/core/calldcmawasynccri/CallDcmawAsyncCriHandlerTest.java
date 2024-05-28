@@ -10,28 +10,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
-import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
-import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -45,6 +41,7 @@ class CallDcmawAsyncCriHandlerTest {
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
+                    .clientOAuthSessionId(TEST_OAUTH_STATE)
                     .govukSigninJourneyId("a-govuk-journey-id")
                     .build();
     private static final ProcessRequest input =
@@ -61,8 +58,6 @@ class CallDcmawAsyncCriHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private DcmawAsyncCriService mockDcmawAsyncCriService;
-    @Mock private CiMitService mockCiMitService;
-    @Mock private CiMitUtilityService mockCiMitUtilityService;
     @Mock private CriStoringService mockCriStoringService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private VerifiableCredentialResponse mockVerifiableCredentialResponse;
@@ -73,22 +68,30 @@ class CallDcmawAsyncCriHandlerTest {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
     }
 
-    // qq:DCC make these tests relevant
     @Test
-    void handleRequestShouldCallTicfCriAndReturnJourneyNextIfNoBreachingCiReceived()
+    void handleRequestShouldCallDcmawCriAndReturnJourneyNextIfNoBreachingCiReceived()
             throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockVerifiableCredentialResponse.getUserId()).thenReturn(TEST_USER_ID);
+        when(mockVerifiableCredentialResponse.getCredentialStatus())
+                .thenReturn(VerifiableCredentialStatus.PENDING);
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(
-                        TEST_OAUTH_STATE, clientOAuthSessionItem, mockIpvSessionItem))
+                        any(String.class),
+                        any(ClientOAuthSessionItem.class),
+                        any(IpvSessionItem.class)))
                 .thenReturn(mockVerifiableCredentialResponse);
 
         Map<String, Object> lambdaResult =
                 callDcmawAsyncCriHandler.handleRequest(input, mockContext);
 
         verify(mockCriStoringService)
-                .storeCriResponse(input, DCMAW_ASYNC_CRI, TEST_OAUTH_STATE, clientOAuthSessionItem);
+                .storeCriResponse(
+                        eq(input),
+                        eq(DCMAW_ASYNC_CRI),
+                        any(String.class),
+                        eq(clientOAuthSessionItem));
 
         InOrder inOrder = inOrder(mockIpvSessionService);
         inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
@@ -112,12 +115,12 @@ class CallDcmawAsyncCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorResponseIfTicfCriServiceThrows() throws Exception {
+    void handleRequestShouldReturnJourneyErrorResponseIfDcmawCriServiceThrows() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(any(), any(), any()))
-                .thenThrow(new Exception("Oh dear"));
+                .thenThrow(new RuntimeException("Oh dear"));
 
         Map<String, Object> lambdaResult =
                 callDcmawAsyncCriHandler.handleRequest(input, mockContext);
@@ -125,27 +128,25 @@ class CallDcmawAsyncCriHandlerTest {
         assertEquals("/journey/error", lambdaResult.get("journey"));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
-                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
-                lambdaResult.get("code"));
+                ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getCode(), lambdaResult.get("code"));
         assertEquals(
-                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getMessage(),
                 lambdaResult.get("message"));
     }
 
     @Test
     void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows() throws Exception {
         List<Exception> exceptionsToThrow =
-                List.of(
-                        new SqsException("Oops"),
-                        new CiPutException("Oops"),
-                        new CiPostMitigationsException("Oops"),
-                        new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+                List.of(new SqsException("Oops"), new RuntimeException("Oops"));
 
         for (Exception e : exceptionsToThrow) {
             when(mockIpvSessionService.getIpvSession("a-session-id"))
                     .thenReturn(mockIpvSessionItem);
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(new ClientOAuthSessionItem());
+                    .thenReturn(clientOAuthSessionItem);
+            when(mockVerifiableCredentialResponse.getUserId()).thenReturn(TEST_USER_ID);
+            when(mockVerifiableCredentialResponse.getCredentialStatus())
+                    .thenReturn(VerifiableCredentialStatus.PENDING);
             when(mockDcmawAsyncCriService.startDcmawAsyncSession(any(), any(), any()))
                     .thenReturn(mockVerifiableCredentialResponse);
             doThrow(e).when(mockCriStoringService).storeCriResponse(any(), any(), any(), any());
@@ -156,31 +157,11 @@ class CallDcmawAsyncCriHandlerTest {
             assertEquals("/journey/error", lambdaResult.get("journey"));
             assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
             assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
+                    ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getCode(),
                     lambdaResult.get("code"));
             assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                    ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getMessage(),
                     lambdaResult.get("message"));
         }
-
-        List<Class<?>> declaredExceptions =
-                List.of(
-                        CriStoringService.class
-                                .getMethod(
-                                        "storeCriResponse",
-                                        ProcessRequest.class,
-                                        String.class,
-                                        String.class,
-                                        ClientOAuthSessionItem.class)
-                                .getExceptionTypes());
-
-        // Checking to make sure we've tested all exceptions that can be thrown
-        assertTrue(
-                exceptionsToThrow.stream()
-                        .allMatch(
-                                exception ->
-                                        declaredExceptions.contains(exception.getClass())
-                                                || declaredExceptions.contains(
-                                                        exception.getClass().getSuperclass())));
     }
 }

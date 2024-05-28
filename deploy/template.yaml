@@ -2145,6 +2145,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub call-dcmaw-async-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
 # qq:DCC Do we need these lambda ARNs?
@@ -2210,6 +2211,10 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref CriOAuthSessionsTable
 # qq:DCC do we need access to this table?
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
@@ -2219,7 +2224,9 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/dcmaw-async/connections/*/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/*/connections/*/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/*/connections/*/oauth-client-secret-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
