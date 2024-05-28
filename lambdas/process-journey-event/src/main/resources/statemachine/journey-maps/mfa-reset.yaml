@@ -17,7 +17,7 @@ states:
         checkIfDisabled:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
-            targetState: ERROR_NO_TICF
+            targetState: ERROR
 
   # Parent states
   CRI_STATE:
