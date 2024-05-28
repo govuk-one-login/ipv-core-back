@@ -152,7 +152,7 @@ states:
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: CRI_TICF_BEFORE_CHECK_COI
+        targetState: CHECK_COI
       unmet:
         targetJourney: FAILED
         targetState: FAILED
@@ -160,28 +160,28 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
-  CRI_TICF_BEFORE_CHECK_COI:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetState: CHECK_COI
-
   CHECK_COI:
     response:
       type: process
       lambda: check-coi
     events:
       coi-check-passed:
-        targetState: IPV_SUCCESS_PAGE
+        targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
+
+  CRI_TICF:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: IPV_SUCCESS_PAGE
 
   IPV_SUCCESS_PAGE:
     response:
