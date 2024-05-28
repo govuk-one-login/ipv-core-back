@@ -181,14 +181,6 @@ states:
     parent: CRI_TICF_STATE
     events:
       next:
-        targetState: IPV_SUCCESS_PAGE
-
-  IPV_SUCCESS_PAGE:
-    response:
-      type: page
-      pageId: page-ipv-success
-    events:
-      next:
         targetState: RETURN_TO_RP
 
   RETURN_TO_RP:
