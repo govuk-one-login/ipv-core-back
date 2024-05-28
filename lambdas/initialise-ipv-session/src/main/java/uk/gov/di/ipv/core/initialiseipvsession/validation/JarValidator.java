@@ -48,6 +48,7 @@ public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
     private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of("openid", "reverification");
+    private static final String SCOPE = "scope";
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;
@@ -79,7 +80,6 @@ public class JarValidator {
 
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         URI redirectUri = validateRedirectUri(jwtClaimsSet, clientId);
-        validateScope(clientId, jwtClaimsSet);
 
         try {
             return getValidatedClaimSet(signedJWT, clientId);
@@ -97,7 +97,7 @@ public class JarValidator {
     private void validateScope(String clientId, JWTClaimsSet claimsSet)
             throws JarValidationException {
         try {
-            var requestedScope = Scope.parse(claimsSet.getStringClaim("scope"));
+            var requestedScope = Scope.parse(claimsSet.getStringClaim(SCOPE));
 
             if (wrongNumberOfRequiredScopes(requestedScope)
                     || scopeNotValidForClient(requestedScope, clientId)) {
@@ -132,7 +132,7 @@ public class JarValidator {
                                     "Could not parse scope from claims set")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             throw new JarValidationException(
-                    OAuth2Error.INVALID_SCOPE.setDescription("Missing scope"));
+                    OAuth2Error.INVALID_SCOPE.setDescription("Scope could not be parsed"));
         }
     }
 
@@ -233,13 +233,15 @@ public class JarValidator {
                                 JWTClaimNames.EXPIRATION_TIME,
                                 JWTClaimNames.NOT_BEFORE,
                                 JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT));
+                                JWTClaimNames.SUBJECT,
+                                SCOPE));
 
         try {
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
+            validateScope(clientId, claimsSet);
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
