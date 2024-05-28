@@ -12,6 +12,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -138,7 +139,6 @@ public class InitialiseIpvSessionHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentId(configService);
 
-        boolean isReverification = false;
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
             String deviceInformation = RequestHelper.getEncodedDeviceInformation(input);
@@ -171,8 +171,9 @@ public class InitialiseIpvSessionHandler
 
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
-            isReverification =
-                    REVERIFICATION_SCOPE.equals(claimsSet.getStringClaim(REQUEST_SCOPE_KEY));
+            var isReverification =
+                    Scope.parse(claimsSet.getStringClaim(REQUEST_SCOPE_KEY))
+                            .contains(REVERIFICATION_SCOPE);
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -244,7 +245,7 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId, e.getErrorObject(), null, isReverification);
+                            clientOAuthSessionId, e.getErrorObject(), null, false);
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),

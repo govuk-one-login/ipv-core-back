@@ -11,6 +11,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.Scope;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -29,7 +30,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
@@ -40,9 +43,11 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SCOPE;
 
 public class JarValidator {
+    public static final String CLAIMS_CLAIM = "claims";
+
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
-    public static final String CLAIMS_CLAIM = "claims";
+    private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of("openid", "reverification");
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;
@@ -92,27 +97,29 @@ public class JarValidator {
     private void validateScope(String clientId, JWTClaimsSet claimsSet)
             throws JarValidationException {
         try {
-            String scope = claimsSet.getStringClaim("scope");
-            var validScopes = configService.getValidClientScopes(clientId);
-            if (validScopes.isEmpty() || !validScopes.contains(scope)) {
+            var requestedScope = Scope.parse(claimsSet.getStringClaim("scope"));
+
+            if (wrongNumberOfRequiredScopes(requestedScope)
+                    || scopeNotValidForClient(requestedScope, clientId)) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "client not allowed to issue a request with this scope")
-                                .with(LOG_SCOPE.getFieldName(), scope)
+                                        "Client not allowed to issue a request with this scope")
+                                .with(LOG_SCOPE.getFieldName(), requestedScope.toString())
                                 .with(LOG_CLIENT_ID.getFieldName(), clientId));
                 throw new JarValidationException(
-                        OAuth2Error.ACCESS_DENIED.setDescription(
-                                "Client not allowed to issue a request with this scope"));
+                        OAuth2Error.INVALID_SCOPE
+                                .setDescription(
+                                        "Client not allowed to issue a request with this scope")
+                                .setHTTPStatusCode(SC_FORBIDDEN));
             }
-            LogHelper.attachClientIdToLogs(clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "allowed scopes not found for client.")
+                                    "Valid scopes for client not found in config")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             throw new JarValidationException(
                     OAuth2Error.INVALID_CLIENT.setDescription(
@@ -122,11 +129,25 @@ public class JarValidator {
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Scope not found in JWT claims.")
+                                    "Could not parse scope from claims set")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             throw new JarValidationException(
                     OAuth2Error.INVALID_SCOPE.setDescription("Missing scope"));
         }
+    }
+
+    private boolean wrongNumberOfRequiredScopes(Scope requestedScopes) {
+        return 1
+                != requestedScopes.stream()
+                        .filter(scope -> ONE_OF_REQUIRED_SCOPES.contains(scope.getValue()))
+                        .count();
+    }
+
+    private boolean scopeNotValidForClient(Scope requestedScopes, String clientId) {
+        var validClientScopes =
+                Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId));
+        return !requestedScopes.stream()
+                .allMatch(scope -> validClientScopes.contains(scope.getValue()));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {

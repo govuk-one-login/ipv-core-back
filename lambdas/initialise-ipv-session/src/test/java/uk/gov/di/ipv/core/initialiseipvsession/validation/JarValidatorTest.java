@@ -34,13 +34,13 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -49,6 +49,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
@@ -118,7 +119,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -150,8 +152,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString()))
-                .thenReturn(Arrays.asList("non-existant-scope"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("non-existant-scope");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -160,9 +162,33 @@ class JarValidatorTest {
                         JarValidationException.class,
                         () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
         ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
         assertEquals(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), errorObject.getCode());
+                "Client not allowed to issue a request with this scope",
+                errorObject.getDescription());
+    }
+
+    @Test
+    void validateRequestJwtShouldFailValidationChecksIfOpenIdAndReverificationScopesProvided()
+            throws Exception {
+        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
+
+        var claimsSetValues = getValidClaimsSetValues();
+        claimsSetValues.put("scope", "openid reverification");
+        SignedJWT signedJWT = generateJWT(claimsSetValues);
+
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
         assertEquals(
                 "Client not allowed to issue a request with this scope",
                 errorObject.getDescription());
@@ -175,7 +201,7 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList());
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim)).thenReturn("");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -184,9 +210,8 @@ class JarValidatorTest {
                         JarValidationException.class,
                         () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
         ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), errorObject.getCode());
+        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
         assertEquals(
                 "Client not allowed to issue a request with this scope",
                 errorObject.getDescription());
@@ -199,7 +224,7 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString()))
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
                 .thenThrow(ParameterNotFoundException.class);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -322,7 +347,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> invalidAudienceClaims = getValidClaimsSetValues();
         invalidAudienceClaims.put(JWTClaimNames.AUDIENCE, "invalid-audience");
@@ -350,7 +376,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> invalidIssuerClaims = getValidClaimsSetValues();
         invalidIssuerClaims.put(JWTClaimNames.ISSUER, "invalid-issuer");
@@ -378,7 +405,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> invalidResponseTypeClaim = getValidClaimsSetValues();
         invalidResponseTypeClaim.put("response_type", "invalid-response-type");
@@ -407,7 +435,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, "different-client-id"))
+                .thenReturn("openid");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -432,7 +461,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> expiredClaims = getValidClaimsSetValues();
         expiredClaims.put(JWTClaimNames.EXPIRATION_TIME, fifteenMinutesInPast());
@@ -458,7 +488,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> notValidYet = getValidClaimsSetValues();
         notValidYet.put(JWTClaimNames.NOT_BEFORE, fifteenMinutesFromNow());
@@ -485,8 +516,8 @@ class JarValidatorTest {
         when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getValidClientScopes(anyString())).thenReturn(Arrays.asList("openid"));
-        ;
+        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                .thenReturn("openid");
 
         Map<String, Object> futureClaims = getValidClaimsSetValues();
         futureClaims.put(
