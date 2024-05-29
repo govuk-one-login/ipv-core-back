@@ -239,7 +239,7 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldCreateSessionItemWithMfaResetJourney() {
+    void shouldCreateSessionItemWithReverificationJourney() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, null, true);
@@ -254,7 +254,7 @@ class IpvSessionServiceTest {
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
-                IpvJourneyTypes.MFA_RESET,
+                IpvJourneyTypes.REVERIFICATION,
                 ipvSessionItemArgumentCaptor.getValue().getJourneyType());
     }
 }

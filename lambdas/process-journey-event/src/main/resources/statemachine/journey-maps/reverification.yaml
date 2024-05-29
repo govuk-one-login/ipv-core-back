@@ -1,9 +1,9 @@
-name: MFA Reset
+name: Reverification
 
 description: >-
-  The routes a user can take to validate their
-  account so that they can reset their two
-  factor authentication mechanism.
+  The routes a user can take to revalidate their
+  account. They will prove their identity but we
+  won't store it.
 
 states:
   # Entry points

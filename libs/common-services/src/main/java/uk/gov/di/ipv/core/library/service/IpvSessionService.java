@@ -103,7 +103,7 @@ public class IpvSessionService {
         if (errorObject == null) {
             ipvSessionItem.setJourneyType(
                     isReverification
-                            ? IpvJourneyTypes.MFA_RESET
+                            ? IpvJourneyTypes.REVERIFICATION
                             : IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
             ipvSessionItem.setUserState(START_STATE);
         } else {

@@ -36,7 +36,7 @@ public enum IpvJourneyTypes {
     UPDATE_NAME("update-name"),
 
     // MFA reset journey
-    MFA_RESET("mfa-reset");
+    REVERIFICATION("reverification");
 
     private final String path;
 
