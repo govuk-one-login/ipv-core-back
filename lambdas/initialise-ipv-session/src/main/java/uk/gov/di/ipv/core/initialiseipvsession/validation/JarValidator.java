@@ -98,8 +98,8 @@ public class JarValidator {
         try {
             var requestedScope = Scope.parse(claimsSet.getStringClaim(SCOPE));
 
-            if (wrongNumberOfRequiredScopes(requestedScope)
-                    || scopeNotValidForClient(requestedScope, clientId)) {
+            if (!hasCorrectNumberOfRequiredScopes(requestedScope)
+                    || !hasValidScopesForClient(requestedScope, clientId)) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
@@ -135,17 +135,17 @@ public class JarValidator {
         }
     }
 
-    private boolean wrongNumberOfRequiredScopes(Scope requestedScopes) {
+    private boolean hasCorrectNumberOfRequiredScopes(Scope requestedScopes) {
         return 1
-                != requestedScopes.stream()
+                == requestedScopes.stream()
                         .filter(scope -> ONE_OF_REQUIRED_SCOPES.contains(scope.getValue()))
                         .count();
     }
 
-    private boolean scopeNotValidForClient(Scope requestedScopes, String clientId) {
+    private boolean hasValidScopesForClient(Scope requestedScopes, String clientId) {
         var validClientScopes =
                 Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId));
-        return !requestedScopes.stream()
+        return requestedScopes.stream()
                 .allMatch(scope -> validClientScopes.contains(scope.getValue()));
     }
 
