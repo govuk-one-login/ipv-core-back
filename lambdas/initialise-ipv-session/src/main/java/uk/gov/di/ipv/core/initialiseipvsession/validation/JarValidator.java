@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
@@ -46,8 +49,7 @@ public class JarValidator {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
-    private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of("openid", "reverification");
-    private static final String SCOPE = "scope";
+    private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of(OPENID, REVERIFICATION);
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;

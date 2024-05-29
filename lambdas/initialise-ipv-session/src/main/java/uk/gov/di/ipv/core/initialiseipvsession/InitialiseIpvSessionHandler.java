@@ -63,6 +63,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -81,8 +83,6 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
-    private static final String REQUEST_SCOPE_KEY = "scope";
-    private static final String REVERIFICATION_SCOPE = "reverification";
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
     private static final ErrorObject INVALID_INHERITED_IDENTITY_ERROR_OBJECT =
             new ErrorObject("invalid_inherited_identity");
@@ -172,8 +172,7 @@ public class InitialiseIpvSessionHandler
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
             var isReverification =
-                    Scope.parse(claimsSet.getStringClaim(REQUEST_SCOPE_KEY))
-                            .contains(REVERIFICATION_SCOPE);
+                    Scope.parse(claimsSet.getStringClaim(SCOPE)).contains(REVERIFICATION);
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
