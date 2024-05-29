@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COUNT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
@@ -100,8 +101,17 @@ public class JarValidator {
         try {
             var requestedScope = Scope.parse(claimsSet.getStringClaim(SCOPE));
 
-            if (!hasCorrectNumberOfRequiredScopes(requestedScope)
-                    || !hasValidScopesForClient(requestedScope, clientId)) {
+            var requiredScopesInRequest =
+                    requestedScope.stream()
+                            .map(Scope.Value::getValue)
+                            .filter(ONE_OF_REQUIRED_SCOPES::contains)
+                            .toList();
+
+            if (requiredScopesInRequest.isEmpty()) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage("No required scopes found in request")
+                                .with(LOG_SCOPE.getFieldName(), requiredScopesInRequest));
+            } else if (!hasValidRequiredScopeForClient(requiredScopesInRequest, clientId)) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
@@ -137,18 +147,16 @@ public class JarValidator {
         }
     }
 
-    private boolean hasCorrectNumberOfRequiredScopes(Scope requestedScopes) {
-        return 1
-                == requestedScopes.stream()
-                        .filter(scope -> ONE_OF_REQUIRED_SCOPES.contains(scope.getValue()))
-                        .count();
-    }
-
-    private boolean hasValidScopesForClient(Scope requestedScopes, String clientId) {
-        var validClientScopes =
-                Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId));
-        return requestedScopes.stream()
-                .allMatch(scope -> validClientScopes.contains(scope.getValue()));
+    private boolean hasValidRequiredScopeForClient(
+            List<String> requiredScopesInRequest, String clientId) {
+        if (requiredScopesInRequest.size() > 1) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage("Too many required scopes in request")
+                            .with(LOG_COUNT.getFieldName(), requiredScopesInRequest.size()));
+            return false;
+        }
+        return Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId))
+                .contains(requiredScopesInRequest.get(0));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {

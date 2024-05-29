@@ -176,6 +176,24 @@ class JarValidatorTest {
     }
 
     @Test
+    void validateRequestJwtShouldPassIfNoRequiredScopeProvided() throws Exception {
+        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
+
+        var claimsSetValues = getValidClaimsSetValues();
+        claimsSetValues.put("scope", "no required scope");
+        SignedJWT signedJWT = generateJWT(claimsSetValues);
+
+        assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+    }
+
+    @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidScopeForClient() throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -186,7 +204,7 @@ class JarValidatorTest {
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
         when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
-                .thenReturn("not-going-to-match-this");
+                .thenReturn("reverification");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -231,7 +249,8 @@ class JarValidatorTest {
     }
 
     @Test
-    void validateRequestJwtShouldFailValidationChecksOnEmptyScopeForClient() throws Exception {
+    void validateRequestJwtShouldFailValidationChecksOnEmptyValidScopesForClient()
+            throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -666,7 +685,7 @@ class JarValidatorTest {
         validClaims.put("client_id", clientIdClaim);
         validClaims.put("redirect_uri", redirectUriClaim);
         validClaims.put("state", stateClaim);
-        validClaims.put("scope", "openid");
+        validClaims.put("scope", "openid phone email");
         validClaims.put(
                 CLAIMS_CLAIM,
                 new JarClaims(
