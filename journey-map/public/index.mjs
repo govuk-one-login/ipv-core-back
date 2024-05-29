@@ -20,6 +20,7 @@ const JOURNEY_TYPES = {
     F2F_FAILED: 'F2F failed',
     OPERATIONAL_PROFILE_MIGRATION: 'Operational profile migration',
     OPERATIONAL_PROFILE_REUSE: 'Operational profile reuse',
+    REVERIFICATION: 'Reverification',
 };
 
 const CRI_NAMES = {

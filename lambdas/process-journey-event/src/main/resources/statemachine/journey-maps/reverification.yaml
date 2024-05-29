@@ -1,0 +1,23 @@
+name: Reverification
+
+description: >-
+  The routes a user can take to revalidate their
+  account. They will prove their identity but we
+  won't store it.
+
+states:
+  # Entry points
+
+  START:
+    events:
+      next:
+        # should be filled out in https://govukverify.atlassian.net/browse/PYIC-6486
+        targetState: PLACEHOLDER
+
+  # Journey states
+
+  PLACEHOLDER:
+    response:
+      type: page
+      pageId: pyi-technical
+      context: unrecoverable

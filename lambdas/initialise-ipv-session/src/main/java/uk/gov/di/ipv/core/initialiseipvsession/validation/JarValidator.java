@@ -11,6 +11,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.Scope;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -24,12 +25,16 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
@@ -37,11 +42,14 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_I
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SCOPE;
 
 public class JarValidator {
+    public static final String CLAIMS_CLAIM = "claims";
+
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
-    public static final String CLAIMS_CLAIM = "claims";
+    private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of(OPENID, REVERIFICATION);
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final ConfigService configService;
@@ -85,6 +93,62 @@ public class JarValidator {
                     jwtClaimsSet.getStringClaim("govuk_signin_journey_id"),
                     e);
         }
+    }
+
+    private void validateScope(String clientId, JWTClaimsSet claimsSet)
+            throws JarValidationException {
+        try {
+            var requestedScope = Scope.parse(claimsSet.getStringClaim(SCOPE));
+
+            if (!hasCorrectNumberOfRequiredScopes(requestedScope)
+                    || !hasValidScopesForClient(requestedScope, clientId)) {
+                LOGGER.error(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Client not allowed to issue a request with this scope")
+                                .with(LOG_SCOPE.getFieldName(), requestedScope.toString())
+                                .with(LOG_CLIENT_ID.getFieldName(), clientId));
+                throw new JarValidationException(
+                        OAuth2Error.INVALID_SCOPE
+                                .setDescription(
+                                        "Client not allowed to issue a request with this scope")
+                                .setHTTPStatusCode(SC_FORBIDDEN));
+            }
+        } catch (ParameterNotFoundException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Valid scopes for client not found in config")
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_CLIENT.setDescription(
+                            "Allowed scopes not found for client"));
+        } catch (ParseException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Could not parse scope from claims set")
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
+            throw new JarValidationException(
+                    OAuth2Error.INVALID_SCOPE.setDescription("Scope could not be parsed"));
+        }
+    }
+
+    private boolean hasCorrectNumberOfRequiredScopes(Scope requestedScopes) {
+        return 1
+                == requestedScopes.stream()
+                        .filter(scope -> ONE_OF_REQUIRED_SCOPES.contains(scope.getValue()))
+                        .count();
+    }
+
+    private boolean hasValidScopesForClient(Scope requestedScopes, String clientId) {
+        var validClientScopes =
+                Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId));
+        return requestedScopes.stream()
+                .allMatch(scope -> validClientScopes.contains(scope.getValue()));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {
@@ -170,13 +234,15 @@ public class JarValidator {
                                 JWTClaimNames.EXPIRATION_TIME,
                                 JWTClaimNames.NOT_BEFORE,
                                 JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT));
+                                JWTClaimNames.SUBJECT,
+                                SCOPE));
 
         try {
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
+            validateScope(clientId, claimsSet);
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
@@ -188,10 +254,8 @@ public class JarValidator {
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
         String maxAllowedTtl = configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
-        LocalDateTime maximumExpirationTime =
-                LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
-        LocalDateTime expirationTime =
-                LocalDateTime.ofInstant(claimsSet.getExpirationTime().toInstant(), ZoneOffset.UTC);
+        Instant maximumExpirationTime = Instant.now().plusSeconds(Long.parseLong(maxAllowedTtl));
+        Instant expirationTime = claimsSet.getExpirationTime().toInstant();
 
         if (expirationTime.isAfter(maximumExpirationTime)) {
             LOGGER.error(
@@ -218,7 +282,7 @@ public class JarValidator {
                                 .with(LOG_REDIRECT_URI.getFieldName(), redirectUri));
                 throw new JarValidationException(
                         OAuth2Error.INVALID_GRANT.setDescription(
-                                "Invalid redirct_uri claim provided for configured client"));
+                                "Invalid redirect_uri claim provided for configured client"));
             }
             return redirectUri;
         } catch (ParseException e) {
