@@ -38,6 +38,7 @@ public class LambdaHandler {
                     new APIGatewayProxyRequestEvent();
             apiGatewayProxyRequestEvent.setBody(request.body());
             apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
+            apiGatewayProxyRequestEvent.setPath(request.pathInfo());
 
             APIGatewayProxyResponseEvent responseEvent =
                     handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
