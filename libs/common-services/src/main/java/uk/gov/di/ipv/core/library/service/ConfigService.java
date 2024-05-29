@@ -176,6 +176,10 @@ public class ConfigService {
         return getApiKeyFromSecretManager(criId, getActiveConnection(criId));
     }
 
+    public String getAppApiKey(String appId) {
+        return getApiKeyFromSecretManager(appId);
+    }
+
     public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
         return getApiKeyFromSecretManager(
                 criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
@@ -305,6 +309,15 @@ public class ConfigService {
                 String.format(
                         "/%s/credential-issuers/%s/connections/%s/api-key",
                         getEnvironmentVariable(ENVIRONMENT), criId, connection);
+        return getSecretValue(criId, connection, secretId);
+    }
+
+    private String getApiKeyFromSecretManager(String appId) {
+        String secretId = resolvePath("%s/api-key", appId);
+        return getSecretValue(appId, null, secretId);
+    }
+
+    private String getSecretValue(String criId, String connection, String secretId) {
         try {
             String secretValue = getSecretValue(secretId);
 
