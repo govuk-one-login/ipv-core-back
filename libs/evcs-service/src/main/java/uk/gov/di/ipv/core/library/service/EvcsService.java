@@ -51,7 +51,6 @@ public class EvcsService {
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
             boolean isF2FIncomplete)
             throws EvcsServiceException {
-        // AC5 and rest
         List<EvcsCreateUserVCsDto> userVCsForEvcs =
                 credentials.stream()
                         .map(
@@ -65,7 +64,6 @@ public class EvcsService {
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs)
                 && (CollectionUtils.isEmpty(existingEvcsUserVCs) || !isF2FIncomplete)) {
-            // AC2 or AC3
             List<EvcsUpdateUserVCsDto> existingCurrentEvcsUserVcsToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
@@ -76,7 +74,6 @@ public class EvcsService {
                                                     EvcsVCState.HISTORIC,
                                                     null))
                             .toList();
-            // AC4
             List<EvcsUpdateUserVCsDto> existingPendingReturnEvcsUserVcsToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(PENDING_RETURN))
@@ -95,7 +92,6 @@ public class EvcsService {
                             .toList();
             evcsClient.updateEvcsUserVCs(userId, evcsUserVCsToUpdate);
         }
-        // AC1 and AC5
         evcsClient.createEvcsUserVCs(userId, userVCsForEvcs);
     }
 }
