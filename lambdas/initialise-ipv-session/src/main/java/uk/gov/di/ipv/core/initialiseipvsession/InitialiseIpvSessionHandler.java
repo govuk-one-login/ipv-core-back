@@ -70,6 +70,7 @@ import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJo
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
@@ -172,7 +173,9 @@ public class InitialiseIpvSessionHandler
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
             var isReverification =
-                    Scope.parse(claimsSet.getStringClaim(SCOPE)).contains(REVERIFICATION);
+                    configService.enabled(MFA_RESET)
+                            && Scope.parse(claimsSet.getStringClaim(SCOPE))
+                                    .contains(REVERIFICATION);
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(

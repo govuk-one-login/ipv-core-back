@@ -14,8 +14,11 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
@@ -56,6 +59,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VAL
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
@@ -115,8 +119,10 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), thrown.getErrorObject().getCode());
     }
 
-    @Test
-    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest(boolean mfaResetEnabled)
+            throws Exception {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
@@ -125,8 +131,11 @@ class JarValidatorTest {
                 .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
-                .thenReturn("openid");
+        when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
+        if (mfaResetEnabled) {
+            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                    .thenReturn("openid");
+        }
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -151,180 +160,206 @@ class JarValidatorTest {
         assertEquals("Unknown client id was provided", errorObject.getDescription());
     }
 
-    @Test
-    void validateRequestJwtShouldThrowRecoverableExceptionIfScopeClaimMissing() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
+    @Nested
+    class ScopeTests {
+        @BeforeEach
+        public void setUp() {
+            when(configService.enabled(MFA_RESET)).thenReturn(true);
+        }
 
-        var claimsSetValues = getValidClaimsSetValues();
-        claimsSetValues.remove("scope");
-        SignedJWT signedJWT = generateJWT(claimsSetValues);
+        @Test
+        void validateRequestJwtShouldThrowRecoverableExceptionIfScopeClaimMissing()
+                throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        RecoverableJarValidationException thrown =
-                assertThrows(
-                        RecoverableJarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(
-                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals("Claim set validation failed", errorObject.getDescription());
-    }
+            var claimsSetValues = getValidClaimsSetValues();
+            claimsSetValues.remove("scope");
+            SignedJWT signedJWT = generateJWT(claimsSetValues);
 
-    @Test
-    void validateRequestJwtShouldPassIfNoRequiredScopeProvided() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
+            RecoverableJarValidationException thrown =
+                    assertThrows(
+                            RecoverableJarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(
+                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+            assertEquals("Claim set validation failed", errorObject.getDescription());
+        }
 
-        var claimsSetValues = getValidClaimsSetValues();
-        claimsSetValues.put("scope", "no required scope");
-        SignedJWT signedJWT = generateJWT(claimsSetValues);
+        @Test
+        void validateRequestJwtShouldPassIfNoRequiredScopeProvided() throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-    }
+            var claimsSetValues = getValidClaimsSetValues();
+            claimsSetValues.put("scope", "no required scope");
+            SignedJWT signedJWT = generateJWT(claimsSetValues);
 
-    @Test
-    void validateRequestJwtShouldFailValidationChecksOnInvalidScopeForClient() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
-                .thenReturn("reverification");
+            assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        }
 
-        SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
+        @Test
+        void validateRequestJwtShouldFailValidationChecksOnInvalidScopeForClient()
+                throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
+            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                    .thenReturn("reverification");
 
-        JarValidationException thrown =
-                assertThrows(
-                        JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
-        assertEquals(
-                "Client not allowed to issue a request with this scope",
-                errorObject.getDescription());
-    }
+            SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-    @Test
-    void validateRequestJwtShouldFailValidationChecksIfOpenIdAndReverificationScopesProvided()
-            throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
+            JarValidationException thrown =
+                    assertThrows(
+                            JarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
+            assertEquals(
+                    "Client not allowed to issue a request with this scope",
+                    errorObject.getDescription());
+        }
 
-        var claimsSetValues = getValidClaimsSetValues();
-        claimsSetValues.put("scope", "openid reverification");
-        SignedJWT signedJWT = generateJWT(claimsSetValues);
+        @Test
+        void validateRequestJwtShouldFailValidationChecksIfOpenIdAndReverificationScopesProvided()
+                throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        JarValidationException thrown =
-                assertThrows(
-                        JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
-        assertEquals(
-                "Client not allowed to issue a request with this scope",
-                errorObject.getDescription());
-    }
+            var claimsSetValues = getValidClaimsSetValues();
+            claimsSetValues.put("scope", "openid reverification");
+            SignedJWT signedJWT = generateJWT(claimsSetValues);
 
-    @Test
-    void validateRequestJwtShouldFailValidationChecksOnEmptyValidScopesForClient()
-            throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim)).thenReturn("");
+            JarValidationException thrown =
+                    assertThrows(
+                            JarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
+            assertEquals(
+                    "Client not allowed to issue a request with this scope",
+                    errorObject.getDescription());
+        }
 
-        SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
+        @Test
+        void validateRequestJwtShouldFailValidationChecksOnEmptyValidScopesForClient()
+                throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
+            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim)).thenReturn("");
 
-        JarValidationException thrown =
-                assertThrows(
-                        JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
-        assertEquals(
-                "Client not allowed to issue a request with this scope",
-                errorObject.getDescription());
-    }
+            SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-    @Test
-    void validateRequestJwtShouldFailValidationChecksOnScopeNotDefinedForClient() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
-        when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
-                .thenThrow(ParameterNotFoundException.class);
+            JarValidationException thrown =
+                    assertThrows(
+                            JarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(SC_FORBIDDEN, errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
+            assertEquals(
+                    "Client not allowed to issue a request with this scope",
+                    errorObject.getDescription());
+        }
 
-        SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
+        @Test
+        void validateRequestJwtShouldFailValidationChecksOnScopeNotDefinedForClient()
+                throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
+            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+                    .thenThrow(ParameterNotFoundException.class);
 
-        JarValidationException thrown =
-                assertThrows(
-                        JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(
-                OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorObject.getCode());
-        assertEquals("Allowed scopes not found for client", errorObject.getDescription());
-    }
+            SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-    @Test
-    void validateRequestJwtShouldFailValidationCheckIfScopeCanNotBeParsed() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
-                .thenReturn(Collections.singletonList(redirectUriClaim));
+            JarValidationException thrown =
+                    assertThrows(
+                            JarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(
+                    OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(),
+                    errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorObject.getCode());
+            assertEquals("Allowed scopes not found for client", errorObject.getDescription());
+        }
 
-        var claimsSetValues = getValidClaimsSetValues();
-        claimsSetValues.put(SCOPE, 1);
-        SignedJWT signedJWT = generateJWT(claimsSetValues);
+        @Test
+        void validateRequestJwtShouldFailValidationCheckIfScopeCanNotBeParsed() throws Exception {
+            when(configService.getSsmParameter(
+                            eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                    .thenReturn(EC_PUBLIC_JWK);
+            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                    .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                    .thenReturn(issuerClaim);
+            when(configService.getClientRedirectUrls(anyString()))
+                    .thenReturn(Collections.singletonList(redirectUriClaim));
 
-        JarValidationException thrown =
-                assertThrows(
-                        JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
-        ErrorObject errorObject = thrown.getErrorObject();
-        assertEquals(
-                OAuth2Error.INVALID_SCOPE.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
-        assertEquals("Scope could not be parsed", errorObject.getDescription());
+            var claimsSetValues = getValidClaimsSetValues();
+            claimsSetValues.put(SCOPE, 1);
+            SignedJWT signedJWT = generateJWT(claimsSetValues);
+
+            JarValidationException thrown =
+                    assertThrows(
+                            JarValidationException.class,
+                            () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+            ErrorObject errorObject = thrown.getErrorObject();
+            assertEquals(
+                    OAuth2Error.INVALID_SCOPE.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+            assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorObject.getCode());
+            assertEquals("Scope could not be parsed", errorObject.getDescription());
+        }
     }
 
     @Test

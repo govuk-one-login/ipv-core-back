@@ -92,6 +92,8 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
@@ -125,33 +127,6 @@ class InitialiseIpvSessionHandlerTest {
     private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
     private static final APIGatewayProxyRequestEvent validEvent = new APIGatewayProxyRequestEvent();
-    private static final JWTClaimsSet.Builder claimsBuilder =
-            new JWTClaimsSet.Builder()
-                    .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
-                    .issueTime(new Date())
-                    .notBeforeTime(new Date())
-                    .subject(TEST_USER_ID)
-                    .audience("test-audience")
-                    .issuer("test-issuer")
-                    .claim(RESPONSE_TYPE, "code")
-                    .claim(REDIRECT_URI, "https://example.com")
-                    .claim(STATE, "test-state")
-                    .claim(CLIENT_ID, "test-client")
-                    .claim(VTR, List.of("P2", "PCL200"))
-                    .claim(SCOPE, "openid")
-                    .claim(
-                            CLAIMS,
-                            Map.of(
-                                    USER_INFO,
-                                    Map.of(
-                                            ADDRESS_CLAIM_NAME,
-                                            "test-address-claim",
-                                            CORE_IDENTITY_JWT_CLAIM_NAME,
-                                            "test-core-identity-jwt-claim",
-                                            INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                            Map.of(VALUES, List.of()),
-                                            PASSPORT_CLAIM_NAME,
-                                            "test-passport-claim")));
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
     private static @Spy IpvSessionItem ipvSessionItem;
@@ -181,7 +156,7 @@ class InitialiseIpvSessionHandlerTest {
         PCL250_MIGRATION_VC = vcHmrcMigrationPCL250NoEvidence();
         PCL200_MIGRATION_VC = vcHmrcMigrationPCL200NoEvidence();
 
-        signedJWT = getSignedJWT(claimsBuilder);
+        signedJWT = getSignedJWT(getValidClaimsBuilder());
         signedEncryptedJwt = getJwe(signedJWT);
 
         validEvent.setBody(
@@ -247,7 +222,8 @@ class InitialiseIpvSessionHandlerTest {
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JOSEException, ParseException, JarValidationException {
         // Arrange
-        var missingVtrClaimsBuilder = new JWTClaimsSet.Builder(claimsBuilder.build());
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
+        var missingVtrClaimsBuilder = getValidClaimsBuilder();
         missingVtrClaimsBuilder.claim(VTR, vtrList);
         var missingVtrSignedJwt = getSignedJWT(missingVtrClaimsBuilder);
         when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -264,6 +240,39 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_VTR.getCode(), responseBody.get("code"));
         assertEquals(ErrorResponse.MISSING_VTR.getMessage(), responseBody.get("message"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("getVtrTestValues")
+    void shouldIpvSessionIdIfMissingVtrAndReverificationJourney(List<String> vtrList)
+            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
+                    JOSEException, ParseException, JarValidationException {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
+        var missingVtrClaimsBuilder = getValidClaimsBuilder();
+        missingVtrClaimsBuilder.claim(VTR, vtrList);
+        missingVtrClaimsBuilder.claim(SCOPE, REVERIFICATION);
+        var missingVtrSignedJwt = getSignedJWT(missingVtrClaimsBuilder);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(missingVtrSignedJwt.getJWTClaimsSet());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
     private static Stream<Arguments> getVtrTestValues() {
@@ -430,9 +439,10 @@ class InitialiseIpvSessionHandlerTest {
         void shouldValidateAndStoreAnyInheritedIdentityWhenStrongerVotThanExisting()
                 throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -487,9 +497,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldValidateAndStoreAnyInheritedIdentityWhenNoExistingIdentity() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -541,9 +552,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldSendAuditEventForIpvInheritedIdentityVcReceived() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -610,9 +622,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldNotStoreInheritedIdentityWhenVotWeakerThanExisting() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -671,9 +684,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldValidateAndStoreAnyInheritedIdentityWhenNoInheritedVcExist() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -727,7 +741,7 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -750,6 +764,7 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response;
@@ -783,7 +798,11 @@ class InitialiseIpvSessionHandlerTest {
         void shouldAllowRequestsThatDoNotIncludeAnInheritedIdentityJwtClaim() throws Exception {
             // Arrange
             when(mockJarValidator.validateRequestJwt(any(), any()))
-                    .thenReturn(claimsBuilder.claim(CLAIMS, Map.of(USER_INFO, Map.of())).build());
+                    .thenReturn(
+                            getValidClaimsBuilder()
+                                    .claim(CLAIMS, Map.of(USER_INFO, Map.of()))
+                                    .build());
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -800,9 +819,12 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder.claim(CLAIMS, Map.of("This", "shouldn't work?")).build());
+                            getValidClaimsBuilder()
+                                    .claim(CLAIMS, Map.of("This", "shouldn't work?"))
+                                    .build());
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -826,9 +848,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldRecoverIfInheritedIdentityJwtHasMultipleValues() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -878,9 +901,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldRecoverIfInheritedIdentityJwtHasNullValue() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -924,9 +948,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldRecoverIfInheritedIdentityJwtFailsToParseAndValidate() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -983,9 +1008,10 @@ class InitialiseIpvSessionHandlerTest {
         @Test
         void shouldRecoverIfInheritedIdentityJwtFailsToPersist() throws Exception {
             // Arrange
+            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
-                            claimsBuilder
+                            getValidClaimsBuilder()
                                     .claim(
                                             CLAIMS,
                                             Map.of(
@@ -1061,5 +1087,34 @@ class InitialiseIpvSessionHandlerTest {
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    }
+
+    private static JWTClaimsSet.Builder getValidClaimsBuilder() {
+        return new JWTClaimsSet.Builder()
+                .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
+                .issueTime(new Date())
+                .notBeforeTime(new Date())
+                .subject(TEST_USER_ID)
+                .audience("test-audience")
+                .issuer("test-issuer")
+                .claim(RESPONSE_TYPE, "code")
+                .claim(REDIRECT_URI, "https://example.com")
+                .claim(STATE, "test-state")
+                .claim(CLIENT_ID, "test-client")
+                .claim(VTR, List.of("P2", "PCL200"))
+                .claim(SCOPE, "openid")
+                .claim(
+                        CLAIMS,
+                        Map.of(
+                                USER_INFO,
+                                Map.of(
+                                        ADDRESS_CLAIM_NAME,
+                                        "test-address-claim",
+                                        CORE_IDENTITY_JWT_CLAIM_NAME,
+                                        "test-core-identity-jwt-claim",
+                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                        Map.of(VALUES, List.of()),
+                                        PASSPORT_CLAIM_NAME,
+                                        "test-passport-claim")));
     }
 }

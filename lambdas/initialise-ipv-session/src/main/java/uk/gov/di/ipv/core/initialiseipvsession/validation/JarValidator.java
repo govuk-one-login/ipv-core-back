@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VAL
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COUNT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
@@ -230,7 +232,19 @@ public class JarValidator {
         String criAudience = configService.getSsmParameter(COMPONENT_ID);
         String clientIssuer = configService.getSsmParameter(CLIENT_ISSUER, clientId);
 
-        DefaultJWTClaimsVerifier<?> verifier =
+        var requiredClaims =
+                new HashSet<>(
+                        Set.of(
+                                JWTClaimNames.EXPIRATION_TIME,
+                                JWTClaimNames.NOT_BEFORE,
+                                JWTClaimNames.ISSUED_AT,
+                                JWTClaimNames.SUBJECT));
+
+        if (configService.enabled(MFA_RESET)) {
+            requiredClaims.add(SCOPE);
+        }
+
+        var verifier =
                 new DefaultJWTClaimsVerifier<>(
                         criAudience,
                         new JWTClaimsSet.Builder()
@@ -238,19 +252,16 @@ public class JarValidator {
                                 .issuer(clientIssuer)
                                 .claim("response_type", "code")
                                 .build(),
-                        Set.of(
-                                JWTClaimNames.EXPIRATION_TIME,
-                                JWTClaimNames.NOT_BEFORE,
-                                JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT,
-                                SCOPE));
+                        requiredClaims);
 
         try {
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
-            validateScope(clientId, claimsSet);
+            if (configService.enabled(MFA_RESET)) {
+                validateScope(clientId, claimsSet);
+            }
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
