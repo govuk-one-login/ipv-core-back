@@ -234,15 +234,14 @@ public class JarValidator {
                                 JWTClaimNames.EXPIRATION_TIME,
                                 JWTClaimNames.NOT_BEFORE,
                                 JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT,
-                                SCOPE));
+                                JWTClaimNames.SUBJECT));
 
         try {
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
-            validateScope(clientId, claimsSet);
+            //            validateScope(clientId, claimsSet);
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
