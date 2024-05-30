@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,10 +26,13 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,7 +62,7 @@ class ResetSessionIdentityHandlerTest {
 
     @BeforeEach
     void setUpEach() {
-        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem = spy(new IpvSessionItem());
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
@@ -99,6 +103,8 @@ class ResetSessionIdentityHandlerTest {
                         JourneyResponse.class);
 
         // Assert
+        verifyVotSetToP0();
+
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
                         ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
@@ -130,6 +136,7 @@ class ResetSessionIdentityHandlerTest {
                         JourneyResponse.class);
 
         // Assert
+        verifyVotSetToP0();
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
                         ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
@@ -168,7 +175,7 @@ class ResetSessionIdentityHandlerTest {
         doThrow(new VerifiableCredentialException(418, FAILED_TO_DELETE_CREDENTIAL))
                 .when(mockSessionCredentialsService)
                 .deleteSessionCredentialsForSubjourneyType(
-                        ipvSessionItem.getIpvSessionId(), CoiSubjourneyType.ADDRESS_ONLY);
+                        TEST_SESSION_ID, CoiSubjourneyType.ADDRESS_ONLY);
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
@@ -182,9 +189,19 @@ class ResetSessionIdentityHandlerTest {
         var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
+        verifyVotSetToP0();
+
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
         assertEquals(418, journeyResponse.get(STATUS_CODE));
         assertEquals(FAILED_TO_DELETE_CREDENTIAL.getCode(), journeyResponse.get("code"));
         assertEquals(FAILED_TO_DELETE_CREDENTIAL.getMessage(), journeyResponse.get("message"));
+    }
+
+    private void verifyVotSetToP0() {
+        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem).getCoiSubjourneyType();
+        inOrder.verifyNoMoreInteractions();
     }
 }

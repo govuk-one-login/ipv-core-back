@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
@@ -72,6 +73,9 @@ public class ResetSessionIdentityHandler
                             ipvSessionItem.getClientOAuthSessionId());
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            ipvSessionItem.setVot(P0);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             sessionCredentialsService.deleteSessionCredentialsForSubjourneyType(
                     ipvSessionId, ipvSessionItem.getCoiSubjourneyType());
