@@ -57,24 +57,10 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CHECK_COI_UPDATE_ADDRESS
+        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-
-  CHECK_COI_UPDATE_ADDRESS:
-    response:
-      type: process
-      lambda: check-coi
-    events:
-      coi-check-passed:
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
 
   EVALUATE_GPG45_SCORES_UPDATE_ADDRESS:
     response:
