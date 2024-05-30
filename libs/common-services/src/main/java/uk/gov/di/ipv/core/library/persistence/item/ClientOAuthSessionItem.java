@@ -28,7 +28,6 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private Boolean reproveIdentity;
     private List<String> vtr;
     private long ttl;
-    private String scope;
 
     @DynamoDbPartitionKey
     public String getClientOAuthSessionId() {
