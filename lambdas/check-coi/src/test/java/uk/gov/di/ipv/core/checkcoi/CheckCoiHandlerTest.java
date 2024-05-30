@@ -119,10 +119,7 @@ class CheckCoiHandlerTest {
             }
 
             @Test
-            void shouldReturnPassedForSuccessfulAddressOnlyCheck() throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
-                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                        .thenReturn(true);
+            void shouldReturnPassedForAddressOnlyCheck() {
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
 
                 var request =
@@ -166,21 +163,6 @@ class CheckCoiHandlerTest {
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
-
-                var request =
-                        ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
-
-                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-                assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
-            }
-
-            @Test
-            void shouldReturnFailedForFailedAddressOnlyCheck() throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
-                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                        .thenReturn(false);
-                when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
 
                 var request =
                         ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
@@ -251,24 +233,6 @@ class CheckCoiHandlerTest {
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
         }
 
-        @Test
-        void shouldReturnErrorIfFullCorrelationCheckThrowsHttpResponseException() throws Exception {
-            when(mockUserIdentityService.areVcsCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(
-                            new HttpResponseExceptionWithErrorBody(
-                                    SC_SERVER_ERROR, FAILED_NAME_CORRELATION));
-            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
-
-            var request =
-                    ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
-        }
-
         @ParameterizedTest
         @EnumSource(
                 value = CoiSubjourneyType.class,
@@ -300,23 +264,6 @@ class CheckCoiHandlerTest {
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(new CredentialParseException("oops"));
             when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
-
-            var request =
-                    ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
-        }
-
-        @Test
-        void shouldReturnErrorIfFullCorrelationCheckThrowsCredParseException() throws Exception {
-            when(mockUserIdentityService.areVcsCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(new CredentialParseException("oops"));
-            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
 
             var request =
                     ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
