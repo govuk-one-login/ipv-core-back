@@ -178,7 +178,7 @@ class BuildUserIdentityHandlerTest {
                 getEventWithAuthIpHeadersAndPath(USER_IDENTITY_REQUEST);
 
         @BeforeEach
-        void setUp() throws Exception {
+        void setUp() {
             clientOAuthSessionItem = getClientAuthSessionItemWithScope(OPENID_SCOPE);
         }
 
@@ -786,7 +786,7 @@ class BuildUserIdentityHandlerTest {
                 getEventWithAuthIpHeadersAndPath(REVERIFICATION_REQUEST);
 
         @BeforeEach
-        void setUp() throws Exception {
+        void setUp() {
             clientOAuthSessionItem = getClientAuthSessionItemWithScope(REVERIFICATION_SCOPE);
         }
 
@@ -850,8 +850,8 @@ class BuildUserIdentityHandlerTest {
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
             assertEquals(false, failedResponse.getSuccess());
             assertEquals(TEST_USER_ID, failedResponse.getSub());
-            assertEquals("", failedResponse.getError_code());
-            assertEquals("Failed verification.", failedResponse.getError_description());
+            assertEquals("", failedResponse.getErrorCode());
+            assertEquals("Failed verification.", failedResponse.getErrorDescription());
 
             verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
             verify(mockSessionCredentialsService, times(1))

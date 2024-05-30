@@ -12,7 +12,7 @@ public abstract class ReverificationBaseResponse {
     @JsonProperty protected final String sub;
 
     @JsonCreator
-    public ReverificationBaseResponse(
+    protected ReverificationBaseResponse(
             @JsonProperty("sub") String sub, @JsonProperty("success") Boolean success) {
         this.success = success;
         this.sub = sub;

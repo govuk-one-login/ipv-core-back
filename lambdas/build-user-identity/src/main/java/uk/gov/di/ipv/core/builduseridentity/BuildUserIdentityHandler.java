@@ -194,8 +194,8 @@ public class BuildUserIdentityHandler
                     ReverificationFailedResponse failedResponse =
                             ReverificationFailedResponse.failedResponseBuilder()
                                     .sub(userId)
-                                    .error_code(ipvSessionItem.getErrorCode())
-                                    .error_description(ipvSessionItem.getErrorDescription())
+                                    .errorCode(ipvSessionItem.getErrorCode())
+                                    .errorDescription(ipvSessionItem.getErrorDescription())
                                     .build();
 
                     return ApiGatewayResponseGenerator.proxyJsonResponse(

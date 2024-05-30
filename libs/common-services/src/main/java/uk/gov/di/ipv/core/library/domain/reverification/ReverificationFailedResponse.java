@@ -9,17 +9,17 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 @Getter
 public class ReverificationFailedResponse extends ReverificationBaseResponse {
-    @JsonProperty private final String error_code;
-    @JsonProperty private final String error_description;
+    @JsonProperty private final String errorCode;
+    @JsonProperty private final String errorDescription;
 
     @JsonCreator
     @Builder(builderMethodName = "failedResponseBuilder")
     public ReverificationFailedResponse(
             @JsonProperty("sub") String sub,
-            @JsonProperty("error_code") String error_code,
-            @JsonProperty("error_description") String error_description) {
+            @JsonProperty("error_code") String errorCode,
+            @JsonProperty("error_description") String errorDescription) {
         super(sub, false);
-        this.error_code = error_code;
-        this.error_description = error_description;
+        this.errorCode = errorCode;
+        this.errorDescription = errorDescription;
     }
 }
