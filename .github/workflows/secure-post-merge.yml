@@ -61,25 +61,17 @@ jobs:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Generate code signing config
-        id: signing
-        uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
-        with:
-          template: ./deploy/template.yaml
-          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
-
       - name: SAM validate
-        working-directory: ./deploy
-        run: sam validate --region ${{ env.AWS_REGION }}
+        run: sam validate --region ${{ env.AWS_REGION }} -t deploy/template.yaml
 
-      - name: SAM build and test
-        working-directory: ./deploy
-        run: sam build
+      - name: SAM build
+        run: |
+          mkdir build
+          sam build -t deploy/template.yaml -b out
 
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
+        uses: govuk-one-login/devplatform-upload-action@v3.5
         with:
             artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
-            working-directory: ./deploy
-            template-file: template.yaml
+            working-directory: ./out
