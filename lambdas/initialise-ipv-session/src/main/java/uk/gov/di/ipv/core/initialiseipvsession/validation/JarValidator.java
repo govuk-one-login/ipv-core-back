@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +39,9 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VAL
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COUNT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
@@ -100,8 +103,17 @@ public class JarValidator {
         try {
             var requestedScope = Scope.parse(claimsSet.getStringClaim(SCOPE));
 
-            if (!hasCorrectNumberOfRequiredScopes(requestedScope)
-                    || !hasValidScopesForClient(requestedScope, clientId)) {
+            var requiredScopesInRequest =
+                    requestedScope.stream()
+                            .map(Scope.Value::getValue)
+                            .filter(ONE_OF_REQUIRED_SCOPES::contains)
+                            .toList();
+
+            if (requiredScopesInRequest.isEmpty()) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage("No required scopes found in request")
+                                .with(LOG_SCOPE.getFieldName(), requiredScopesInRequest));
+            } else if (!hasValidRequiredScopeForClient(requiredScopesInRequest, clientId)) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
@@ -137,18 +149,16 @@ public class JarValidator {
         }
     }
 
-    private boolean hasCorrectNumberOfRequiredScopes(Scope requestedScopes) {
-        return 1
-                == requestedScopes.stream()
-                        .filter(scope -> ONE_OF_REQUIRED_SCOPES.contains(scope.getValue()))
-                        .count();
-    }
-
-    private boolean hasValidScopesForClient(Scope requestedScopes, String clientId) {
-        var validClientScopes =
-                Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId));
-        return requestedScopes.stream()
-                .allMatch(scope -> validClientScopes.contains(scope.getValue()));
+    private boolean hasValidRequiredScopeForClient(
+            List<String> requiredScopesInRequest, String clientId) {
+        if (requiredScopesInRequest.size() > 1) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage("Too many required scopes in request")
+                            .with(LOG_COUNT.getFieldName(), requiredScopesInRequest.size()));
+            return false;
+        }
+        return Scope.parse(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientId))
+                .contains(requiredScopesInRequest.get(0));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {
@@ -222,7 +232,19 @@ public class JarValidator {
         String criAudience = configService.getSsmParameter(COMPONENT_ID);
         String clientIssuer = configService.getSsmParameter(CLIENT_ISSUER, clientId);
 
-        DefaultJWTClaimsVerifier<?> verifier =
+        var requiredClaims =
+                new HashSet<>(
+                        Set.of(
+                                JWTClaimNames.EXPIRATION_TIME,
+                                JWTClaimNames.NOT_BEFORE,
+                                JWTClaimNames.ISSUED_AT,
+                                JWTClaimNames.SUBJECT));
+
+        if (configService.enabled(MFA_RESET)) {
+            requiredClaims.add(SCOPE);
+        }
+
+        var verifier =
                 new DefaultJWTClaimsVerifier<>(
                         criAudience,
                         new JWTClaimsSet.Builder()
@@ -230,18 +252,16 @@ public class JarValidator {
                                 .issuer(clientIssuer)
                                 .claim("response_type", "code")
                                 .build(),
-                        Set.of(
-                                JWTClaimNames.EXPIRATION_TIME,
-                                JWTClaimNames.NOT_BEFORE,
-                                JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT));
+                        requiredClaims);
 
         try {
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
-            //            validateScope(clientId, claimsSet);
+            if (configService.enabled(MFA_RESET)) {
+                validateScope(clientId, claimsSet);
+            }
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {

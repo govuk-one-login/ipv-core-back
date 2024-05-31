@@ -104,7 +104,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                 .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
                         case FAMILY_NAME_ONLY, FAMILY_NAME_AND_ADDRESS -> userIdentityService
                                 .areGivenNamesAndDobCorrelated(credentials);
-                        case ADDRESS_ONLY -> userIdentityService.areVcsCorrelated(credentials);
+                        case ADDRESS_ONLY -> {
+                            LOGGER.warn(
+                                    LogHelper.buildLogMessage("Address only COI check requested"));
+                            yield true;
+                        }
                     };
 
             if (!successfulCheck) {

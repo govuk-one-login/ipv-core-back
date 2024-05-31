@@ -131,12 +131,6 @@ public class ProcessJourneyEventHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
-            if (isCoiSubjourneyEvent(journeyEvent)) {
-                CoiSubjourneyType coiJourneyType = CoiSubjourneyType.fromString(journeyEvent);
-
-                ipvSessionItem.setCoiSubjourneyType(coiJourneyType);
-            }
-
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -159,6 +153,14 @@ public class ProcessJourneyEventHandler
                             auditEventUser,
                             deviceInformation,
                             currentPage);
+
+            if (isCoiSubjourneyEvent(journeyEvent)) {
+                CoiSubjourneyType coiJourneyType = CoiSubjourneyType.fromString(journeyEvent);
+
+                ipvSessionItem.setCoiSubjourneyType(coiJourneyType);
+            }
+
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             if (stepResponse.getMitigationStart() != null) {
                 sendMitigationStartAuditEvent(
@@ -223,8 +225,6 @@ public class ProcessJourneyEventHandler
                     ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
-
-            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return basicState.getResponse();
         } catch (UnknownStateException e) {
