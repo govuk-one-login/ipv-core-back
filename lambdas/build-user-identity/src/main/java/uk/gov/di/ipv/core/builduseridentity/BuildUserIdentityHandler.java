@@ -27,9 +27,8 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.reverification.ReverificationFailedResponse;
-import uk.gov.di.ipv.core.library.domain.reverification.ReverificationSuccessResponse;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -259,8 +258,7 @@ public class BuildUserIdentityHandler
             ipvSessionService.revokeAccessToken(ipvSessionItem);
             deleteSessionCredentials(ipvSessionId);
 
-            ReverificationSuccessResponse successResponse =
-                    ReverificationSuccessResponse.successResponseBuilder().sub(userId).build();
+            ReverificationResponse successResponse = ReverificationResponse.success(userId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HTTPResponse.SC_OK, successResponse);
@@ -268,12 +266,11 @@ public class BuildUserIdentityHandler
             ipvSessionService.revokeAccessToken(ipvSessionItem);
             deleteSessionCredentials(ipvSessionId);
 
-            ReverificationFailedResponse failedResponse =
-                    ReverificationFailedResponse.failedResponseBuilder()
-                            .sub(userId)
-                            .errorCode(ipvSessionItem.getErrorCode())
-                            .errorDescription(ipvSessionItem.getErrorDescription())
-                            .build();
+            ReverificationResponse failedResponse =
+                    ReverificationResponse.failure(
+                            userId,
+                            ipvSessionItem.getErrorCode(),
+                            ipvSessionItem.getErrorDescription());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HTTPResponse.SC_OK, failedResponse);
