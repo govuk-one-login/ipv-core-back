@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
@@ -28,6 +29,7 @@ import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class TicfCriService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -143,6 +145,13 @@ public class TicfCriService {
     private void checkStatusCode(HttpResponse<String> ticfCriHttpResponse)
             throws TicfCriHttpResponseException {
         if (200 > ticfCriHttpResponse.statusCode() || ticfCriHttpResponse.statusCode() > 299) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                                    ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
+                                            .getMessage())
+                            .with(
+                                    LOG_STATUS_CODE.getFieldName(),
+                                    ticfCriHttpResponse.statusCode()));
             throw new TicfCriHttpResponseException(
                     String.format(
                             "Non 200 HTTP status code: '%s'", ticfCriHttpResponse.statusCode()));

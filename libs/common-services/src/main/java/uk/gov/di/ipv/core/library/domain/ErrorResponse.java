@@ -91,7 +91,13 @@ public enum ErrorResponse {
     FAILED_TO_STORE_IDENTITY(1074, "Failed to store identity"),
     MITIGATION_ROUTE_CONFIG_NOT_FOUND(
             1075, "No mitigation journey route event found in cimit config"),
-    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1076, "Error parsing evidenceRequest for cri oauth request");
+    FAILED_TO_PARSE_EVIDENCE_REQUESTED(1076, "Error parsing evidenceRequest for cri oauth request"),
+    RECEIVED_NON_200_RESPONSE_STATUS_CODE(1077, "Non 200 HTTP response status code"),
+    FAILED_TO_CONSTRUCT_EVCS_URI(1078, "Failed to construct EVCS uri"),
+    FAILED_TO_PARSE_EVCS_RESPONSE(1079, "Failed to parse EVCS response"),
+    FAILED_TO_PARSE_EVCS_REQUEST_BODY(1080, "Failed to parse EVCS request body"),
+    FAILED_TO_PARSE_EVCS_VC(1081, "Failed to parse a vc from EVCS"),
+    FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
