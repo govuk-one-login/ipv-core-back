@@ -33,6 +33,7 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class EvcsClient {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -69,7 +70,6 @@ public class EvcsClient {
                             .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
-            checkResponseStatusCode(evcsHttpResponse);
 
             EvcsGetUserVCsDto evcsGetUserVCs =
                     OBJECT_MAPPER.readValue(evcsHttpResponse.body(), new TypeReference<>() {});
@@ -102,8 +102,7 @@ public class EvcsClient {
                                     configService.getAppApiKey(EVCS_APP_ID.getPath()))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
-            checkResponseStatusCode(evcsHttpResponse);
+            sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -129,8 +128,7 @@ public class EvcsClient {
                                     configService.getAppApiKey(EVCS_APP_ID.getPath()))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
-            checkResponseStatusCode(evcsHttpResponse);
+            sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -160,9 +158,9 @@ public class EvcsClient {
         if (200 > evcsHttpResponse.statusCode() || evcsHttpResponse.statusCode() > 299) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage()
-                                    + String.format(
-                                            " (%s) received", evcsHttpResponse.statusCode())));
+                                    ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
+                                            .getMessage())
+                            .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode()));
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
@@ -175,7 +173,10 @@ public class EvcsClient {
             throws EvcsServiceException {
         LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
         try {
-            return httpClient.send(evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    httpClient.send(evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatusCode(response);
+            return response;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.

@@ -30,18 +30,27 @@ public class EvcsService {
     }
 
     @Tracing
-    public void storeIdentity(
-            String userId,
-            List<VerifiableCredential> credentials,
-            String evcsAccessToken,
-            boolean isF2FIncomplete)
+    public void storeCompletedIdentity(
+            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
         List<EvcsGetUserVCDto> existingEvcsUserVCs =
                 evcsClient
                         .getUserVcs(userId, evcsAccessToken, List.of(CURRENT, PENDING_RETURN))
                         .vcs();
 
-        persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, isF2FIncomplete);
+        persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, false);
+    }
+
+    @Tracing
+    public void storePendingIdentity(
+            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            throws EvcsServiceException {
+        List<EvcsGetUserVCDto> existingEvcsUserVCs =
+                evcsClient
+                        .getUserVcs(userId, evcsAccessToken, List.of(CURRENT, PENDING_RETURN))
+                        .vcs();
+
+        persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, true);
     }
 
     @Tracing
@@ -49,7 +58,7 @@ public class EvcsService {
             String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
-            boolean isF2FIncomplete)
+            boolean isPendingIdentity)
             throws EvcsServiceException {
         List<EvcsCreateUserVCsDto> userVCsForEvcs =
                 credentials.stream()
@@ -66,12 +75,12 @@ public class EvcsService {
                                 vc ->
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(),
-                                                isF2FIncomplete ? PENDING_RETURN : CURRENT,
+                                                isPendingIdentity ? PENDING_RETURN : CURRENT,
                                                 null,
                                                 null))
                         .toList();
 
-        if (!CollectionUtils.isEmpty(existingEvcsUserVCs) && !isF2FIncomplete) {
+        if (!CollectionUtils.isEmpty(existingEvcsUserVCs) && !isPendingIdentity) {
             var existingCurrentEvcsUserVcsToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))

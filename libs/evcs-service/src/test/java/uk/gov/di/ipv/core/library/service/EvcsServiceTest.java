@@ -91,8 +91,8 @@ class EvcsServiceTest {
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
                 .thenReturn(new EvcsGetUserVCsDto(Collections.emptyList()));
         // Act
-        evcsService.storeIdentity(
-                TEST_USER_ID, VERIFIABLE_CREDENTIALS, TEST_EVCS_ACCESS_TOKEN, false);
+        evcsService.storeCompletedIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
         InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -113,58 +113,14 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testStoreIdentity_onSuccessfulJourney_butNot_incompleteF2F_and_6MFC() {
+    void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() {
         // Arrange
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
                 .thenReturn(EVCS_GET_USER_VCS_DTO);
         // Act
-        evcsService.storeIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
-                TEST_EVCS_ACCESS_TOKEN,
-                false);
-        // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
-
-        var evcsUserVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
-        assertEquals(2, (evcsUserVCsToUpdate.size()));
-        assertEquals(
-                1,
-                (evcsUserVCsToUpdate.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.HISTORIC))
-                        .count()));
-        assertEquals(
-                1,
-                (evcsUserVCsToUpdate.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
-                        .count()));
-        var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                3,
-                (userVCsForEvcs.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
-                        .count()));
-    }
-
-    @Test
-    void testStoreIdentity_whenIncompleteF2f() {
-        // Arrange
-        when(mockEvcsClient.getUserVcs(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
-                .thenReturn(EVCS_GET_USER_VCS_DTO);
-        // Act
-        evcsService.storeIdentity(
-                TEST_USER_ID, VERIFIABLE_CREDENTIALS, TEST_EVCS_ACCESS_TOKEN, true);
+        evcsService.storePendingIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
         InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -189,11 +145,8 @@ class EvcsServiceTest {
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
                 .thenReturn(EVCS_GET_USER_VCS_DTO);
         // Act
-        evcsService.storeIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
-                TEST_EVCS_ACCESS_TOKEN,
-                false);
+        evcsService.storeCompletedIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
         InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
         mockOrderVerifier
