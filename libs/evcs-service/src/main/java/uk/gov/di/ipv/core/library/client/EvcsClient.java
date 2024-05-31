@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -28,6 +29,8 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 
@@ -35,10 +38,7 @@ public class EvcsClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String X_API_KEY_HEADER = "x-api-key";
-    public static final String AUTHORISATION_HEADER_KEY = "Authorisation";
     public static final String VC_STATE_PARAM = "state";
-    public static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=utf-8";
-    public static final String CONTENT_TYPE = "Content-Type";
 
     private final HttpClient httpClient;
     private final ConfigService configService;
@@ -60,11 +60,13 @@ public class EvcsClient {
             throws EvcsServiceException {
         try {
             HttpRequest.Builder httpRequestBuilder =
-                    HttpRequest.newBuilder().uri(getUri(userId, vcStatesToQueryFor)).GET();
-            httpRequestBuilder.header(
-                    X_API_KEY_HEADER, configService.getAppApiKey(EVCS_APP_ID.getPath()));
-            httpRequestBuilder.header(AUTHORISATION_HEADER_KEY, "Bearer " + evcsAccessToken);
-            httpRequestBuilder.header(CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8);
+                    HttpRequest.newBuilder()
+                            .uri(getUri(userId, vcStatesToQueryFor))
+                            .GET()
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                            .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
             checkResponseStatusCode(evcsHttpResponse);
@@ -86,7 +88,7 @@ public class EvcsClient {
     }
 
     @Tracing
-    public void createEvcsUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
+    public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
         try {
             HttpRequest.Builder httpRequestBuilder =
@@ -94,10 +96,11 @@ public class EvcsClient {
                             .uri(getUri(userId, null))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)));
-            httpRequestBuilder.header(
-                    X_API_KEY_HEADER, configService.getAppApiKey(EVCS_APP_ID.getPath()));
-            httpRequestBuilder.header(CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8);
+                                            OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
             checkResponseStatusCode(evcsHttpResponse);
@@ -111,7 +114,7 @@ public class EvcsClient {
     }
 
     @Tracing
-    public void updateEvcsUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
+    public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
         try {
             HttpRequest.Builder httpRequestBuilder =
@@ -120,10 +123,11 @@ public class EvcsClient {
                             .method(
                                     "PATCH",
                                     HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)));
-            httpRequestBuilder.header(
-                    X_API_KEY_HEADER, configService.getAppApiKey(EVCS_APP_ID.getPath()));
-            httpRequestBuilder.header(CONTENT_TYPE, APPLICATION_JSON_CHARSET_UTF_8);
+                                            OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
             checkResponseStatusCode(evcsHttpResponse);
@@ -138,31 +142,27 @@ public class EvcsClient {
 
     private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
+        var uriBuilder =
+                new URIBuilder(configService.getSsmParameter(EVCS_APPLICATION_URL))
+                        .setPathSegments("vcs", userId);
         if (vcStatesToQueryFor != null) {
-            return new URIBuilder(
-                            configService
-                                    .getSsmParameter(EVCS_APPLICATION_URL)
-                                    .concat("/")
-                                    .concat(userId))
-                    .addParameter(
-                            VC_STATE_PARAM,
-                            vcStatesToQueryFor.stream()
-                                    .map(EvcsVCState::name)
-                                    .collect(Collectors.joining(",")))
-                    .build();
-        } else {
-            return new URIBuilder(
-                            configService
-                                    .getSsmParameter(EVCS_APPLICATION_URL)
-                                    .concat("/")
-                                    .concat(userId))
-                    .build();
+            uriBuilder.addParameter(
+                    VC_STATE_PARAM,
+                    vcStatesToQueryFor.stream()
+                            .map(EvcsVCState::name)
+                            .collect(Collectors.joining(",")));
         }
+        return uriBuilder.build();
     }
 
     private void checkResponseStatusCode(HttpResponse<String> evcsHttpResponse)
             throws EvcsServiceException {
         if (200 > evcsHttpResponse.statusCode() || evcsHttpResponse.statusCode() > 299) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage()
+                                    + String.format(
+                                            " (%s) received", evcsHttpResponse.statusCode())));
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);

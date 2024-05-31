@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -37,9 +36,10 @@ public class EvcsService {
             String evcsAccessToken,
             boolean isF2FIncomplete)
             throws EvcsServiceException {
-        List<EvcsVCState> vcStatesToQueryFor = List.of(CURRENT, PENDING_RETURN);
         List<EvcsGetUserVCDto> existingEvcsUserVCs =
-                evcsClient.getUserVcs(userId, evcsAccessToken, vcStatesToQueryFor).vcs();
+                evcsClient
+                        .getUserVcs(userId, evcsAccessToken, List.of(CURRENT, PENDING_RETURN))
+                        .vcs();
 
         persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, isF2FIncomplete);
     }
@@ -53,6 +53,15 @@ public class EvcsService {
             throws EvcsServiceException {
         List<EvcsCreateUserVCsDto> userVCsForEvcs =
                 credentials.stream()
+                        .filter(
+                                credential ->
+                                        existingEvcsUserVCs.stream()
+                                                .noneMatch(
+                                                        evcsVC ->
+                                                                evcsVC.vc()
+                                                                        .equals(
+                                                                                credential
+                                                                                        .getVcString())))
                         .map(
                                 vc ->
                                         new EvcsCreateUserVCsDto(
@@ -62,36 +71,45 @@ public class EvcsService {
                                                 null))
                         .toList();
 
-        if (!CollectionUtils.isEmpty(existingEvcsUserVCs)
-                && (CollectionUtils.isEmpty(existingEvcsUserVCs) || !isF2FIncomplete)) {
-            List<EvcsUpdateUserVCsDto> existingCurrentEvcsUserVcsToUpdate =
+        if (!CollectionUtils.isEmpty(existingEvcsUserVCs) && !isF2FIncomplete) {
+            var existingCurrentEvcsUserVcsToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
+                            .filter(
+                                    vc ->
+                                            credentials.stream()
+                                                    .noneMatch(
+                                                            credential ->
+                                                                    credential
+                                                                            .getVcString()
+                                                                            .equals(vc.vc())))
                             .map(
                                     vc ->
                                             new EvcsUpdateUserVCsDto(
-                                                    vc.vc().split("\\.")[2],
-                                                    EvcsVCState.HISTORIC,
-                                                    null))
+                                                    getVcSignature(vc), EvcsVCState.HISTORIC, null))
                             .toList();
-            List<EvcsUpdateUserVCsDto> existingPendingReturnEvcsUserVcsToUpdate =
+            var existingPendingReturnEvcsUserVcsToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(PENDING_RETURN))
                             .map(
                                     vc ->
                                             new EvcsUpdateUserVCsDto(
-                                                    vc.vc().split("\\.")[2],
+                                                    getVcSignature(vc),
                                                     EvcsVCState.ABANDONED,
                                                     null))
                             .toList();
-            List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate =
-                    Stream.of(
-                                    existingCurrentEvcsUserVcsToUpdate,
-                                    existingPendingReturnEvcsUserVcsToUpdate)
-                            .flatMap(Collection::stream)
+            var evcsUserVCsToUpdate =
+                    Stream.concat(
+                                    existingCurrentEvcsUserVcsToUpdate.stream(),
+                                    existingPendingReturnEvcsUserVcsToUpdate.stream())
                             .toList();
-            evcsClient.updateEvcsUserVCs(userId, evcsUserVCsToUpdate);
+
+            evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
         }
-        evcsClient.createEvcsUserVCs(userId, userVCsForEvcs);
+        evcsClient.storeUserVCs(userId, userVCsForEvcs);
+    }
+
+    private static String getVcSignature(EvcsGetUserVCDto vc) {
+        return vc.vc().split("\\.")[2];
     }
 }

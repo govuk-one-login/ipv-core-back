@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -39,7 +41,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.client.EvcsClient.AUTHORISATION_HEADER_KEY;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -51,7 +52,7 @@ class EvcsClientTest {
     private static final String EVCS_APPLICATION_URL = "http://localhost";
     private static final String EVCS_API_KEY = "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg";
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
-    private static final String TEST_USER_ID = "a-user-id";
+    private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
     private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
             new EvcsGetUserVCsDto(
                     List.of(
@@ -137,8 +138,11 @@ class EvcsClientTest {
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
         HttpRequest httpRequest = httpRequestCaptor.getValue();
         assertEquals("GET", httpRequest.method());
-        assertTrue(httpRequest.headers().map().containsKey(AUTHORISATION_HEADER_KEY));
+        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+        var expectedUriPrefix =
+                new URIBuilder(EVCS_APPLICATION_URL).setPathSegments("vcs", TEST_USER_ID).build();
+        assertTrue(httpRequest.uri().toString().startsWith(expectedUriPrefix.toString()));
     }
 
     @Test
@@ -158,7 +162,7 @@ class EvcsClientTest {
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
         HttpRequest httpRequest = httpRequestCaptor.getValue();
         assertEquals("GET", httpRequest.method());
-        assertTrue(httpRequest.headers().map().containsKey(AUTHORISATION_HEADER_KEY));
+        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
     }
 
@@ -214,11 +218,15 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
         // Act
         // Assert
         assertThrows(
                 EvcsServiceException.class,
-                () -> evcsClient.getUserVcs("user%^", TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+                () ->
+                        evcsClient.getUserVcs(
+                                "user %^", TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
     }
 
     @Test
@@ -230,14 +238,14 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.createEvcsUserVCs(TEST_USER_ID, EVCS_CREATE_USER_VCS_DTO);
+            evcsClient.storeUserVCs(TEST_USER_ID, EVCS_CREATE_USER_VCS_DTO);
 
             // Assert
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
             HttpRequest httpRequest = httpRequestCaptor.getValue();
             assertEquals("POST", httpRequest.method());
             assertTrue(httpRequest.bodyPublisher().isPresent());
-            assertFalse(httpRequest.headers().map().containsKey(AUTHORISATION_HEADER_KEY));
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
             assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
 
             mockedBodyPublishers.verify(
@@ -253,11 +261,13 @@ class EvcsClientTest {
     @Test
     void testCreateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
         // Act
         // Assert
         assertThrows(
                 EvcsServiceException.class,
-                () -> evcsClient.createEvcsUserVCs("user%^", EVCS_CREATE_USER_VCS_DTO));
+                () -> evcsClient.storeUserVCs("user%^", EVCS_CREATE_USER_VCS_DTO));
     }
 
     @Test
@@ -269,14 +279,14 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.updateEvcsUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+            evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
 
             // Assert
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
             HttpRequest httpRequest = httpRequestCaptor.getValue();
             assertEquals("PATCH", httpRequest.method());
             assertTrue(httpRequest.bodyPublisher().isPresent());
-            assertFalse(httpRequest.headers().map().containsKey(AUTHORISATION_HEADER_KEY));
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
             assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
 
             mockedBodyPublishers.verify(
@@ -292,10 +302,12 @@ class EvcsClientTest {
     @Test
     void testUpdateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
         // Act
         // Assert
         assertThrows(
                 EvcsServiceException.class,
-                () -> evcsClient.updateEvcsUserVCs("user%^", EVCS_UPDATE_USER_VCS_DTO));
+                () -> evcsClient.updateUserVCs("user%^", EVCS_UPDATE_USER_VCS_DTO));
     }
 }
