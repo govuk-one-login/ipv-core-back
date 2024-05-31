@@ -22,7 +22,12 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.*;
+import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.reverification.ReverificationFailedResponse;
 import uk.gov.di.ipv.core.library.domain.reverification.ReverificationSuccessResponse;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -51,6 +56,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -60,9 +67,9 @@ public class BuildUserIdentityHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
-    private static final String REVERIFICATION_SCOPE = "reverification";
+    //    private static final String REVERIFICATION_SCOPE = "reverification";
     private static final String REVERIFICATION_ENDPOINT = "/reverification";
-    private static final String OPENID_SCOPE = "openid";
+    //    private static final String OPENID_SCOPE = "openid";
     private static final String USER_IDENTITY_ENDPOINT = "/user-identity";
 
     private final UserIdentityService userIdentityService;
@@ -152,24 +159,24 @@ public class BuildUserIdentityHandler
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
             String userId = clientOAuthSessionItem.getUserId();
-            AuditEventUser auditEventUser =
-                    new AuditEventUser(
-                            userId,
-                            ipvSessionId,
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            null);
-
-            var contraIndicatorsVc =
-                    ciMitService.getContraIndicatorsVc(
-                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
             var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
 
             if (input.getPath().contains(REVERIFICATION_ENDPOINT)) {
-                return getReverificationEndpointResponse(scopeClaims, ipvSessionItem, userId);
+
+                if (!Arrays.asList(scopeClaims).contains(REVERIFICATION)) {
+                    return getAccessDeniedApiGatewayProxyResponseEvent();
+                }
+
+                return getReverificationEndpointResponse(ipvSessionItem, userId);
             } else if (input.getPath().contains(USER_IDENTITY_ENDPOINT)) {
+
+                if (!Arrays.asList(scopeClaims).contains(OPENID)) {
+                    return getAccessDeniedApiGatewayProxyResponseEvent();
+                }
+
                 return getUserIdentityEndpointResponse(
-                        scopeClaims, ipvSessionItem, userId, auditEventUser, contraIndicatorsVc);
+                        ipvSessionItem, userId, clientOAuthSessionItem);
             }
 
             return getAccessDeniedApiGatewayProxyResponseEvent();
@@ -192,19 +199,25 @@ public class BuildUserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getUserIdentityEndpointResponse(
-            String[] scopeClaims,
             IpvSessionItem ipvSessionItem,
             String userId,
-            AuditEventUser auditEventUser,
-            VerifiableCredential contraIndicatorsVc)
+            ClientOAuthSessionItem clientOAuthSessionItem)
             throws CiRetrievalException, VerifiableCredentialException, SqsException,
                     HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        if (!Arrays.asList(scopeClaims).contains(OPENID_SCOPE)) {
-            return getAccessDeniedApiGatewayProxyResponseEvent();
-        }
 
-        String ipvSessionId = ipvSessionItem.getIpvSessionId();
+        var ipvSessionId = ipvSessionItem.getIpvSessionId();
+
+        AuditEventUser auditEventUser =
+                new AuditEventUser(
+                        userId,
+                        ipvSessionId,
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        null);
+
+        var contraIndicatorsVc =
+                ciMitService.getContraIndicatorsVc(
+                        userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
         var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
 
@@ -238,12 +251,9 @@ public class BuildUserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getReverificationEndpointResponse(
-            String[] scopeClaims, IpvSessionItem ipvSessionItem, String userId) {
-        if (!Arrays.asList(scopeClaims).contains(REVERIFICATION_SCOPE)) {
-            return getAccessDeniedApiGatewayProxyResponseEvent();
-        }
+            IpvSessionItem ipvSessionItem, String userId) {
 
-        String ipvSessionId = ipvSessionItem.getIpvSessionId();
+        var ipvSessionId = ipvSessionItem.getIpvSessionId();
 
         if (ipvSessionItem.getVot().equals(Vot.P2)) {
             ipvSessionService.revokeAccessToken(ipvSessionItem);
