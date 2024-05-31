@@ -9,11 +9,11 @@ public record ReverificationResponse(
         String sub,
         @JsonProperty("error_code") String errorCode,
         @JsonProperty("error_description") String errorDescription) {
-    public static ReverificationResponse success(String sub) {
+    public static ReverificationResponse successResponse(String sub) {
         return new ReverificationResponse(true, sub, null, null);
     }
 
-    public static ReverificationResponse failure(
+    public static ReverificationResponse failureResponse(
             String sub, String errorCode, String errorDescription) {
         return new ReverificationResponse(false, sub, errorCode, errorDescription);
     }

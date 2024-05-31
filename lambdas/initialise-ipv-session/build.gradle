@@ -17,8 +17,7 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:audit-service"),
-			project(":libs:user-identity-service"),
-			project(":lambdas:initialise-ipv-session")
+			project(":libs:user-identity-service")
 
 	compileOnly	libs.lombok
 	annotationProcessor libs.lombok

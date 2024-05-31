@@ -55,9 +55,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.OPENID;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
@@ -258,7 +258,7 @@ public class BuildUserIdentityHandler
             ipvSessionService.revokeAccessToken(ipvSessionItem);
             deleteSessionCredentials(ipvSessionId);
 
-            ReverificationResponse successResponse = ReverificationResponse.success(userId);
+            ReverificationResponse successResponse = ReverificationResponse.successResponse(userId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HTTPResponse.SC_OK, successResponse);
@@ -267,7 +267,7 @@ public class BuildUserIdentityHandler
             deleteSessionCredentials(ipvSessionId);
 
             ReverificationResponse failedResponse =
-                    ReverificationResponse.failure(
+                    ReverificationResponse.failureResponse(
                             userId,
                             ipvSessionItem.getErrorCode(),
                             ipvSessionItem.getErrorDescription());

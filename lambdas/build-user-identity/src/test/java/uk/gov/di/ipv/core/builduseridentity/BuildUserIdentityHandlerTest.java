@@ -33,11 +33,10 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.reverification.ReverificationFailedResponse;
-import uk.gov.di.ipv.core.library.domain.reverification.ReverificationSuccessResponse;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -797,12 +796,6 @@ class BuildUserIdentityHandlerTest {
                     .thenReturn(Optional.ofNullable(ipvSessionItem));
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                    .thenReturn(
-                            VerifiableCredential.fromValidJwt(
-                                    TEST_USER_ID,
-                                    "test-cri-id",
-                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -811,10 +804,11 @@ class BuildUserIdentityHandlerTest {
             // Assert
             assertEquals(200, response.getStatusCode());
 
-            ReverificationSuccessResponse successResponse =
+            ReverificationResponse successResponse =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-            assertEquals(true, successResponse.getSuccess());
-            assertEquals(TEST_USER_ID, successResponse.getSub());
+
+            assertTrue(successResponse.success());
+            assertEquals(TEST_USER_ID, successResponse.sub());
 
             verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
             verify(mockSessionCredentialsService, times(1))
@@ -832,12 +826,6 @@ class BuildUserIdentityHandlerTest {
                     .thenReturn(Optional.ofNullable(ipvSessionItem));
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                    .thenReturn(
-                            VerifiableCredential.fromValidJwt(
-                                    TEST_USER_ID,
-                                    "test-cri-id",
-                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -846,12 +834,13 @@ class BuildUserIdentityHandlerTest {
             // Assert
             assertEquals(200, response.getStatusCode());
 
-            ReverificationFailedResponse failedResponse =
+            ReverificationResponse failedResponse =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-            assertEquals(false, failedResponse.getSuccess());
-            assertEquals(TEST_USER_ID, failedResponse.getSub());
-            assertEquals("", failedResponse.getErrorCode());
-            assertEquals("Failed verification.", failedResponse.getErrorDescription());
+
+            assertFalse(failedResponse.success());
+            assertEquals(TEST_USER_ID, failedResponse.sub());
+            assertEquals("", failedResponse.errorCode());
+            assertEquals("Failed verification.", failedResponse.errorDescription());
 
             verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
             verify(mockSessionCredentialsService, times(1))
@@ -868,12 +857,6 @@ class BuildUserIdentityHandlerTest {
                     .thenReturn(Optional.ofNullable(ipvSessionItem));
             when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                    .thenReturn(
-                            VerifiableCredential.fromValidJwt(
-                                    TEST_USER_ID,
-                                    "test-cri-id",
-                                    SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
 
             // Act
             APIGatewayProxyResponseEvent response =
