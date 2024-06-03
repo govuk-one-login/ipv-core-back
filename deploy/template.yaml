@@ -2453,7 +2453,6 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -2498,8 +2497,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
       AutoPublishAlias: live
 
   StoreIdentityFunctionLogGroup:

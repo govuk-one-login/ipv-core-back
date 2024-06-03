@@ -70,6 +70,7 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -191,7 +192,8 @@ public class InitialiseIpvSessionHandler
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
             Optional<ListOfStringValues> evcsAccessTokenClaim = Optional.empty();
-            if (configService.enabled(EVCS_READ_ENABLED)) {
+            if (configService.enabled(EVCS_READ_ENABLED)
+                    || configService.enabled(EVCS_WRITE_ENABLED)) {
                 evcsAccessTokenClaim = getStringListClaim(claimsSet, false);
                 if (evcsAccessTokenClaim.isPresent()) {
                     validateEvcsAccessToken(evcsAccessTokenClaim.get(), claimsSet);
@@ -306,7 +308,8 @@ public class InitialiseIpvSessionHandler
     private Optional<ListOfStringValues> getStringListClaim(
             JWTClaimsSet claimsSet, boolean isForInheritedIdentityClaim)
             throws ParseException, RecoverableJarValidationException {
-        if (!configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+        if (isForInheritedIdentityClaim
+                && !configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
             return Optional.empty();
         }
         try {

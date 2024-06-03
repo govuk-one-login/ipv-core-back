@@ -82,6 +82,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -95,6 +96,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
@@ -195,6 +197,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
@@ -218,6 +221,45 @@ class InitialiseIpvSessionHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
+        assertNull(evcsAccessTokenCaptor.getValue());
+    }
+
+    @Test
+    void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
+                        any(), any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, evcsAccessTokenCaptor.getValue());
     }
 
     @ParameterizedTest
@@ -434,6 +476,7 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                     .thenReturn(true); // Mock enabled inherited identity feature flag
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                     .thenReturn(ipvSessionItem);
             when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
