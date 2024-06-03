@@ -52,6 +52,7 @@ const expandParents = (journeyMap) => {
 
 // Expand out nested states
 const expandNestedJourneys = (journeyMap, subjourneys) => {
+    console.log('expanding nested');
     Object.entries(journeyMap).forEach(([state, definition]) => {
         if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
             delete journeyMap[state];
@@ -240,7 +241,7 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
 
     if (formData.has('expandNestedJourneys')) {
-        expandNestedJourneys(journeyMapCopy, nestedJourneys);
+        expandNestedJourneys(journeyMapCopy.states, nestedJourneys);
     }
 
     expandParents(journeyMapCopy.states);
