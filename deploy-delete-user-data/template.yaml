@@ -484,9 +484,9 @@ Resources:
       AlarmDescription: "Trigger an alarm when the age of the oldest message in the DeleteAccountSQSQueue is 5 or more minutes"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-warning-alert
+        - !ImportValue alarm-alerts-topic
       OKActions:
-        - !ImportValue platform-alarm-topic-warning-alert
+        - !ImportValue alarm-alerts-topic
       MetricName: ApproximateAgeOfOldestMessage
       Namespace: AWS/SQS
       Statistic: Maximum
@@ -508,9 +508,9 @@ Resources:
       AlarmDescription: "Trigger an alarm when the age of the oldest message in the IPVDeleteAccountSQSQueue is 5 or more minutes"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue platform-alarm-topic-warning-alert
+        - !ImportValue alarm-alerts-topic
       OKActions:
-        - !ImportValue platform-alarm-topic-warning-alert
+        - !ImportValue alarm-alerts-topic
       MetricName: ApproximateAgeOfOldestMessage
       Namespace: AWS/SQS
       Statistic: Maximum
