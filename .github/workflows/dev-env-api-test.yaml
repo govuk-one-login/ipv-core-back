@@ -1,0 +1,36 @@
+name: Dev env internal API test
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+
+jobs:
+  make-api-call:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Auth with AWS dev account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PYIC_5872_INTERNAL_API_TOKEN_ACCESS_AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Fetch API token
+        id: fetch-api-token
+        run: |
+          apiToken=$(aws apigateway get-api-key \
+            --api-key $(aws cloudformation describe-stacks --stack-name core-back-chrisw | jq -r '.Stacks[0].Outputs | .[] | select(.OutputKey == "InternalApiKeyId") | .OutputValue') \
+            --include-value \
+            | jq -r .value)
+
+          echo "API_TOKEN=${apiToken}" >> "$GITHUB_OUTPUT"
+
+      - name: Make auth'd API call
+        env:
+          API_TOKEN: ${{ steps.fetch-api-token.outputs.API_TOKEN }}
+        run: curl -v -H "x-api-key:${API_TOKEN}" https://internal-api-dev-chrisw.01.dev.identity.account.gov.uk/user/proven-identity-details
