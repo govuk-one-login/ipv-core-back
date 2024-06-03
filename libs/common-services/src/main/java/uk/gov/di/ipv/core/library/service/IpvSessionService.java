@@ -102,11 +102,12 @@ public class IpvSessionService {
         ipvSessionItem.setVot(Vot.P0);
 
         if (errorObject == null) {
-            ipvSessionItem.setJourneyType(
-                    isReverification
-                            ? IpvJourneyTypes.REVERIFICATION
-                            : IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
-            ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.REVERIFICATION);
+            if (isReverification) {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.REVERIFICATION);
+                ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.REVERIFICATION);
+            } else {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            }
             ipvSessionItem.setUserState(START_STATE);
         } else {
             ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);
