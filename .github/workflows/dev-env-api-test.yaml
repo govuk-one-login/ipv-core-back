@@ -24,7 +24,7 @@ jobs:
         id: fetch-api-token
         run: |
           apiToken=$(aws apigateway get-api-key \
-            --api-key $(aws cloudformation describe-stacks --stack-name core-back-chrisw | jq -r '.Stacks[0].Outputs | .[] | select(.OutputKey == "InternalApiKeyId") | .OutputValue') \
+            --api-key $(aws cloudformation describe-stacks --stack-name core-back-chrisw | jq -r '.Stacks[0].Outputs | .[] | select(.OutputKey == "InternalTestingApiKeyId") | .OutputValue') \
             --include-value \
             | jq -r .value)
 
