@@ -476,11 +476,57 @@ Resources:
         - Endpoint: !FindInMap [ PagerDutyURL, Environment, !Ref Environment]
           Protocol: https
 
+#Alarm for old messages in DeleteAccountSQSQueue
+  DeleteAccountSQSAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-DeleteAccountSQSAlarm"
+      AlarmDescription: "Trigger an alarm when the age of the oldest message in the DeleteAccountSQSQueue is 5 or more minutes"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-warning-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-warning-alert
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeleteAccountSQSQueue.QueueName
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 300
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+#Alarm for old messages in IPVDeleteAccountSQSQueue
+  IPVDeleteAccountSQSAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-IPVDeleteAccountSQSAlarm"
+      AlarmDescription: "Trigger an alarm when the age of the oldest message in the IPVDeleteAccountSQSQueue is 5 or more minutes"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-warning-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-warning-alert
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt IPVDeleteAccountSQSQueue.QueueName
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 300
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
 Outputs:
   IPVCoreSNSKey:
     Description: IPVCoreDeleteUserSNSTopicKeyArn
     Value: !GetAtt IPVSnsKmsKey.Arn
     Export:
       Name: !Sub "IPVCoreDeleteUserSNSTopicKeyArn-${Environment}"
-  DLQAlarmsSNSTopicArn:
-    Value: !Ref DLQAlarmsSNSTopic
