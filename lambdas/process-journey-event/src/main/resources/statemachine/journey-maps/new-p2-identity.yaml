@@ -545,13 +545,7 @@ states:
       next:
         targetState: ADDRESS_AND_FRAUD_J2
       access-denied:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
-        checkFeatureFlag:
-          f2fVolumesJourneyEnabled:
-            targetState: PROVE_ANOTHER_WAY_J2
+        targetState: PROVE_ANOTHER_WAY_J2
       alternate-doc-invalid-passport:
         targetState: MITIGATION_05_OPTIONS
 
@@ -593,13 +587,7 @@ states:
       next:
         targetState: ADDRESS_AND_FRAUD_J3
       access-denied:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
-        checkFeatureFlag:
-          f2fVolumesJourneyEnabled:
-            targetState: PROVE_ANOTHER_WAY_J3
+        targetState: PROVE_ANOTHER_WAY_J3
       alternate-doc-invalid-dl:
         targetState: MITIGATION_03_OPTIONS
 
@@ -1287,11 +1275,7 @@ states:
       next:
         targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
       access-denied:
-        targetJourney: FAILED
-        targetState: FAILED
-        checkFeatureFlag:
-          f2fVolumesJourneyEnabled:
-            targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
+        targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
 
   MITIGATION_PP_PROVE_ANOTHER_WAY:
     response:
@@ -1361,11 +1345,7 @@ states:
       next:
         targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
       access-denied:
-        targetJourney: FAILED
-        targetState: FAILED
-        checkFeatureFlag:
-          f2fVolumesJourneyEnabled:
-            targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
+        targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
 
   MITIGATION_DL_PROVE_ANOTHER_WAY:
     response:
