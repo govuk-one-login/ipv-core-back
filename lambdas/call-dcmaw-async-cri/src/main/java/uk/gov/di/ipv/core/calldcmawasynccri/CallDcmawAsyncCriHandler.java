@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -61,7 +62,7 @@ public class CallDcmawAsyncCriHandler
                 new CriStoringService(
                         configService,
                         new AuditService(AuditService.getSqsClient(), configService),
-                        null,
+                        new CriResponseService(configService),
                         new SessionCredentialsService(configService),
                         new CiMitService(configService));
     }
