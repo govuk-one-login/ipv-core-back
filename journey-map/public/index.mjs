@@ -76,13 +76,28 @@ const loadJourneyMaps = async () => {
     nestedJourneys = yaml.parse(await nestedResponse.text());
 };
 
-const getPageUrl = (id) => `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
+const getPageUrl = (id, context) => {
+    const baseUrl = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
+    return context ? `${baseUrl}?context=${encodeURIComponent(context)}` : baseUrl;
+}
+
 const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 
-const switchJourney = async (journeyType) => {
-    window.history.pushState(undefined, undefined, getJourneyUrl(journeyType));
-    selectedState = null;
+const switchJourney = async (targetJourney, targetState) => {
+    // Update URL
+    window.history.pushState(undefined, undefined, getJourneyUrl(targetJourney));
+
+    // Update journey map graph
     await updateView();
+
+    // Update selected state and description
+    if (targetState) {
+        selectedState = targetState;
+        highlightState(targetState);
+    }
+    nodeTitle.innerText = targetState || "";
+    nodeDef.innerHTML = "";
+    nodeDesc.innerHTML = "";
 };
 
 const setupHeader = () => {
@@ -93,7 +108,7 @@ const setupHeader = () => {
         link.innerText = label;
         link.onclick = async (e) => {
             e.preventDefault();
-            await switchJourney(id);
+            await switchJourney(id, null);
         }
         headerBar.insertBefore(link,  stateSearch);
     });
@@ -197,11 +212,11 @@ const setupMermaidClickHandlers = () => {
         // Clicking a node twice opens the link
         if (selectedState === state) {
             if (def.pageId) {
-                window.open(getPageUrl(def.pageId), '_blank');
+                window.open(getPageUrl(def.pageId, def.context), '_blank');
                 return;
             }
             if (def.targetJourney) {
-                await switchJourney(def.targetJourney);
+                await switchJourney(def.targetJourney, def.targetState);
                 return;
             }
         }
@@ -217,10 +232,7 @@ const setupMermaidClickHandlers = () => {
         if (def.pageId) {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the page in build';
-            link.href = getPageUrl(def.pageId);
-            if (def.context) {
-                link.href += `?context=${def.context}`;
-            }
+            link.href = getPageUrl(def.pageId, def.context);
             link.target = '_blank';
             nodeDesc.append(link);
         }
@@ -230,7 +242,7 @@ const setupMermaidClickHandlers = () => {
             link.href = getJourneyUrl(def.targetJourney);
             link.onclick = async (e) => {
                 e.preventDefault();
-                await switchJourney(def.targetJourney);
+                await switchJourney(def.targetJourney, def.targetState);
             }
             nodeDesc.append(link);
         }
