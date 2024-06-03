@@ -50,9 +50,27 @@ const expandParents = (journeyMap) => {
     parentStates.forEach((state) => delete journeyMap[state]);
 };
 
+// Should match logic in BasicEvent.java
+const resolveEventTarget = (definition, formData) => {
+    // Look for an override for disabled CRIs
+    const disabledCris = formData.getAll('disabledCri');
+    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
+    if (disabledResolution) {
+        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
+    }
+
+    // Look for an override for feature flags
+    const featureFlags = formData.getAll('featureFlag');
+    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
+    if (featureFlagResolution) {
+        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
+    }
+
+    return definition;
+};
+
 // Expand out nested states
-const expandNestedJourneys = (journeyMap, subjourneys) => {
-    console.log('expanding nested');
+const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
     Object.entries(journeyMap).forEach(([state, definition]) => {
         if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
             delete journeyMap[state];
@@ -63,7 +81,7 @@ const expandNestedJourneys = (journeyMap, subjourneys) => {
                 // Copy to avoid mutating different versions of the expanded definition
                 const expandedDefinition = JSON.parse(JSON.stringify(nestedDefinition));
 
-                Object.entries(expandedDefinition.events).forEach(([evt, def]) => {
+                Object.entries(expandedDefinition.events || {}).forEach(([evt, def]) => {
                     // Map target states to expanded states
                     if (def.targetState && !def.targetJourney) {
                         def.targetState = `${def.targetState}_${state}`;
@@ -87,32 +105,16 @@ const expandNestedJourneys = (journeyMap, subjourneys) => {
             // Update entry events on other states to expanded states
             Object.entries(subjourney.entryEvents).forEach(([entryEvent, def]) => {
                 Object.values(journeyMap).forEach((journeyDef) => {
-                    if (journeyDef.events?.[entryEvent]?.targetState === state) {
-                        journeyDef.events[entryEvent].targetState = `${def.targetState}_${state}`;
+                    if (journeyDef.events?.[entryEvent]) {
+                        const target = resolveEventTarget(journeyDef.events[entryEvent], formData);
+                        if (target.targetState === state) {
+                            target.targetState = `${def.targetState}_${state}`
+                        }
                     }
                 });
             });
         }
     });
-};
-
-// Should match logic in BasicEvent.java
-const resolveEventTarget = (definition, formData) => {
-    // Look for an override for disabled CRIs
-    const disabledCris = formData.getAll('disabledCri');
-    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
-    if (disabledResolution) {
-        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
-    }
-
-    // Look for an override for feature flags
-    const featureFlags = formData.getAll('featureFlag');
-    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
-    if (featureFlagResolution) {
-        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
-    }
-
-    return definition;
 };
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
@@ -241,7 +243,7 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
 
     if (formData.has('expandNestedJourneys')) {
-        expandNestedJourneys(journeyMapCopy.states, nestedJourneys);
+        expandNestedJourneys(journeyMapCopy.states, nestedJourneys, formData);
     }
 
     expandParents(journeyMapCopy.states);
