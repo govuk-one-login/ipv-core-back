@@ -65,10 +65,7 @@ public class BuildUserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
-
-    //    private static final String REVERIFICATION_SCOPE = "reverification";
     private static final String REVERIFICATION_ENDPOINT = "/reverification";
-    //    private static final String OPENID_SCOPE = "openid";
     private static final String USER_IDENTITY_ENDPOINT = "/user-identity";
 
     private final UserIdentityService userIdentityService;
