@@ -15,6 +15,7 @@ public class PageStepResponse implements StepResponse {
     private String pageId;
     private String context;
     private String mitigationStart;
+    private String auditEvent;
 
     public Map<String, Object> value() {
         Map<String, Object> response = new HashMap<>();

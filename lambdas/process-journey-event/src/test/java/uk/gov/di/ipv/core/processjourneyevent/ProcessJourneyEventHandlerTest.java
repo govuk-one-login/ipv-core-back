@@ -490,6 +490,29 @@ class ProcessJourneyEventHandlerTest {
                         .mitigationType());
     }
 
+    @Test
+    void shouldSendAuditEventWhenThereIsAuditEventInJourneyMap() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testWithAuditEvent")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                .handleRequest(input, mockContext);
+
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
+
+        assertEquals(
+                AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, capturedAuditEvent.getEventName());
+        assertEquals("core", capturedAuditEvent.getComponentId());
+        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
+    }
+
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());

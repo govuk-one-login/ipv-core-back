@@ -16,4 +16,6 @@ public interface StepResponse {
     Map<String, Object> value();
 
     String getMitigationStart();
+
+    String getAuditEvent();
 }

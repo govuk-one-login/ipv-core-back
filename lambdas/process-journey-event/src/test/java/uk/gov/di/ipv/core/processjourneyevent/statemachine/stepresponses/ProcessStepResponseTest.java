@@ -14,7 +14,8 @@ class ProcessStepResponseTest {
                 new ProcessStepResponse(
                         "a-process-lambda",
                         Map.of("input1", "Windom Earle", "input2", 315),
-                        "mitigationType");
+                        "mitigationType",
+                        null);
 
         Map<String, Object> expectedValue =
                 Map.of(

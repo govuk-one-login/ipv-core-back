@@ -35,6 +35,8 @@ states:
         targetState: CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST
       testWithMitigationStart:
         targetState: PAGE_STATE_AT_START_OF_MITIGATION
+      testWithAuditEvent:
+        targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
       testJourneyStep:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -76,6 +78,15 @@ states:
       type: page
       pageId: page-id-for-some-page
       mitigationStart: a-mitigation-type
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
+
+  PAGE_STATE_AT_START_OF_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: page-id-for-some-page
+      auditEvent: IPV_NO_PHOTO_ID_JOURNEY_START
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
