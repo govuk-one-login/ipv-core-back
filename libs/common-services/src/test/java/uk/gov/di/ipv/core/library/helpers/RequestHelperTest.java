@@ -237,13 +237,12 @@ class RequestHelperTest {
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        String journey = DCMAW_CRI;
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(ipvSessionId)
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(journey)
+                        .journey(DCMAW_CRI)
                         .featureSet(featureSet)
                         .build();
 
@@ -259,12 +258,11 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        String journey = DCMAW_CRI;
         var event =
                 JourneyRequest.builder()
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(journey)
+                        .journey(DCMAW_CRI)
                         .featureSet(featureSet)
                         .build();
 
@@ -419,26 +417,6 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIsUserInitiatedShouldReturnTrue() throws Exception {
-        ProcessRequest request =
-                ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isUserInitiated", true))
-                        .build();
-
-        assertTrue(RequestHelper.getIsUserInitiated(request));
-    }
-
-    @Test
-    void getIsUserInitiatedShouldReturnFalse() throws Exception {
-        ProcessRequest request =
-                ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isUserInitiated", false))
-                        .build();
-
-        assertFalse(RequestHelper.getIsUserInitiated(request));
-    }
-
-    @Test
     void getDeleteOnlyGPG45VCsShouldReturnTrue() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
@@ -459,17 +437,38 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIsUserInitiatedShouldThrowIfNull() {
+    void getIsCompletedIdentityShouldReturnTrue() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("isCompletedIdentity", true))
+                        .build();
+
+        assertTrue(RequestHelper.getIsCompletedIdentity(request));
+    }
+
+    @Test
+    void getIsCompletedIdentityShouldReturnFalse() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("isCompletedIdentity", false))
+                        .build();
+
+        assertFalse(RequestHelper.getIsCompletedIdentity(request));
+    }
+
+    @Test
+    void getIsCompletedIdentityShouldThrowIfNull() {
         var lambdaInput = new HashMap<String, Object>();
-        lambdaInput.put("isUserInitiated", null);
+        lambdaInput.put("isCompletedIdentity", null);
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
 
         HttpResponseExceptionWithErrorBody thrown =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getIsUserInitiated(request));
+                        () -> RequestHelper.getIsCompletedIdentity(request));
 
-        assertEquals(ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER, thrown.getErrorResponse());
+        assertEquals(
+                ErrorResponse.MISSING_IS_COMPLETED_IDENTITY_PARAMETER, thrown.getErrorResponse());
     }
 }
