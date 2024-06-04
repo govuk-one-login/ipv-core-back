@@ -7,6 +7,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
@@ -101,10 +102,12 @@ public class IpvSessionService {
         ipvSessionItem.setVot(Vot.P0);
 
         if (errorObject == null) {
-            ipvSessionItem.setJourneyType(
-                    isReverification
-                            ? IpvJourneyTypes.REVERIFICATION
-                            : IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            if (isReverification) {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.REVERIFICATION);
+                ipvSessionItem.setCoiSubjourneyType(CoiSubjourneyType.REVERIFICATION);
+            } else {
+                ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+            }
             ipvSessionItem.setUserState(START_STATE);
         } else {
             ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);

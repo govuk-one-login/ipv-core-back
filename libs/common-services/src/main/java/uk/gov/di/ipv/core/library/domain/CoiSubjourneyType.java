@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum CoiSubjourneyType {
+    REVERIFICATION("reverification"),
     ADDRESS_ONLY("address-only"),
 
     GIVEN_NAMES_ONLY("given-names-only"),
