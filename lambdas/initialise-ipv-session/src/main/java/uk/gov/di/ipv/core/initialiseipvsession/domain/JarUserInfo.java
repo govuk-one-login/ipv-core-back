@@ -14,6 +14,6 @@ public record JarUserInfo(
         @JsonProperty(value = ADDRESS_CLAIM_NAME) Essential addressClaim,
         @JsonProperty(value = CORE_IDENTITY_JWT_CLAIM_NAME) Essential coreIdentityJwtClaim,
         @JsonProperty(value = INHERITED_IDENTITY_JWT_CLAIM_NAME)
-                ListOfStringValues inheritedIdentityClaim,
-        @JsonProperty(value = EVCS_ACCESS_TOKEN_CLAIM_NAME) ListOfStringValues evcsAccessToken,
+                StringListClaim inheritedIdentityClaim,
+        @JsonProperty(value = EVCS_ACCESS_TOKEN_CLAIM_NAME) StringListClaim evcsAccessToken,
         @JsonProperty(value = PASSPORT_CLAIM_NAME) Essential passportClaim) {}
