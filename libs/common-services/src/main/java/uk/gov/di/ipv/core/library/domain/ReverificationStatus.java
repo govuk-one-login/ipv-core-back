@@ -14,5 +14,4 @@ public enum ReverificationStatus {
     ReverificationStatus(String status) {
         this.status = status;
     }
-    ;
 }
