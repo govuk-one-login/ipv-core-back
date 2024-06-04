@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 
 import java.util.Collections;
 import java.util.Map;
@@ -47,10 +46,10 @@ public class ApiGatewayResponseGenerator {
     }
 
     public static APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
-            AccessTokenMetadata accessTokenMetadata) {
+            String expiryTime) {
         LOGGER.error(
                 "User credential could not be retrieved. The supplied access token expired at: {}",
-                accessTokenMetadata.getExpiryDateTime());
+                expiryTime);
         return proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED
@@ -59,10 +58,10 @@ public class ApiGatewayResponseGenerator {
     }
 
     public static APIGatewayProxyResponseEvent getRevokedAccessTokenApiGatewayProxyResponseEvent(
-            AccessTokenMetadata accessTokenMetadata) {
+            String revokedTime) {
         LOGGER.error(
                 "User credential could not be retrieved. The supplied access token has been revoked at: {}",
-                accessTokenMetadata.getRevokedAtDateTime());
+                revokedTime);
         return proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED

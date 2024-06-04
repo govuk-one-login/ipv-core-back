@@ -22,22 +22,18 @@ public class AccessTokenHelper {
 
     public static APIGatewayProxyResponseEvent validateAccessTokenMetadata(
             AccessTokenMetadata accessTokenMetadata) {
-        if (StringUtils.isNotBlank(accessTokenMetadata.getRevokedAtDateTime())) {
+
+        String revokedAt = accessTokenMetadata.getRevokedAtDateTime();
+        if (StringUtils.isNotBlank(revokedAt)) {
             return ApiGatewayResponseGenerator.getRevokedAccessTokenApiGatewayProxyResponseEvent(
-                    accessTokenMetadata);
+                    revokedAt);
         }
 
-        if (accessTokenHasExpired(accessTokenMetadata)) {
+        String expiredAt = accessTokenMetadata.getExpiryDateTime();
+        if (StringUtils.isNotBlank(expiredAt) && Instant.now().isAfter(Instant.parse(expiredAt))) {
             return ApiGatewayResponseGenerator.getExpiredAccessTokenApiGatewayProxyResponseEvent(
-                    accessTokenMetadata);
+                    expiredAt);
         }
         return null;
-    }
-
-    private static boolean accessTokenHasExpired(AccessTokenMetadata accessTokenMetadata) {
-        if (StringUtils.isNotBlank(accessTokenMetadata.getExpiryDateTime())) {
-            return Instant.now().isAfter(Instant.parse(accessTokenMetadata.getExpiryDateTime()));
-        }
-        return false;
     }
 }
