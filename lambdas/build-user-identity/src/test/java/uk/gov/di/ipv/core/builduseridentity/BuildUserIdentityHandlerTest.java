@@ -39,6 +39,7 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -863,6 +864,74 @@ class BuildUserIdentityHandlerTest {
         assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), responseBody.get("error_description"));
         verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenIpvSessionIsNull() throws Exception {
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(null));
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - The supplied access token was not found in the database")
+                        .getDescription(),
+                responseBody.get("error_description"));
+        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenAuditServiceThrowsError() throws Exception {
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(VC_ADDRESS));
+
+        doThrow(new SqsException("test error")).when(mockAuditService).sendAuditEvent(any());
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals(OAuth2Error.SERVER_ERROR.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.SERVER_ERROR
+                        .appendDescription(" - Failed to send audit event to SQS queue. test error")
+                        .getDescription(),
+                responseBody.get("error_description"));
+
+        verify(mockUserIdentityService)
+                .generateUserIdentity(
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators);
     }
 
     private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {

@@ -131,7 +131,7 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
+    void shouldReturnErrorResponseWhenAccessTokenHasExpired()
             throws JsonProcessingException, VerifiableCredentialException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
@@ -206,6 +206,31 @@ class UserReverificationHandlerTest {
                         .appendDescription(
                                 " - Access was attempted from an invalid endpoint or journey.")
                         .getDescription(),
+                responseBody.get("error_description"));
+
+        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenTokenIsInvalid() throws Exception {
+
+        // Arrange
+
+        APIGatewayProxyRequestEvent event = testEvent.clone();
+        event.setHeaders(
+                Map.of("Authorization", "invalid-bearer-token", "ip-address", TEST_IP_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(event, mockContext);
+
+        // Assert
+        Map<String, String> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST.getDescription(),
                 responseBody.get("error_description"));
 
         verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
