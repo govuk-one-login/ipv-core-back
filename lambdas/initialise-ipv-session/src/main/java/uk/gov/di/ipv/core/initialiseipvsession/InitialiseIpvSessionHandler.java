@@ -196,7 +196,10 @@ public class InitialiseIpvSessionHandler
             if (configService.enabled(EVCS_READ_ENABLED)
                     || configService.enabled(EVCS_WRITE_ENABLED)) {
                 validateEvcsAccessToken(jarUserInfoClaim, claimsSet);
-                evcsAccessToken = jarUserInfoClaim.get().evcsAccessToken().values().get(0);
+                evcsAccessToken =
+                        jarUserInfoClaim.isPresent()
+                                ? jarUserInfoClaim.get().evcsAccessToken().values().get(0)
+                                : null;
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(

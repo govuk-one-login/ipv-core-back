@@ -132,6 +132,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String VALUES = "values";
     private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
+    private static final String INVALID_EVCS_ACCESS_TOKEN = "invalid_evcs_access_token";
     private static final APIGatewayProxyRequestEvent validEvent = new APIGatewayProxyRequestEvent();
     public static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static SignedJWT signedJWT;
@@ -261,6 +262,101 @@ class InitialiseIpvSessionHandlerTest {
         verify(mockClientOAuthSessionDetailsService)
                 .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
         assertEquals(TEST_EVCS_ACCESS_TOKEN, evcsAccessTokenCaptor.getValue());
+    }
+
+    @Test
+    void shouldRecoverIfEvcsIsEnabled_butClaimsHasMultipleTokenValues() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        getValidClaimsBuilder()
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(
+                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUES,
+                                                                List.of(
+                                                                        PCL200_MIGRATION_VC
+                                                                                .getVcString())),
+                                                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                                                        Map.of(
+                                                                VALUES,
+                                                                List.of(
+                                                                        TEST_EVCS_ACCESS_TOKEN,
+                                                                        "test_multi_access_token")))))
+                                .build());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+
+        verify(mockIpvSessionService, times(2))
+                .generateIpvSession(
+                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
+        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
+        assertEquals(
+                "2 EVCS access token received - one expected",
+                capturedErrorObject.getDescription());
+    }
+
+    @Test
+    void shouldRecoverIfEvcsIsEnabled_butClaimsWithEmptyUserInfo() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        getValidClaimsBuilder().claim(CLAIMS, Map.of(USER_INFO, Map.of())).build());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+
+        verify(mockIpvSessionService, times(2))
+                .generateIpvSession(
+                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
+        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
+        assertEquals(
+                "Evcs access token jwt claim not received", capturedErrorObject.getDescription());
     }
 
     @ParameterizedTest
