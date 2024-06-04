@@ -513,6 +513,24 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
+    @Test
+    void shouldReturnErrorWhenWrongAuditEvenTypeProvidedInJourneyMap() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testWithWrongAuditEvent")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        Map<String, Object> output =
+                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
+    }
+
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());

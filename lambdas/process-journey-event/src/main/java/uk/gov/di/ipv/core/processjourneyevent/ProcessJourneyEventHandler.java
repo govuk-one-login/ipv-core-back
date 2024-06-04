@@ -69,7 +69,7 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
-            new ProcessStepResponse("build-client-oauth-response", null, null, null);
+            new ProcessStepResponse(END_SESSION_EVENT, null, null, null);
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
