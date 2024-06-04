@@ -1,0 +1,277 @@
+package uk.gov.di.ipv.core.userreverification;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
+import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class UserReverificationHandlerTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.getInstance().generate();
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_ACCESS_TOKEN = "test-access-token";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String REVERIFICATION_SCOPE = "reverification email phone";
+    private static final String REVERIFICATION_REQUEST = "/reverification";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID =
+            SecureTokenHelper.getInstance().generate();
+
+    private static final APIGatewayProxyRequestEvent testEvent = getEventWithAuthAndIpHeaders();
+
+    @Mock private Context mockContext;
+    @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private ConfigService mockConfigService;
+    @Mock private AuditService mockAuditService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
+    @Mock private SessionCredentialsService mockSessionCredentialsService;
+    @InjectMocks private UserReverificationHandler userReverificationHandler;
+
+    private IpvSessionItem ipvSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
+    private Map<String, String> responseBody;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        responseBody = new HashMap<>();
+
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
+        ipvSessionItem.setUserState("test-state");
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
+        ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
+        ipvSessionItem.setVot(Vot.P2);
+        clientOAuthSessionItem = getClientAuthSessionItemWithScope(REVERIFICATION_SCOPE);
+    }
+
+    @Test
+    void shouldReturnSuccsessfulReverificationResponseOnFailedReverification() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        ReverificationResponse reverificationResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(true, reverificationResponse.success());
+        assertEquals(TEST_USER_ID, reverificationResponse.sub());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+    }
+
+    @Test
+    void shouldReturnUnsuccsessfulReverificationResponseOnSuccessfulReverification()
+            throws Exception {
+        // Arrange
+        ipvSessionItem.setVot(Vot.P0);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        ReverificationResponse reverificationResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(false, reverificationResponse.success());
+        assertEquals(TEST_USER_ID, reverificationResponse.sub());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+        verify(mockSessionCredentialsService, times(1))
+                .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+    }
+
+    @Test
+    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
+            throws JsonProcessingException, VerifiableCredentialException {
+        AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
+        expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
+        ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has expired")
+                        .getDescription(),
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
+            throws JsonProcessingException, VerifiableCredentialException {
+        AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
+        revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
+        ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has been revoked")
+                        .getDescription(),
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenPathIsInvalid() throws Exception {
+
+        // Arrange
+
+        APIGatewayProxyRequestEvent event = testEvent.clone();
+        event.setPath("/a-different-path");
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(event, mockContext);
+
+        // Assert
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - Access was attempted from an invalid endpoint or journey.")
+                        .getDescription(),
+                responseBody.get("error_description"));
+
+        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenScopeIsInvalid() throws Exception {
+
+        // Arrange
+        ClientOAuthSessionItem clientOAuthSessionItemWithScope =
+                getClientAuthSessionItemWithScope("a-different-scope");
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItemWithScope);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - Access was attempted from an invalid endpoint or journey.")
+                        .getDescription(),
+                responseBody.get("error_description"));
+
+        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+        event.setPath(REVERIFICATION_REQUEST);
+        return event;
+    }
+
+    private static ClientOAuthSessionItem getClientAuthSessionItemWithScope(String scope) {
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                .state("test-state")
+                .responseType("code")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId(TEST_USER_ID)
+                .clientId("test-client")
+                .govukSigninJourneyId("test-journey-id")
+                .scope(scope)
+                .build();
+    }
+}
