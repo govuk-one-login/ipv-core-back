@@ -265,34 +265,19 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(TEST_EVCS_ACCESS_TOKEN, evcsAccessTokenCaptor.getValue());
     }
 
-    @Test
-    void shouldRecoverIfEvcsIsEnabled_butClaimsHasMultipleTokenValues() throws Exception {
+    @ParameterizedTest
+    @MethodSource("getEvcsAccessTokenClaimValuesAndMsg")
+    void shouldRecoverIfEvcsIsEnabled_butClaimsHasMultipleTokenValues(
+            Map<String, Map<String, Map<String, List<String>>>> evcsAccessTokenClaims,
+            String expectedMessage)
+            throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(
-                        getValidClaimsBuilder()
-                                .claim(
-                                        CLAIMS,
-                                        Map.of(
-                                                USER_INFO,
-                                                Map.of(
-                                                        INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                        Map.of(
-                                                                VALUES,
-                                                                List.of(
-                                                                        PCL200_MIGRATION_VC
-                                                                                .getVcString())),
-                                                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                        Map.of(
-                                                                VALUES,
-                                                                List.of(
-                                                                        TEST_EVCS_ACCESS_TOKEN,
-                                                                        "test_multi_access_token")))))
-                                .build());
+                .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -317,93 +302,31 @@ class InitialiseIpvSessionHandlerTest {
                         anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
         var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
         assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
-        assertEquals(
-                "2 EVCS access token received - one expected",
-                capturedErrorObject.getDescription());
+        assertEquals(expectedMessage, capturedErrorObject.getDescription());
     }
 
-    @Test
-    void shouldRecoverIfEvcsIsEnabled_butClaimsWithEmptyUserInfo() throws Exception {
-        // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
-                .thenReturn(ipvSessionItem);
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-        when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(
-                        getValidClaimsBuilder().claim(CLAIMS, Map.of(USER_INFO, Map.of())).build());
-
-        // Act
-        APIGatewayProxyResponseEvent response =
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
-
-        // Assert
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-        verify(mockClientOAuthSessionDetailsService)
-                .generateErrorClientSessionDetails(
-                        any(String.class),
-                        eq("https://example.com"),
-                        eq("test-client"),
-                        eq("test-state"),
-                        eq(null));
-
-        verify(mockIpvSessionService, times(2))
-                .generateIpvSession(
-                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
-        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
-        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
-        assertEquals(
-                "Evcs access token jwt claim not received", capturedErrorObject.getDescription());
-    }
-
-    @Test
-    void shouldRecoverIfEvcsIsEnabled_butClaimsWithEmptyAccessTokenList() throws Exception {
-        // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
-                .thenReturn(ipvSessionItem);
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+    private static Stream<Arguments> getEvcsAccessTokenClaimValuesAndMsg() {
+        Map<String, Map<String, Map<String, List<String>>>> testMultiAccessToken =
+                Map.of(
+                        USER_INFO,
+                        Map.of(
+                                INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                Map.of(VALUES, List.of(PCL200_MIGRATION_VC.getVcString())),
+                                EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                                Map.of(
+                                        VALUES,
+                                        List.of(
+                                                TEST_EVCS_ACCESS_TOKEN,
+                                                "test_multi_access_token"))));
         Map<String, List<String>> values = new HashMap<>();
         values.put(VALUES, null);
-        when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(
-                        getValidClaimsBuilder()
-                                .claim(
-                                        CLAIMS,
-                                        Map.of(
-                                                USER_INFO,
-                                                Map.of(EVCS_ACCESS_TOKEN_CLAIM_NAME, values)))
-                                .build());
-        // Act
-        APIGatewayProxyResponseEvent response =
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
-
-        // Assert
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-        verify(mockClientOAuthSessionDetailsService)
-                .generateErrorClientSessionDetails(
-                        any(String.class),
-                        eq("https://example.com"),
-                        eq("test-client"),
-                        eq("test-state"),
-                        eq(null));
-
-        verify(mockIpvSessionService, times(2))
-                .generateIpvSession(
-                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
-        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
-        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
-        assertEquals(
-                "Evcs access token jwt claim received but value is null",
-                capturedErrorObject.getDescription());
+        return Stream.of(
+                Arguments.of(testMultiAccessToken, "2 EVCS access token received - one expected"),
+                Arguments.of(
+                        Map.of(USER_INFO, Map.of()), "Evcs access token jwt claim not received"),
+                Arguments.of(
+                        Map.of(USER_INFO, Map.of(EVCS_ACCESS_TOKEN_CLAIM_NAME, values)),
+                        "Evcs access token jwt claim received but value is null"));
     }
 
     @ParameterizedTest
