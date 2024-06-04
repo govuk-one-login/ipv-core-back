@@ -1161,13 +1161,6 @@ Resources:
               Ref: IPVCoreExternalAPI
             Path: /user-identity
             Method: GET
-        IPVCoreExternalAPIReverification:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreExternalAPI
-            Path: /reverification
-            Method: GET
       AutoPublishAlias: live
 
   BuildUserIdentityFunctionLogGroup:
@@ -1184,6 +1177,87 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
+
+  UserReverificationFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "UserReverificationFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "build-user-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.userreverification.UserReverificationHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/user-reverification
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: {}
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+      Events:
+        IPVCoreExternalAPIReverification:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreExternalAPI
+            Path: /reverification
+            Method: GET
+      AutoPublishAlias: live
+
+  UserReverificationFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/user-reverification-${Environment}"
+
+  UserReverificationFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref UserReverificationFunctionLogGroup
+
 
   JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
