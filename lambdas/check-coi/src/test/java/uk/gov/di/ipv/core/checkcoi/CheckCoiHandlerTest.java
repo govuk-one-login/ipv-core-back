@@ -100,6 +100,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScope()).thenReturn("openid");
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -132,6 +133,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScope()).thenReturn("openid");
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -166,6 +168,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScope()).thenReturn("openid");
 
                 var request =
                         ProcessRequest.processRequestBuilder()
