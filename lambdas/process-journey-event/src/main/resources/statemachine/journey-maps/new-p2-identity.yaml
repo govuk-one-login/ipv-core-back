@@ -546,6 +546,9 @@ states:
         targetState: ADDRESS_AND_FRAUD_J2
       access-denied:
         targetState: PROVE_ANOTHER_WAY_J2
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
       alternate-doc-invalid-passport:
         targetState: MITIGATION_05_OPTIONS
 
@@ -588,6 +591,9 @@ states:
         targetState: ADDRESS_AND_FRAUD_J3
       access-denied:
         targetState: PROVE_ANOTHER_WAY_J3
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
       alternate-doc-invalid-dl:
         targetState: MITIGATION_03_OPTIONS
 
