@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,12 +63,9 @@ class UserReverificationHandlerTest {
 
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
-    private Map<String, String> responseBody;
 
     @BeforeEach
-    void setUp() throws Exception {
-        responseBody = new HashMap<>();
-
+    void setUp() {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setUserState("test-state");
@@ -202,7 +198,8 @@ class UserReverificationHandlerTest {
                 userReverificationHandler.handleRequest(event, mockContext);
 
         // Assert
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, String> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         assertEquals(
                 OAuth2Error.ACCESS_DENIED
@@ -232,7 +229,8 @@ class UserReverificationHandlerTest {
                 userReverificationHandler.handleRequest(testEvent, mockContext);
 
         // Assert
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, String> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         assertEquals(
                 OAuth2Error.ACCESS_DENIED

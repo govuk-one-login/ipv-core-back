@@ -13,6 +13,8 @@ import java.time.Instant;
 public class AccessTokenHelper {
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
+    private AccessTokenHelper() {}
+
     public static AccessToken parseAccessToken(APIGatewayProxyRequestEvent input)
             throws ParseException {
         return AccessToken.parse(

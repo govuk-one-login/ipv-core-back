@@ -201,15 +201,16 @@ class BuildUserIdentityHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
 
-        UserIdentity userIdentity =
+        UserIdentity userIdentityResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs(), userIdentity.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), userIdentity.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), userIdentity.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), userIdentity.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), userIdentity.getNinoClaim());
+        assertEquals(4, userIdentityResponse.getVcs().size());
+        assertEquals(userIdentity.getVcs(), userIdentityResponse.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), userIdentityResponse.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), userIdentityResponse.getAddressClaim());
+        assertEquals(
+                userIdentity.getDrivingPermitClaim(), userIdentityResponse.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), userIdentityResponse.getNinoClaim());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -223,7 +224,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(Vot.P2, extensions.getLevelOfConfidence());
         assertFalse(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
-        assertEquals(3, userIdentity.getReturnCode().size());
+        assertEquals(3, userIdentityResponse.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
@@ -273,15 +274,16 @@ class BuildUserIdentityHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
 
-        UserIdentity userIdentity =
+        UserIdentity userIdentityResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs(), userIdentity.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), userIdentity.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), userIdentity.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), userIdentity.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), userIdentity.getNinoClaim());
+        assertEquals(4, userIdentityResponse.getVcs().size());
+        assertEquals(userIdentity.getVcs(), userIdentityResponse.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), userIdentityResponse.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), userIdentityResponse.getAddressClaim());
+        assertEquals(
+                userIdentity.getDrivingPermitClaim(), userIdentityResponse.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), userIdentityResponse.getNinoClaim());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -295,7 +297,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(Vot.P2, extensions.getLevelOfConfidence());
         assertFalse(extensions.isCiFail());
         assertTrue(extensions.isHasMitigations());
-        assertEquals(3, userIdentity.getReturnCode().size());
+        assertEquals(3, userIdentityResponse.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVc(any(), any(), any());
 
@@ -342,16 +344,18 @@ class BuildUserIdentityHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
 
-        UserIdentity userIdentity =
+        UserIdentity userIdentityResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs(), userIdentity.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), userIdentity.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), userIdentity.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), userIdentity.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), userIdentity.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), userIdentity.getReturnCode().size());
+        assertEquals(4, userIdentityResponse.getVcs().size());
+        assertEquals(userIdentity.getVcs(), userIdentityResponse.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), userIdentityResponse.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), userIdentityResponse.getAddressClaim());
+        assertEquals(
+                userIdentity.getDrivingPermitClaim(), userIdentityResponse.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), userIdentityResponse.getNinoClaim());
+        assertEquals(
+                userIdentity.getReturnCode().size(), userIdentityResponse.getReturnCode().size());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
@@ -420,16 +424,18 @@ class BuildUserIdentityHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
 
-        UserIdentity userIdentity =
+        UserIdentity userIdentityResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(5, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs(), userIdentity.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), userIdentity.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), userIdentity.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), userIdentity.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), userIdentity.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), userIdentity.getReturnCode().size());
+        assertEquals(5, userIdentityResponse.getVcs().size());
+        assertEquals(userIdentity.getVcs(), userIdentityResponse.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), userIdentityResponse.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), userIdentityResponse.getAddressClaim());
+        assertEquals(
+                userIdentity.getDrivingPermitClaim(), userIdentityResponse.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), userIdentityResponse.getNinoClaim());
+        assertEquals(
+                userIdentity.getReturnCode().size(), userIdentityResponse.getReturnCode().size());
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
     }
@@ -495,16 +501,18 @@ class BuildUserIdentityHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
 
-        UserIdentity userIdentity =
+        UserIdentity userIdentityResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(4, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs(), userIdentity.getVcs());
-        assertEquals(userIdentity.getIdentityClaim(), userIdentity.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), userIdentity.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), userIdentity.getDrivingPermitClaim());
-        assertEquals(userIdentity.getNinoClaim(), userIdentity.getNinoClaim());
-        assertEquals(userIdentity.getReturnCode().size(), userIdentity.getReturnCode().size());
+        assertEquals(4, userIdentityResponse.getVcs().size());
+        assertEquals(userIdentity.getVcs(), userIdentityResponse.getVcs());
+        assertEquals(userIdentity.getIdentityClaim(), userIdentityResponse.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), userIdentityResponse.getAddressClaim());
+        assertEquals(
+                userIdentity.getDrivingPermitClaim(), userIdentityResponse.getDrivingPermitClaim());
+        assertEquals(userIdentity.getNinoClaim(), userIdentityResponse.getNinoClaim());
+        assertEquals(
+                userIdentity.getReturnCode().size(), userIdentityResponse.getReturnCode().size());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
