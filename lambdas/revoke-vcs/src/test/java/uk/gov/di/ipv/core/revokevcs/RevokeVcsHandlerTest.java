@@ -52,6 +52,7 @@ class RevokeVcsHandlerTest {
                         "kbv",
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         Instant.now(),
+                        Instant.now(),
                         Instant.now());
         when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVcStoreItem);
 
@@ -99,6 +100,7 @@ class RevokeVcsHandlerTest {
                         TEST_USER_ID,
                         "kbv",
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                        Instant.now(),
                         Instant.now(),
                         Instant.now());
         when(mockDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVcStoreItem);

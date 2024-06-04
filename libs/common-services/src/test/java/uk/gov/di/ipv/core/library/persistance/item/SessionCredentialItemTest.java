@@ -9,6 +9,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 
+import java.time.Instant;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -21,9 +23,10 @@ class SessionCredentialItemTest {
     private SessionCredentialItem sessionCredentialItem;
 
     @BeforeEach
-    private void setUp() {
+    public void setUp() {
         when(mockJwt.getSignature()).thenReturn(Base64URL.encode(SIGNATURE));
-        sessionCredentialItem = new SessionCredentialItem(SESSION_ID, CRI_ID, mockJwt, true);
+        sessionCredentialItem =
+                new SessionCredentialItem(SESSION_ID, CRI_ID, mockJwt, true, Instant.now());
     }
 
     @Test

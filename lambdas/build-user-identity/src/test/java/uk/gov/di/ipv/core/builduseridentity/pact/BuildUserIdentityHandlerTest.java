@@ -120,10 +120,10 @@ class BuildUserIdentityHandlerTest {
         List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
         var passportCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true);
+                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true, null);
         var addressCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true);
+                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true, null);
         sessionCredentials.add(passportCredential);
         sessionCredentials.add(addressCredential);
 

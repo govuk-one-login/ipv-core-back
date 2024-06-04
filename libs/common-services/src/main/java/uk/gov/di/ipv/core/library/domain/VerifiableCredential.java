@@ -2,8 +2,8 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -12,7 +12,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 
-@Getter
+@Data
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
     private final String userId;
@@ -20,8 +20,9 @@ public class VerifiableCredential {
     private final String vcString;
     private final JWTClaimsSet claimsSet;
     private final SignedJWT signedJwt;
+    private Instant migrated;
 
-    private VerifiableCredential(String userId, String criId, SignedJWT signedJwt)
+    private VerifiableCredential(String userId, String criId, SignedJWT signedJwt, Instant migrated)
             throws CredentialParseException {
         try {
             this.userId = userId;
@@ -29,6 +30,7 @@ public class VerifiableCredential {
             this.vcString = signedJwt.serialize();
             this.claimsSet = signedJwt.getJWTClaimsSet();
             this.signedJwt = signedJwt;
+            this.migrated = migrated;
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
@@ -37,7 +39,7 @@ public class VerifiableCredential {
 
     public static VerifiableCredential fromValidJwt(String userId, String criId, SignedJWT jwt)
             throws CredentialParseException {
-        return new VerifiableCredential(userId, criId, jwt);
+        return new VerifiableCredential(userId, criId, jwt, null);
     }
 
     public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
@@ -50,7 +52,10 @@ public class VerifiableCredential {
         try {
             var jwt = SignedJWT.parse(vcStoreItem.getCredential());
             return new VerifiableCredential(
-                    vcStoreItem.getUserId(), vcStoreItem.getCredentialIssuer(), jwt);
+                    vcStoreItem.getUserId(),
+                    vcStoreItem.getCredentialIssuer(),
+                    jwt,
+                    vcStoreItem.getMigrated());
         } catch (ParseException e) {
             throw new CredentialParseException("Failed to parse VcStoreItem credential", e);
         }
@@ -63,6 +68,7 @@ public class VerifiableCredential {
                         .credentialIssuer(criId)
                         .dateCreated(Instant.now())
                         .credential(vcString)
+                        .migrated(migrated)
                         .build();
 
         Date expirationTime = claimsSet.getExpirationTime();
@@ -79,7 +85,8 @@ public class VerifiableCredential {
             return new VerifiableCredential(
                     userId,
                     sessionCredentialItem.getCriId(),
-                    SignedJWT.parse(sessionCredentialItem.getCredential()));
+                    SignedJWT.parse(sessionCredentialItem.getCredential()),
+                    sessionCredentialItem.getMigrated());
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to parse SessionCredentialItem credential", e);
@@ -88,6 +95,7 @@ public class VerifiableCredential {
 
     public SessionCredentialItem toSessionCredentialItem(
             String ipvSessionId, boolean receivedThisSession) {
-        return new SessionCredentialItem(ipvSessionId, criId, signedJwt, receivedThisSession);
+        return new SessionCredentialItem(
+                ipvSessionId, criId, signedJwt, receivedThisSession, migrated);
     }
 }

@@ -44,6 +44,7 @@ class RestoreVcsHandlerTest {
                         "kbv",
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         Instant.now(),
+                        Instant.now(),
                         Instant.now());
         when(mockVcDataStore.getItem(TEST_USER_ID, "kbv")).thenReturn(testKbvVc);
 
