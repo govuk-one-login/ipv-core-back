@@ -124,8 +124,11 @@ public class CriStoringService {
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
-            ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-            ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+            // TODO PYIC-6658: use scope constants when PYIC-6089 is merged
+            if (!clientOAuthSessionItem.getScope().equals("reverification")) {
+                ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
+                ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+            }
 
             if (criId.equals(TICF_CRI)) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());

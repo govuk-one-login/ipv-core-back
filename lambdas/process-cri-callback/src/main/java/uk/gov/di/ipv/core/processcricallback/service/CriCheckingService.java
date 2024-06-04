@@ -219,16 +219,20 @@ public class CriCheckingService {
             String ipvSessionId)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException, VerifiableCredentialException {
-        var cis =
-                ciMitService.getContraIndicators(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        callbackRequest.getIpAddress());
 
-        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-            return ciMitUtilityService
-                    .getCiMitigationJourneyResponse(cis)
-                    .orElse(JOURNEY_FAIL_WITH_CI);
+        // TODO PYIC-6658: use scope constants when PYIC-6089 is merged
+        if (!clientOAuthSessionItem.getScope().equals("reverification")) {
+            var cis =
+                    ciMitService.getContraIndicators(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            callbackRequest.getIpAddress());
+
+            if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
+                return ciMitUtilityService
+                        .getCiMitigationJourneyResponse(cis)
+                        .orElse(JOURNEY_FAIL_WITH_CI);
+            }
         }
 
         if (!userIdentityService.areVcsCorrelated(
