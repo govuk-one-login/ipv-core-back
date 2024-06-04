@@ -1186,7 +1186,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-user-identity-${Environment}"
+      FunctionName: !Sub "user-reverification-${Environment}"
       Handler: uk.gov.di.ipv.core.userreverification.UserReverificationHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/user-reverification
@@ -1195,7 +1195,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
