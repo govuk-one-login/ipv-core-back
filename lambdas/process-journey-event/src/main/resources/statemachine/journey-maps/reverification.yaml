@@ -12,12 +12,12 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
         checkFeatureFlag:
-          ticfCriBeta:
+          mfaReset:
             targetState: IDENTITY_START_PAGE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
+            checkIfDisabled:
+              dcmaw:
+                targetJourney: TECHNICAL_ERROR
+                targetState: ERROR
 
   # Parent states
   CRI_STATE:
@@ -79,24 +79,12 @@ states:
     events:
       appTriage:
         targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
       appTriageSmartphone:
         targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
       appTriageSmartphoneIphone:
         targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
       appTriageSmartphoneAndroid:
         targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -116,16 +104,6 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
       temporarily-unavailable:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-
-  STRATEGIC_APP_TRIAGE:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
 
@@ -166,7 +144,10 @@ states:
       lambda: check-coi
     events:
       coi-check-passed:
-        targetState: CRI_TICF
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
