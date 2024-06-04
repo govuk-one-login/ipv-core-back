@@ -77,6 +77,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -357,6 +358,52 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
         assertEquals(
                 "Evcs access token jwt claim not received", capturedErrorObject.getDescription());
+    }
+
+    @Test
+    void shouldRecoverIfEvcsIsEnabled_butClaimsWithEmptyAccessTokenList() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+        Map<String, List<String>> values = new HashMap<>();
+        values.put(VALUES, null);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(
+                        getValidClaimsBuilder()
+                                .claim(
+                                        CLAIMS,
+                                        Map.of(
+                                                USER_INFO,
+                                                Map.of(EVCS_ACCESS_TOKEN_CLAIM_NAME, values)))
+                                .build());
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+
+        verify(mockIpvSessionService, times(2))
+                .generateIpvSession(
+                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
+        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
+        assertEquals(
+                "Evcs access token jwt claim received but value is null",
+                capturedErrorObject.getDescription());
     }
 
     @ParameterizedTest

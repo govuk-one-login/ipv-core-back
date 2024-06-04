@@ -22,6 +22,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -136,6 +137,7 @@ public class InitialiseIpvSessionHandler
         this.auditService = auditService;
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -193,13 +195,12 @@ public class InitialiseIpvSessionHandler
 
             Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
             String evcsAccessToken = null;
-            if (configService.enabled(EVCS_READ_ENABLED)
-                    || configService.enabled(EVCS_WRITE_ENABLED)) {
-                validateEvcsAccessToken(jarUserInfoClaim, claimsSet);
-                evcsAccessToken =
-                        jarUserInfoClaim.isPresent()
-                                ? jarUserInfoClaim.get().evcsAccessToken().values().get(0)
-                                : null;
+            if ((configService.enabled(EVCS_READ_ENABLED)
+                            || configService.enabled(EVCS_WRITE_ENABLED))
+                    && (jarUserInfoClaim.isPresent())) {
+                StringListClaim evcsAccessTokenList = jarUserInfoClaim.get().evcsAccessToken();
+                validateEvcsAccessToken(Optional.ofNullable(evcsAccessTokenList), claimsSet);
+                evcsAccessToken = evcsAccessTokenList.values().get(0);
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -215,10 +216,11 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
+                    && (jarUserInfoClaim.isPresent())) {
                 validateAndStoreHMRCInheritedIdentity(
                         clientOAuthSessionItem.getUserId(),
-                        jarUserInfoClaim,
+                        Optional.ofNullable(jarUserInfoClaim.get().inheritedIdentityClaim()),
                         claimsSet,
                         ipvSessionItem,
                         auditEventUser,
@@ -333,7 +335,7 @@ public class InitialiseIpvSessionHandler
     @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
             String userId,
-            Optional<JarUserInfo> jarUserInfoClaim,
+            Optional<StringListClaim> inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
@@ -341,7 +343,8 @@ public class InitialiseIpvSessionHandler
             throws RecoverableJarValidationException, ParseException, CredentialParseException,
                     SqsException {
         try {
-            var inheritedIdentityVc = validateHmrcInheritedIdentity(userId, jarUserInfoClaim);
+            var inheritedIdentityVc =
+                    validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
             sendInheritedIdentityReceivedAuditEvent(
                     inheritedIdentityVc, auditEventUser, deviceInformation);
             if (!isHmrcInheritedIdentityWithStrongerVotPresent(inheritedIdentityVc, userId)) {
@@ -360,21 +363,13 @@ public class InitialiseIpvSessionHandler
 
     @Tracing
     private void validateEvcsAccessToken(
-            Optional<JarUserInfo> jarUserInfoClaim, JWTClaimsSet claimsSet)
+            Optional<StringListClaim> evcsAccessTokenClaim, JWTClaimsSet claimsSet)
             throws RecoverableJarValidationException, ParseException {
         try {
             // Validate JAR claims structure is valid
             var evcsAccessTokenList =
                     Optional.ofNullable(
-                                    Optional.ofNullable(
-                                                    jarUserInfoClaim
-                                                            .orElseThrow(
-                                                                    () ->
-                                                                            new JarValidationException(
-                                                                                    EVCS_ACCESS_TOKEN_ERROR_OBJECT
-                                                                                            .setDescription(
-                                                                                                    "Evcs access token jwt claim not received. Claims userInfo missing")))
-                                                            .evcsAccessToken())
+                                    evcsAccessTokenClaim
                                             .orElseThrow(
                                                     () ->
                                                             new JarValidationException(
@@ -400,20 +395,12 @@ public class InitialiseIpvSessionHandler
     }
 
     private VerifiableCredential validateHmrcInheritedIdentity(
-            String userId, Optional<JarUserInfo> jarUserInfoClaim)
+            String userId, Optional<StringListClaim> inheritedIdentityJwtClaim)
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
                 Optional.ofNullable(
-                                Optional.ofNullable(
-                                                jarUserInfoClaim
-                                                        .orElseThrow(
-                                                                () ->
-                                                                        new JarValidationException(
-                                                                                INVALID_INHERITED_IDENTITY_ERROR_OBJECT
-                                                                                        .setDescription(
-                                                                                                "Inherited identity jwt claim not received. Claims userInfo missing")))
-                                                        .inheritedIdentityClaim())
+                                inheritedIdentityJwtClaim
                                         .orElseThrow(
                                                 () ->
                                                         new JarValidationException(
