@@ -198,9 +198,9 @@ public class InitialiseIpvSessionHandler
             if ((configService.enabled(EVCS_READ_ENABLED)
                             || configService.enabled(EVCS_WRITE_ENABLED))
                     && (jarUserInfoClaim.isPresent())) {
-                StringListClaim evcsAccessTokenList = jarUserInfoClaim.get().evcsAccessToken();
-                validateEvcsAccessToken(Optional.ofNullable(evcsAccessTokenList), claimsSet);
-                evcsAccessToken = evcsAccessTokenList.values().get(0);
+                evcsAccessToken =
+                        validateEvcsAccessToken(
+                                jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -220,7 +220,7 @@ public class InitialiseIpvSessionHandler
                     && (jarUserInfoClaim.isPresent())) {
                 validateAndStoreHMRCInheritedIdentity(
                         clientOAuthSessionItem.getUserId(),
-                        Optional.ofNullable(jarUserInfoClaim.get().inheritedIdentityClaim()),
+                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim),
                         claimsSet,
                         ipvSessionItem,
                         auditEventUser,
@@ -362,7 +362,7 @@ public class InitialiseIpvSessionHandler
     }
 
     @Tracing
-    private void validateEvcsAccessToken(
+    private String validateEvcsAccessToken(
             Optional<StringListClaim> evcsAccessTokenClaim, JWTClaimsSet claimsSet)
             throws RecoverableJarValidationException, ParseException {
         try {
@@ -389,6 +389,7 @@ public class InitialiseIpvSessionHandler
                                         "%d EVCS access token received - one expected",
                                         evcsAccessTokenList.size())));
             }
+            return evcsAccessTokenList.get(0);
         } catch (JarValidationException e) {
             throw new RecoverableJarValidationException(e.getErrorObject(), claimsSet, e);
         }
