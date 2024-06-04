@@ -41,7 +41,6 @@ public class UserReverificationHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final SessionCredentialsService sessionCredentialsService;
 
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,

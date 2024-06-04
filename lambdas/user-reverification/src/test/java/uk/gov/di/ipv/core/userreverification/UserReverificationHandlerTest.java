@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -59,7 +58,6 @@ class UserReverificationHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
-    @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @InjectMocks private UserReverificationHandler userReverificationHandler;

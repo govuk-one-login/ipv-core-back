@@ -13,8 +13,6 @@ dependencies {
 
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:cimit-service"),
-			project(":libs:audit-service"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
@@ -25,8 +23,7 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactProviderJunit,
-			project(path: ':libs:common-services', configuration: 'tests'),
-			project(path: ':libs:pact-test-helpers')
+			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly libs.junitPlatform
 }
