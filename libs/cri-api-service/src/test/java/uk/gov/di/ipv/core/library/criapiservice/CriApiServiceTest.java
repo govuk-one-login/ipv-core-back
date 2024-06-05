@@ -108,7 +108,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -137,7 +137,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
