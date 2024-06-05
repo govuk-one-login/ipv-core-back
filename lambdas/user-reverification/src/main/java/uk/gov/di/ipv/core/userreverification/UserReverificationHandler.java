@@ -31,7 +31,6 @@ import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 public class UserReverificationHandler extends UserIdentityRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String REVERIFICATION_ENDPOINT = "/reverification";
 
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
@@ -40,7 +39,6 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             SessionCredentialsService sessionCredentialsService) {
 
         super(
-                REVERIFICATION_ENDPOINT,
                 REVERIFICATION,
                 ipvSessionService,
                 configService,
@@ -50,7 +48,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public UserReverificationHandler() {
-        super(REVERIFICATION_ENDPOINT, REVERIFICATION);
+        super(REVERIFICATION);
     }
 
     @Override

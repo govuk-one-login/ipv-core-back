@@ -53,8 +53,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final String USER_IDENTITY_ENDPOINT = "/user-identity";
-
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
     private final CiMitService ciMitService;
@@ -71,7 +69,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             CiMitUtilityService ciMitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
         super(
-                USER_IDENTITY_ENDPOINT,
                 OPENID,
                 ipvSessionService,
                 configService,
@@ -85,7 +82,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildUserIdentityHandler() {
-        super(USER_IDENTITY_ENDPOINT, OPENID);
+        super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
         this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);

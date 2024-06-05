@@ -38,12 +38,10 @@ public abstract class UserIdentityRequestHandler {
     protected final ConfigService configService;
     protected final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     protected final SessionCredentialsService sessionCredentialsService;
-    private final String allowedPath;
     private final String allowedScope;
 
     @ExcludeFromGeneratedCoverageReport
-    protected UserIdentityRequestHandler(String allowedPath, String allowedScope) {
-        this.allowedPath = allowedPath;
+    protected UserIdentityRequestHandler(String allowedScope) {
         this.allowedScope = allowedScope;
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
@@ -52,13 +50,11 @@ public abstract class UserIdentityRequestHandler {
     }
 
     protected UserIdentityRequestHandler(
-            String allowedPath,
             String allowedScope,
             IpvSessionService ipvSessionService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             SessionCredentialsService sessionCredentialsService) {
-        this.allowedPath = allowedPath;
         this.allowedScope = allowedScope;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -119,8 +115,7 @@ public abstract class UserIdentityRequestHandler {
 
         var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
         if (configService.enabled(MFA_RESET)
-                && (!urlPath.contains(this.allowedPath)
-                        || !Arrays.asList(scopeClaims).contains(this.allowedScope))) {
+                && !Arrays.asList(scopeClaims).contains(this.allowedScope)) {
             throw new InvalidScopeException();
         }
         return clientOAuthSessionItem;

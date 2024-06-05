@@ -182,39 +182,6 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenPathIsInvalidForScope() throws Exception {
-
-        // Arrange
-
-        APIGatewayProxyRequestEvent event = testEvent.clone();
-        event.setPath("/a-different-path");
-
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
-
-        // Act
-        APIGatewayProxyResponseEvent response =
-                userReverificationHandler.handleRequest(event, mockContext);
-
-        // Assert
-        Map<String, String> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(
-                                " - Access was attempted from an invalid endpoint or journey.")
-                        .getDescription(),
-                responseBody.get("error_description"));
-
-        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
     void shouldReturnErrorResponseWhenTokenIsInvalid() throws Exception {
 
         // Arrange
