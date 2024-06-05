@@ -417,7 +417,7 @@ class ConfigServiceTest {
     }
 
     @Test
-    void getCriOAuthClientSecretShouldOAuthClientSecret() {
+    void getCriOAuthClientSecretShouldReturnOAuthClientSecret() {
         environmentVariables.set("ENVIRONMENT", "test");
         when(secretsProvider.get(
                         "/test/credential-issuers/ukPassport/connections/main/oauth-client-secret"))
