@@ -19,5 +19,5 @@ public class AuditExtensionCoiCheck implements AuditExtensions {
 
     @JsonProperty
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    Boolean success;
+    Boolean successful;
 }
