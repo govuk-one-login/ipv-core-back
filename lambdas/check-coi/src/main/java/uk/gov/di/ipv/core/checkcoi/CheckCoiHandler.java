@@ -6,12 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.checkcoi.domain.CoiCheck;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheckType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -38,7 +37,8 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COI_SUBJOURNEY_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_COI_JOURNEY_FOR_COI_CHECK;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COI_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -104,6 +104,36 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
             var userId = clientOAuthSession.getUserId();
 
+            var auditEventUser =
+                    new AuditEventUser(
+                            userId,
+                            ipvSession.getIpvSessionId(),
+                            govukSigninJourneyId,
+                            request.getIpAddress());
+
+            var coiSubjourneyType = ipvSession.getCoiSubjourneyType();
+            var coiCheckType =
+                    switch (coiSubjourneyType) {
+                        case GIVEN_NAMES_ONLY, GIVEN_NAMES_AND_ADDRESS -> CoiCheckType
+                                .LAST_NAME_AND_DOB;
+                        case FAMILY_NAME_ONLY, FAMILY_NAME_AND_ADDRESS -> CoiCheckType
+                                .GIVEN_NAMES_AND_DOB;
+                        case REVERIFICATION -> CoiCheckType.FULL_NAME_AND_DOB;
+                        case ADDRESS_ONLY -> {
+                            LOGGER.error(
+                                    LogHelper.buildLogMessage("Address only COI check requested"));
+                            throw new HttpResponseExceptionWithErrorBody(
+                                    SC_INTERNAL_SERVER_ERROR, INVALID_COI_JOURNEY_FOR_COI_CHECK);
+                        }
+                    };
+
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_COI_START,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            new AuditExtensionCoiCheck(coiCheckType, null)));
+
             var credentials =
                     Stream.concat(
                                     verifiableCredentialService.getVcs(userId).stream(),
@@ -112,61 +142,33 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                             .stream())
                             .toList();
 
-            var coiSubjourneyType = ipvSession.getCoiSubjourneyType();
-            var coiCheck =
-                    switch (coiSubjourneyType) {
-                        case GIVEN_NAMES_ONLY, GIVEN_NAMES_AND_ADDRESS -> new CoiCheck(
-                                userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
-                                        credentials),
-                                CoiCheckType.LAST_NAME_AND_DOB);
-                        case FAMILY_NAME_ONLY, FAMILY_NAME_AND_ADDRESS -> new CoiCheck(
-                                userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
-                                        credentials),
-                                CoiCheckType.GIVEN_NAMES_AND_DOB);
-                        case ADDRESS_ONLY -> {
-                            LOGGER.warn(
-                                    LogHelper.buildLogMessage("Address only COI check requested"));
-                            yield new CoiCheck(
-                                    userIdentityService.areVcsCorrelated(credentials),
-                                    CoiCheckType.FULL_NAME_AND_DOB); // THERE HASN'T BEEN ANY CHECK!?
-                        }
-                        case REVERIFICATION -> new CoiCheck(
-                                userIdentityService.areVcsCorrelated(credentials),
-                                CoiCheckType.FULL_NAME_AND_DOB);
+            var coiCheckSuccess =
+                    switch (coiCheckType) {
+                        case LAST_NAME_AND_DOB -> userIdentityService
+                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
+                        case GIVEN_NAMES_AND_DOB -> userIdentityService
+                                .areGivenNamesAndDobCorrelatedForCoiCheck(credentials);
+                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
-            var auditEventUser =
-                    new AuditEventUser(
-                            userId,
-                            ipvSession.getIpvSessionId(),
-                            govukSigninJourneyId,
-                            request.getIpAddress());
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_COI_END,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
 
-            if (!coiCheck.isSuccessful()) {
+            if (!coiCheckSuccess) {
                 LOGGER.info(
                         LogHelper.buildLogMessage("Failed COI check")
-                                .with(LOG_COI_SUBJOURNEY_TYPE.getFieldName(), coiSubjourneyType));
-
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_COI_CHECK_FAILED,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser,
-                                new AuditExtensionCoiCheckType(coiCheck.type())));
+                                .with(LOG_COI_CHECK_TYPE.getFieldName(), coiCheckType));
 
                 return JOURNEY_COI_CHECK_FAILED.toObjectMap();
             }
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Successful COI check")
-                            .with(LOG_COI_SUBJOURNEY_TYPE.getFieldName(), coiSubjourneyType));
-
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_COI_CHECK_SUCCESS,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            new AuditExtensionCoiCheckType(coiCheck.type())));
+                            .with(LOG_COI_CHECK_TYPE.getFieldName(), coiCheckType));
 
             return JOURNEY_COI_CHECK_PASSED.toObjectMap();
 
