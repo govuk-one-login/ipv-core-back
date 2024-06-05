@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
@@ -40,6 +41,7 @@ public abstract class UserIdentityRequestHandler {
     private final String allowedPath;
     private final String allowedScope;
 
+    @ExcludeFromGeneratedCoverageReport
     protected UserIdentityRequestHandler(String allowedPath, String allowedScope) {
         this.allowedPath = allowedPath;
         this.allowedScope = allowedScope;
