@@ -97,8 +97,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
-            var clientOAuthSessionItem =
-                    super.getClientOAuthSessionItem(input.getPath(), ipvSessionItem);
+            var clientOAuthSessionItem = super.getClientOAuthSessionItem(ipvSessionItem);
 
             String ipvSessionId = ipvSessionItem.getIpvSessionId();
             String userId = clientOAuthSessionItem.getUserId();

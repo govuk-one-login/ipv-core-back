@@ -59,8 +59,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
-            var clientOAuthSessionItem =
-                    super.getClientOAuthSessionItem(input.getPath(), ipvSessionItem);
+            var clientOAuthSessionItem = super.getClientOAuthSessionItem(ipvSessionItem);
             String userId = clientOAuthSessionItem.getUserId();
 
             closeSession(ipvSessionItem);

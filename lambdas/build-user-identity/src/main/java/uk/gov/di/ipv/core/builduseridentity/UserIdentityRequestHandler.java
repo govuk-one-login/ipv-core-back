@@ -103,8 +103,8 @@ public abstract class UserIdentityRequestHandler {
         return ipvSessionItem;
     }
 
-    protected ClientOAuthSessionItem getClientOAuthSessionItem(
-            String urlPath, IpvSessionItem ipvSessionItem) throws InvalidScopeException {
+    protected ClientOAuthSessionItem getClientOAuthSessionItem(IpvSessionItem ipvSessionItem)
+            throws InvalidScopeException {
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
