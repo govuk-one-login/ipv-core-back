@@ -68,7 +68,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
+        return builder.given("dummySecret is a valid basic auth secret")
                 .given("dummyDcmawAsyncComponentId is the dcmaw async CRI component ID")
                 .uponReceiving("Valid basic auth credentials")
                 .path("/async/token")
@@ -78,7 +78,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded",
                         "Authorization",
-                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "dummyAuthCode"))
+                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "dummySecret"))
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -122,7 +122,7 @@ class ContractTest {
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidRequestReturns401(PactDslWithProvider builder) {
-        return builder.given("badAuthCode is not a valid authorization code")
+        return builder.given("badDummySecret is not a valid basic auth secret")
                 .given("dummyDcmawAsyncComponentId is the dcmaw async CRI component ID")
                 .uponReceiving("Invalid basic auth credentials")
                 .path("/async/token")
@@ -132,7 +132,7 @@ class ContractTest {
                         "Content-Type",
                         "application/x-www-form-urlencoded",
                         "Authorization",
-                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "badAuthCode"))
+                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "badDummySecret"))
                 .willRespondWith()
                 .status(401)
                 .toPact();
