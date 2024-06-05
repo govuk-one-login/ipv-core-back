@@ -4,6 +4,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public enum AuditEventTypes {
+    IPV_COI_END,
+    IPV_COI_START,
     IPV_CORE_CRI_RESOURCE_RETRIEVED,
     IPV_CORE_VC_RESET,
     IPV_CRI_ACCESS_TOKEN_EXCHANGED,
@@ -28,6 +30,4 @@ public enum AuditEventTypes {
     IPV_VC_RESTORED,
     IPV_VC_REVOKED,
     IPV_VC_REVOKED_FAILURE,
-    IPV_COI_START,
-    IPV_COI_END,
 }

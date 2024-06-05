@@ -94,24 +94,19 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         LogHelper.attachComponentId(configService);
 
         try {
+            var ipAddress = request.getIpAddress();
             var ipvSession =
                     ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
+            var ipvSessionId = ipvSession.getIpvSessionId();
+            var coiSubjourneyType = ipvSession.getCoiSubjourneyType();
+
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSession.getClientOAuthSessionId());
+            var userId = clientOAuthSession.getUserId();
             var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var userId = clientOAuthSession.getUserId();
-
-            var auditEventUser =
-                    new AuditEventUser(
-                            userId,
-                            ipvSession.getIpvSessionId(),
-                            govukSigninJourneyId,
-                            request.getIpAddress());
-
-            var coiSubjourneyType = ipvSession.getCoiSubjourneyType();
             var coiCheckType =
                     switch (coiSubjourneyType) {
                         case GIVEN_NAMES_ONLY, GIVEN_NAMES_AND_ADDRESS -> CoiCheckType
@@ -127,18 +122,20 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         }
                     };
 
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_COI_START,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            new AuditExtensionCoiCheck(coiCheckType, null)));
+            sendAuditEvent(
+                    AuditEventTypes.IPV_COI_START,
+                    coiCheckType,
+                    null,
+                    userId,
+                    ipvSessionId,
+                    govukSigninJourneyId,
+                    ipAddress);
 
             var credentials =
                     Stream.concat(
                                     verifiableCredentialService.getVcs(userId).stream(),
                                     sessionCredentialsService
-                                            .getCredentials(ipvSession.getIpvSessionId(), userId)
+                                            .getCredentials(ipvSessionId, userId)
                                             .stream())
                             .toList();
 
@@ -151,12 +148,14 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_COI_END,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
+            sendAuditEvent(
+                    AuditEventTypes.IPV_COI_END,
+                    coiCheckType,
+                    coiCheckSuccess,
+                    userId,
+                    ipvSessionId,
+                    govukSigninJourneyId,
+                    ipAddress);
 
             if (!coiCheckSuccess) {
                 LOGGER.info(
@@ -190,5 +189,26 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                             JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
         }
+    }
+
+    @Tracing
+    private void sendAuditEvent(
+            AuditEventTypes auditEventType,
+            CoiCheckType coiCheckType,
+            Boolean coiCheckSuccess,
+            String userId,
+            String ipvSessionId,
+            String govukSigninJourneyId,
+            String ipAddress)
+            throws SqsException {
+        var auditEventUser =
+                new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        auditEventType,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
     }
 }
