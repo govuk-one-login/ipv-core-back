@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
+import java.net.URI;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -69,6 +70,7 @@ class DcmawAsyncCriServiceTest {
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
         when(mockConfigService.getCriOAuthClientSecret(any())).thenReturn("clientSecret");
+        when(criConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
         BearerAccessToken accessToken = new BearerAccessToken("accessToken");
         when(mockCriApiService.fetchAccessToken(any(), any(), any())).thenReturn(accessToken);
@@ -105,6 +107,7 @@ class DcmawAsyncCriServiceTest {
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
         BearerAccessToken accessToken = new BearerAccessToken("accessToken");
         when(mockCriApiService.fetchAccessToken(any(), any(), any())).thenReturn(accessToken);
+        when(criConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
         when(mockCriApiService.fetchVerifiableCredential(any(), any(), any(), any()))
                 .thenThrow(new JsonProcessingException("error") {});

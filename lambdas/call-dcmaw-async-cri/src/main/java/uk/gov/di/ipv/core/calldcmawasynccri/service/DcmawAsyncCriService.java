@@ -83,7 +83,8 @@ public class DcmawAsyncCriService {
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         criConfig.getClientId(),
-                        oauthState);
+                        oauthState,
+                        criConfig.getClientCallbackUrl().toString());
 
         return criApiService.fetchVerifiableCredential(
                 accessToken, criId, criOAuthSessionItem, credentialRequestBody);

@@ -16,4 +16,7 @@ public class CredentialRequestBodyDto {
 
     @JsonProperty(value = "state")
     private String state;
+
+    @JsonProperty(value = "redirect_uri")
+    private String redirectUri;
 }
