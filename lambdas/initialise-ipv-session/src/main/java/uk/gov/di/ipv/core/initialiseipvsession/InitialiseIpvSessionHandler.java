@@ -218,13 +218,17 @@ public class InitialiseIpvSessionHandler
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
                     && (jarUserInfoClaim.isPresent())) {
-                validateAndStoreHMRCInheritedIdentity(
-                        clientOAuthSessionItem.getUserId(),
-                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim),
-                        claimsSet,
-                        ipvSessionItem,
-                        auditEventUser,
-                        deviceInformation);
+                Optional<StringListClaim> inheritedIdentityJwtClaim =
+                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim);
+                if (inheritedIdentityJwtClaim.isPresent()) {
+                    validateAndStoreHMRCInheritedIdentity(
+                            clientOAuthSessionItem.getUserId(),
+                            inheritedIdentityJwtClaim.get(),
+                            claimsSet,
+                            ipvSessionItem,
+                            auditEventUser,
+                            deviceInformation);
+                }
             }
 
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
@@ -335,7 +339,7 @@ public class InitialiseIpvSessionHandler
     @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
             String userId,
-            Optional<StringListClaim> inheritedIdentityJwtClaim,
+            StringListClaim inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
@@ -396,19 +400,11 @@ public class InitialiseIpvSessionHandler
     }
 
     private VerifiableCredential validateHmrcInheritedIdentity(
-            String userId, Optional<StringListClaim> inheritedIdentityJwtClaim)
+            String userId, StringListClaim inheritedIdentityJwtClaim)
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
-                Optional.ofNullable(
-                                inheritedIdentityJwtClaim
-                                        .orElseThrow(
-                                                () ->
-                                                        new JarValidationException(
-                                                                INVALID_INHERITED_IDENTITY_ERROR_OBJECT
-                                                                        .setDescription(
-                                                                                "Inherited identity jwt claim not received")))
-                                        .values())
+                Optional.ofNullable(inheritedIdentityJwtClaim.values())
                         .orElseThrow(
                                 () ->
                                         new JarValidationException(
