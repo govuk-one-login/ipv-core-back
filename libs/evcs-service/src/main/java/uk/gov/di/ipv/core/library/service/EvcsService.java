@@ -20,13 +20,13 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 public class EvcsService {
     private final EvcsClient evcsClient;
 
+    public EvcsService(EvcsClient evcsClient) {
+        this.evcsClient = evcsClient;
+    }
+
     @ExcludeFromGeneratedCoverageReport
     public EvcsService(ConfigService configService) {
         this.evcsClient = new EvcsClient(configService);
-    }
-
-    public EvcsService(EvcsClient evcsClient) {
-        this.evcsClient = evcsClient;
     }
 
     @Tracing
@@ -51,6 +51,15 @@ public class EvcsService {
                         .vcs();
 
         persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, true);
+    }
+
+    @Tracing
+    public void storePendingVc(VerifiableCredential credential) {
+        evcsClient.storeUserVCs(
+                credential.getUserId(),
+                List.of(
+                        new EvcsCreateUserVCsDto(
+                                credential.getVcString(), PENDING_RETURN, null, null)));
     }
 
     @Tracing

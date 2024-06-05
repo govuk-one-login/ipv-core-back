@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.persistance;
+package uk.gov.di.ipv.core.library.persistence;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +18,6 @@ import software.amazon.awssdk.enhanced.dynamodb.internal.conditional.BeginsWithC
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
-import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 

@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -40,11 +41,13 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriRespon
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -62,6 +65,7 @@ public class ProcessAsyncCriCredentialHandler
     private final AuditService auditService;
     private final CiMitService ciMitService;
     private final CriResponseService criResponseService;
+    private final EvcsService evcsService;
 
     public ProcessAsyncCriCredentialHandler(
             ConfigService configService,
@@ -69,13 +73,15 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialValidator verifiableCredentialValidator,
             AuditService auditService,
             CiMitService ciMitService,
-            CriResponseService criResponseService) {
+            CriResponseService criResponseService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.ciMitService = ciMitService;
         this.criResponseService = criResponseService;
+        this.evcsService = evcsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -87,6 +93,7 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = new AuditService(AuditService.getSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
+        this.evcsService = new EvcsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -189,6 +196,10 @@ public class ProcessAsyncCriCredentialHandler
             submitVcToCiStorage(vc);
             postMitigatingVc(vc);
 
+            if (configService.enabled(EVCS_WRITE_ENABLED)) {
+                evcsService.storePendingVc(vc);
+                vc.setMigrated(Instant.now());
+            }
             verifiableCredentialService.persistUserCredentials(vc);
 
             sendIpvVcConsumedAuditEvent(auditEventUser, vc);
