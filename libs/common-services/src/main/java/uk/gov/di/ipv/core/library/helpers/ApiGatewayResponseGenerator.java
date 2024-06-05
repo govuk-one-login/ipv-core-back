@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,64 +42,6 @@ public class ApiGatewayResponseGenerator {
         apiGatewayProxyResponseEvent.setBody(body);
 
         return apiGatewayProxyResponseEvent;
-    }
-
-    public static APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
-            String expiryTime) {
-        LOGGER.error(
-                "User credential could not be retrieved. The supplied access token expired at: {}",
-                expiryTime);
-        return proxyJsonResponse(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(" - The supplied access token has expired")
-                        .toJSONObject());
-    }
-
-    public static APIGatewayProxyResponseEvent getRevokedAccessTokenApiGatewayProxyResponseEvent(
-            String revokedTime) {
-        LOGGER.error(
-                "User credential could not be retrieved. The supplied access token has been revoked at: {}",
-                revokedTime);
-        return proxyJsonResponse(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(" - The supplied access token has been revoked")
-                        .toJSONObject());
-    }
-
-    public static APIGatewayProxyResponseEvent getUnknownAccessTokenApiGatewayProxyResponseEvent() {
-        LOGGER.error(
-                LogHelper.buildLogMessage(
-                        "User credential could not be retrieved. The supplied access token was not found in the database."));
-        return proxyJsonResponse(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(
-                                " - The supplied access token was not found in the database")
-                        .toJSONObject());
-    }
-
-    public static APIGatewayProxyResponseEvent serverErrorJsonResponse(
-            String errorHeader, Exception e) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorHeader, e));
-        return proxyJsonResponse(
-                OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                OAuth2Error.SERVER_ERROR
-                        .appendDescription(" - " + errorHeader + " " + e.getMessage())
-                        .toJSONObject());
-    }
-
-    public static APIGatewayProxyResponseEvent getAccessDeniedApiGatewayProxyResponseEvent() {
-        LOGGER.error(
-                LogHelper.buildLogMessage(
-                        "Access denied. Access was attempted from an invalid endpoint or journey."));
-        return proxyJsonResponse(
-                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(
-                                " - Access was attempted from an invalid endpoint or journey.")
-                        .toJSONObject());
     }
 
     private static <T> String generateResponseBody(T body) throws JsonProcessingException {

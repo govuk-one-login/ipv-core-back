@@ -6,9 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -26,14 +23,16 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.helpers.AccessTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -44,29 +43,22 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
-public class BuildUserIdentityHandler
+public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String USER_IDENTITY_ENDPOINT = "/user-identity";
 
     private final UserIdentityService userIdentityService;
-    private final IpvSessionService ipvSessionService;
-    private final ConfigService configService;
     private final AuditService auditService;
-    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
-    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildUserIdentityHandler(
@@ -78,26 +70,26 @@ public class BuildUserIdentityHandler
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
+        super(
+                USER_IDENTITY_ENDPOINT,
+                OPENID,
+                ipvSessionService,
+                configService,
+                clientOAuthSessionDetailsService,
+                sessionCredentialsService);
         this.userIdentityService = userIdentityService;
-        this.ipvSessionService = ipvSessionService;
-        this.configService = configService;
         this.auditService = auditService;
-        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
-        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildUserIdentityHandler() {
-        this.configService = new ConfigService();
+        super(USER_IDENTITY_ENDPOINT, OPENID);
         this.userIdentityService = new UserIdentityService(configService);
-        this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getSqsClient(), configService);
-        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
-        this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
     @Override
@@ -105,51 +97,18 @@ public class BuildUserIdentityHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentId(configService);
+
         try {
-            AccessToken accessToken = AccessTokenHelper.parseAccessToken(input);
-            IpvSessionItem ipvSessionItem =
-                    ipvSessionService
-                            .getIpvSessionByAccessToken(accessToken.getValue())
-                            .orElse(null);
-
-            if (Objects.isNull((ipvSessionItem))) {
-                return ApiGatewayResponseGenerator
-                        .getUnknownAccessTokenApiGatewayProxyResponseEvent();
-            }
-
-            configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
-
-            var validationError =
-                    AccessTokenHelper.validateAccessTokenMetadata(
-                            ipvSessionItem.getAccessTokenMetadata());
-            if (validationError != null) {
-                return validationError;
-            }
+            var ipvSessionItem = super.initialiseIpvSession(input);
+            var clientOAuthSessionItem =
+                    super.getClientOAuthSessionItem(input.getPath(), ipvSessionItem);
 
             String ipvSessionId = ipvSessionItem.getIpvSessionId();
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
-
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
-
-            LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
-
             String userId = clientOAuthSessionItem.getUserId();
-
-            var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
-            if (!input.getPath().contains(USER_IDENTITY_ENDPOINT)
-                    || !Arrays.asList(scopeClaims).contains(OPENID)) {
-                return ApiGatewayResponseGenerator.getAccessDeniedApiGatewayProxyResponseEvent();
-            }
-
             AuditEventUser auditEventUser =
                     new AuditEventUser(
-                            userId,
-                            ipvSessionId,
+                            clientOAuthSessionItem.getUserId(),
+                            ipvSessionItem.getIpvSessionId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
@@ -191,28 +150,23 @@ public class BuildUserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
-            return ApiGatewayResponseGenerator.serverErrorJsonResponse(
-                    "Failed to send audit event to SQS queue.", e);
+            return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiRetrievalException e) {
-            return ApiGatewayResponseGenerator.serverErrorJsonResponse(
-                    "Error when fetching CIs from storage system.", e);
+            return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
         } catch (CredentialParseException e) {
-            return ApiGatewayResponseGenerator.serverErrorJsonResponse(
-                    "Failed to parse successful VC Store items.", e);
+            return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
-            return ApiGatewayResponseGenerator.serverErrorJsonResponse("CI error.", e);
-        }
-    }
-
-    private void deleteSessionCredentials(String ipvSessionId) {
-        try {
-            sessionCredentialsService.deleteSessionCredentials(ipvSessionId);
-        } catch (VerifiableCredentialException e) {
-            // just log the error - it should get deleted after a fixed time period anyway
-            LOGGER.error(
-                    LogHelper.buildLogMessage("Failed to delete session credential from store"));
+            return serverErrorJsonResponse("CI error.", e);
+        } catch (UnknownAccessTokenException e) {
+            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
+        } catch (RevokedAccessTokenException e) {
+            return getRevokedAccessTokenApiGatewayProxyResponseEvent(e.getRevokedAt());
+        } catch (ExpiredAccessTokenException e) {
+            return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
+        } catch (InvalidScopeException e) {
+            return getAccessDeniedApiGatewayProxyResponseEvent();
         }
     }
 
