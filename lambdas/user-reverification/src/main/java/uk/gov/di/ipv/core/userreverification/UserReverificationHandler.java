@@ -61,14 +61,9 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
             var clientOAuthSessionItem =
                     super.getClientOAuthSessionItem(input.getPath(), ipvSessionItem);
-
-            String ipvSessionId = ipvSessionItem.getIpvSessionId();
             String userId = clientOAuthSessionItem.getUserId();
 
-            // Invalidate the access token
-            ipvSessionService.revokeAccessToken(ipvSessionItem);
-            // Clear the session VC store
-            deleteSessionCredentials(ipvSessionId);
+            closeSession(ipvSessionItem);
 
             ReverificationResponse response;
             if (ipvSessionItem.getVot().equals(Vot.P2)) {

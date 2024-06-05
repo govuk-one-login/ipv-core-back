@@ -121,9 +121,12 @@ public abstract class UserIdentityRequestHandler {
         return clientOAuthSessionItem;
     }
 
-    protected void deleteSessionCredentials(String ipvSessionId) {
+    protected void closeSession(IpvSessionItem ipvSessionItem) {
+        // Invalidate the access token
+        ipvSessionService.revokeAccessToken(ipvSessionItem);
         try {
-            sessionCredentialsService.deleteSessionCredentials(ipvSessionId);
+            // Clear the session VC store
+            sessionCredentialsService.deleteSessionCredentials(ipvSessionItem.getIpvSessionId());
         } catch (VerifiableCredentialException e) {
             // just log the error - it should get deleted after a fixed time period anyway
             LOGGER.error(

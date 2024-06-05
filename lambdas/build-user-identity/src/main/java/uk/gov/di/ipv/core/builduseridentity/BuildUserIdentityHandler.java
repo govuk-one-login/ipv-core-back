@@ -105,7 +105,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             clientOAuthSessionItem.getUserId(),
-                            ipvSessionItem.getIpvSessionId(),
+                            ipvSessionId,
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
@@ -129,9 +129,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             sendIdentityIssuedAuditEvent(
                     ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
 
-            ipvSessionService.revokeAccessToken(ipvSessionItem);
-
-            deleteSessionCredentials(ipvSessionId);
+            closeSession(ipvSessionItem);
 
             var message =
                     new StringMapMessage()
