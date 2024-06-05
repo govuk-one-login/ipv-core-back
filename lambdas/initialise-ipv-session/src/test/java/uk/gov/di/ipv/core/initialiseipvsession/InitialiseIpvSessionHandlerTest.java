@@ -960,6 +960,11 @@ class InitialiseIpvSessionHandlerTest {
 
             assertEquals(HttpStatus.SC_OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
         }
 
         @Test
