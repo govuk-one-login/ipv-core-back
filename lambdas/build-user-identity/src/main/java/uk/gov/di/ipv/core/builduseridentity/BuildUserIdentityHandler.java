@@ -96,7 +96,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             APIGatewayProxyRequestEvent input, Context context) {
 
         try {
-            var ipvSessionItem = super.initialiseIpvSession(input);
+            var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
             var clientOAuthSessionItem =
                     super.getClientOAuthSessionItem(input.getPath(), ipvSessionItem);
 

@@ -62,7 +62,7 @@ public abstract class UserIdentityRequestHandler {
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
-    protected IpvSessionItem initialiseIpvSession(APIGatewayProxyRequestEvent input)
+    protected IpvSessionItem validateAccessTokenAndGetIpvSession(APIGatewayProxyRequestEvent input)
             throws ParseException, UnknownAccessTokenException, RevokedAccessTokenException,
                     ExpiredAccessTokenException {
 
