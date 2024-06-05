@@ -54,6 +54,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
+        clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
 
         Boolean reproveIdentity =
                 configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)

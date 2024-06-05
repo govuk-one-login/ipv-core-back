@@ -53,13 +53,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
@@ -83,6 +83,7 @@ class JarValidatorTest {
     private final String clientIdClaim = "test-client-id";
     private final String redirectUriClaim = "https://example.com";
     private final String stateClaim = "af0ifjsldkj";
+    private final String scopeClaim = "test-scope";
 
     @BeforeEach
     void setUp() {
@@ -716,6 +717,7 @@ class JarValidatorTest {
         validClaims.put(JWTClaimNames.AUDIENCE, audienceClaim);
         validClaims.put(JWTClaimNames.ISSUER, issuerClaim);
         validClaims.put(JWTClaimNames.SUBJECT, subjectClaim);
+        validClaims.put("scope", scopeClaim);
         validClaims.put("response_type", responseTypeClaim);
         validClaims.put("client_id", clientIdClaim);
         validClaims.put("redirect_uri", redirectUriClaim);

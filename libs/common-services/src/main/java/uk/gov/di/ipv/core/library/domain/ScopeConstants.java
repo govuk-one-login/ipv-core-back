@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.initialiseipvsession.domain;
+package uk.gov.di.ipv.core.library.domain;
 
 public class ScopeConstants {
     public static final String SCOPE = "scope";

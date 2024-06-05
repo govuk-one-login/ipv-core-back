@@ -171,6 +171,7 @@ class BuildUserIdentityHandlerTest {
         oAuthSession.setUserId("dummyOAuthUserId");
         oAuthSession.setClientId("dummyOAuthClientId");
         oAuthSession.setGovukSigninJourneyId("dummySigninJourneyId");
+        oAuthSession.setScope("openid");
         when(mockOAuthSessionStore.getItem("dummyClientOAuthSessionId")).thenReturn(oAuthSession);
         ipvSession.setAccessTokenMetadata(accessTokenMetaData);
 
