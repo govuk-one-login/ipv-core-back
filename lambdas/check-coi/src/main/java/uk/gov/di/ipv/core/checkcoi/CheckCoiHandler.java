@@ -109,6 +109,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                     LogHelper.buildLogMessage("Address only COI check requested"));
                             yield true;
                         }
+                        case REVERIFICATION -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
             if (!successfulCheck) {

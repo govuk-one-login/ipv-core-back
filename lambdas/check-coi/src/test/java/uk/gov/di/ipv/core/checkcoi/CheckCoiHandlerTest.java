@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.ADDRESS_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -121,6 +122,22 @@ class CheckCoiHandlerTest {
             @Test
             void shouldReturnPassedForAddressOnlyCheck() {
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
+
+                var request =
+                        ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+            }
+
+            @Test
+            void shouldReturnPassedForSuccessfulReverificationCheck()
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(REVERIFICATION);
 
                 var request =
                         ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
@@ -264,6 +281,43 @@ class CheckCoiHandlerTest {
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(new CredentialParseException("oops"));
             when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
+
+            var request =
+                    ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+
+            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
+            assertEquals(
+                    FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
+        }
+
+        @Test
+        void shouldReturnErrorIfAreVcsCorrelatedCheckThrowsHttpResponseException()
+                throws Exception {
+            when(mockUserIdentityService.areVcsCorrelated(
+                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                    .thenThrow(
+                            new HttpResponseExceptionWithErrorBody(
+                                    SC_SERVER_ERROR, FAILED_NAME_CORRELATION));
+            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(REVERIFICATION);
+
+            var request =
+                    ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+
+            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
+            assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
+        }
+
+        @Test
+        void shouldReturnErrorIfAreVcsCorrelatedCheckThrowsCredentialParseException()
+                throws Exception {
+            when(mockUserIdentityService.areVcsCorrelated(
+                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                    .thenThrow(new CredentialParseException("oops"));
+            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(REVERIFICATION);
 
             var request =
                     ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();

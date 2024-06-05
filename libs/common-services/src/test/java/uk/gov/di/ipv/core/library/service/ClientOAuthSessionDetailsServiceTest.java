@@ -84,7 +84,10 @@ class ClientOAuthSessionDetailsServiceTest {
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId, testClaimSet, "test-client");
+                        clientOAuthSessionId,
+                        testClaimSet,
+                        "test-client",
+                        "test-evcs-access-token");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
@@ -106,6 +109,9 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(
                 clientOAuthSessionItem.getUserId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
+        assertEquals(
+                clientOAuthSessionItem.getEvcsAccessToken(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getEvcsAccessToken());
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());

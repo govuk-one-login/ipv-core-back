@@ -15,7 +15,9 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -25,14 +27,17 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -48,6 +53,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final SessionCredentialsService sessionCredentialsService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final AuditService auditService;
+    private final EvcsService evcsService;
 
     public StoreIdentityHandler(
             ConfigService configService,
@@ -55,13 +61,15 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             IpvSessionService ipvSessionService,
             SessionCredentialsService sessionCredentialsService,
             VerifiableCredentialService verifiableCredentialService,
-            AuditService auditService) {
+            AuditService auditService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
+        this.evcsService = evcsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -72,6 +80,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.evcsService = new EvcsService(configService);
     }
 
     @Override
@@ -90,20 +99,30 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            verifiableCredentialService.storeIdentity(
+            String userId = clientOAuthSessionItem.getUserId();
+            List<VerifiableCredential> credentials =
                     sessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()),
-                    clientOAuthSessionItem.getUserId());
+                            ipvSessionItem.getIpvSessionId(), userId);
+            verifiableCredentialService.storeIdentity(credentials, userId);
 
+            if (configService.enabled(EVCS_WRITE_ENABLED)) {
+                if (RequestHelper.getIsCompletedIdentity(input)) {
+                    evcsService.storeCompletedIdentity(
+                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                } else {
+                    evcsService.storePendingIdentity(
+                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                }
+            }
             LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
-            Vot vot = ipvSessionItem.getVot();
 
+            Vot vot = ipvSessionItem.getVot();
             auditService.sendAuditEvent(
                     new AuditEvent(
                             IPV_IDENTITY_STORED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(
-                                    clientOAuthSessionItem.getUserId(),
+                                    userId,
                                     ipvSessionItem.getIpvSessionId(),
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
                                     input.getIpAddress()),
@@ -112,7 +131,9 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             return JOURNEY_IDENTITY_STORED;
 
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+        } catch (HttpResponseExceptionWithErrorBody
+                | VerifiableCredentialException
+                | EvcsServiceException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())

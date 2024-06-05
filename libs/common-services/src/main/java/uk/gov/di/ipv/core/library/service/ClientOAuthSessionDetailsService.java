@@ -37,7 +37,10 @@ public class ClientOAuthSessionDetailsService {
     }
 
     public ClientOAuthSessionItem generateClientSessionDetails(
-            String clientOauthSessionId, JWTClaimsSet claimsSet, String clientId)
+            String clientOauthSessionId,
+            JWTClaimsSet claimsSet,
+            String clientId,
+            String evcsAccessToken)
             throws ParseException {
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
 
@@ -59,7 +62,7 @@ public class ClientOAuthSessionDetailsService {
                         : null;
 
         clientOAuthSessionItem.setReproveIdentity(reproveIdentity);
-
+        clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
         return clientOAuthSessionItem;

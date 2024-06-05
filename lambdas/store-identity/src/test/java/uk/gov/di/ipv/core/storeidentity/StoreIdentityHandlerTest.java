@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.storeidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionVot;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -24,22 +27,30 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
@@ -64,10 +75,17 @@ class StoreIdentityHandlerTest {
     private static final String SESSION_ID = "session-id";
     private static final String STATUS_CODE = "statusCode";
     private static final String USER_ID = "user-id";
-    private static final ProcessRequest PROCESS_REQUEST =
+    private static final ProcessRequest PROCESS_REQUEST_FOR_COMPLETED_IDENTITY =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId(SESSION_ID)
                     .ipAddress(IP_ADDRESS)
+                    .lambdaInput(new HashMap<>(Map.of("isCompletedIdentity", true)))
+                    .build();
+    private static final ProcessRequest PROCESS_REQUEST_FOR_PENDING_IDENTITY =
+            ProcessRequest.processRequestBuilder()
+                    .ipvSessionId(SESSION_ID)
+                    .ipAddress(IP_ADDRESS)
+                    .lambdaInput(new HashMap<>(Map.of("isCompletedIdentity", false)))
                     .build();
     private static final List<VerifiableCredential> VCS =
             List.of(
@@ -85,6 +103,7 @@ class StoreIdentityHandlerTest {
     @Mock private SessionCredentialsService mockSessionCredentialService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private AuditService mockAuditService;
+    @Mock private EvcsService mockEvcsService;
     @InjectMocks private StoreIdentityHandler storeIdentityHandler;
 
     @BeforeAll
@@ -92,6 +111,7 @@ class StoreIdentityHandlerTest {
         clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setUserId(USER_ID);
         clientOAuthSessionItem.setGovukSigninJourneyId(GOVUK_JOURNEY_ID);
+        clientOAuthSessionItem.setEvcsAccessToken("TEST_EVCS_ACCESS_TOKEN");
     }
 
     @BeforeEach
@@ -111,15 +131,19 @@ class StoreIdentityHandlerTest {
 
     @Test
     void shouldReturnAnIdentityStoredJourney() throws Exception {
-        var response = storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
         verify(mockVerifiableCredentialService).storeIdentity(VCS, USER_ID);
+        verify(mockEvcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
     }
 
     @Test
     void shouldSendAuditEventWithVotExtensionWhenIdentityAchieved() throws Exception {
-        storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        storeIdentityHandler.handleRequest(PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         var auditEvent = auditEventCaptor.getValue();
@@ -130,13 +154,14 @@ class StoreIdentityHandlerTest {
         assertEquals(
                 new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
                 auditEvent.getUser());
+        verify(mockEvcsService, times(0)).storeCompletedIdentity(anyString(), any(), any());
     }
 
     @Test
     void shouldSendAuditEventWithVotExtensionWhenIdentityIncomplete() throws Exception {
         ipvSessionItem.setVot(P0);
 
-        storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        storeIdentityHandler.handleRequest(PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         var auditEvent = auditEventCaptor.getValue();
@@ -169,7 +194,9 @@ class StoreIdentityHandlerTest {
         when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID))
                 .thenThrow(new VerifiableCredentialException(418, FAILED_TO_GET_CREDENTIAL));
 
-        var response = storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
         assertEquals(418, response.get(STATUS_CODE));
@@ -184,7 +211,9 @@ class StoreIdentityHandlerTest {
                 .when(mockVerifiableCredentialService)
                 .storeIdentity(any(), any());
 
-        var response = storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
         assertEquals(418, response.get(STATUS_CODE));
@@ -198,11 +227,63 @@ class StoreIdentityHandlerTest {
                 .when(mockAuditService)
                 .sendAuditEvent(any(AuditEvent.class));
 
-        var response = storeIdentityHandler.handleRequest(PROCESS_REQUEST, mockContext);
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
         assertEquals(500, response.get(STATUS_CODE));
         assertEquals(FAILED_TO_SEND_AUDIT_EVENT.getCode(), response.get(CODE));
         assertEquals(FAILED_TO_SEND_AUDIT_EVENT.getMessage(), response.get(MESSAGE));
+    }
+
+    @Test
+    void
+            shouldStoreIdentityInEvcsAndSendAuditEventAndSendIdentityStoredJourney_whenEvcsWriteEnabled_forPendingF2f()
+                    throws Exception {
+        reset(mockIpvSessionService);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.REPEAT_FRAUD_CHECK);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext);
+
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
+        assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+        assertEquals(P2, ((AuditExtensionVot) auditEvent.getExtensions()).vot());
+        assertEquals(COMPONENT_ID, auditEvent.getComponentId());
+        assertEquals(
+                new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
+                auditEvent.getUser());
+        verify(mockEvcsService, times(1))
+                .storePendingIdentity(USER_ID, VCS, clientOAuthSessionItem.getEvcsAccessToken());
+    }
+
+    @Test
+    void
+            shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsWriteEnabled_forPendingF2f() {
+        reset(mockIpvSessionService);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.REPEAT_FRAUD_CHECK);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        doThrow(
+                        new EvcsServiceException(
+                                HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
+                .when(mockEvcsService)
+                .storePendingIdentity(USER_ID, VCS, clientOAuthSessionItem.getEvcsAccessToken());
+
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext);
+
+        assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
+        assertEquals(500, response.get(STATUS_CODE));
+        assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getCode(), response.get(CODE));
+        assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), response.get(MESSAGE));
     }
 }
