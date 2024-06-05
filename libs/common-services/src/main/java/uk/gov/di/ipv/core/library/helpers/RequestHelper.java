@@ -27,8 +27,8 @@ public class RequestHelper {
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String ENCODED_DEVICE_INFORMATION_HEADER = "txma-audit-encoded";
     public static final String FEATURE_SET_HEADER = "feature-set";
-    public static final String IS_USER_INITIATED = "isUserInitiated";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
+    public static final String IS_COMPLETED_IDENTITY = "isCompletedIdentity";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
@@ -145,15 +145,6 @@ public class RequestHelper {
                 request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD);
     }
 
-    public static boolean getIsUserInitiated(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        return Boolean.TRUE.equals(
-                extractValueFromLambdaInput(
-                        request,
-                        IS_USER_INITIATED,
-                        ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER));
-    }
-
     public static boolean getDeleteOnlyGPG45VCs(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         return Boolean.TRUE.equals(
@@ -161,6 +152,15 @@ public class RequestHelper {
                         request,
                         DELETE_ONLY_GPG45_VCS,
                         ErrorResponse.MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER));
+    }
+
+    public static boolean getIsCompletedIdentity(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        return Boolean.TRUE.equals(
+                extractValueFromLambdaInput(
+                        request,
+                        IS_COMPLETED_IDENTITY,
+                        ErrorResponse.MISSING_IS_COMPLETED_IDENTITY_PARAMETER));
     }
 
     private static <T> T extractValueFromLambdaInput(

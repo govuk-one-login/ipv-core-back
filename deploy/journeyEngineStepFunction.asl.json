@@ -166,6 +166,7 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "featureSet.$": "$$.Execution.Input.featureSet",
+        "lambdaInput.$": "$.lambdaInput",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney"
