@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -23,7 +24,10 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
@@ -77,8 +81,8 @@ public class ResetSessionIdentityHandler
             ipvSessionItem.setVot(P0);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            sessionCredentialsService.deleteSessionCredentialsForSubjourneyType(
-                    ipvSessionId, ipvSessionItem.getCoiSubjourneyType());
+            sessionCredentialsService.deleteSessionCredentialsForResetType(
+                    ipvSessionId, RequestHelper.getSessionCredentialsResetType(input));
 
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 
@@ -87,6 +91,13 @@ public class ResetSessionIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse().getMessage(), e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
+        } catch (UnknownResetTypeException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Unknown reset type received", e)
+                            .with(LOG_RESET_TYPE.getFieldName(), e.getResetType()));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_RESET_TYPE)
                     .toObjectMap();
         }
     }

@@ -102,6 +102,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
         targetState: IDENTITY_START_PAGE
@@ -452,6 +454,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
         targetState: F2F_HANDOFF_PAGE

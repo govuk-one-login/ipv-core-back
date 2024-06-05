@@ -7,25 +7,45 @@ description: >-
 states:
 # Entry points
 
-  UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START:
+  GIVEN_ONLY_AFTER_REUSE_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_REUSE
+        targetState: GIVEN_ONLY_AFTER_REUSE
 
-  UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START:
+  GIVEN_ONLY_AFTER_RFC_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_RFC
+        targetState: GIVEN_ONLY_AFTER_RFC
 
-  UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START:
+  FAMILY_ONLY_AFTER_REUSE_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_REUSE
+        targetState: FAMILY_ONLY_AFTER_REUSE
 
-  UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START:
+  FAMILY_ONLY_AFTER_RFC_START:
     events:
       next:
-        targetState: UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_RFC
+        targetState: FAMILY_ONLY_AFTER_RFC
+
+  GIVEN_WITH_ADDRESS_AFTER_REUSE_START:
+    events:
+      next:
+        targetState: GIVEN_WITH_ADDRESS_AFTER_REUSE
+
+  GIVEN_WITH_ADDRESS_AFTER_RFC_START:
+    events:
+      next:
+        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC
+
+  FAMILY_WITH_ADDRESS_AFTER_REUSE_START:
+    events:
+      next:
+        targetState: FAMILY_WITH_ADDRESS_AFTER_REUSE
+
+  FAMILY_WITH_ADDRESS_AFTER_RFC_START:
+    events:
+      next:
+        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC
 
   # Parent States
 
@@ -63,48 +83,86 @@ states:
 
    # WITHOUT ADDRESS
 
-  UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_REUSE:
+  GIVEN_ONLY_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+        targetState: RESET_IDENTITY_GIVEN_ONLY
       end:
         targetState: RETURN_TO_RP
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
 
-  UPDATE_NAME_PAGE_WITHOUT_ADDRESS_AFTER_RFC:
+  GIVEN_ONLY_AFTER_RFC:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_WITHOUT_ADDRESS
+        targetState: RESET_IDENTITY_GIVEN_ONLY
       end:
         targetState: RETURN_TO_RP
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
 
-  RESET_IDENTITY_WITHOUT_ADDRESS:
+  FAMILY_ONLY_AFTER_REUSE:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_FAMILY_ONLY
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: UPDATE_DETAILS_START
+
+  FAMILY_ONLY_AFTER_RFC:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_FAMILY_ONLY
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REPEAT_FRAUD_CHECK
+        targetState: START
+
+  RESET_IDENTITY_GIVEN_ONLY:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: NAME_ONLY_CHANGE
     events:
       next:
-        targetState: DCMAW_UPDATE_NAME_ONLY
+        targetState: DCMAW_GIVEN_ONLY
 
-  DCMAW_UPDATE_NAME_ONLY:
+  RESET_IDENTITY_FAMILY_ONLY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: NAME_ONLY_CHANGE
+    events:
+      next:
+        targetState: DCMAW_FAMILY_ONLY
+
+  DCMAW_GIVEN_ONLY:
     response:
       type: cri
       criId: dcmaw
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ONLY
+        targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -118,71 +176,151 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
-  POST_DCMAW_SUCCESS_PAGE_NAME_ONLY:
+  DCMAW_FAMILY_ONLY:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_ONLY
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+
+  POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY:
     response:
       type: page
       pageId: page-dcmaw-success
       context: coiNoAddress
     events:
       next:
-        targetState: FRAUD_CHECK_UPDATE_NAME
+        targetState: FRAUD_CHECK_GIVEN_ONLY
 
-  FRAUD_CHECK_UPDATE_NAME:
+  POST_DCMAW_SUCCESS_PAGE_FAMILY_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiNoAddress
+    events:
+      next:
+        targetState: FRAUD_CHECK_FAMILY_ONLY
+
+  FRAUD_CHECK_GIVEN_ONLY:
     response:
       type: cri
       criId: fraud
     parent: CRI_STATE
     events:
       next:
-        targetState: CHECK_COI_UPDATE_NAME
+        targetState: CHECK_COI_GIVEN
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+
+  FRAUD_CHECK_FAMILY_ONLY:
+    response:
+      type: cri
+      criId: fraud
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CHECK_COI_FAMILY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
   # WITH ADDRESS
 
-  UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_REUSE:
+  GIVEN_WITH_ADDRESS_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_WITH_ADDRESS
+        targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
 
-  UPDATE_NAME_PAGE_WITH_ADDRESS_AFTER_RFC:
+  GIVEN_WITH_ADDRESS_AFTER_RFC:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_WITH_ADDRESS
+        targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
 
-  RESET_IDENTITY_WITH_ADDRESS:
+  FAMILY_WITH_ADDRESS_AFTER_REUSE:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: UPDATE_DETAILS_START
+
+  FAMILY_WITH_ADDRESS_AFTER_RFC:
+    response:
+      type: page
+      pageId: page-update-name
+    events:
+      update-name:
+        targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
+      end:
+        targetState: RETURN_TO_RP
+      back:
+        targetJourney: REPEAT_FRAUD_CHECK
+        targetState: START
+
+  RESET_IDENTITY_GIVEN_WITH_ADDRESS:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
-        targetState: DCMAW_UPDATE_NAME_ADDRESS
+        targetState: DCMAW_GIVEN_WITH_ADDRESS
 
-  DCMAW_UPDATE_NAME_ADDRESS:
+  RESET_IDENTITY_FAMILY_WITH_ADDRESS:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: DCMAW_FAMILY_WITH_ADDRESS
+
+  DCMAW_GIVEN_WITH_ADDRESS:
     response:
       type: cri
       criId: dcmaw
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS
+        targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -196,33 +334,74 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
-  POST_DCMAW_SUCCESS_PAGE_NAME_ADDRESS:
+  DCMAW_FAMILY_WITH_ADDRESS:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_WITH_ADDRESS
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+
+  POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS:
     response:
       type: page
       pageId: page-dcmaw-success
       context: coiAddress
     events:
       next:
-        targetState: ADDRESS_AND_FRAUD_UPDATE
+        targetState: ADDRESS_AND_FRAUD_GIVEN
 
-  ADDRESS_AND_FRAUD_UPDATE:
+  POST_DCMAW_SUCCESS_PAGE_FAMILY_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiAddress
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_FAMILY
+
+  ADDRESS_AND_FRAUD_GIVEN:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CHECK_COI_UPDATE_NAME
+        targetState: CHECK_COI_GIVEN
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+
+  ADDRESS_AND_FRAUD_FAMILY:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: CHECK_COI_FAMILY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
   # SHARED STATES
 
-  CHECK_COI_UPDATE_NAME:
+  CHECK_COI_GIVEN:
     response:
       type: process
       lambda: check-coi
+      lambdaInput:
+        checkType: FAMILY_NAME_AND_DOB
     events:
       coi-check-passed:
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_NAME
+        targetState: EVALUATE_GPG45_SCORES
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -230,16 +409,32 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  EVALUATE_GPG45_SCORES_UPDATE_NAME:
+  CHECK_COI_FAMILY:
+    response:
+      type: process
+      lambda: check-coi
+      lambdaInput:
+        checkType: GIVEN_NAMES_AND_DOB
+    events:
+      coi-check-passed:
+        targetState: EVALUATE_GPG45_SCORES
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  EVALUATE_GPG45_SCORES:
     response:
       type: process
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
+            targetState: CRI_TICF_BEFORE_SUCCESS
       unmet:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -247,7 +442,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
-  STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME:
+  STORE_IDENTITY_BEFORE_SUCCESS:
     response:
       type: process
       lambda: store-identity
@@ -255,18 +450,18 @@ states:
         identityType: UPDATE
     events:
       identity-stored:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+        targetState: IPV_SUCCESS_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS:
+  CRI_TICF_BEFORE_SUCCESS:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS_UPDATE_NAME
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
@@ -283,7 +478,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  IPV_SUCCESS_PAGE_UPDATE_ADDRESS:
+  IPV_SUCCESS_PAGE:
     response:
       type: page
       pageId: page-ipv-success
