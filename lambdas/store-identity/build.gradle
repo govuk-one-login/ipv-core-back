@@ -14,7 +14,8 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(':libs:journey-uris'),
-			project(":libs:verifiable-credentials")
+			project(":libs:verifiable-credentials"),
+			project(':libs:evcs-service')
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

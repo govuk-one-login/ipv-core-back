@@ -20,9 +20,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -70,6 +70,8 @@ import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJo
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -87,6 +89,8 @@ public class InitialiseIpvSessionHandler
     private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
     private static final ErrorObject INVALID_INHERITED_IDENTITY_ERROR_OBJECT =
             new ErrorObject("invalid_inherited_identity");
+    private static final ErrorObject EVCS_ACCESS_TOKEN_ERROR_OBJECT =
+            new ErrorObject("invalid_evcs_access_token");
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
@@ -133,6 +137,7 @@ public class InitialiseIpvSessionHandler
         this.auditService = auditService;
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -188,11 +193,21 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
+            Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
+            String evcsAccessToken = null;
+            if ((configService.enabled(EVCS_READ_ENABLED)
+                            || configService.enabled(EVCS_WRITE_ENABLED))
+                    && (jarUserInfoClaim.isPresent())) {
+                evcsAccessToken =
+                        validateEvcsAccessToken(
+                                jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
+            }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
                             clientOAuthSessionId,
                             claimsSet,
-                            sessionParams.get(CLIENT_ID_PARAM_KEY));
+                            sessionParams.get(CLIENT_ID_PARAM_KEY),
+                            evcsAccessToken);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -201,11 +216,11 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            var inheritedIdentityJwtClaim = getInheritedIdentityClaim(claimsSet);
-            if (inheritedIdentityJwtClaim.isPresent()) {
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
+                    && (jarUserInfoClaim.isPresent())) {
                 validateAndStoreHMRCInheritedIdentity(
                         clientOAuthSessionItem.getUserId(),
-                        inheritedIdentityJwtClaim.get(),
+                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim),
                         claimsSet,
                         ipvSessionItem,
                         auditEventUser,
@@ -291,17 +306,13 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    private Optional<InheritedIdentityJwtClaim> getInheritedIdentityClaim(JWTClaimsSet claimsSet)
+    private Optional<JarUserInfo> getJarUserInfo(JWTClaimsSet claimsSet)
             throws ParseException, RecoverableJarValidationException {
-        if (!configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-            return Optional.empty();
-        }
         try {
             return Optional.ofNullable(
                             OBJECT_MAPPER.convertValue(
                                     claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
-                    .map(JarClaims::userInfo)
-                    .map(JarUserInfo::inheritedIdentityClaim);
+                    .map(JarClaims::userInfo);
         } catch (IllegalArgumentException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
@@ -324,7 +335,7 @@ public class InitialiseIpvSessionHandler
     @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
             String userId,
-            InheritedIdentityJwtClaim inheritedIdentityJwtClaim,
+            Optional<StringListClaim> inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
@@ -350,12 +361,54 @@ public class InitialiseIpvSessionHandler
         }
     }
 
+    @Tracing
+    private String validateEvcsAccessToken(
+            Optional<StringListClaim> evcsAccessTokenClaim, JWTClaimsSet claimsSet)
+            throws RecoverableJarValidationException, ParseException {
+        try {
+            // Validate JAR claims structure is valid
+            var evcsAccessTokenList =
+                    Optional.ofNullable(
+                                    evcsAccessTokenClaim
+                                            .orElseThrow(
+                                                    () ->
+                                                            new JarValidationException(
+                                                                    EVCS_ACCESS_TOKEN_ERROR_OBJECT
+                                                                            .setDescription(
+                                                                                    "Evcs access token jwt claim not received")))
+                                            .values())
+                            .orElseThrow(
+                                    () ->
+                                            new JarValidationException(
+                                                    EVCS_ACCESS_TOKEN_ERROR_OBJECT.setDescription(
+                                                            "Evcs access token jwt claim received but value is null")));
+            if (evcsAccessTokenList.size() != 1) {
+                throw new JarValidationException(
+                        EVCS_ACCESS_TOKEN_ERROR_OBJECT.setDescription(
+                                String.format(
+                                        "%d EVCS access token received - one expected",
+                                        evcsAccessTokenList.size())));
+            }
+            return evcsAccessTokenList.get(0);
+        } catch (JarValidationException e) {
+            throw new RecoverableJarValidationException(e.getErrorObject(), claimsSet, e);
+        }
+    }
+
     private VerifiableCredential validateHmrcInheritedIdentity(
-            String userId, InheritedIdentityJwtClaim inheritedIdentityJwtClaim)
+            String userId, Optional<StringListClaim> inheritedIdentityJwtClaim)
             throws JarValidationException, ParseException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
-                Optional.ofNullable(inheritedIdentityJwtClaim.values())
+                Optional.ofNullable(
+                                inheritedIdentityJwtClaim
+                                        .orElseThrow(
+                                                () ->
+                                                        new JarValidationException(
+                                                                INVALID_INHERITED_IDENTITY_ERROR_OBJECT
+                                                                        .setDescription(
+                                                                                "Inherited identity jwt claim not received")))
+                                        .values())
                         .orElseThrow(
                                 () ->
                                         new JarValidationException(

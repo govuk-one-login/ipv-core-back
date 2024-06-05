@@ -22,9 +22,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import uk.gov.di.ipv.core.initialiseipvsession.domain.InheritedIdentityJwtClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
+import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
@@ -727,7 +727,8 @@ class JarValidatorTest {
                         new JarUserInfo(
                                 null,
                                 null,
-                                new InheritedIdentityJwtClaim(List.of("DEFO.A.JWT")),
+                                new StringListClaim(List.of("DEFO.A.JWT")),
+                                new StringListClaim(List.of("EVCS_ACCESS_TOKEN")),
                                 null)));
         return validClaims;
     }

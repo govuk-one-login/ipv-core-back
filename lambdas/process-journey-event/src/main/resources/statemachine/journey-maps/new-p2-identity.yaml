@@ -102,8 +102,6 @@ states:
     response:
       type: process
       lambda: reset-session-identity
-      lambdaInput:
-        isUserInitiated: false
     events:
       next:
         targetState: IDENTITY_START_PAGE
@@ -428,6 +426,8 @@ states:
     response:
       type: process
       lambda: store-identity
+      lambdaInput:
+        isCompletedIdentity: true
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE
@@ -439,6 +439,8 @@ states:
     response:
       type: process
       lambda: store-identity
+      lambdaInput:
+        isCompletedIdentity: false
     events:
       identity-stored:
         targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
