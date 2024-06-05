@@ -193,11 +193,10 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
-            Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
             String evcsAccessToken = null;
             if ((configService.enabled(EVCS_READ_ENABLED)
-                            || configService.enabled(EVCS_WRITE_ENABLED))
-                    && (jarUserInfoClaim.isPresent())) {
+                    || configService.enabled(EVCS_WRITE_ENABLED))) {
+                Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
                 evcsAccessToken =
                         validateEvcsAccessToken(
                                 jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
@@ -216,8 +215,8 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
-                    && (jarUserInfoClaim.isPresent())) {
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
                 Optional<StringListClaim> inheritedIdentityJwtClaim =
                         jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim);
                 if (inheritedIdentityJwtClaim.isPresent()) {
