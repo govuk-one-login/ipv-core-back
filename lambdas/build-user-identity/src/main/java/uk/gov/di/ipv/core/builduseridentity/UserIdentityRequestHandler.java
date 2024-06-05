@@ -28,6 +28,8 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
+
 public abstract class UserIdentityRequestHandler {
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
     protected static final Logger LOGGER = LogManager.getLogger();
@@ -38,7 +40,7 @@ public abstract class UserIdentityRequestHandler {
     private final String allowedPath;
     private final String allowedScope;
 
-    public UserIdentityRequestHandler(String allowedPath, String allowedScope) {
+    protected UserIdentityRequestHandler(String allowedPath, String allowedScope) {
         this.allowedPath = allowedPath;
         this.allowedScope = allowedScope;
         this.configService = new ConfigService();
@@ -47,7 +49,7 @@ public abstract class UserIdentityRequestHandler {
         this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
-    public UserIdentityRequestHandler(
+    protected UserIdentityRequestHandler(
             String allowedPath,
             String allowedScope,
             IpvSessionService ipvSessionService,
@@ -114,8 +116,9 @@ public abstract class UserIdentityRequestHandler {
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
         var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
-        if (!urlPath.contains(this.allowedPath)
-                || !Arrays.asList(scopeClaims).contains(this.allowedScope)) {
+        if (configService.enabled(MFA_RESET)
+                && (!urlPath.contains(this.allowedPath)
+                        || !Arrays.asList(scopeClaims).contains(this.allowedScope))) {
             throw new InvalidScopeException();
         }
         return clientOAuthSessionItem;

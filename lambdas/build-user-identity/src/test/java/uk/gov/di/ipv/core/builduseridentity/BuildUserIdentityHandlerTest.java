@@ -72,6 +72,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -192,6 +193,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
 
@@ -260,6 +262,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
         doThrow(
@@ -418,6 +421,7 @@ class BuildUserIdentityHandlerTest {
                                 "test-cri-id",
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -495,6 +499,7 @@ class BuildUserIdentityHandlerTest {
                                 "test-cri-id",
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -623,7 +628,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenPathIsInvalid() throws Exception {
+    void shouldReturnErrorResponseWhenPathIsInvalidForScope() throws Exception {
 
         // Arrange
 
@@ -634,6 +639,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -654,6 +660,45 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
+    void shouldNotReturnErrorResponseWhenPathIsInvalidForScopeAndFeatureDisabled()
+            throws Exception {
+
+        // Arrange
+        APIGatewayProxyRequestEvent event = testEvent.clone();
+        event.setPath("/a-different-path");
+
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+
+        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(VC_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+    }
+
+    @Test
     void shouldReturnErrorResponseWhenScopeIsInvalid() throws Exception {
 
         // Arrange
@@ -664,6 +709,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItemWithScope);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -681,6 +727,43 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldNotReturnErrorResponseWhenScopeIsInvalidAndFeatureDisabled() throws Exception {
+
+        // Arrange
+        ClientOAuthSessionItem clientOAuthSessionItemWithScope =
+                getClientAuthSessionItemWithScope("a-different-scope");
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItemWithScope);
+        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
+                .thenReturn(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                "test-cri-id",
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
+        when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
+
+        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+
+        when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
+                .thenReturn(List.of(VC_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
     }
 
     @Test
@@ -912,6 +995,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
 
