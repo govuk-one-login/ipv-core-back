@@ -28,7 +28,7 @@ public class CoreBack {
         Spark.post("/token", lambdaHandler.getToken());
         Spark.get("/user-identity", lambdaHandler.getUserIdentity());
 
-        Spark.get("/reverification", lambdaHandler.getUserIdentity());
+        Spark.get("/reverification", lambdaHandler.getUserReverification());
 
         Spark.internalServerError("🤮");
     }

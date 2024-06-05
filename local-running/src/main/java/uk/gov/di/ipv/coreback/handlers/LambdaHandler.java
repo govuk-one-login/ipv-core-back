@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
+import uk.gov.di.ipv.core.userreverification.UserReverificationHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 
 import java.util.HashMap;
@@ -30,6 +31,8 @@ public class LambdaHandler {
     private final Route token = apiGatewayProxyRoute(new IssueClientAccessTokenHandler());
 
     private final Route userIdentity = apiGatewayProxyRoute(new BuildUserIdentityHandler());
+
+    private final Route userReverification = apiGatewayProxyRoute(new UserReverificationHandler());
 
     private Route apiGatewayProxyRoute(
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler) {
@@ -61,6 +64,10 @@ public class LambdaHandler {
 
     public Route getBuildProvenUserIdentityDetails() {
         return this.buildProvenUserIdentityDetails;
+    }
+
+    public Route getUserReverification() {
+        return this.userReverification;
     }
 
     public Route getCriCallBack() {

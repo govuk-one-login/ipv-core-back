@@ -47,3 +47,6 @@ deploy/core-back-*.yaml
 dev
 production
 uuid_results
+
+libs/pact-test-helpers/bin
+local-running/bin/
