@@ -97,7 +97,7 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_EVCS_REQUEST_BODY(1080, "Failed to parse EVCS request body"),
     FAILED_TO_PARSE_EVCS_VC(1081, "Failed to parse a vc from EVCS"),
     FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS"),
-    MISSING_IS_COMPLETED_IDENTITY_PARAMETER(1083, "Missing isCompletedIdentity in request");
+    INVALID_IDENTITY_TYPE_PARAMETER(1083, "Invalid or missing identityType in request");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

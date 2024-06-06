@@ -8,6 +8,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public class RequestHelper {
     public static final String ENCODED_DEVICE_INFORMATION_HEADER = "txma-audit-encoded";
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
-    public static final String IS_COMPLETED_IDENTITY = "isCompletedIdentity";
+    public static final String IDENTITY_TYPE = "identityType";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
@@ -154,13 +155,17 @@ public class RequestHelper {
                         ErrorResponse.MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER));
     }
 
-    public static boolean getIsCompletedIdentity(ProcessRequest request)
+    public static IdentityType getIdentityType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
-        return Boolean.TRUE.equals(
+        String identityType =
                 extractValueFromLambdaInput(
-                        request,
-                        IS_COMPLETED_IDENTITY,
-                        ErrorResponse.MISSING_IS_COMPLETED_IDENTITY_PARAMETER));
+                        request, IDENTITY_TYPE, ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER);
+        try {
+            return IdentityType.valueOf(identityType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER);
+        }
     }
 
     private static <T> T extractValueFromLambdaInput(
