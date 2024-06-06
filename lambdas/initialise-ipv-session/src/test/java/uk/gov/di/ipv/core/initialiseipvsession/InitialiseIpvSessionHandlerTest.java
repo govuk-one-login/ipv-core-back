@@ -128,7 +128,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String CLIENT_ID = "client_id";
     private static final String VTR = "vtr";
     private static final String CLAIMS = "claims";
-    private static final String USER_INFO = "userInfo";
+    private static final String USER_INFO = "userinfo";
     private static final String VALUES = "values";
     private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";

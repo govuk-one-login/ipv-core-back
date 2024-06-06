@@ -315,7 +315,7 @@ public class InitialiseIpvSessionHandler
             return Optional.ofNullable(
                             OBJECT_MAPPER.convertValue(
                                     claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
-                    .map(JarClaims::userInfo);
+                    .map(JarClaims::userinfo);
         } catch (IllegalArgumentException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
