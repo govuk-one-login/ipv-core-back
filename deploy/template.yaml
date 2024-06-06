@@ -376,6 +376,8 @@ Resources:
     Condition: IsDevelopment
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
+      Name: !Sub IPV Core Private Testing API Gateway ${Environment}
+      Description: A parallel to the private internal API but opened up for testing
       EndpointConfiguration:
         Type: REGIONAL
       DefinitionBody:
@@ -607,11 +609,6 @@ Resources:
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W1001 # Ref to resource "IPVCoreInternalTestingApi" that may not be available when condition "IsDevelopment" is False
     DependsOn:
       - "IssueClientAccessTokenFunctionLogGroup"
     Properties:
@@ -668,13 +665,6 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref IPVCoreExternalAPI
-            Path: /token
-            Method: POST
-        IPVCoreInternalTestingApi:
-          Condition: IsDevelopment
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalTestingApi
             Path: /token
             Method: POST
       AutoPublishAlias: live
@@ -774,11 +764,6 @@ Resources:
 
   InitialiseIpvSessionFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W1001 # Ref to resource "IPVCoreInternalTestingApi" that may not be available when condition "IsDevelopment" is False
     DependsOn:
       - "InitialiseIpvSessionFunctionLogGroup"
     Properties:
@@ -857,14 +842,16 @@ Resources:
             RestApiId: !Ref IPVCorePrivateAPI
             Path: /session/initialise
             Method: POST
-        IPVCoreInternalTestingApi:
-          Condition: IsDevelopment
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalTestingApi
-            Path: /session/initialise
-            Method: POST
       AutoPublishAlias: live
+
+  InitialiseIpvSessionFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsDevelopment
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref InitialiseIpvSessionFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/POST/session/initialise"
 
   InitialiseIpvSessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -976,11 +963,6 @@ Resources:
 
   ProcessCriCallbackFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W1001 # Ref to resource "IPVCoreInternalTestingApi" that may not be available when condition "IsDevelopment" is False
     DependsOn:
       - "ProcessCriCallbackLogGroup"
     Properties:
@@ -1183,14 +1165,16 @@ Resources:
             RestApiId: !Ref IPVCorePrivateAPI
             Path: /cri/callback
             Method: POST
-        IPVCoreInternalTestingApi:
-          Condition: IsDevelopment
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalTestingApi
-            Path: /cri/callback
-            Method: POST
       AutoPublishAlias: live
+
+  ProcessCriCallbackFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsDevelopment
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref ProcessCriCallbackFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/POST/cri/callback"
 
   ProcessCriCallbackLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1209,11 +1193,6 @@ Resources:
 
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W1001 # Ref to resource "IPVCoreInternalTestingApi" that may not be available when condition "IsDevelopment" is False
     DependsOn:
       - "BuildUserIdentityFunctionLogGroup"
     Properties:
@@ -1321,13 +1300,6 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref IPVCoreExternalAPI
-            Path: /user-identity
-            Method: GET
-        IPVCoreInternalTestingApi:
-          Condition: IsDevelopment
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalTestingApi
             Path: /user-identity
             Method: GET
       AutoPublishAlias: live
@@ -1713,11 +1685,6 @@ Resources:
 
   BuildProvenUserIdentityDetailsFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W1001 # Ref to resource "IPVCoreInternalTestingApi" that may not be available when condition "IsDevelopment" is False
     DependsOn:
       - BuildProvenUserIdentityDetailsFunctionLogGroup
     Properties:
@@ -1781,14 +1748,16 @@ Resources:
             RestApiId: !Ref IPVCorePrivateAPI
             Path: /user/proven-identity-details
             Method: GET
-        IPVCoreInternalTestingApi:
-          Condition: IsDevelopment
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalTestingApi
-            Path: /user/proven-identity-details
-            Method: GET
       AutoPublishAlias: live
+
+  BuildProvenUserIdentityDetailsFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsDevelopment
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref BuildProvenUserIdentityDetailsFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/GET/user/proven-identity-details"
 
   BuildProvenUserIdentityDetailsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
