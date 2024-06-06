@@ -117,6 +117,7 @@ public interface VcFixtures {
                             .txn("bcd2346")
                             .strengthScore(3)
                             .validityScore(2)
+                            .verificationScore(2)
                             .activityHistoryScore(1)
                             .checkDetails(
                                     List.of(
