@@ -37,7 +37,10 @@ public class ClientOAuthSessionDetailsService {
     }
 
     public ClientOAuthSessionItem generateClientSessionDetails(
-            String clientOauthSessionId, JWTClaimsSet claimsSet, String clientId)
+            String clientOauthSessionId,
+            JWTClaimsSet claimsSet,
+            String clientId,
+            String evcsAccessToken)
             throws ParseException {
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
 
@@ -51,6 +54,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
+        clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
 
         Boolean reproveIdentity =
                 configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
@@ -58,7 +62,7 @@ public class ClientOAuthSessionDetailsService {
                         : null;
 
         clientOAuthSessionItem.setReproveIdentity(reproveIdentity);
-
+        clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
         return clientOAuthSessionItem;

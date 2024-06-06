@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -100,15 +101,20 @@ class SessionCredentialsServiceTest {
     class Reads {
         @Test
         void getCredentialsShouldReturnAListOfVerifiableCredentials() throws Exception {
+            var now = Instant.now();
             var item1 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false);
+                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false, now);
             var item2 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_2, CREDENTIAL_2.getSignedJwt(), false);
+                            SESSION_ID,
+                            CRI_ID_2,
+                            CREDENTIAL_2.getSignedJwt(),
+                            false,
+                            now.plusSeconds(10));
             var item3 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_3, CREDENTIAL_3.getSignedJwt(), true);
+                            SESSION_ID, CRI_ID_3, CREDENTIAL_3.getSignedJwt(), true, null);
 
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2, item3));
 
@@ -129,7 +135,7 @@ class SessionCredentialsServiceTest {
         void getCredentialsShouldAllowFilteringByReceivedThisSession() throws Exception {
             var item1 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false);
+                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false, null);
 
             when(mockDataStore.getItemsWithBooleanAttribute(
                             SESSION_ID, "receivedThisSession", true))
@@ -149,7 +155,7 @@ class SessionCredentialsServiceTest {
             when(mockSignedJwt.serialize()).thenReturn("🫠");
 
             var sessionCredentialItem =
-                    new SessionCredentialItem(SESSION_ID, CRI_ID_1, mockSignedJwt, false);
+                    new SessionCredentialItem(SESSION_ID, CRI_ID_1, mockSignedJwt, false, null);
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(sessionCredentialItem));
 
             var caughtException =

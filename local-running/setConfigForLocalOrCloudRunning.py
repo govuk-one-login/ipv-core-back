@@ -16,6 +16,7 @@ DevAccount = namedtuple("DevAccount", "account_id number")
 def get_local_running_params(environment, client_id_suffix):
     return [
         Param(f"/{environment}/core/clients/orchestrator/validRedirectUrls", "http://localhost:3000/callback"),
+        Param(f"/{environment}/core/clients/stubAuth/validRedirectUrls", "http://localhost:3000/callback"),
 
         Param(f"/{environment}/core/credentialIssuers/dcmaw/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/address/activeConnection", "local"),
@@ -179,6 +180,7 @@ def get_local_running_params(environment, client_id_suffix):
 def get_cloud_running_params(environment, dev_account):
     return [
         Param(f"/{environment}/core/clients/orchestrator/validRedirectUrls", f"https://orch-{environment}.{dev_account}.core.dev.stubs.account.gov.uk/callback"),
+        Param(f"/{environment}/core/clients/stubAuth/validRedirectUrls", f"https://orch-{environment}.{dev_account}.core.dev.stubs.account.gov.uk/callback"),
 
         Param(f"/{environment}/core/credentialIssuers/dcmaw/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/address/activeConnection", "stub"),

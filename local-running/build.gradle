@@ -35,6 +35,7 @@ dependencies {
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:reset-session-identity"),
 			project(":lambdas:store-identity"),
+			project(":lambdas:user-reverification"),
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),

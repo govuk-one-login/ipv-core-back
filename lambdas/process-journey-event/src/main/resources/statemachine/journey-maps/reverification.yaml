@@ -1,23 +1,170 @@
-name: Reverification
-
+name: MFA Reset
 description: >-
-  The routes a user can take to revalidate their
-  account. They will prove their identity but we
-  won't store it.
+  The routes a user can take to validate their
+  account so that they can reset their two
+  factor authentication mechanism.
 
 states:
   # Entry points
-
   START:
     events:
       next:
-        # should be filled out in https://govukverify.atlassian.net/browse/PYIC-6486
-        targetState: PLACEHOLDER
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkFeatureFlag:
+          mfaResetEnabled:
+            targetState: IDENTITY_START_PAGE
+            checkIfDisabled:
+              dcmaw:
+                targetJourney: TECHNICAL_ERROR
+                targetState: ERROR
+
+  # Parent states
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  CRI_TICF_STATE:
+    events:
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   # Journey states
-
-  PLACEHOLDER:
+  IDENTITY_START_PAGE:
     response:
       type: page
-      pageId: pyi-technical
-      context: unrecoverable
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
+        targetState: CRI_DCMAW
+      appTriageSmartphone:
+        targetState: CRI_DCMAW
+      appTriageSmartphoneIphone:
+        targetState: CRI_DCMAW
+      appTriageSmartphoneAndroid:
+        targetState: CRI_DCMAW
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  CRI_DCMAW:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      not-found:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      access-denied:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      temporarily-unavailable:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  POST_DCMAW_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+
+  ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: EVALUATE_GPG45_SCORES
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  EVALUATE_GPG45_SCORES:
+    response:
+      type: process
+      lambda: evaluate-gpg45-scores
+    events:
+      met:
+        targetState: CHECK_COI
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  CHECK_COI:
+    response:
+      type: process
+      lambda: check-coi
+    events:
+      coi-check-passed:
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  CRI_TICF:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

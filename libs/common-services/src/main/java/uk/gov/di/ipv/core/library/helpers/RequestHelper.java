@@ -8,6 +8,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Arrays;
@@ -27,8 +28,8 @@ public class RequestHelper {
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String ENCODED_DEVICE_INFORMATION_HEADER = "txma-audit-encoded";
     public static final String FEATURE_SET_HEADER = "feature-set";
-    public static final String IS_USER_INITIATED = "isUserInitiated";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
+    public static final String IDENTITY_TYPE = "identityType";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
@@ -145,15 +146,6 @@ public class RequestHelper {
                 request, "scoreThreshold", ErrorResponse.MISSING_SCORE_THRESHOLD);
     }
 
-    public static boolean getIsUserInitiated(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        return Boolean.TRUE.equals(
-                extractValueFromLambdaInput(
-                        request,
-                        IS_USER_INITIATED,
-                        ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER));
-    }
-
     public static boolean getDeleteOnlyGPG45VCs(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody {
         return Boolean.TRUE.equals(
@@ -161,6 +153,19 @@ public class RequestHelper {
                         request,
                         DELETE_ONLY_GPG45_VCS,
                         ErrorResponse.MISSING_IS_RESET_DELETE_GPG45_ONLY_PARAMETER));
+    }
+
+    public static IdentityType getIdentityType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        String identityType =
+                extractValueFromLambdaInput(
+                        request, IDENTITY_TYPE, ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER);
+        try {
+            return IdentityType.valueOf(identityType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER);
+        }
     }
 
     private static <T> T extractValueFromLambdaInput(

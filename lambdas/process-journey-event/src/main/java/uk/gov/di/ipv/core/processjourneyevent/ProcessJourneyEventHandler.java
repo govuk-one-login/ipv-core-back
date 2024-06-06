@@ -48,6 +48,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepRes
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
-            new ProcessStepResponse("build-client-oauth-response", null, null);
+            new ProcessStepResponse(END_SESSION_EVENT, null, null, null);
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -165,6 +166,22 @@ public class ProcessJourneyEventHandler
             if (stepResponse.getMitigationStart() != null) {
                 sendMitigationStartAuditEvent(
                         auditEventUser, stepResponse.getMitigationStart(), deviceInformation);
+            }
+
+            String journeyAuditEvent = stepResponse.getAuditEvent();
+            if (journeyAuditEvent != null) {
+                boolean eventTypeExists =
+                        Arrays.stream(AuditEventTypes.values())
+                                .anyMatch(eventType -> eventType.name().equals(journeyAuditEvent));
+                if (!eventTypeExists) {
+                    LOGGER.error(
+                            LogHelper.buildLogMessage("Invalid audit event type provided")
+                                    .with(LOG_JOURNEY_EVENT.getFieldName(), journeyAuditEvent));
+                    throw new JourneyEngineException(
+                            "Invalid audit event type provided, failed to execute journey engine step.");
+                }
+                AuditEventTypes auditEventType = AuditEventTypes.valueOf(journeyAuditEvent);
+                sendJourneyAuditEvent(auditEventType, auditEventUser, deviceInformation);
             }
 
             return stepResponse.value();
@@ -350,6 +367,18 @@ public class ProcessJourneyEventHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionMitigationType(mitigationType),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private void sendJourneyAuditEvent(
+            AuditEventTypes auditEventType, AuditEventUser auditEventUser, String deviceInformation)
+            throws SqsException {
+
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        auditEventType,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 

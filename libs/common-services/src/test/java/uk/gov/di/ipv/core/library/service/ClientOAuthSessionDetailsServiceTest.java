@@ -79,11 +79,15 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("state", "test-state")
                         .claim("govuk_signin_journey_id", "test-journey-id")
                         .claim("reprove_identity", false)
+                        .claim("scope", "test-scope")
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId, testClaimSet, "test-client");
+                        clientOAuthSessionId,
+                        testClaimSet,
+                        "test-client",
+                        "test-evcs-access-token");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
@@ -106,8 +110,14 @@ class ClientOAuthSessionDetailsServiceTest {
                 clientOAuthSessionItem.getUserId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
         assertEquals(
+                clientOAuthSessionItem.getEvcsAccessToken(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getEvcsAccessToken());
+        assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getScope(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getScope());
         assertFalse(clientOAuthSessionItem.getReproveIdentity());
     }
 

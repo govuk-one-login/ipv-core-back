@@ -1,11 +1,11 @@
 package uk.gov.di.ipv.core.library.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
@@ -74,15 +75,12 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959"))));
 
-    @Mock EvcsClient mockEvcsClient;
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<List<EvcsUpdateUserVCsDto>> evcsUpdateUserVCsDtosCaptor;
-    EvcsService evcsService;
+    @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
-    @BeforeEach
-    void setUp() {
-        evcsService = new EvcsService(mockEvcsClient);
-    }
+    @Mock EvcsClient mockEvcsClient;
+    @InjectMocks EvcsService evcsService;
 
     @Test
     void testStoreIdentity_whenNoExistingEvcsUserVCs() {
@@ -171,5 +169,18 @@ class EvcsServiceTest {
                 (userVCsForEvcs.stream()
                         .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
                         .count()));
+    }
+
+    @Test
+    void storeAsyncVcShouldStoreVcWithPendingReturnState() {
+        evcsService.storePendingVc(VC_ADDRESS);
+
+        verify(mockEvcsClient)
+                .storeUserVCs(
+                        stringArgumentCaptor.capture(), evcsCreateUserVCsDtosCaptor.capture());
+
+        assertEquals(VC_ADDRESS.getUserId(), stringArgumentCaptor.getValue());
+        assertEquals(VC_ADDRESS.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
+        assertEquals(PENDING_RETURN, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
     }
 }

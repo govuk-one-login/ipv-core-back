@@ -11,16 +11,6 @@
       }
     },
     "Loggers": {
-      "logger": [
-        {
-          "name": "JsonLogger",
-          "level": "info",
-          "additivity": false,
-          "AppenderRef": {
-            "ref": "JsonAppender"
-          }
-        }
-      ],
       "Root": {
         "level": "info",
         "AppenderRef": {

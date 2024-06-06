@@ -78,7 +78,6 @@ public enum ErrorResponse {
     UNKNOWN_SCORE_TYPE(1060, "Unknown score type in request"),
     FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS(1061, "Failed to parse successful VC Store items."),
     FAILED_TO_GENERATE_NINO_CLAIM(1062, "Failed to generate the NINO claim"),
-    MISSING_IS_USER_INITIATED_PARAMETER(1063, "Missing isUserInitiated in request"),
     MISSING_VTR(1064, "The 'vtr' claim is required and was not provided in the request."),
     NO_IPV_FOR_CRI_OAUTH_SESSION(1065, "No ipvSession for existing CriOAuthSession."),
     FAILED_TO_PARSE_CRI_CALLBACK_REQUEST(1066, "Failed to parse cri callback request."),
@@ -98,7 +97,8 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_EVCS_REQUEST_BODY(1080, "Failed to parse EVCS request body"),
     FAILED_TO_PARSE_EVCS_VC(1081, "Failed to parse a vc from EVCS"),
     FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS"),
-    ERROR_CALLING_DCMAW_ASYNC_CRI(1076, "Error calling the DCMAW Async CRI");
+    INVALID_IDENTITY_TYPE_PARAMETER(1083, "Invalid or missing identityType in request"),
+    ERROR_CALLING_DCMAW_ASYNC_CRI(1084, "Error calling the DCMAW Async CRI");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

@@ -31,15 +31,15 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.OPENID;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COUNT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;

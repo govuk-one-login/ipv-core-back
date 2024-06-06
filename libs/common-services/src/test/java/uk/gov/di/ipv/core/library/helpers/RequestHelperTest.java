@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Arrays;
@@ -237,13 +238,12 @@ class RequestHelperTest {
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        String journey = DCMAW_CRI;
         var event =
                 JourneyRequest.builder()
                         .ipvSessionId(ipvSessionId)
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(journey)
+                        .journey(DCMAW_CRI)
                         .featureSet(featureSet)
                         .build();
 
@@ -259,12 +259,11 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        String journey = DCMAW_CRI;
         var event =
                 JourneyRequest.builder()
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(journey)
+                        .journey(DCMAW_CRI)
                         .featureSet(featureSet)
                         .build();
 
@@ -419,26 +418,6 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIsUserInitiatedShouldReturnTrue() throws Exception {
-        ProcessRequest request =
-                ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isUserInitiated", true))
-                        .build();
-
-        assertTrue(RequestHelper.getIsUserInitiated(request));
-    }
-
-    @Test
-    void getIsUserInitiatedShouldReturnFalse() throws Exception {
-        ProcessRequest request =
-                ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isUserInitiated", false))
-                        .build();
-
-        assertFalse(RequestHelper.getIsUserInitiated(request));
-    }
-
-    @Test
     void getDeleteOnlyGPG45VCsShouldReturnTrue() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
@@ -459,17 +438,62 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIsUserInitiatedShouldThrowIfNull() {
+    void getIdentityTypeShouldReturnNew() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("identityType", "new"))
+                        .build();
+
+        assertEquals(IdentityType.NEW, RequestHelper.getIdentityType(request));
+    }
+
+    @Test
+    void getIdentityTypeShouldReturnPending() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("identityType", "pending"))
+                        .build();
+
+        assertEquals(IdentityType.PENDING, RequestHelper.getIdentityType(request));
+    }
+
+    @Test
+    void getIdentityTypeShouldReturnUpdate() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("identityType", "UPDATE"))
+                        .build();
+
+        assertEquals(IdentityType.UPDATE, RequestHelper.getIdentityType(request));
+    }
+
+    @Test
+    void getIdentityTypeShouldThrowIfNull() {
         var lambdaInput = new HashMap<String, Object>();
-        lambdaInput.put("isUserInitiated", null);
+        lambdaInput.put("identityType", null);
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
 
         HttpResponseExceptionWithErrorBody thrown =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getIsUserInitiated(request));
+                        () -> RequestHelper.getIdentityType(request));
 
-        assertEquals(ErrorResponse.MISSING_IS_USER_INITIATED_PARAMETER, thrown.getErrorResponse());
+        assertEquals(ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getIdentityTypeShouldThrowIfInvalid() {
+        var lambdaInput = new HashMap<String, Object>();
+        lambdaInput.put("identityType", "invalid");
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
+
+        HttpResponseExceptionWithErrorBody thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getIdentityType(request));
+
+        assertEquals(ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER, thrown.getErrorResponse());
     }
 }

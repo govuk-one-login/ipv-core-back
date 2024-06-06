@@ -4,8 +4,12 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,6 +28,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
@@ -31,6 +36,7 @@ import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,10 +49,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
@@ -71,23 +78,11 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_ASYNC_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
             "Additional information on the error";
-    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
-    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
-    private static final OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
-    private static final VerifiableCredential PASSPORT_VC;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    static {
-        try {
-            TEST_CREDENTIAL_ISSUER_CONFIG = createOauthCriConfig(TEST_COMPONENT_ID);
-            TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
-            TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
-                    createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
-            PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
+    private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
+    private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
+    private VerifiableCredential F2F_VC;
 
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
@@ -95,36 +90,25 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private AuditService auditService;
     @Mock private CiMitService ciMitService;
     @Mock private CriResponseService criResponseService;
+    @Mock private EvcsService evcsService;
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
 
-    @Test
-    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully() throws Exception {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
-
-        when(verifiableCredentialValidator.parseAndValidate(
-                        eq(TEST_USER_ID),
-                        eq(TEST_CREDENTIAL_ISSUER_ID),
-                        anyList(),
-                        any(),
-                        any(),
-                        any()))
-                .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
-        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
-                .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        mockCredentialIssuerConfig();
-
-        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
-
-        assertEquals(0, batchResponse.getBatchItemFailures().size());
-
-        verifyVerifiableCredentialJwtValidator();
-        verifyCiStorageServicePutContraIndicators();
-        verifyVerifiableCredentialService();
-        verifyAuditService();
+    @BeforeAll
+    static void setUpBeforeAll() throws URISyntaxException {
+        TEST_CREDENTIAL_ISSUER_CONFIG = createOauthCriConfig(TEST_COMPONENT_ID);
+        TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
+        TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
+                createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
     }
 
-    @Test
-    void shouldSendValidExpectedAsyncVerifiableCredentialToCIMITPostMitigationWhenFeatureEnabled()
+    @BeforeEach
+    void setUp() {
+        F2F_VC = vcF2fM1a();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully(boolean evcsWrites)
             throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
@@ -135,10 +119,11 @@ class ProcessAsyncCriCredentialHandlerTest {
                         any(),
                         any(),
                         any()))
-                .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+                .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(evcsWrites);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -147,7 +132,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyVerifiableCredentialJwtValidator();
         verifyCiStorageServicePutContraIndicators();
         verifyCiStorageServicePostMitigations();
-        verifyVerifiableCredentialService();
+        verifyVerifiableCredentialService(evcsWrites);
+        verify(evcsService, times(evcsWrites ? 1 : 0)).storePendingVc(F2F_VC);
         verifyAuditService();
     }
 
@@ -228,7 +214,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         any(),
                         any(),
                         any()))
-                .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+                .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
@@ -247,6 +233,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
 
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
+        verify(evcsService, never()).storePendingVc(any());
 
         verifyBatchResponseFailures(testEvent, batchResponse);
     }
@@ -263,7 +250,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         any(),
                         any(),
                         any()))
-                .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+                .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
@@ -279,6 +266,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(ciMitService, times(1)).submitVC(any(), any(), any());
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
+        verify(evcsService, never()).storePendingVc(any());
 
         verifyBatchResponseFailures(testEvent, batchResponse);
     }
@@ -307,7 +295,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                         null,
                         TEST_USER_ID,
                         testOauthState,
-                        List.of(PASSPORT_VC.getVcString()),
+                        List.of(F2F_VC.getVcString()),
                         null,
                         null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
@@ -343,7 +331,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         var ciVcs = ciVcCaptor.getAllValues();
         assertEquals(1, ciVcs.size());
-        assertEquals(PASSPORT_VC, ciVcs.get(0));
+        assertEquals(F2F_VC, ciVcs.get(0));
 
         var ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
@@ -369,7 +357,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         var postedVcs = postedVcsCaptor.getValue();
         assertEquals(1, postedVcs.size());
-        assertEquals(PASSPORT_VC, postedVcs.get(0));
+        assertEquals(F2F_VC, postedVcs.get(0));
 
         var ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
@@ -380,20 +368,22 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertNull(ciIpAddresses.get(0));
     }
 
-    private void verifyVerifiableCredentialService() throws Exception {
+    private void verifyVerifiableCredentialService(boolean evcsWrites) throws Exception {
         var vcCaptor = ArgumentCaptor.forClass(VerifiableCredential.class);
 
         verify(verifiableCredentialService, times(1)).persistUserCredentials(vcCaptor.capture());
 
         var storedVcs = vcCaptor.getAllValues();
         assertEquals(1, storedVcs.size());
-        assertEquals(PASSPORT_VC, storedVcs.get(0));
+        assertEquals(F2F_VC, storedVcs.get(0));
+        assertEquals(evcsWrites, !Objects.isNull(storedVcs.get(0).getMigrated()));
     }
 
     private void verifyVerifiableCredentialNotProcessedFurther() throws Exception {
         verify(auditService, never())
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
+        verify(evcsService, never()).storePendingVc(any());
         verify(ciMitService, never()).submitVC(any(), any(), any());
         verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
     }

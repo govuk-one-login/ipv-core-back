@@ -251,6 +251,8 @@ states:
     response:
       type: process
       lambda: store-identity
+      lambdaInput:
+        identityType: UPDATE
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS

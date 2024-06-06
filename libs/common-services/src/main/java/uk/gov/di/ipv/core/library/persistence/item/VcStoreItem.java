@@ -24,6 +24,7 @@ public class VcStoreItem implements DynamodbItem {
     private String credential;
     private Instant dateCreated;
     private Instant expirationTime;
+    private Instant migrated;
 
     @DynamoDbPartitionKey
     public String getUserId() {

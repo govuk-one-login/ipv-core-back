@@ -13,6 +13,8 @@ public class VocabConstants {
     public static final String IDENTITY_CLAIM_NAME = "https://vocab.account.gov.uk/v1/coreIdentity";
     public static final String INHERITED_IDENTITY_JWT_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/inheritedIdentityJWT";
+    public static final String EVCS_ACCESS_TOKEN_CLAIM_NAME =
+            "https://vocab.account.gov.uk/v1/storageAccessToken";
     public static final String NINO_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/socialSecurityRecord";
     public static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
