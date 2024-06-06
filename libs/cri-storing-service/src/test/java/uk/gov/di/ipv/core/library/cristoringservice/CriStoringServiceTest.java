@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -178,8 +181,8 @@ class CriStoringServiceTest {
                 mockIpvSessionItem);
 
         // Assert
-        verify(mockCiMitService, Mockito.never()).submitVC(any(), any(), any());
-        verify(mockCiMitService, Mockito.never()).submitMitigatingVcList(any(), any(), any());
+        verify(mockCiMitService, never()).submitVC(any(), any(), any());
+        verify(mockCiMitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test

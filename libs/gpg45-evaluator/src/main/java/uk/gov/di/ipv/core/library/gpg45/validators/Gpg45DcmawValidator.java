@@ -13,6 +13,7 @@ public class Gpg45DcmawValidator {
         if (item.getFailedCheckDetails() != null) {
             return false;
         }
+        System.out.println(item);
         return item.getValidityScore() != 0
                 && item.getVerificationScore() > 0
                 && item.getStrengthScore() > 0;
