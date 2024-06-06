@@ -149,7 +149,7 @@ states:
       type: process
       lambda: store-identity
       lambdaInput:
-        isCompletedIdentity: true
+        identityType: UPDATE
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE_RFC

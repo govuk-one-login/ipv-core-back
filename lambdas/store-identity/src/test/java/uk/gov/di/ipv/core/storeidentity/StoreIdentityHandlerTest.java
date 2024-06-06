@@ -14,11 +14,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionVot;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -54,6 +55,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
@@ -79,13 +81,13 @@ class StoreIdentityHandlerTest {
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId(SESSION_ID)
                     .ipAddress(IP_ADDRESS)
-                    .lambdaInput(new HashMap<>(Map.of("isCompletedIdentity", true)))
+                    .lambdaInput(new HashMap<>(Map.of("identityType", "new")))
                     .build();
     private static final ProcessRequest PROCESS_REQUEST_FOR_PENDING_IDENTITY =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId(SESSION_ID)
                     .ipAddress(IP_ADDRESS)
-                    .lambdaInput(new HashMap<>(Map.of("isCompletedIdentity", false)))
+                    .lambdaInput(new HashMap<>(Map.of("identityType", "pending")))
                     .build();
     private static final List<VerifiableCredential> VCS =
             List.of(
@@ -142,14 +144,18 @@ class StoreIdentityHandlerTest {
     }
 
     @Test
-    void shouldSendAuditEventWithVotExtensionWhenIdentityAchieved() throws Exception {
+    void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityAchieved()
+            throws Exception {
         storeIdentityHandler.handleRequest(PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         var auditEvent = auditEventCaptor.getValue();
 
         assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-        assertEquals(P2, ((AuditExtensionVot) auditEvent.getExtensions()).vot());
+        assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
+        assertEquals(
+                IdentityType.NEW,
+                ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
         assertEquals(COMPONENT_ID, auditEvent.getComponentId());
         assertEquals(
                 new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
@@ -158,7 +164,33 @@ class StoreIdentityHandlerTest {
     }
 
     @Test
-    void shouldSendAuditEventWithVotExtensionWhenIdentityIncomplete() throws Exception {
+    void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityUpdated() throws Exception {
+        var updateReq =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(IP_ADDRESS)
+                        .lambdaInput(new HashMap<>(Map.of("identityType", "update")))
+                        .build();
+        storeIdentityHandler.handleRequest(updateReq, mockContext);
+
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+        assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
+        assertEquals(
+                IdentityType.UPDATE,
+                ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
+        assertEquals(COMPONENT_ID, auditEvent.getComponentId());
+        assertEquals(
+                new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
+                auditEvent.getUser());
+        verify(mockEvcsService, times(0)).storeCompletedIdentity(anyString(), any(), any());
+    }
+
+    @Test
+    void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityIncomplete()
+            throws Exception {
         ipvSessionItem.setVot(P0);
 
         storeIdentityHandler.handleRequest(PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
@@ -167,11 +199,50 @@ class StoreIdentityHandlerTest {
         var auditEvent = auditEventCaptor.getValue();
 
         assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-        assertNull(((AuditExtensionVot) auditEvent.getExtensions()).vot());
+        assertNull(((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
+        assertEquals(
+                IdentityType.NEW,
+                ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
         assertEquals(COMPONENT_ID, auditEvent.getComponentId());
         assertEquals(
                 new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
                 auditEvent.getUser());
+    }
+
+    @Test
+    void shouldReturnErrorIfMissingIdentityTypeParameter() throws Exception {
+        ProcessRequest missingReq =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(IP_ADDRESS)
+                        .lambdaInput(new HashMap<>())
+                        .build();
+
+        var response = storeIdentityHandler.handleRequest(missingReq, mockContext);
+
+        assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
+        assertEquals(SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getCode(), response.get(CODE));
+        assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get(MESSAGE));
+        verify(mockVerifiableCredentialService, never()).storeIdentity(any(), any());
+    }
+
+    @Test
+    void shouldReturnErrorIfInvalidIdentityTypeParameter() throws Exception {
+        ProcessRequest invalidReq =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(IP_ADDRESS)
+                        .lambdaInput(new HashMap<>(Map.of("identityType", "INVALID")))
+                        .build();
+
+        var response = storeIdentityHandler.handleRequest(invalidReq, mockContext);
+
+        assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
+        assertEquals(SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getCode(), response.get(CODE));
+        assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get(MESSAGE));
+        verify(mockVerifiableCredentialService, never()).storeIdentity(any(), any());
     }
 
     @Test
@@ -255,7 +326,10 @@ class StoreIdentityHandlerTest {
 
         assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
         assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-        assertEquals(P2, ((AuditExtensionVot) auditEvent.getExtensions()).vot());
+        assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
+        assertEquals(
+                IdentityType.PENDING,
+                ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
         assertEquals(COMPONENT_ID, auditEvent.getComponentId());
         assertEquals(
                 new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
