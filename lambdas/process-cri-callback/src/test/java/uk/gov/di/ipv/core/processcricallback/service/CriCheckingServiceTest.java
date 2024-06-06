@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -44,8 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -485,6 +485,25 @@ class CriCheckingServiceTest {
     }
 
     @Test
+    void checkVcResponseDoesNotCheckForCIsWhenOnReverificationJourney() throws Exception {
+        // Arrange for VCs not correlated
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
+
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
+        verify(mockCiMitService, never()).getContraIndicators(any(), any(), any());
+        verify(mockCimitUtilityService, never()).isBreachingCiThreshold(any());
+    }
+
+    @Test
     void checkVcResponseShouldReturnMitigatedJourneyWhenCiMitigationIsPossible() throws Exception {
         // Arrange for CI mitigation possibility
         var callbackRequest = buildValidCallbackRequest();
@@ -568,6 +587,9 @@ class CriCheckingServiceTest {
     }
 
     private ClientOAuthSessionItem buildValidClientOAuthSessionItem() {
-        return ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
+        return ClientOAuthSessionItem.builder()
+                .userId(TEST_USER_ID)
+                .scope(ScopeConstants.OPENID)
+                .build();
     }
 }

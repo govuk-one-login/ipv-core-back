@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -220,8 +221,7 @@ public class CriCheckingService {
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException, VerifiableCredentialException {
 
-        // TODO PYIC-6658: use scope constants when PYIC-6089 is merged
-        if (!clientOAuthSessionItem.getScope().equals("reverification")) {
+        if (!clientOAuthSessionItem.getScope().equals(ScopeConstants.REVERIFICATION)) {
             var cis =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
