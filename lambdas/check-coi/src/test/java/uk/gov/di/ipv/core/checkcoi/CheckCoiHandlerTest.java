@@ -117,12 +117,14 @@ class CheckCoiHandlerTest {
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
                 assertEquals(
-                        AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                        auditEventsCaptured.get(0).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
-                        AuditEventTypes.IPV_COI_END, auditEventsCaptured.get(1).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
+                        auditEventsCaptured.get(1).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
@@ -149,12 +151,14 @@ class CheckCoiHandlerTest {
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
                 assertEquals(
-                        AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                        auditEventsCaptured.get(0).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
-                        AuditEventTypes.IPV_COI_END, auditEventsCaptured.get(1).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
+                        auditEventsCaptured.get(1).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
@@ -179,12 +183,14 @@ class CheckCoiHandlerTest {
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
                 assertEquals(
-                        AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                        auditEventsCaptured.get(0).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
-                        AuditEventTypes.IPV_COI_END, auditEventsCaptured.get(1).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
+                        auditEventsCaptured.get(1).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
@@ -215,12 +221,14 @@ class CheckCoiHandlerTest {
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
                 assertEquals(
-                        AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                        auditEventsCaptured.get(0).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
-                        AuditEventTypes.IPV_COI_END, auditEventsCaptured.get(1).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
+                        auditEventsCaptured.get(1).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
@@ -247,12 +255,14 @@ class CheckCoiHandlerTest {
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
                 assertEquals(
-                        AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                        auditEventsCaptured.get(0).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
-                        AuditEventTypes.IPV_COI_END, auditEventsCaptured.get(1).getEventName());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
+                        auditEventsCaptured.get(1).getEventName());
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
@@ -299,7 +309,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -328,7 +340,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -356,7 +370,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -384,7 +400,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -426,7 +444,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -451,7 +471,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
@@ -475,7 +497,9 @@ class CheckCoiHandlerTest {
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            assertEquals(AuditEventTypes.IPV_COI_START, auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
+                    auditEventsCaptured.get(0).getEventName());
             assertEquals(
                     new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());

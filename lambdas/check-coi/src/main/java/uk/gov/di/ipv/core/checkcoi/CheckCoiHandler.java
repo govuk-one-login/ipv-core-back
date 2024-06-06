@@ -123,7 +123,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     };
 
             sendAuditEvent(
-                    AuditEventTypes.IPV_COI_START,
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_START,
                     coiCheckType,
                     null,
                     userId,
@@ -149,7 +149,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     };
 
             sendAuditEvent(
-                    AuditEventTypes.IPV_COI_END,
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_END,
                     coiCheckType,
                     coiCheckSuccess,
                     userId,
