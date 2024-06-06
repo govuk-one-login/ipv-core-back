@@ -93,7 +93,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -970,8 +969,6 @@ class InitialiseIpvSessionHandlerTest {
 
         @Test
         void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
-            reset(mockConfigService);
-            reset(mockClientOAuthSessionDetailsService);
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))

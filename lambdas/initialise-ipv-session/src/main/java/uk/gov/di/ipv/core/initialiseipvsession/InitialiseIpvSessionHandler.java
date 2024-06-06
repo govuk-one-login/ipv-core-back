@@ -193,14 +193,13 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
-            Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
             String evcsAccessToken = null;
-            if ((configService.enabled(EVCS_READ_ENABLED)
-                            || configService.enabled(EVCS_WRITE_ENABLED))
-                    && (jarUserInfoClaim.isPresent())) {
+            if (configService.enabled(EVCS_READ_ENABLED)
+                    || configService.enabled(EVCS_WRITE_ENABLED)) {
                 evcsAccessToken =
                         validateEvcsAccessToken(
-                                jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
+                                getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
+                                claimsSet);
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -216,10 +215,9 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
-                    && (jarUserInfoClaim.isPresent())) {
-                Optional<StringListClaim> inheritedIdentityJwtClaim =
-                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim);
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                var inheritedIdentityJwtClaim =
+                        getJarUserInfo(claimsSet).map(JarUserInfo::inheritedIdentityClaim);
                 if (inheritedIdentityJwtClaim.isPresent()) {
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
