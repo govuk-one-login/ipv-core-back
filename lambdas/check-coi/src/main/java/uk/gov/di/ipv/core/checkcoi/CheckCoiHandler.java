@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -145,14 +146,16 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     ipAddress);
 
             if (!successfulCheck) {
+                if (clientOAuthSession.getScope().equals(ScopeConstants.REVERIFICATION)) {
+                    ipvSession.setReverificationStatus(ReverificationStatus.FAILED);
+                }
                 LOGGER.info(
                         LogHelper.buildLogMessage("Failed COI check")
                                 .with(LOG_CHECK_TYPE.getFieldName(), checkType));
                 return JOURNEY_COI_CHECK_FAILED.toObjectMap();
             }
 
-            // TODO PYIC-6658: use scope constants when PYIC-6089 is merged
-            if (clientOAuthSession.getScope().equals("reverification")) {
+            if (clientOAuthSession.getScope().equals(ScopeConstants.REVERIFICATION)) {
                 ipvSession.setReverificationStatus(ReverificationStatus.SUCCESS);
             }
 

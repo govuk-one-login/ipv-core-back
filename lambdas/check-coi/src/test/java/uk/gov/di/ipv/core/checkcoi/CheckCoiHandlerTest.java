@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -36,9 +38,9 @@ import java.util.Map;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
@@ -179,6 +181,7 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.SUCCESS);
                 verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
@@ -262,6 +265,23 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
+            }
+
+            @Test
+            void shouldReturnFailedForFailedReverificationCheck()
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(false);
+                when(mockClientSessionItem.getScope()).thenReturn(ScopeConstants.REVERIFICATION);
+
+                var request =
+                        ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
+                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.FAILED);
             }
         }
     }
