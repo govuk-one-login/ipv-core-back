@@ -25,7 +25,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
-    public static final String IP_ADDRESS_HEADER = "ip-address";
+    public static final String IP_ADDRESS_HEADER = "x-forwarded-for";
     public static final String ENCODED_DEVICE_INFORMATION_HEADER = "txma-audit-encoded";
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";

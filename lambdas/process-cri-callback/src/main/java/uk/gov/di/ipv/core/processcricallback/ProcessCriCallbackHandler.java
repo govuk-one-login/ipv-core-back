@@ -234,7 +234,7 @@ public class ProcessCriCallbackHandler
             var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
-            callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
+            callbackRequest.setIpAddress(input.getHeaders().get("x-forwarded-for"));
             callbackRequest.setDeviceInformation(input.getHeaders().get("txma-audit-encoded"));
             return callbackRequest;
         } catch (JsonProcessingException e) {

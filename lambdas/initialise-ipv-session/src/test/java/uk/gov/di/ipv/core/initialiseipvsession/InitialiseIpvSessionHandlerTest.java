@@ -174,7 +174,7 @@ class InitialiseIpvSessionHandlerTest {
                                 "test-client",
                                 "request",
                                 signedEncryptedJwt.serialize())));
-        validEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        validEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
     }
 
     @BeforeEach
@@ -400,7 +400,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturn400IfMissingBody() throws JsonProcessingException {
         // Arrange
         APIGatewayProxyRequestEvent missingBodyEvent = new APIGatewayProxyRequestEvent();
-        missingBodyEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        missingBodyEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -421,7 +421,7 @@ class InitialiseIpvSessionHandlerTest {
         // Arrange
         APIGatewayProxyRequestEvent invalidBodyEvent = new APIGatewayProxyRequestEvent();
         invalidBodyEvent.setBody("invalid-body");
-        invalidBodyEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        invalidBodyEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -443,7 +443,7 @@ class InitialiseIpvSessionHandlerTest {
         APIGatewayProxyRequestEvent missingClientIdEvent = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams = Map.of("request", signedEncryptedJwt.serialize());
         missingClientIdEvent.setBody(OBJECT_MAPPER.writeValueAsString(sessionParams));
-        missingClientIdEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        missingClientIdEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -465,7 +465,7 @@ class InitialiseIpvSessionHandlerTest {
         APIGatewayProxyRequestEvent missingRequestEvent = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams = Map.of("clientId", "test-client");
         missingRequestEvent.setBody(OBJECT_MAPPER.writeValueAsString(sessionParams));
-        missingRequestEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        missingRequestEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -488,7 +488,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams =
                 Map.of("clientId", "test-client", "request", signedJWT.serialize());
         unencryptedRequestEvent.setBody(OBJECT_MAPPER.writeValueAsString(sessionParams));
-        unencryptedRequestEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+        unencryptedRequestEvent.setHeaders(Map.of("x-forwarded-for", TEST_IP_ADDRESS));
 
         // Act
         APIGatewayProxyResponseEvent response =
