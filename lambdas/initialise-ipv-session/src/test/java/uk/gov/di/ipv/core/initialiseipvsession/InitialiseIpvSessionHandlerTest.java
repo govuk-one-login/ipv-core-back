@@ -82,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static com.nimbusds.oauth2.sdk.OAuth2Error.INVALID_REQUEST_OBJECT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,6 +93,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -968,6 +970,8 @@ class InitialiseIpvSessionHandlerTest {
 
         @Test
         void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
+            reset(mockConfigService);
+            reset(mockClientOAuthSessionDetailsService);
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -993,6 +997,17 @@ class InitialiseIpvSessionHandlerTest {
                             eq("test-client"),
                             eq("test-state"),
                             eq(null));
+
+            verify(mockIpvSessionService, times(2))
+                    .generateIpvSession(
+                            anyString(),
+                            errorObjectArgumentCaptor.capture(),
+                            isNull(),
+                            anyBoolean());
+            var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+            assertEquals(INVALID_REQUEST_OBJECT_CODE, capturedErrorObject.getCode());
+            assertEquals(
+                    "Claims cannot be parsed to JarClaims", capturedErrorObject.getDescription());
         }
 
         @Test
