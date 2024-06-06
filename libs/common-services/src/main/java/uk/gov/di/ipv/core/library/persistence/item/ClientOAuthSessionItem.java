@@ -34,4 +34,8 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     public String getClientOAuthSessionId() {
         return clientOAuthSessionId;
     }
+
+    public String[] getScopeClaims() {
+        return this.scope.split(" ");
+    }
 }

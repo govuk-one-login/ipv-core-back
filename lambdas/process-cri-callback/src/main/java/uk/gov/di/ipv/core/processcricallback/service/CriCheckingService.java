@@ -221,7 +221,8 @@ public class CriCheckingService {
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException, VerifiableCredentialException {
 
-        if (!clientOAuthSessionItem.getScope().equals(ScopeConstants.REVERIFICATION)) {
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
+        if (!Arrays.asList(scopeClaims).contains(ScopeConstants.REVERIFICATION)) {
             var cis =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),

@@ -113,7 +113,7 @@ public abstract class UserIdentityRequestHandler {
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
-        var scopeClaims = clientOAuthSessionItem.getScope().split(" ");
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         if (configService.enabled(MFA_RESET)
                 && !Arrays.asList(scopeClaims).contains(this.allowedScope)) {
             throw new InvalidScopeException();
