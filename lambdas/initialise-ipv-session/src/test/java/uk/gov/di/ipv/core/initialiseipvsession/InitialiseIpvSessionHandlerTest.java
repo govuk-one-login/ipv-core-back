@@ -82,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static com.nimbusds.oauth2.sdk.OAuth2Error.INVALID_REQUEST_OBJECT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -128,7 +129,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String CLIENT_ID = "client_id";
     private static final String VTR = "vtr";
     private static final String CLAIMS = "claims";
-    private static final String USER_INFO = "userInfo";
+    private static final String USER_INFO = "userinfo";
     private static final String VALUES = "values";
     private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
@@ -993,6 +994,17 @@ class InitialiseIpvSessionHandlerTest {
                             eq("test-client"),
                             eq("test-state"),
                             eq(null));
+
+            verify(mockIpvSessionService, times(2))
+                    .generateIpvSession(
+                            anyString(),
+                            errorObjectArgumentCaptor.capture(),
+                            isNull(),
+                            anyBoolean());
+            var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+            assertEquals(INVALID_REQUEST_OBJECT_CODE, capturedErrorObject.getCode());
+            assertEquals(
+                    "Claims cannot be parsed to JarClaims", capturedErrorObject.getDescription());
         }
 
         @Test

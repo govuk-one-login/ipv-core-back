@@ -194,12 +194,12 @@ public class InitialiseIpvSessionHandler
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
             String evcsAccessToken = null;
-            if ((configService.enabled(EVCS_READ_ENABLED)
-                    || configService.enabled(EVCS_WRITE_ENABLED))) {
-                Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
+            if (configService.enabled(EVCS_READ_ENABLED)
+                    || configService.enabled(EVCS_WRITE_ENABLED)) {
                 evcsAccessToken =
                         validateEvcsAccessToken(
-                                jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
+                                getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
+                                claimsSet);
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -216,9 +216,8 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
-                Optional<StringListClaim> inheritedIdentityJwtClaim =
-                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim);
+                var inheritedIdentityJwtClaim =
+                        getJarUserInfo(claimsSet).map(JarUserInfo::inheritedIdentityClaim);
                 if (inheritedIdentityJwtClaim.isPresent()) {
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
@@ -315,7 +314,7 @@ public class InitialiseIpvSessionHandler
             return Optional.ofNullable(
                             OBJECT_MAPPER.convertValue(
                                     claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
-                    .map(JarClaims::userInfo);
+                    .map(JarClaims::userinfo);
         } catch (IllegalArgumentException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
