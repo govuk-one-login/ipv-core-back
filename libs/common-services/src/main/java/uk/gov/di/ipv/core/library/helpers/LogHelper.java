@@ -10,15 +10,12 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_STACK;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 @ExcludeFromGeneratedCoverageReport
@@ -148,14 +145,7 @@ public class LogHelper {
     }
 
     public static StringMapMessage buildErrorMessage(String message, Exception e) {
-        var mapMessage = buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
-        if (LOGGER.isDebugEnabled()) {
-            var sw = new StringWriter();
-            var pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            mapMessage = mapMessage.with(LOG_ERROR_STACK.getFieldName(), sw.toString());
-        }
-        return mapMessage;
+        return buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
     }
 
     public static StringMapMessage buildErrorMessage(String message, ErrorObject err) {

@@ -9,6 +9,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkLambda,
+			libs.diVocab,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

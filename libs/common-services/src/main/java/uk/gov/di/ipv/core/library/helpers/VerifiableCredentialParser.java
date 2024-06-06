@@ -63,7 +63,8 @@ public class VerifiableCredentialParser {
             // Try again with more relaxed parsing rules
             var vc = LAX_OBJECT_MAPPER.convertValue(vcClaim, vcType);
             LOGGER.warn(
-                    LogHelper.buildErrorMessage("Credential contained unexpected properties", e));
+                    LogHelper.buildErrorMessage(
+                            "Credential contained unexpected properties: " + e.getMessage(), e));
             return vc;
         }
     }

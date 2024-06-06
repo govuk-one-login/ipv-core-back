@@ -4,11 +4,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
@@ -19,7 +15,6 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final String userId;
     private final String criId;
     private final String vcString;
@@ -39,14 +34,6 @@ public class VerifiableCredential {
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
-        }
-
-        try {
-            VerifiableCredentialParser.parseCredential(claimsSet);
-        } catch (CredentialParseException e) {
-            // For now, we just log a warning here that we can fix
-            // In future this should return a CredentialParseException instead
-            LOGGER.warn(LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
         }
     }
 
