@@ -12,7 +12,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
         checkFeatureFlag:
-          mfaReset:
+          mfaResetEnabled:
             targetState: IDENTITY_START_PAGE
             checkIfDisabled:
               dcmaw:
