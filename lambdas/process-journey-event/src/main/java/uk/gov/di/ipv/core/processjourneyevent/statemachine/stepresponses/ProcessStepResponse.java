@@ -17,6 +17,7 @@ public class ProcessStepResponse implements StepResponse {
     private String lambda;
     private Map<String, Object> lambdaInput;
     private String mitigationStart;
+    private String auditEvent;
 
     @Override
     public Map<String, Object> value() {

@@ -713,6 +713,7 @@ states:
     response:
       type: cri
       criId: claimedIdentity
+      auditEvent: IPV_NO_PHOTO_ID_JOURNEY_START
       context: bank_account
     parent: CRI_STATE
     events:
