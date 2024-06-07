@@ -2387,7 +2387,6 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-# qq:DCC Do we need these lambda ARNs?
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
             - cimit_account_id: !If
@@ -2456,7 +2455,6 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
-# qq:DCC do we need access to this table?
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
@@ -2473,81 +2471,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-# qq:DCC Are these resources needed for DCMAW Async?
-            - Sid: invokeGetContraIndicatorCredentialFunction
-              Effect: Allow
-              Action:
-                - 'lambda:InvokeFunction'
-              Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}:live"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-            - Sid: invokePutCiFunction
-              Effect: Allow
-              Action:
-                - 'lambda:InvokeFunction'
-              Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}:live"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-            - Sid: invokePostCiMitigationFunction
-              Effect: Allow
-              Action:
-                - 'lambda:InvokeFunction'
-              Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}:live"
-                  - cimit_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - cimitEnvironment
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   CallDcmawAsyncCriFunctionLogGroup:
