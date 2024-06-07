@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.dto.CredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -24,6 +25,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
@@ -65,6 +67,8 @@ class CriApiServiceTest {
     private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
+    private static final String TEST_BASIC_AUTH_USER = "test_basic_auth_user";
+    private static final String TEST_BASIC_AUTH_SECRET = "test_basic_auth_secret";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
     private static final VerifiableCredential PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -208,7 +212,8 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldGetApiKeyIfPresent() throws Exception {
+    void buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldGetApiKeyIfPresent()
+            throws Exception {
         // Arrange
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
@@ -225,8 +230,9 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldUseCorrectTokenEndpoint(
-            WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldUseCorrectTokenEndpoint(
+                    WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         // Arrange
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
@@ -244,7 +250,8 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldHandleJOSEException() throws Exception {
+    void buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldHandleJOSEException()
+            throws Exception {
         // Arrange
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
@@ -265,7 +272,9 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey() throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldFailGracefullyWithInvalidApiKey()
+                    throws Exception {
         // Arrange
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn("InvalidApiKey");
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
@@ -282,8 +291,9 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldIncludeAuthorizationCodeInRequestBody()
-            throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeAuthorizationCodeInRequestBody()
+                    throws Exception {
         // Arrange
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
@@ -299,7 +309,9 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody() throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeRedirectionUriInRequestBody()
+                    throws Exception {
         // Arrange
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
@@ -312,6 +324,46 @@ class CriApiServiceTest {
 
         // Assert
         assertTrue(request.getBody().contains("redirect_uri="));
+    }
+
+    @Test
+    void
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldBuildAnAuthorizationHeader()
+                    throws Exception {
+        // Arrange
+        var criOauthSession = new CriOAuthSessionItem();
+        criOauthSession.setCriId(TEST_CRI_ID);
+        var expectedHeader =
+                Base64.getEncoder()
+                        .encodeToString(
+                                (TEST_BASIC_AUTH_USER + ":" + TEST_BASIC_AUTH_SECRET).getBytes());
+
+        // Act
+        var request =
+                criApiService.buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+                        TEST_BASIC_AUTH_USER, TEST_BASIC_AUTH_SECRET, criOauthSession);
+
+        // Assert
+        assertEquals(
+                "Basic dGVzdF9iYXNpY19hdXRoX3VzZXI6dGVzdF9iYXNpY19hdXRoX3NlY3JldA==",
+                request.getAuthorization());
+    }
+
+    @Test
+    void
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldIncludeGrantTypeInRequestBody()
+                    throws Exception {
+        // Arrange
+        var criOauthSession = new CriOAuthSessionItem();
+        criOauthSession.setCriId(TEST_CRI_ID);
+
+        // Act
+        var request =
+                criApiService.buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+                        TEST_BASIC_AUTH_USER, TEST_BASIC_AUTH_SECRET, criOauthSession);
+
+        // Assert
+        assertEquals("grant_type=client_credentials", request.getBody());
     }
 
     @Test
@@ -497,7 +549,7 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchVerifiableCredentialRequestShouldSetCorrectHeaders()
+    void buildFetchVerifiableCredentialRequestShouldSetApiKeyHeader()
             throws JsonProcessingException {
         // Arrange
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
@@ -521,6 +573,48 @@ class CriApiServiceTest {
 
         // Assert
         assertEquals("Bearer validToken", request.getAuthorization());
+    }
+
+    @Test
+    void buildFetchVerifiableCredentialRequestShouldSetContentTypeHeaderWhenABodyIsProvided()
+            throws JsonProcessingException {
+        // Arrange
+        var body =
+                new CredentialRequestBodyDto(
+                        "userId",
+                        "journeyId",
+                        TEST_CRI_ID,
+                        "RANDOM_STATE_VALUE",
+                        "https://example.com");
+
+        // Act
+        var request =
+                criApiService.buildFetchVerifiableCredentialRequest(
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+
+        // Assert
+        assertEquals("application/json", request.getHeaderMap().get("Content-Type").get(0));
+    }
+
+    @Test
+    void buildFetchVerifiableCredentialRequestShouldSetBodyWhenABodyIsProvided()
+            throws JsonProcessingException {
+        // Arrange
+        var body =
+                new CredentialRequestBodyDto(
+                        "userId",
+                        "journeyId",
+                        TEST_CRI_ID,
+                        "RANDOM_STATE_VALUE",
+                        "https://example.com");
+
+        // Act
+        var request =
+                criApiService.buildFetchVerifiableCredentialRequest(
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+
+        // Assert
+        assertTrue(request.getBody().contains("userId"));
     }
 
     @Test

@@ -328,10 +328,11 @@ public class CriApiService {
         if (requestBody != null) {
             var bodyString = OBJECT_MAPPER.writeValueAsString(requestBody);
             request.setBody(bodyString);
+            request.setHeader(HEADER_CONTENT_TYPE, "application/json");
         } else {
             request.setHeader(
                     HEADER_CONTENT_TYPE,
-                    ""); // remove the default, no request body so we don't need
+                    ""); // remove the default, no request body so we don't need a content type
         }
 
         if (apiKey != null) {
