@@ -9,13 +9,14 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionVot;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -103,10 +104,13 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             List<VerifiableCredential> credentials =
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
+
+            var identityType = RequestHelper.getIdentityType(input);
+
             verifiableCredentialService.storeIdentity(credentials, userId);
 
             if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                if (RequestHelper.getIsCompletedIdentity(input)) {
+                if (identityType != IdentityType.PENDING) {
                     evcsService.storeCompletedIdentity(
                             userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
                 } else {
@@ -126,7 +130,8 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                                     ipvSessionItem.getIpvSessionId(),
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
                                     input.getIpAddress()),
-                            new AuditExtensionVot(vot.equals(P0) ? null : vot),
+                            new AuditExtensionIdentityType(
+                                    identityType, vot.equals(P0) ? null : vot),
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
             return JOURNEY_IDENTITY_STORED;

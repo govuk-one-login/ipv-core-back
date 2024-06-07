@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Arrays;
@@ -437,38 +438,62 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIsCompletedIdentityShouldReturnTrue() throws Exception {
+    void getIdentityTypeShouldReturnNew() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isCompletedIdentity", true))
+                        .lambdaInput(Map.of("identityType", "new"))
                         .build();
 
-        assertTrue(RequestHelper.getIsCompletedIdentity(request));
+        assertEquals(IdentityType.NEW, RequestHelper.getIdentityType(request));
     }
 
     @Test
-    void getIsCompletedIdentityShouldReturnFalse() throws Exception {
+    void getIdentityTypeShouldReturnPending() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("isCompletedIdentity", false))
+                        .lambdaInput(Map.of("identityType", "pending"))
                         .build();
 
-        assertFalse(RequestHelper.getIsCompletedIdentity(request));
+        assertEquals(IdentityType.PENDING, RequestHelper.getIdentityType(request));
     }
 
     @Test
-    void getIsCompletedIdentityShouldThrowIfNull() {
+    void getIdentityTypeShouldReturnUpdate() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("identityType", "UPDATE"))
+                        .build();
+
+        assertEquals(IdentityType.UPDATE, RequestHelper.getIdentityType(request));
+    }
+
+    @Test
+    void getIdentityTypeShouldThrowIfNull() {
         var lambdaInput = new HashMap<String, Object>();
-        lambdaInput.put("isCompletedIdentity", null);
+        lambdaInput.put("identityType", null);
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
 
         HttpResponseExceptionWithErrorBody thrown =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getIsCompletedIdentity(request));
+                        () -> RequestHelper.getIdentityType(request));
 
-        assertEquals(
-                ErrorResponse.MISSING_IS_COMPLETED_IDENTITY_PARAMETER, thrown.getErrorResponse());
+        assertEquals(ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getIdentityTypeShouldThrowIfInvalid() {
+        var lambdaInput = new HashMap<String, Object>();
+        lambdaInput.put("identityType", "invalid");
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder().lambdaInput(lambdaInput).build();
+
+        HttpResponseExceptionWithErrorBody thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getIdentityType(request));
+
+        assertEquals(ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER, thrown.getErrorResponse());
     }
 }

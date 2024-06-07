@@ -82,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static com.nimbusds.oauth2.sdk.OAuth2Error.INVALID_REQUEST_OBJECT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -92,15 +93,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
@@ -129,7 +129,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String CLIENT_ID = "client_id";
     private static final String VTR = "vtr";
     private static final String CLAIMS = "claims";
-    private static final String USER_INFO = "userInfo";
+    private static final String USER_INFO = "userinfo";
     private static final String VALUES = "values";
     private static final String SCOPE = "scope";
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
@@ -969,8 +969,6 @@ class InitialiseIpvSessionHandlerTest {
 
         @Test
         void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
-            reset(mockConfigService);
-            reset(mockClientOAuthSessionDetailsService);
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -996,6 +994,17 @@ class InitialiseIpvSessionHandlerTest {
                             eq("test-client"),
                             eq("test-state"),
                             eq(null));
+
+            verify(mockIpvSessionService, times(2))
+                    .generateIpvSession(
+                            anyString(),
+                            errorObjectArgumentCaptor.capture(),
+                            isNull(),
+                            anyBoolean());
+            var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+            assertEquals(INVALID_REQUEST_OBJECT_CODE, capturedErrorObject.getCode());
+            assertEquals(
+                    "Claims cannot be parsed to JarClaims", capturedErrorObject.getDescription());
         }
 
         @Test

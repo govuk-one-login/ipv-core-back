@@ -63,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.REVERIFICATION;
-import static uk.gov.di.ipv.core.initialiseipvsession.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -74,6 +72,8 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class InitialiseIpvSessionHandler
@@ -193,14 +193,13 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
-            Optional<JarUserInfo> jarUserInfoClaim = getJarUserInfo(claimsSet);
             String evcsAccessToken = null;
-            if ((configService.enabled(EVCS_READ_ENABLED)
-                            || configService.enabled(EVCS_WRITE_ENABLED))
-                    && (jarUserInfoClaim.isPresent())) {
+            if (configService.enabled(EVCS_READ_ENABLED)
+                    || configService.enabled(EVCS_WRITE_ENABLED)) {
                 evcsAccessToken =
                         validateEvcsAccessToken(
-                                jarUserInfoClaim.map(JarUserInfo::evcsAccessToken), claimsSet);
+                                getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
+                                claimsSet);
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -216,10 +215,9 @@ public class InitialiseIpvSessionHandler
                             govukSigninJourneyId,
                             ipAddress);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
-                    && (jarUserInfoClaim.isPresent())) {
-                Optional<StringListClaim> inheritedIdentityJwtClaim =
-                        jarUserInfoClaim.map(JarUserInfo::inheritedIdentityClaim);
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
+                var inheritedIdentityJwtClaim =
+                        getJarUserInfo(claimsSet).map(JarUserInfo::inheritedIdentityClaim);
                 if (inheritedIdentityJwtClaim.isPresent()) {
                     validateAndStoreHMRCInheritedIdentity(
                             clientOAuthSessionItem.getUserId(),
@@ -316,7 +314,7 @@ public class InitialiseIpvSessionHandler
             return Optional.ofNullable(
                             OBJECT_MAPPER.convertValue(
                                     claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
-                    .map(JarClaims::userInfo);
+                    .map(JarClaims::userinfo);
         } catch (IllegalArgumentException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(

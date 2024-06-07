@@ -427,7 +427,7 @@ states:
       type: process
       lambda: store-identity
       lambdaInput:
-        isCompletedIdentity: true
+        identityType: NEW
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE
@@ -440,7 +440,7 @@ states:
       type: process
       lambda: store-identity
       lambdaInput:
-        isCompletedIdentity: false
+        identityType: PENDING
     events:
       identity-stored:
         targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
@@ -713,6 +713,7 @@ states:
     response:
       type: cri
       criId: claimedIdentity
+      auditEvent: IPV_NO_PHOTO_ID_JOURNEY_START
       context: bank_account
     parent: CRI_STATE
     events:

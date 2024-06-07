@@ -92,11 +92,14 @@ public class LambdaHttpServer {
 
             String requestId = UUID.randomUUID().toString();
 
+            String path = request.getHttpContext().getPath();
+
             APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
                     new APIGatewayProxyRequestEvent()
                             .withBody(requestBody)
                             .withHeaders(getHeaderMap(requestHeaders))
                             .withHttpMethod(request.getRequestMethod())
+                            .withPath(path)
                             .withRequestContext(
                                     new APIGatewayProxyRequestEvent.ProxyRequestContext()
                                             .withRequestId(requestId));
