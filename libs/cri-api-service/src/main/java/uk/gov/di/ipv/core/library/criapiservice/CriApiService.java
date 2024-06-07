@@ -95,7 +95,6 @@ public class CriApiService {
                 callbackRequest.getCredentialIssuerId(), criOAuthSessionItem, accessTokenRequest);
     }
 
-    // qq:DCC tests
     public BearerAccessToken fetchAccessToken(
             String basicAuthClientId,
             String basicAuthClientSecret,
