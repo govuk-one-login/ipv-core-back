@@ -1,20 +1,16 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
-import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -23,23 +19,29 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.net.URI;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class DcmawAsyncCriServiceTest {
-    private static final String SESSION_ID = "session-id";
-    private static final String OAUTH_STATE = "oauth-state";
+    private static final String IPV_SESSION_ID = "ipv-session-id";
+    private static final String CRI_OAUTH_STATE = "cri-oauth-state";
+    public static final String TEST_SECRET = "test-secret";
+    public static final String CRI_CLIENT_ID = "cri-client-id";
+    public static final String CREDENTIAL_URL = "https://example.com/credentialbackUrl";
+    public static final String TOKEN_URL = "https://example.com/tokenUrl";
+    private static final String REDIRECT_URL = "https://example.com/callbackUrl";
+    public static final String ACCESS_TOKEN = "accessToken";
+    public static final String USER_ID = "userId";
+    public static final String JOURNEY_ID = "journeyId";
+    public static final String CLIENT_OAUTH_SESSION_ID = "client-oauth-session-id";
+    public static final String CONNECTION = "connection";
 
-    private IpvSessionItem ipvSessionItem;
-    @Mock private OauthCriConfig criConfig;
     @Mock private ConfigService mockConfigService;
-    private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
     @Mock private CriApiService mockCriApiService;
 
     @Mock private IpvSessionService mockIpvSessionService;
@@ -47,75 +49,74 @@ class DcmawAsyncCriServiceTest {
 
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
-    @BeforeEach
-    void setUp() {
-        ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setVot(Vot.P2);
-        ipvSessionItem.setIpvSessionId(SESSION_ID);
-    }
-
     @Test
-    void testStartDcmawAsyncSession() throws Exception {
-        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-        var vcResponse =
-                VerifiableCredentialResponse.builder()
-                        .userId(clientOAuthSessionItem.getUserId())
-                        .verifiableCredentials(
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()))
-                        .credentialStatus(VerifiableCredentialStatus.CREATED)
+    void startDcmawAsyncSession_WhenCalled_ReturnsAVc() throws Exception {
+        // Arrange
+        var clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .userId(USER_ID)
+                        .govukSigninJourneyId(JOURNEY_ID)
+                        .clientOAuthSessionId(CLIENT_OAUTH_SESSION_ID)
                         .build();
 
-        when(mockCriApiService.fetchVerifiableCredential(any(), any(), any(), any()))
+        var ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setVot(Vot.P2);
+        ipvSessionItem.setIpvSessionId(IPV_SESSION_ID);
+
+        var criConfig =
+                OauthCriConfig.builder()
+                        .tokenUrl(new URI(TOKEN_URL))
+                        .credentialUrl(new URI(CREDENTIAL_URL))
+                        .clientId(CRI_CLIENT_ID)
+                        .clientCallbackUrl(URI.create(REDIRECT_URL))
+                        .requiresApiKey(false)
+                        .requiresAdditionalEvidence(false)
+                        .build();
+
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criId(DCMAW_ASYNC_CRI)
+                        .criOAuthSessionId(CRI_OAUTH_STATE)
+                        .clientOAuthSessionId(CLIENT_OAUTH_SESSION_ID)
+                        .build();
+
+        when(mockCriOAuthSessionService.persistCriOAuthSession(
+                        CRI_OAUTH_STATE, DCMAW_ASYNC_CRI, CLIENT_OAUTH_SESSION_ID, CONNECTION))
+                .thenReturn(criOAuthSessionItem);
+
+        when(mockConfigService.getOauthCriConfig(criOAuthSessionItem)).thenReturn(criConfig);
+        when(mockConfigService.getCriOAuthClientSecret(criOAuthSessionItem))
+                .thenReturn(TEST_SECRET);
+        when(mockConfigService.getActiveConnection(DCMAW_ASYNC_CRI)).thenReturn(CONNECTION);
+
+        var accessToken = new BearerAccessToken(ACCESS_TOKEN);
+        when(mockCriApiService.fetchAccessToken(CRI_CLIENT_ID, TEST_SECRET, criOAuthSessionItem))
+                .thenReturn(accessToken);
+
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId(USER_ID)
+                        .credentialStatus(VerifiableCredentialStatus.PENDING)
+                        .build();
+        when(mockCriApiService.fetchVerifiableCredential(
+                        argThat(bat -> ACCESS_TOKEN.equals(bat.getValue())),
+                        eq(DCMAW_ASYNC_CRI),
+                        eq(criOAuthSessionItem),
+                        argThat(
+                                crbd ->
+                                        USER_ID.equals(crbd.getUserId())
+                                                && JOURNEY_ID.equals(crbd.getJourneyId())
+                                                && CRI_CLIENT_ID.equals(crbd.getClientId())
+                                                && CRI_OAUTH_STATE.equals(crbd.getState())
+                                                && REDIRECT_URL.equals(crbd.getRedirectUri()))))
                 .thenReturn(vcResponse);
 
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
-        when(mockConfigService.getCriOAuthClientSecret(any())).thenReturn("clientSecret");
-        when(criConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
+        // Act
+        var response =
+                dcmawAsyncCriService.startDcmawAsyncSession(
+                        CRI_OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem);
 
-        BearerAccessToken accessToken = new BearerAccessToken("accessToken");
-        when(mockCriApiService.fetchAccessToken(any(), any(), any())).thenReturn(accessToken);
-
-        dcmawAsyncCriService.startDcmawAsyncSession(
-                OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem);
-
-        verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-        verify(mockCriOAuthSessionService).persistCriOAuthSession(any(), any(), any(), any());
-        verify(mockCriApiService).fetchVerifiableCredential(any(), any(), any(), any());
-    }
-
-    @Test
-    void testStartDcmawAsyncSessionThrowsCriApiException() throws Exception {
-        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
-
-        when(mockCriApiService.fetchAccessToken(any(), any(), any()))
-                .thenThrow(
-                        new CriApiException(
-                                HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
-
-        assertThrows(
-                CriApiException.class,
-                () ->
-                        dcmawAsyncCriService.startDcmawAsyncSession(
-                                OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem));
-    }
-
-    @Test
-    void testStartDcmawAsyncSessionThrowsJsonProcessingException() throws Exception {
-        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);
-        BearerAccessToken accessToken = new BearerAccessToken("accessToken");
-        when(mockCriApiService.fetchAccessToken(any(), any(), any())).thenReturn(accessToken);
-        when(criConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
-
-        when(mockCriApiService.fetchVerifiableCredential(any(), any(), any(), any()))
-                .thenThrow(new JsonProcessingException("error") {});
-
-        assertThrows(
-                JsonProcessingException.class,
-                () ->
-                        dcmawAsyncCriService.startDcmawAsyncSession(
-                                OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem));
+        // Assert
+        assertEquals(vcResponse, response);
     }
 }

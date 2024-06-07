@@ -8,7 +8,6 @@ import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -60,16 +59,13 @@ public class DcmawAsyncCriService {
 
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
-        criOAuthSessionService.persistCriOAuthSession(
-                oauthState, criId, clientOAuthSessionItem.getClientOAuthSessionId(), connection);
 
-        CriOAuthSessionItem criOAuthSessionItem =
-                CriOAuthSessionItem.builder()
-                        .criOAuthSessionId(oauthState)
-                        .criId(criId)
-                        .clientOAuthSessionId(clientOAuthSessionItem.getClientOAuthSessionId())
-                        .connection(connection)
-                        .build();
+        var criOAuthSessionItem =
+                criOAuthSessionService.persistCriOAuthSession(
+                        oauthState,
+                        criId,
+                        clientOAuthSessionItem.getClientOAuthSessionId(),
+                        connection);
 
         String dcmawAsyncClientSecret = configService.getCriOAuthClientSecret(criOAuthSessionItem);
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);

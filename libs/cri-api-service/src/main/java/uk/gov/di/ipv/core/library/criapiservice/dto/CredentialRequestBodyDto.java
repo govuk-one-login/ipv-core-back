@@ -2,8 +2,10 @@ package uk.gov.di.ipv.core.library.criapiservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public class CredentialRequestBodyDto {
     @JsonProperty(value = "sub")
     private String userId;
