@@ -308,7 +308,7 @@ public class ProcessCriCallbackHandler
                     CiPostMitigationsException, UnrecognisedVotException, CredentialParseException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
-            criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
+            criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem);
 
             return Collections.emptyList();
         } else {

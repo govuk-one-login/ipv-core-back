@@ -112,7 +112,7 @@ public class CallDcmawAsyncCriHandler
             }
 
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
-            criStoringService.storeCriResponse(
+            criStoringService.recordCriResponse(
                     request, DCMAW_ASYNC_CRI, oauthState, clientOAuthSessionItem);
 
             return JOURNEY_NEXT;

@@ -159,7 +159,7 @@ class ProcessCriCallbackHandlerTest {
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         verify(mockCriCheckingService).validateSessionIds(callbackRequest);
-        verify(mockCriStoringService).storeCriResponse(callbackRequest, clientOAuthSessionItem);
+        verify(mockCriStoringService).recordCriResponse(callbackRequest, clientOAuthSessionItem);
     }
 
     @Test

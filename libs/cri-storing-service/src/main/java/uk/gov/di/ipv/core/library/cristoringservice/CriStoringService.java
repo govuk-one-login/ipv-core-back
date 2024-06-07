@@ -41,8 +41,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
-// qq:DCC what's going on here? We are storing a CriResponse, but not using a single bit of the
-// actual response in these methods?
 public class CriStoringService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -67,14 +65,14 @@ public class CriStoringService {
         VcHelper.setConfigService(configService);
     }
 
-    public void storeCriResponse(
+    public void recordCriResponse(
             JourneyRequest journeyRequest,
             String criId,
             String criOAuthSessionId,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException, JsonProcessingException {
 
-        storeCriResponse(
+        recordCriResponse(
                 criId,
                 criOAuthSessionId,
                 journeyRequest.getIpvSessionId(),
@@ -83,11 +81,11 @@ public class CriStoringService {
                 clientOAuthSessionItem);
     }
 
-    public void storeCriResponse(
+    public void recordCriResponse(
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException, JsonProcessingException {
 
-        storeCriResponse(
+        recordCriResponse(
                 callbackRequest.getCredentialIssuerId(),
                 callbackRequest.getState(),
                 callbackRequest.getIpvSessionId(),
@@ -96,7 +94,7 @@ public class CriStoringService {
                 clientOAuthSessionItem);
     }
 
-    private void storeCriResponse(
+    private void recordCriResponse(
             String criId,
             String criOAuthSessionId,
             String ipvSessionId,

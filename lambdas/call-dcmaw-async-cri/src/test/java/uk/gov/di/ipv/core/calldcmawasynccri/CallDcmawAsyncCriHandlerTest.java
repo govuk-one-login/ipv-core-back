@@ -87,7 +87,7 @@ class CallDcmawAsyncCriHandlerTest {
                 callDcmawAsyncCriHandler.handleRequest(input, mockContext);
 
         verify(mockCriStoringService)
-                .storeCriResponse(
+                .recordCriResponse(
                         eq(input),
                         eq(DCMAW_ASYNC_CRI),
                         any(String.class),
@@ -149,7 +149,7 @@ class CallDcmawAsyncCriHandlerTest {
                     .thenReturn(VerifiableCredentialStatus.PENDING);
             when(mockDcmawAsyncCriService.startDcmawAsyncSession(any(), any(), any()))
                     .thenReturn(mockVerifiableCredentialResponse);
-            doThrow(e).when(mockCriStoringService).storeCriResponse(any(), any(), any(), any());
+            doThrow(e).when(mockCriStoringService).recordCriResponse(any(), any(), any(), any());
 
             Map<String, Object> lambdaResult =
                     callDcmawAsyncCriHandler.handleRequest(input, mockContext);
