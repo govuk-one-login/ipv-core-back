@@ -37,9 +37,9 @@ jobs:
           cache: 'gradle'
       - name: Run consumer contract tests
         run: ./gradlew --parallel pactConsumerTests
-      - name: Upload pacts to broker with gradle
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
-        run: ./gradlew pactPublish
+#      - name: Upload pacts to broker with gradle
+#        if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
+#        run: ./gradlew pactPublish
       # The initial call to the pact broker starts a 30 second timer where calls will succeed. As uploading the pacts and
       # verifying the pacts together takes over 30s we need to wait for the timer to expire so that the pact verification
       # call starts its own timer.
