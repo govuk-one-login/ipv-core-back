@@ -466,32 +466,6 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldSendAuditEventForMitigationStart() throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("testWithMitigationStart")
-                        .ipvSessionId(TEST_IP)
-                        .build();
-        mockIpvSessionItemAndTimeout("CRI_STATE");
-
-        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
-                .handleRequest(input, mockContext);
-
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-
-        assertEquals(AuditEventTypes.IPV_MITIGATION_START, capturedAuditEvent.getEventName());
-        assertEquals("core", capturedAuditEvent.getComponentId());
-        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
-        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
-        assertEquals(
-                "a-mitigation-type",
-                ((AuditExtensionMitigationType) capturedAuditEvent.getExtensions())
-                        .mitigationType());
-    }
-
-    @Test
     void shouldSendAuditEventWhenThereIsAuditEventInJourneyMap() throws Exception {
         var input =
                 JourneyRequest.builder()

@@ -33,8 +33,6 @@ states:
         targetState: CRI_STATE_WITH_EVIDENCE_REQUEST
       testWithContextAndEvidenceRequest:
         targetState: CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST
-      testWithMitigationStart:
-        targetState: PAGE_STATE_AT_START_OF_MITIGATION
       testWithAuditEvent:
         targetState: ERROR_STATE
         auditEvents:
@@ -78,15 +76,6 @@ states:
       evidenceRequest:
         scoringPolicy: gpg45
         strengthScore: 2
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
-
-  PAGE_STATE_AT_START_OF_MITIGATION:
-    response:
-      type: page
-      pageId: page-id-for-some-page
-      mitigationStart: a-mitigation-type
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE

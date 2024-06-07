@@ -16,8 +16,6 @@ public class ProcessStepResponse implements StepResponse {
     private static final String JOURNEY_TEMPLATE = "/journey/%s";
     private String lambda;
     private Map<String, Object> lambdaInput;
-    private String mitigationStart;
-    private String auditEvent;
 
     @Override
     public Map<String, Object> value() {

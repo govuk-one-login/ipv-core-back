@@ -70,7 +70,7 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
-            new ProcessStepResponse(END_SESSION_EVENT, null, null, null);
+            new ProcessStepResponse(END_SESSION_EVENT, null);
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -163,11 +163,6 @@ public class ProcessJourneyEventHandler
             }
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            if (stepResponse.getMitigationStart() != null) {
-                sendMitigationStartAuditEvent(
-                        auditEventUser, stepResponse.getMitigationStart(), deviceInformation);
-            }
 
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -369,19 +364,6 @@ public class ProcessJourneyEventHandler
                             new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
         }
         return stateMachinesMap;
-    }
-
-    private void sendMitigationStartAuditEvent(
-            AuditEventUser auditEventUser, String mitigationType, String deviceInformation)
-            throws SqsException {
-
-        auditService.sendAuditEvent(
-                new AuditEvent(
-                        AuditEventTypes.IPV_MITIGATION_START,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionMitigationType(mitigationType),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
     private void sendJourneyAuditEvent(

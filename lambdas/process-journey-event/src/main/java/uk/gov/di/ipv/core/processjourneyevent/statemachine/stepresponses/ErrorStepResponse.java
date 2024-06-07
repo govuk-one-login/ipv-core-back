@@ -13,8 +13,6 @@ public class ErrorStepResponse implements StepResponse {
     private static final String ERROR = "error";
     private String pageId;
     private String statusCode;
-    private String mitigationStart;
-    private String auditEvent;
 
     public Map<String, Object> value() {
         return Map.of("type", ERROR, "page", pageId, "statusCode", Integer.parseInt(statusCode));

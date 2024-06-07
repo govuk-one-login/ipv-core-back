@@ -24,7 +24,7 @@ class BasicStateTest {
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
         BasicState targetState = new BasicState();
-        PageStepResponse stepResponse = new PageStepResponse("stepId", "context", null, null);
+        PageStepResponse stepResponse = new PageStepResponse("stepId", "context");
         targetState.setResponse(stepResponse);
 
         BasicState currentState = new BasicState();
