@@ -3,13 +3,16 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,8 +25,10 @@ public class BasicEvent implements Event {
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;
+    private List<AuditEventTypes> auditEvents;
+    private LinkedHashMap<String, String> auditContext;
 
-    public State resolve(JourneyContext journeyContext) throws UnknownEventException {
+    public TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException {
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
@@ -50,7 +55,7 @@ public class BasicEvent implements Event {
                 return checkFeatureFlag.get(featureFlagValue).resolve(journeyContext);
             }
         }
-        return targetStateObj;
+        return new TransitionResult(targetStateObj, auditEvents, auditContext);
     }
 
     @Override

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
@@ -19,7 +20,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class BasicState implements State {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
     private String name;
     private String parent;
     private BasicState parentObj;
@@ -27,12 +27,9 @@ public class BasicState implements State {
     private Map<String, Event> events = new HashMap<>();
 
     @Override
-    public State transition(String eventName, String startState, JourneyContext journeyContext)
+    public TransitionResult transition(
+            String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException {
-        if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
-            return this;
-        }
-
         return getEvent(eventName)
                 .orElseThrow(
                         () ->

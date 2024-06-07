@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
@@ -21,16 +22,16 @@ class ExitNestedJourneyEventTest {
 
     @Test
     void resolveShouldResolveEventFromNestedJourneyExitEvents() throws UnknownEventException {
-        BasicState expectedState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         BasicEvent nestedJourneyExitEvent = mock(BasicEvent.class);
-        when(nestedJourneyExitEvent.resolve(any(JourneyContext.class))).thenReturn(expectedState);
+        when(nestedJourneyExitEvent.resolve(any(JourneyContext.class))).thenReturn(expectedResult);
 
         ExitNestedJourneyEvent exitNestedJourneyEvent = new ExitNestedJourneyEvent();
         exitNestedJourneyEvent.setExitEventToEmit("exiting");
         exitNestedJourneyEvent.setNestedJourneyExitEvents(
                 Map.of("exiting", nestedJourneyExitEvent));
 
-        assertEquals(expectedState, exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
+        assertEquals(expectedResult, exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
     }
 
     @Test

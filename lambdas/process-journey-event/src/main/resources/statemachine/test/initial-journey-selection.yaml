@@ -36,9 +36,16 @@ states:
       testWithMitigationStart:
         targetState: PAGE_STATE_AT_START_OF_MITIGATION
       testWithAuditEvent:
-        targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
-      testWithWrongAuditEvent:
-        targetState: WRONG_AUDIT_EVENT_STATE
+        targetState: ERROR_STATE
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+      testWithAuditEventContext:
+        targetState: ERROR_STATE
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: test-mitigation
       testJourneyStep:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -88,16 +95,6 @@ states:
     response:
       type: page
       pageId: page-id-for-some-page
-      auditEvent: IPV_NO_PHOTO_ID_JOURNEY_START
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
-
-  WRONG_AUDIT_EVENT_STATE:
-    response:
-      type: page
-      pageId: page-id-for-some-page
-      auditEvent: WRONG_AUDIT_EVENT_TYPE
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE

@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
@@ -514,21 +515,35 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenWrongAuditEvenTypeProvidedInJourneyMap() throws Exception {
+    void shouldSendMultipleAuditEventsWithContext() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("testWithWrongAuditEvent")
+                        .journey("testWithAuditEventContext")
                         .ipvSessionId(TEST_IP)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
-        Map<String, Object> output =
-                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                .handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvents = auditEventCaptor.getAllValues();
+        assertEquals(capturedAuditEvents.size(), 2);
+
+        var firstEvent = capturedAuditEvents.get(0);
+        assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
+        assertEquals("core", firstEvent.getComponentId());
+        assertEquals("testuserid", firstEvent.getUser().getUserId());
+        assertEquals("testjourneyid", firstEvent.getUser().getGovukSigninJourneyId());
+
+        var secondEvent = capturedAuditEvents.get(1);
+        assertEquals(AuditEventTypes.IPV_MITIGATION_START, secondEvent.getEventName());
+        assertEquals("core", secondEvent.getComponentId());
+        assertEquals("testuserid", secondEvent.getUser().getUserId());
+        assertEquals("testjourneyid", secondEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(
+                new AuditExtensionMitigationType("test-mitigation"), secondEvent.getExtensions());
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {
