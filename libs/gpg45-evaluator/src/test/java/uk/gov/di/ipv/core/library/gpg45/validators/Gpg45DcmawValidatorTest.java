@@ -13,6 +13,24 @@ class Gpg45DcmawValidatorTest {
 
     @Test
     void isSuccessfulShouldReturnTrueOnValidCredential() {
+        var testCheckDetail = new CheckDetail();
+        testCheckDetail.setBiometricVerificationProcessLevel(2);
+
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        3,
+                        2,
+                        1,
+                        2,
+                        Collections.singletonList(testCheckDetail),
+                        null,
+                        Collections.emptyList());
+
+        assertTrue(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
+    void isSuccessfulShouldReturnFalseOnInvalidCredentialWithNoBiometricVerificationProcessLevel() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         3,
@@ -23,7 +41,7 @@ class Gpg45DcmawValidatorTest {
                         null,
                         Collections.emptyList());
 
-        assertTrue(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
+        assertFalse(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
     }
 
     @Test
