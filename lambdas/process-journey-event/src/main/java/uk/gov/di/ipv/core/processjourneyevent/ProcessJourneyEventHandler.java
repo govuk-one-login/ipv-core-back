@@ -206,13 +206,12 @@ public class ProcessJourneyEventHandler
             String currentPage)
             throws JourneyEngineException, SqsException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
-            updateUserSessionForTimeout(
-                    ipvSessionItem.getUserState(),
-                    ipvSessionItem,
-                    auditEventUser,
-                    deviceInformation);
+            updateUserSessionForTimeout(ipvSessionItem, auditEventUser, deviceInformation);
             journeyEvent = NEXT_EVENT;
         }
+
+        var initialState = ipvSessionItem.getUserState();
+        var initialJourneyType = ipvSessionItem.getJourneyType();
 
         try {
             var newState = executeStateTransition(ipvSessionItem, journeyEvent, currentPage);
@@ -234,12 +233,9 @@ public class ProcessJourneyEventHandler
             }
 
             var basicState = (BasicState) newState;
+            ipvSessionItem.setUserState(basicState.getName());
 
-            updateUserState(
-                    ipvSessionItem.getUserState(),
-                    basicState.getName(),
-                    journeyEvent,
-                    ipvSessionItem);
+            logStateChange(initialState, initialJourneyType, journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
@@ -296,15 +292,19 @@ public class ProcessJourneyEventHandler
     }
 
     @Tracing
-    private void updateUserState(
-            String oldState, String newState, String journeyEvent, IpvSessionItem ipvSessionItem) {
-        ipvSessionItem.setUserState(newState);
+    private void logStateChange(
+            String oldState,
+            IpvJourneyTypes oldJourneyType,
+            String journeyEvent,
+            IpvSessionItem ipvSessionItem) {
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
                         .with("event", journeyEvent)
                         .with("from", oldState)
-                        .with("to", newState);
+                        .with("to", ipvSessionItem.getUserState())
+                        .with("fromJourney", oldJourneyType.name())
+                        .with("toJourney", ipvSessionItem.getJourneyType().name());
         LOGGER.info(message);
     }
 
@@ -317,15 +317,17 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private void updateUserSessionForTimeout(
-            String oldState,
-            IpvSessionItem ipvSessionItem,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser, String deviceInformation)
             throws SqsException {
+        var oldState = ipvSessionItem.getUserState();
+        var oldJourneyType = ipvSessionItem.getJourneyType();
+
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
-        updateUserState(oldState, CORE_SESSION_TIMEOUT_STATE, "timeout", ipvSessionItem);
+        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+
+        logStateChange(oldState, oldJourneyType, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
     }
 
