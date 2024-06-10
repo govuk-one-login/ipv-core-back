@@ -21,11 +21,11 @@ class StateMachineTest {
 
     @Test
     void transitionShouldReturnAppropriateState() throws Exception {
-        State expectedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
 
         State startingState = mock(BasicState.class);
         when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
-                .thenReturn(expectedEndState);
+                .thenReturn(expectedResult);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -33,10 +33,9 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionedState =
-                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
-        assertEquals(expectedEndState, transitionedState);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
@@ -54,14 +53,14 @@ class StateMachineTest {
 
     @Test
     void transitionShouldTransitionIntoNestedJourneyInvokeState() throws Exception {
-        State expectedNestedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
         when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
-                .thenReturn(expectedNestedEndState);
+                .thenReturn(expectedResult);
 
         State startingState = mock(BasicState.class);
         when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
-                .thenReturn(nestedJourneyInvokeState);
+                .thenReturn(new TransitionResult(nestedJourneyInvokeState));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -69,19 +68,18 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionState =
-                stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
-        assertEquals(expectedNestedEndState, transitionState);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
     void transitionShouldHandleNestedStateName() throws Exception {
-        State expectedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
 
         State startingState = mock(NestedJourneyInvokeState.class);
         when(startingState.transition("event", "START_STATE/NESTED_JOURNEY", JOURNEY_CONTEXT))
-                .thenReturn(expectedEndState);
+                .thenReturn(expectedResult);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -89,10 +87,26 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        State transitionedState =
+        var actualResult =
                 stateMachine.transition(
                         "START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, null);
 
-        assertEquals(expectedEndState, transitionedState);
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldReturnSameStateIfAttemptedRecovery() throws Exception {
+        State startingState = mock(BasicState.class);
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        var actualResult =
+                stateMachine.transition("START_STATE", "attempt-recovery", JOURNEY_CONTEXT, null);
+
+        assertEquals(startingState, actualResult.state());
     }
 }

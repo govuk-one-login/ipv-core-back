@@ -8,8 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ErrorStepResponseTest {
 
-    public static final ErrorStepResponse ERROR_RESPONSE =
-            new ErrorStepResponse("aPageId", "500", null, null);
+    public static final ErrorStepResponse ERROR_RESPONSE = new ErrorStepResponse("aPageId", "500");
 
     @Test
     void valueReturnsCorrectResponse() {
