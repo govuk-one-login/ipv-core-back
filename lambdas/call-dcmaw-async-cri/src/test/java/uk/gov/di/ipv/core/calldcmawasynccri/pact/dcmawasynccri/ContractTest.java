@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
-import uk.gov.di.ipv.core.library.criapiservice.dto.CredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -278,8 +278,8 @@ class ContractTest {
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
     }
 
-    private CredentialRequestBodyDto getCredentialRequestBody(String userId) {
-        return new CredentialRequestBodyDto(
+    private AsyncCredentialRequestBodyDto getCredentialRequestBody(String userId) {
+        return new AsyncCredentialRequestBodyDto(
                 userId,
                 "dummyJourneyId",
                 IPV_CORE_CLIENT_ID,

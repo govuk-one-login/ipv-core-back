@@ -108,7 +108,7 @@ public class CallDcmawAsyncCriHandler
 
             if (!VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
                 throw new DcmawAsyncCriHttpResponseException(
-                        "DCMAW Async CRI returned a non-pending VVC response");
+                        "DCMAW Async CRI returned a non-pending VC response");
             }
 
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);

@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.criapiservice.dto.CredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -574,7 +574,7 @@ class CriApiServiceTest {
             throws JsonProcessingException {
         // Arrange
         var body =
-                new CredentialRequestBodyDto(
+                new AsyncCredentialRequestBodyDto(
                         "userId",
                         "journeyId",
                         TEST_CRI_ID,
@@ -595,7 +595,7 @@ class CriApiServiceTest {
             throws JsonProcessingException {
         // Arrange
         var body =
-                new CredentialRequestBodyDto(
+                new AsyncCredentialRequestBodyDto(
                         "userId",
                         "journeyId",
                         TEST_CRI_ID,

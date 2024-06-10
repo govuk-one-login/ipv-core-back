@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class CredentialRequestBodyDto {
+public class AsyncCredentialRequestBodyDto {
     @JsonProperty(value = "sub")
     private String userId;
 

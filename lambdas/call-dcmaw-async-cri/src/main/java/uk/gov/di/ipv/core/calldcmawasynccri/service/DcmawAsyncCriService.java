@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.calldcmawasynccri.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
-import uk.gov.di.ipv.core.library.criapiservice.dto.CredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
@@ -75,7 +75,7 @@ public class DcmawAsyncCriService {
                         criConfig.getClientId(), dcmawAsyncClientSecret, criOAuthSessionItem);
 
         var credentialRequestBody =
-                new CredentialRequestBodyDto(
+                new AsyncCredentialRequestBodyDto(
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         criConfig.getClientId(),

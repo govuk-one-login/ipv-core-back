@@ -2387,54 +2387,6 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
-            - cimit_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitEnvironment
-          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
-            - cimit_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitEnvironment
-          CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
-            - cimit_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA

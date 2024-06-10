@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.criapiservice.dto.CredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -230,7 +230,7 @@ public class CriApiService {
             BearerAccessToken accessToken,
             String criId,
             CriOAuthSessionItem criOAuthSessionItem,
-            CredentialRequestBodyDto requestBody)
+            AsyncCredentialRequestBodyDto requestBody)
             throws CriApiException, JsonProcessingException {
         var request =
                 buildFetchVerifiableCredentialRequest(
@@ -317,7 +317,7 @@ public class CriApiService {
             BearerAccessToken accessToken,
             String criId,
             CriOAuthSessionItem criOAuthSessionItem,
-            CredentialRequestBodyDto requestBody)
+            AsyncCredentialRequestBodyDto requestBody)
             throws JsonProcessingException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
