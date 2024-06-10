@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -10,7 +11,9 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -51,6 +54,30 @@ public class EvcsService {
                         .vcs();
 
         persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, true);
+    }
+
+    @Tracing
+    public List<VerifiableCredential> getVerifiableCredentials(
+            String userId, String evcsAccessToken, EvcsVCState... states) {
+        List<EvcsGetUserVCDto> existingEvcsUserVCs =
+                evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
+
+        return existingEvcsUserVCs.stream()
+                .map(
+                        vc -> {
+                            try {
+                                return toVerifiableCredential(userId, vc);
+                            } catch (ParseException | CredentialParseException e) {
+                                return null;
+                            }
+                        })
+                .toList();
+    }
+
+    private VerifiableCredential toVerifiableCredential(String userId, EvcsGetUserVCDto dto)
+            throws ParseException, CredentialParseException {
+        var jwt = SignedJWT.parse(dto.vc());
+        return VerifiableCredential.fromValidJwt(userId, null, jwt);
     }
 
     @Tracing

@@ -1881,6 +1881,8 @@ Resources:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
       AutoPublishAlias: live
 
   CheckExistingIdentityFunctionLogGroup:
@@ -2893,6 +2895,8 @@ Resources:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
       AutoPublishAlias: live
 
   CheckCoiFunctionLogGroup:

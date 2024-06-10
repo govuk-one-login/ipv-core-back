@@ -47,6 +47,7 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -60,6 +61,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -68,6 +70,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -123,6 +126,7 @@ public class CheckExistingIdentityHandler
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final EvcsService evcsService;
 
     @SuppressWarnings({
         "unused",
@@ -139,7 +143,8 @@ public class CheckExistingIdentityHandler
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -151,6 +156,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.evcsService = evcsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -168,6 +174,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.evcsService = new EvcsService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -215,7 +222,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            var vcs = verifiableCredentialService.getVcs(userId);
+            var vcs = getVerifiableCredentials(userId, clientOAuthSessionItem.getEvcsAccessToken());
             var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F_CRI));
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
@@ -291,6 +298,18 @@ public class CheckExistingIdentityHandler
         } catch (MitigationRouteException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         }
+    }
+
+    @Tracing
+    private List<VerifiableCredential> getVerifiableCredentials(
+            String userId, String evcsAccessToken) throws CredentialParseException {
+        if (configService.enabled(EVCS_READ_ENABLED)) {
+            var vcs = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
+            if (vcs != null && vcs.size() > 0) {
+                return vcs;
+            }
+        }
+        return verifiableCredentialService.getVcs(userId);
     }
 
     @Tracing

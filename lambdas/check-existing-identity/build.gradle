@@ -18,7 +18,8 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service")
+			project(":libs:user-identity-service"),
+			project(":libs:evcs-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

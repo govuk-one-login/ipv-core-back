@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -25,19 +26,23 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_COI_JOURNEY_FOR_COI_CHECK;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COI_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
@@ -57,6 +62,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
+    private final EvcsService evcsService;
 
     public CheckCoiHandler(
             ConfigService configService,
@@ -65,7 +71,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
-            UserIdentityService userIdentityService) {
+            UserIdentityService userIdentityService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
@@ -73,6 +80,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.userIdentityService = userIdentityService;
+        this.evcsService = evcsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -84,6 +92,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
+        this.evcsService = new EvcsService(configService);
     }
 
     @Override
@@ -132,12 +141,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     ipAddress);
 
             var credentials =
-                    Stream.concat(
-                                    verifiableCredentialService.getVcs(userId).stream(),
-                                    sessionCredentialsService
-                                            .getCredentials(ipvSessionId, userId)
-                                            .stream())
-                            .toList();
+                    getCredentials(userId, ipvSessionId, clientOAuthSession.getEvcsAccessToken());
 
             var coiCheckSuccess =
                     switch (coiCheckType) {
@@ -210,5 +214,23 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
+    }
+
+    @Tracing
+    private List<VerifiableCredential> getCredentials(
+            String userId, String ipvSessionId, String evcsAccessToken)
+            throws CredentialParseException, VerifiableCredentialException {
+
+        List<VerifiableCredential> credentials = null;
+        if (configService.enabled(EVCS_READ_ENABLED)) {
+            credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
+        }
+        if (credentials == null || credentials.size() == 0) {
+            credentials = verifiableCredentialService.getVcs(userId);
+        }
+        return Stream.concat(
+                        credentials.stream(),
+                        sessionCredentialsService.getCredentials(ipvSessionId, userId).stream())
+                .toList();
     }
 }
