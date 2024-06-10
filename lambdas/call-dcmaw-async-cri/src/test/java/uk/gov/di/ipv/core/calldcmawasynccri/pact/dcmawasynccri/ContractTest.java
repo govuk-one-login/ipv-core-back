@@ -112,7 +112,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        IPV_CORE_CLIENT_ID, "dummyAuthCode", CRI_OAUTH_SESSION_ITEM);
+                        IPV_CORE_CLIENT_ID, "dummySecret", CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -161,7 +161,7 @@ class ContractTest {
                         CriApiException.class,
                         () -> {
                             underTest.fetchAccessToken(
-                                    IPV_CORE_CLIENT_ID, "badAuthCode", CRI_OAUTH_SESSION_ITEM);
+                                    IPV_CORE_CLIENT_ID, "badDummySecret", CRI_OAUTH_SESSION_ITEM);
                         });
         // Assert
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -178,7 +178,7 @@ class ContractTest {
                 .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
                 .headers(
                         "Content-Type",
-                        "application/x-www-form-urlencoded",
+                        "application/json",
                         "Authorization",
                         "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -236,7 +236,7 @@ class ContractTest {
                 .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
                 .headers(
                         "Content-Type",
-                        "application/x-www-form-urlencoded",
+                        "application/json",
                         "Authorization",
                         "Bearer badAccessToken")
                 .willRespondWith()
