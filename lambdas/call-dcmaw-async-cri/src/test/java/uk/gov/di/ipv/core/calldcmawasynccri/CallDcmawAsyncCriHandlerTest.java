@@ -143,4 +143,33 @@ class CallDcmawAsyncCriHandlerTest {
                 ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getMessage(),
                 lambdaResult.get("message"));
     }
+
+    @Test
+    void handleRequestShouldReturnJourneyErrorIfRespnseIsUserIdDoesntMatch() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId("Wrong-user-id")
+                        .credentialStatus(VerifiableCredentialStatus.PENDING)
+                        .build();
+        when(mockDcmawAsyncCriService.startDcmawAsyncSession(
+                any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
+                .thenReturn(vcResponse);
+
+        // Act
+        Map<String, Object> lambdaResult =
+                callDcmawAsyncCriHandler.handleRequest(input, mockContext);
+
+        // Assert
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(
+                ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getCode(), lambdaResult.get("code"));
+        assertEquals(
+                ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getMessage(),
+                lambdaResult.get("message"));
+    }
 }
