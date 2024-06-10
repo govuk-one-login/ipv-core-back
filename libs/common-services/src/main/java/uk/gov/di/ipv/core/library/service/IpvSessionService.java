@@ -103,13 +103,16 @@ public class IpvSessionService {
         if (errorObject == null) {
             if (isReverification) {
                 ipvSessionItem.setJourneyType(IpvJourneyTypes.REVERIFICATION);
+                ipvSessionItem.pushState(IpvJourneyTypes.REVERIFICATION, START_STATE);
             } else {
                 ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
+                ipvSessionItem.pushState(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, START_STATE);
             }
             ipvSessionItem.setUserState(START_STATE);
         } else {
             ipvSessionItem.setJourneyType(IpvJourneyTypes.TECHNICAL_ERROR);
             ipvSessionItem.setUserState(ERROR_STATE);
+            ipvSessionItem.pushState(IpvJourneyTypes.TECHNICAL_ERROR, ERROR_STATE);
             ipvSessionItem.setErrorCode(errorObject.getCode());
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }

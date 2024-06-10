@@ -118,3 +118,8 @@ states:
         targetState: JOURNEY_STATE
       exitEventFromDoublyNestedInvokeState:
         targetState: ERROR_STATE
+
+  JOURNEY_STATE:
+    response:
+      type: page
+      pageId: page-id-for-some-page

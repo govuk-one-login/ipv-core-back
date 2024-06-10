@@ -6,11 +6,12 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.JourneyState;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -24,12 +25,17 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
     private static final String START_STATE = "START";
+    private static final String ERROR_STATE = "ERROR";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
+    @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
     @InjectMocks private IpvSessionService ipvSessionService;
 
@@ -111,17 +117,17 @@ class IpvSessionServiceTest {
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, null, false);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(capturedSessionItem.getIpvSessionId());
+        assertNotNull(capturedSessionItem.getCreationDateTime());
 
+        assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
+        assertEquals(START_STATE, capturedSessionItem.getUserState());
         assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
-        assertEquals(START_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+                new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE),
+                capturedSessionItem.getStateStack().pop());
     }
 
     @Test
@@ -130,18 +136,15 @@ class IpvSessionServiceTest {
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, "test@test.com", false);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(capturedSessionItem.getIpvSessionId());
+        assertNotNull(capturedSessionItem.getCreationDateTime());
 
-        assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
-        assertEquals(START_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals("test@test.com", ipvSessionItemArgumentCaptor.getValue().getEmailAddress());
+        assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
+        assertEquals(START_STATE, capturedSessionItem.getUserState());
+        assertEquals("test@test.com", capturedSessionItem.getEmailAddress());
     }
 
     @Test
@@ -151,24 +154,37 @@ class IpvSessionServiceTest {
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), testErrorObject, null, false);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(capturedSessionItem.getIpvSessionId());
+        assertNotNull(capturedSessionItem.getCreationDateTime());
+        assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
+        assertEquals(TECHNICAL_ERROR, capturedSessionItem.getJourneyType());
+        assertEquals(ERROR_STATE, capturedSessionItem.getUserState());
+        assertEquals(testErrorObject.getCode(), capturedSessionItem.getErrorCode());
+        assertEquals(testErrorObject.getDescription(), capturedSessionItem.getErrorDescription());
         assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
+                new JourneyState(TECHNICAL_ERROR, ERROR_STATE),
+                capturedSessionItem.getStateStack().pop());
+    }
+
+    @Test
+    void shouldCreateSessionItemWithReverificationJourney() {
+        IpvSessionItem ipvSessionItem =
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.getInstance().generate(), null, null, true);
+
+        verify(mockDataStore)
+                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(capturedSessionItem.getIpvSessionId());
+        assertNotNull(capturedSessionItem.getCreationDateTime());
+        assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
+        assertEquals(REVERIFICATION, capturedSessionItem.getJourneyType());
         assertEquals(
-                IpvJourneyTypes.TECHNICAL_ERROR,
-                ipvSessionItemArgumentCaptor.getValue().getJourneyType());
-        assertEquals("ERROR", ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals(
-                testErrorObject.getCode(), ipvSessionItemArgumentCaptor.getValue().getErrorCode());
-        assertEquals(
-                testErrorObject.getDescription(),
-                ipvSessionItemArgumentCaptor.getValue().getErrorDescription());
+                new JourneyState(REVERIFICATION, START_STATE),
+                capturedSessionItem.getStateStack().pop());
     }
 
     @Test
@@ -194,8 +210,6 @@ class IpvSessionServiceTest {
         ipvSessionService.setAuthorizationCode(
                 ipvSessionItem, testCode.getValue(), "http://example.com");
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAuthorizationCode());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAuthorizationCodeMetadata());
@@ -211,8 +225,6 @@ class IpvSessionServiceTest {
 
         ipvSessionService.setAccessToken(ipvSessionItem, accessToken);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessToken());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessTokenMetadata());
@@ -228,33 +240,11 @@ class IpvSessionServiceTest {
 
         ipvSessionService.revokeAccessToken(ipvSessionItem);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
         assertNotNull(
                 ipvSessionItemArgumentCaptor
                         .getValue()
                         .getAccessTokenMetadata()
                         .getRevokedAtDateTime());
-    }
-
-    @Test
-    void shouldCreateSessionItemWithReverificationJourney() {
-        IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, true);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
-        assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                IpvJourneyTypes.REVERIFICATION,
-                ipvSessionItemArgumentCaptor.getValue().getJourneyType());
     }
 }
