@@ -626,7 +626,7 @@ class UserIdentityServiceTest {
             mockCredentialIssuerConfig();
 
             // Act & Assert
-            assertTrue(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertTrue(userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(vcs));
         }
 
         @Test
@@ -652,7 +652,7 @@ class UserIdentityServiceTest {
             mockCredentialIssuerConfig();
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(vcs));
         }
 
         @Test
@@ -678,7 +678,7 @@ class UserIdentityServiceTest {
             mockCredentialIssuerConfig();
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(vcs));
         }
 
         @Test
@@ -704,7 +704,7 @@ class UserIdentityServiceTest {
             mockCredentialIssuerConfig();
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertFalse(userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(vcs));
         }
 
         @ParameterizedTest
@@ -734,7 +734,9 @@ class UserIdentityServiceTest {
             HttpResponseExceptionWithErrorBody thrownError =
                     assertThrows(
                             HttpResponseExceptionWithErrorBody.class,
-                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+                            () ->
+                                    userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
+                                            vcs));
 
             // Assert
             assertEquals(500, thrownError.getResponseCode());
@@ -768,7 +770,9 @@ class UserIdentityServiceTest {
             HttpResponseExceptionWithErrorBody thrownError =
                     assertThrows(
                             HttpResponseExceptionWithErrorBody.class,
-                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+                            () ->
+                                    userIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
+                                            vcs));
 
             // Assert
             assertEquals(500, thrownError.getResponseCode());

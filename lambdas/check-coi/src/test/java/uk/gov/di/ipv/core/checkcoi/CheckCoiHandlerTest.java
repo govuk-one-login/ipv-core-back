@@ -8,17 +8,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -30,13 +38,18 @@ import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.ADDRESS_ONLY;
+import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.GIVEN_NAMES_ONLY;
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_COI_JOURNEY_FOR_COI_CHECK;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
@@ -50,6 +63,7 @@ class CheckCoiHandlerTest {
     private static final String CLIENT_SESSION_ID = "client-session-id";
     private static final String USER_ID = "user-id";
     @Mock private ConfigService mockConfigService;
+    @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientSessionService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
@@ -59,6 +73,7 @@ class CheckCoiHandlerTest {
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private ClientOAuthSessionItem mockClientSessionItem;
     @InjectMocks CheckCoiHandler checkCoiHandler;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
     @BeforeEach
     void setup() throws Exception {
@@ -98,6 +113,21 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
             }
 
             @ParameterizedTest
@@ -106,7 +136,7 @@ class CheckCoiHandlerTest {
                     names = {"FAMILY_NAME_ONLY", "FAMILY_NAME_AND_ADDRESS"})
             void shouldReturnPassedForSuccessfulFamilyNameOnlyCheck(
                     CoiSubjourneyType coiSubjourneyType) throws Exception {
-                when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                when(mockUserIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
@@ -117,23 +147,27 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
-            }
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
 
-            @Test
-            void shouldReturnPassedForAddressOnlyCheck() {
-                when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
-
-                var request =
-                        ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
-
-                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
             }
 
             @Test
             void shouldReturnPassedForSuccessfulReverificationCheck()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                            SqsException {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
@@ -145,6 +179,21 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
             }
         }
 
@@ -168,6 +217,21 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, false),
+                        auditEventsCaptured.get(1).getExtensions());
             }
 
             @ParameterizedTest
@@ -176,7 +240,7 @@ class CheckCoiHandlerTest {
                     names = {"FAMILY_NAME_ONLY", "FAMILY_NAME_AND_ADDRESS"})
             void shouldReturnFailedForFailedFamilyNameOnlyCheck(CoiSubjourneyType coiSubjourneyType)
                     throws Exception {
-                when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                when(mockUserIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
@@ -187,6 +251,21 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, false),
+                        auditEventsCaptured.get(1).getExtensions());
             }
         }
     }
@@ -197,13 +276,14 @@ class CheckCoiHandlerTest {
 
         @Test
         @MockitoSettings(strictness = LENIENT)
-        void shouldReturnErrorIfIpvSessionIdNotFound() {
+        void shouldReturnErrorIfIpvSessionIdNotFound() throws SqsException {
             var request = ProcessRequest.processRequestBuilder().ipvSessionId(null).build();
 
             var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(MISSING_IPV_SESSION_ID.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(0)).sendAuditEvent(any());
         }
 
         @ParameterizedTest
@@ -226,6 +306,15 @@ class CheckCoiHandlerTest {
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
 
         @ParameterizedTest
@@ -234,7 +323,7 @@ class CheckCoiHandlerTest {
                 names = {"FAMILY_NAME_ONLY", "FAMILY_NAME_AND_ADDRESS"})
         void shouldReturnErrorIfGivenNameCorrelationCheckThrowsHttpResponseException(
                 CoiSubjourneyType coiSubjourneyType) throws Exception {
-            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+            when(mockUserIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(
                             new HttpResponseExceptionWithErrorBody(
@@ -248,6 +337,15 @@ class CheckCoiHandlerTest {
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
 
         @ParameterizedTest
@@ -269,6 +367,15 @@ class CheckCoiHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(
                     FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
 
         @ParameterizedTest
@@ -277,7 +384,7 @@ class CheckCoiHandlerTest {
                 names = {"FAMILY_NAME_ONLY", "FAMILY_NAME_AND_ADDRESS"})
         void shouldReturnErrorIfGivenNameCorrelationCheckThrowsCredParseException(
                 CoiSubjourneyType coiSubjourneyType) throws Exception {
-            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+            when(mockUserIdentityService.areGivenNamesAndDobCorrelatedForCoiCheck(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(new CredentialParseException("oops"));
             when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
@@ -290,6 +397,31 @@ class CheckCoiHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(
                     FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
+        }
+
+        @Test
+        @MockitoSettings(strictness = LENIENT)
+        void shouldReturnErrorIfCoiSubjourneyTypeAddressOnly() throws SqsException {
+            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(ADDRESS_ONLY);
+
+            var request =
+                    ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+
+            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
+            assertEquals(
+                    INVALID_COI_JOURNEY_FOR_COI_CHECK.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(0)).sendAuditEvent(any());
         }
 
         @Test
@@ -309,6 +441,15 @@ class CheckCoiHandlerTest {
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
 
         @Test
@@ -327,6 +468,15 @@ class CheckCoiHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(
                     FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
 
         @Test
@@ -335,6 +485,7 @@ class CheckCoiHandlerTest {
                     .thenThrow(
                             new VerifiableCredentialException(
                                     SC_SERVER_ERROR, FAILED_TO_GET_CREDENTIAL));
+            when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(GIVEN_NAMES_ONLY);
 
             var request =
                     ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
@@ -343,6 +494,15 @@ class CheckCoiHandlerTest {
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+            var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+            assertEquals(
+                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                    auditEventsCaptured.get(0).getEventName());
+            assertEquals(
+                    new AuditExtensionCoiCheck(CoiCheckType.LAST_NAME_AND_DOB, null),
+                    auditEventsCaptured.get(0).getExtensions());
         }
     }
 }

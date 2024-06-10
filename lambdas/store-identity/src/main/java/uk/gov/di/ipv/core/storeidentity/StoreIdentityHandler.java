@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -107,8 +108,6 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             var identityType = RequestHelper.getIdentityType(input);
 
-            verifiableCredentialService.storeIdentity(credentials, userId);
-
             if (configService.enabled(EVCS_WRITE_ENABLED)) {
                 if (identityType != IdentityType.PENDING) {
                     evcsService.storeCompletedIdentity(
@@ -117,7 +116,11 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                     evcsService.storePendingIdentity(
                             userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
                 }
+                credentials.forEach(credential -> credential.setMigrated(Instant.now()));
             }
+
+            verifiableCredentialService.storeIdentity(credentials, userId);
+
             LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
             Vot vot = ipvSessionItem.getVot();
