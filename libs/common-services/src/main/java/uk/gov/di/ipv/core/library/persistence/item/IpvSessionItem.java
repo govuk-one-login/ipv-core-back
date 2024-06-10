@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.Arrays;
@@ -34,7 +33,6 @@ public class IpvSessionItem implements DynamodbItem {
     private Vot vot;
     private long ttl;
     private IpvJourneyTypes journeyType;
-    private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
 
