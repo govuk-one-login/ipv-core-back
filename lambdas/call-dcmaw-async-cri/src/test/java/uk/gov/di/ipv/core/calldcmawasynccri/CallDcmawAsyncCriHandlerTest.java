@@ -156,7 +156,7 @@ class CallDcmawAsyncCriHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.PENDING)
                         .build();
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(
-                any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
+                        any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
                 .thenReturn(vcResponse);
 
         // Act
