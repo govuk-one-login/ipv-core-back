@@ -68,8 +68,6 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
         error:
-          # qq:DCC this is what the current DCMAW CRI does if there is an error, should we do the same?
-          # Although, in local running at least, if there is an exception thrown we still see "Sorry, there is a problem. We cannot prove your identity right now." instead. What's going on?
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
           checkIfDisabled:
             f2f:
@@ -83,7 +81,6 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
         error:
-          # qq:DCC this is what the current DCMAW CRI does if there is an error, should we do the same?
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
           checkIfDisabled:
             f2f:
@@ -141,7 +138,6 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
         error:
-          # qq:DCC this is what the current DCMAW CRI does if there is an error, should we do the same?
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
           checkIfDisabled:
             f2f:
@@ -155,7 +151,6 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
         error:
-          # qq:DCC this is what the current DCMAW CRI does if there is an error, should we do the same?
           targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
           checkIfDisabled:
             f2f:
