@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -152,7 +153,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
             if (!successfulCheck) {
                 if (isReverification) {
-                    ipvSession.setReverificationStatus(ReverificationStatus.FAILED);
+                    setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.FAILED);
                 }
                 LOGGER.info(
                         LogHelper.buildLogMessage("Failed COI check")
@@ -161,7 +162,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             }
 
             if (isReverification) {
-                ipvSession.setReverificationStatus(ReverificationStatus.SUCCESS);
+                setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.SUCCESS);
             }
 
             LOGGER.info(
@@ -195,6 +196,12 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
         }
+    }
+
+    private void setIpvSessionReverificationStatus(
+            IpvSessionItem ipvSessionItem, ReverificationStatus status) {
+        ipvSessionItem.setReverificationStatus(status);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
     @Tracing

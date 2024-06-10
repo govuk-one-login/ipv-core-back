@@ -65,7 +65,10 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             closeSession(ipvSessionItem);
 
             ReverificationResponse response;
-            if (ipvSessionItem.getReverificationStatus().equals(ReverificationStatus.SUCCESS)) {
+            if (ipvSessionItem.getReverificationStatus() != null
+                    && ipvSessionItem
+                            .getReverificationStatus()
+                            .equals(ReverificationStatus.SUCCESS)) {
                 response = ReverificationResponse.successResponse(userId);
             } else {
                 response =
