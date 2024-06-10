@@ -503,7 +503,7 @@ class ProcessJourneyEventHandlerTest {
 
         verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         var capturedAuditEvents = auditEventCaptor.getAllValues();
-        assertEquals(capturedAuditEvents.size(), 2);
+        assertEquals(2, capturedAuditEvents.size());
 
         var firstEvent = capturedAuditEvents.get(0);
         assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
