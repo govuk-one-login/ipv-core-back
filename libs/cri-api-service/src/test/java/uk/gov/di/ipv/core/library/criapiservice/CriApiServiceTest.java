@@ -112,7 +112,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -141,7 +141,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -328,15 +328,10 @@ class CriApiServiceTest {
 
     @Test
     void
-            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldBuildAnAuthorizationHeader()
-                    throws Exception {
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldBuildAnAuthorizationHeader() {
         // Arrange
         var criOauthSession = new CriOAuthSessionItem();
         criOauthSession.setCriId(TEST_CRI_ID);
-        var expectedHeader =
-                Base64.getEncoder()
-                        .encodeToString(
-                                (TEST_BASIC_AUTH_USER + ":" + TEST_BASIC_AUTH_SECRET).getBytes());
 
         // Act
         var request =
@@ -351,8 +346,7 @@ class CriApiServiceTest {
 
     @Test
     void
-            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldIncludeGrantTypeInRequestBody()
-                    throws Exception {
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldIncludeGrantTypeInRequestBody() {
         // Arrange
         var criOauthSession = new CriOAuthSessionItem();
         criOauthSession.setCriId(TEST_CRI_ID);

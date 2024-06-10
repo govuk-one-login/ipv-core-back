@@ -248,8 +248,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriWithInvalidAccessToken_throwsAnException(
-                    MockServer mockServer)
-                    throws URISyntaxException, CriApiException, JsonProcessingException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
