@@ -31,7 +31,7 @@ lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.10.1"
-notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.0.0-RELEASE"
+notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.1.0-RELEASE"
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
 powertoolsLogging = { module = "software.amazon.lambda:powertools-logging", version.ref = "powertools" }
