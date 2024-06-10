@@ -3335,9 +3335,10 @@ Resources:
       MetricName: Duration
       Namespace: AWS/Lambda
       Statistic: Maximum
-      Period: 300 #Evaluated over 300s = 5 minutes
-      EvaluationPeriods: 1
-      Threshold: 300000 #300k milliseconds = 5 minutes
+      Period: 60
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      Threshold: 30000 #30k milliseconds = 30 seconds
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
