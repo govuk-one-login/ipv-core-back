@@ -172,8 +172,12 @@ states:
           updateSupported: false
       cancel:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetState: IDENTITY_REUSE_PAGE_COI
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   DETAILS_DELETED_PAGE:
     response:

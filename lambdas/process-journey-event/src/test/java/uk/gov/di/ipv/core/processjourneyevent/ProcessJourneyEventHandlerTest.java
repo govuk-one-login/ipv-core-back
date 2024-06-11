@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -501,9 +503,9 @@ class ProcessJourneyEventHandlerTest {
         getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
                 .handleRequest(input, mockContext);
 
-        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        verify(mockAuditService, times(4)).sendAuditEvent(auditEventCaptor.capture());
         var capturedAuditEvents = auditEventCaptor.getAllValues();
-        assertEquals(2, capturedAuditEvents.size());
+        assertEquals(4, capturedAuditEvents.size());
 
         var firstEvent = capturedAuditEvents.get(0);
         assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
@@ -518,6 +520,22 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("testjourneyid", secondEvent.getUser().getGovukSigninJourneyId());
         assertEquals(
                 new AuditExtensionMitigationType("test-mitigation"), secondEvent.getExtensions());
+
+        var thirdEvent = capturedAuditEvents.get(2);
+        assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_SELECTED, thirdEvent.getEventName());
+        assertEquals("core", thirdEvent.getComponentId());
+        assertEquals("testuserid", thirdEvent.getUser().getUserId());
+        assertEquals("testjourneyid", thirdEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(
+                new AuditExtensionUserDetailsUpdateSelected(List.of("address"), true),
+                thirdEvent.getExtensions());
+
+        var fourthEvent = capturedAuditEvents.get(3);
+        assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_END, fourthEvent.getEventName());
+        assertEquals("core", fourthEvent.getComponentId());
+        assertEquals("testuserid", fourthEvent.getUser().getUserId());
+        assertEquals("testjourneyid", fourthEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(new AuditExtensionSuccessful(false), fourthEvent.getExtensions());
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {

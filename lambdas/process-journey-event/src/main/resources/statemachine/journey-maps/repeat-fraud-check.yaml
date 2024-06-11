@@ -141,6 +141,8 @@ states:
         checkFeatureFlag:
           coiEnabled:
             targetState: CONFIRM_DETAILS
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_ABORTED
 
   FRAUD_CHECK_RFC:
     response:

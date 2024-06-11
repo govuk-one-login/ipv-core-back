@@ -42,8 +42,13 @@ states:
         auditEvents:
           - IPV_NO_PHOTO_ID_JOURNEY_START
           - IPV_MITIGATION_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+          - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           mitigationType: test-mitigation
+          updateFields: address
+          updateSupported: true
+          successful: false
       testJourneyStep:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
