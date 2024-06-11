@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -127,7 +126,7 @@ public class CriStoringService {
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
             var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-            if (!Arrays.asList(scopeClaims).contains(ScopeConstants.REVERIFICATION)) {
+            if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
                 ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
                 ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
             }

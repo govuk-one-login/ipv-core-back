@@ -488,7 +488,7 @@ class CriCheckingServiceTest {
 
     @Test
     void checkVcResponseDoesNotCheckForCIsWhenOnReverificationJourney() throws Exception {
-        // Arrange for VCs not correlated
+        // Arrange and set scope to reverification
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);

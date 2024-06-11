@@ -8,6 +8,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.Arrays;
 import java.util.List;
 
 @DynamoDbBean
@@ -35,7 +36,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
         return clientOAuthSessionId;
     }
 
-    public String[] getScopeClaims() {
-        return this.scope.split(" ");
+    public List<String> getScopeClaims() {
+        return Arrays.asList(this.scope.split(" "));
     }
 }

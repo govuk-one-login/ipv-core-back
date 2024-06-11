@@ -222,7 +222,7 @@ public class CriCheckingService {
                     CredentialParseException, VerifiableCredentialException {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        if (!Arrays.asList(scopeClaims).contains(ScopeConstants.REVERIFICATION)) {
+        if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
             var cis =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),

@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -139,8 +138,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     };
 
             var scopeClaims = clientOAuthSession.getScopeClaims();
-            var isReverification =
-                    Arrays.asList(scopeClaims).contains(ScopeConstants.REVERIFICATION);
+            var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
 
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
@@ -151,6 +149,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     govukSigninJourneyId,
                     ipAddress);
 
+            if (isReverification) {
+                setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.SUCCESS);
+            }
+
             if (!successfulCheck) {
                 if (isReverification) {
                     setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.FAILED);
@@ -159,10 +161,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         LogHelper.buildLogMessage("Failed COI check")
                                 .with(LOG_CHECK_TYPE.getFieldName(), checkType));
                 return JOURNEY_COI_CHECK_FAILED.toObjectMap();
-            }
-
-            if (isReverification) {
-                setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.SUCCESS);
             }
 
             LOGGER.info(
