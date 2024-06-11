@@ -199,17 +199,14 @@ public class CredentialEvidenceItem {
                 return 0;
             }
 
-            var checkMethodWithVerificationScore =
-                    checkDetails.stream()
-                            .filter(
-                                    checkMethod ->
-                                            checkMethod.getBiometricVerificationProcessLevel()
-                                                    != null)
-                            .findFirst();
+            return checkDetails.stream()
+                    .filter(
+                            checkMethod ->
+                                    checkMethod.getBiometricVerificationProcessLevel() != null)
+                    .findFirst()
+                    .map(CheckDetail::getBiometricVerificationProcessLevel)
+                    .orElse(0);
 
-            return checkMethodWithVerificationScore.isPresent()
-                    ? checkMethodWithVerificationScore.get().getBiometricVerificationProcessLevel()
-                    : 0;
         } else {
             return verificationScore;
         }
