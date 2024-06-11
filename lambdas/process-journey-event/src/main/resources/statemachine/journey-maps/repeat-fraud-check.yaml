@@ -60,16 +60,16 @@ states:
         targetState: UPDATE_NAME_DOB
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START
+        targetState: GIVEN_ONLY_AFTER_RFC_START
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START
+        targetState: FAMILY_ONLY_AFTER_RFC_START
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START
+        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC_START
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START
+        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC_START
       next:
         targetState: FRAUD_CHECK_RFC
 

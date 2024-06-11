@@ -49,6 +49,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ADDRESS_ONLY_CHANGE
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS

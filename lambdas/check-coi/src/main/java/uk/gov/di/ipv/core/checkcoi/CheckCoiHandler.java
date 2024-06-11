@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -37,8 +38,8 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_COI_JOURNEY_FOR_COI_CHECK;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COI_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -98,7 +99,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var ipvSession =
                     ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
             var ipvSessionId = ipvSession.getIpvSessionId();
-            var coiSubjourneyType = ipvSession.getCoiSubjourneyType();
 
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -107,24 +107,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var coiCheckType =
-                    switch (coiSubjourneyType) {
-                        case GIVEN_NAMES_ONLY, GIVEN_NAMES_AND_ADDRESS -> CoiCheckType
-                                .LAST_NAME_AND_DOB;
-                        case FAMILY_NAME_ONLY, FAMILY_NAME_AND_ADDRESS -> CoiCheckType
-                                .GIVEN_NAMES_AND_DOB;
-                        case REVERIFICATION -> CoiCheckType.FULL_NAME_AND_DOB;
-                        case ADDRESS_ONLY -> {
-                            LOGGER.error(
-                                    LogHelper.buildLogMessage("Address only COI check requested"));
-                            throw new HttpResponseExceptionWithErrorBody(
-                                    SC_INTERNAL_SERVER_ERROR, INVALID_COI_JOURNEY_FOR_COI_CHECK);
-                        }
-                    };
-
+            var checkType = RequestHelper.getCoiCheckType(request);
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                    coiCheckType,
+                    checkType,
                     null,
                     userId,
                     ipvSessionId,
@@ -139,35 +125,34 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                             .stream())
                             .toList();
 
-            var coiCheckSuccess =
-                    switch (coiCheckType) {
-                        case LAST_NAME_AND_DOB -> userIdentityService
-                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
+            var successfulCheck =
+                    switch (checkType) {
                         case GIVEN_NAMES_AND_DOB -> userIdentityService
-                                .areGivenNamesAndDobCorrelatedForCoiCheck(credentials);
+                                .areGivenNamesAndDobCorrelated(credentials);
+                        case FAMILY_NAME_AND_DOB -> userIdentityService
+                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
                         case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
-                    coiCheckType,
-                    coiCheckSuccess,
+                    checkType,
+                    successfulCheck,
                     userId,
                     ipvSessionId,
                     govukSigninJourneyId,
                     ipAddress);
 
-            if (!coiCheckSuccess) {
+            if (!successfulCheck) {
                 LOGGER.info(
                         LogHelper.buildLogMessage("Failed COI check")
-                                .with(LOG_COI_CHECK_TYPE.getFieldName(), coiCheckType));
-
+                                .with(LOG_CHECK_TYPE.getFieldName(), checkType));
                 return JOURNEY_COI_CHECK_FAILED.toObjectMap();
             }
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Successful COI check")
-                            .with(LOG_COI_CHECK_TYPE.getFieldName(), coiCheckType));
+                            .with(LOG_CHECK_TYPE.getFieldName(), checkType));
 
             return JOURNEY_COI_CHECK_PASSED.toObjectMap();
 
@@ -187,6 +172,13 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_SEND_AUDIT_EVENT)
+                    .toObjectMap();
+        } catch (UnknownCoiCheckTypeException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Unknown COI check type received", e)
+                            .with(LOG_CHECK_TYPE.getFieldName(), e.getCheckType()));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
         }
     }

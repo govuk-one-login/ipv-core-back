@@ -97,6 +97,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
@@ -124,16 +126,16 @@ states:
         targetState: START
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START
+        targetState: GIVEN_ONLY_AFTER_REUSE_START
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START
+        targetState: FAMILY_ONLY_AFTER_REUSE_START
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START
+        targetState: GIVEN_WITH_ADDRESS_AFTER_REUSE_START
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START
+        targetState: FAMILY_WITH_ADDRESS_AFTER_REUSE_START
       names-dob:
         targetState: UPDATE_NAME_DOB_PAGE
       cancel:
