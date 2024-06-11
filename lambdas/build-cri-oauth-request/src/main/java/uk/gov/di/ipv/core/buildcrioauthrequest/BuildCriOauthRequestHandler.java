@@ -66,8 +66,8 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
@@ -318,7 +318,7 @@ public class BuildCriOauthRequestHandler
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributesForUser(ipvSessionItem, vcs, criId);
 
-        if (criId.equals(F2F_CRI)) {
+        if (criId.equals(F2F.getId())) {
             evidenceRequest = getEvidenceRequestForF2F(vcs);
         }
         SignedJWT signedJWT =
@@ -404,7 +404,7 @@ public class BuildCriOauthRequestHandler
                     SharedClaims credentialsSharedClaims =
                             OBJECT_MAPPER.readValue(
                                     credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(configService.getComponentId(ADDRESS_CRI))) {
+                    if (credentialIss.equals(configService.getComponentId(ADDRESS.getId()))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {

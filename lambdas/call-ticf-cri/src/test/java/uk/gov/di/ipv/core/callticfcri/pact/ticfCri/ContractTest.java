@@ -43,7 +43,7 @@ import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -114,8 +114,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockSessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
@@ -183,8 +183,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("B00", new ContraIndicatorConfig()));
@@ -254,8 +254,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockSessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
@@ -327,8 +327,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockSessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
@@ -389,8 +389,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockSessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
@@ -455,8 +455,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockSessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
@@ -522,8 +522,8 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         var ipvSessionItem = getIpvSessionItem();
         var clientOAuthSessionItem = getClientOAuthSessionItem();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn(PRIVATE_API_KEY);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("B00", new ContraIndicatorConfig()));

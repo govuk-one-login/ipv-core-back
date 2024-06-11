@@ -33,10 +33,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -225,10 +225,10 @@ class SessionCredentialsServiceTest {
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS_CRI, new HashMap<>() {});
+                            "userId", ADDRESS.getId(), new HashMap<>() {});
             var fraudVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD_CRI, new HashMap<>() {});
+                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -248,18 +248,18 @@ class SessionCredentialsServiceTest {
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS_CRI, new HashMap<>() {});
+                            "userId", ADDRESS.getId(), new HashMap<>() {});
             var fraudVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD_CRI, new HashMap<>() {});
+                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
 
             var dcmawVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW_CRI, new HashMap<>() {});
+                            "userId", DCMAW.getId(), new HashMap<>() {});
 
             var hmrcKbvVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV_CRI, new HashMap<>() {});
+                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -287,18 +287,18 @@ class SessionCredentialsServiceTest {
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS_CRI, new HashMap<>() {});
+                            "userId", ADDRESS.getId(), new HashMap<>() {});
             var fraudVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD_CRI, new HashMap<>() {});
+                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
 
             var dcmawVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW_CRI, new HashMap<>() {});
+                            "userId", DCMAW.getId(), new HashMap<>() {});
 
             var hmrcKbvVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV_CRI, new HashMap<>() {});
+                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -331,18 +331,18 @@ class SessionCredentialsServiceTest {
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS_CRI, new HashMap<>() {});
+                            "userId", ADDRESS.getId(), new HashMap<>() {});
             var fraudVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD_CRI, new HashMap<>() {});
+                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
 
             var dcmawVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW_CRI, new HashMap<>() {});
+                            "userId", DCMAW.getId(), new HashMap<>() {});
 
             var hmrcKbvVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV_CRI, new HashMap<>() {});
+                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);

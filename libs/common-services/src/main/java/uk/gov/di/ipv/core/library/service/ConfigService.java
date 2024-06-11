@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.CriIdentifer;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -234,7 +236,9 @@ public class ConfigService {
         try {
             String secretValue = getCoreSecretValue(ConfigurationVariable.CI_CONFIG);
             List<ContraIndicatorConfig> configList =
-                    OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
+                    OBJECT_MAPPER
+                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                            .readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
             for (ContraIndicatorConfig config : configList) {
                 configMap.put(config.getCi(), config);
@@ -341,11 +345,18 @@ public class ConfigService {
     }
 
     private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {
+        return getCriConfigForType(connection, criId, configType, true);
+    }
+
+    private <T> T getCriConfigForType(
+            String connection, String criId, Class<T> configType, boolean failOnUnknown) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {
             String parameter = ssmProvider.get(resolvePath(pathTemplate, criId, connection));
-            return OBJECT_MAPPER.readValue(parameter, configType);
+            return OBJECT_MAPPER
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknown)
+                    .readValue(parameter, configType);
         } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format(
@@ -357,5 +368,16 @@ public class ConfigService {
                             "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
                             pathTemplate, e));
         }
+    }
+
+    public Map<String, String> getCriConfigs() {
+        Map<String, String> configs = new HashMap<>();
+        for (var cri : CriIdentifer.values()) {
+            var criId = cri.getId();
+            var criConfig =
+                    getCriConfigForType(getActiveConnection(criId), criId, CriConfig.class, false);
+            configs.put(criConfig.getComponentId(), criId);
+        }
+        return configs;
     }
 }

@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +31,7 @@ public class CriResponseServiceTest {
 
     private static final String USER_ID_1 = "user-id-1";
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER = F2F_CRI;
+    private static final String TEST_CREDENTIAL_ISSUER = F2F.getId();
     private static final String TEST_ISSUER_RESPONSE =
             "{\"sub\":"
                     + TEST_USER_ID
@@ -86,7 +86,7 @@ public class CriResponseServiceTest {
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
-        when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
+        when(mockDataStore.getItem(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
         CriResponseItem retrievedCredentialItem =
                 criResponseService.getFaceToFaceRequest(USER_ID_1);

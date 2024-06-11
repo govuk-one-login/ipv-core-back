@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.CriIdentifer;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -33,8 +34,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.OPERATIONAL_CRIS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -59,6 +58,8 @@ public class VcHelper {
                     .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static ConfigService configService;
     private static final int ONLY = 0;
+    private static List<String> OPERATIONAL_CRIS = CriIdentifer.getOperationalCriIds();
+    private static List<String> NON_EVIDENCE_CRI_TYPES = CriIdentifer.getNonEvidenceCriIds();
 
     private VcHelper() {}
 

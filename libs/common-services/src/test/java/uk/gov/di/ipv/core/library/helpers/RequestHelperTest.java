@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.CLAIMED_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_INFORMATION_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
@@ -243,7 +243,7 @@ class RequestHelperTest {
                         .ipvSessionId(ipvSessionId)
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(DCMAW_CRI)
+                        .journey(DCMAW.getId())
                         .featureSet(featureSet)
                         .build();
 
@@ -263,7 +263,7 @@ class RequestHelperTest {
                 JourneyRequest.builder()
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(DCMAW_CRI)
+                        .journey(DCMAW.getId())
                         .featureSet(featureSet)
                         .build();
 
@@ -353,7 +353,7 @@ class RequestHelperTest {
                         .journey(journey)
                         .build();
 
-        assertEquals(CLAIMED_IDENTITY_CRI, event.getJourneyUri().getPath());
+        assertEquals(CLAIMED_IDENTITY.getId(), event.getJourneyUri().getPath());
         assertEquals(expectedContext, RequestHelper.getJourneyParameter(event, CONTEXT));
         assertEquals(expectedScope, RequestHelper.getJourneyParameter(event, SCOPE));
     }

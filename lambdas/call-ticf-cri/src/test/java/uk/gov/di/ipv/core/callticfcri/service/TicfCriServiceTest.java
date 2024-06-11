@@ -46,7 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
@@ -109,8 +109,9 @@ class TicfCriServiceTest {
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(true)
                         .build();
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfConfigWithApiKeyRequired);
-        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF_CRI))
+        when(mockConfigService.getRestCriConfig(TICF.getId()))
+                .thenReturn(ticfConfigWithApiKeyRequired);
+        when(mockConfigService.getCriPrivateApiKeyForActiveConnection(TICF.getId()))
                 .thenReturn("api-key");
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
                 .thenReturn(List.of(M1B_DCMAW_VC));
@@ -147,7 +148,7 @@ class TicfCriServiceTest {
 
     @Test
     void getTicfVcShouldNotIncludeApiKeyIfNotRequired() throws Exception {
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
@@ -163,7 +164,7 @@ class TicfCriServiceTest {
     @ParameterizedTest
     @ValueSource(ints = {199, 300})
     void getTicfVcShouldReturnEmptyListIfNon200HttpResponse(int statusCode) throws Exception {
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
@@ -194,7 +195,7 @@ class TicfCriServiceTest {
             })
     void getTicfVcShouldReturnEmptyListIfHttpClientEncountersException(Class<?> exceptionToThrow)
             throws Exception {
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(), any()))
                 .thenThrow((Throwable) exceptionToThrow.getConstructor().newInstance());
 
@@ -204,7 +205,7 @@ class TicfCriServiceTest {
 
     @Test
     void getTicfVcShouldThrowIfCanNotParseResponseBody() throws Exception {
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
@@ -220,7 +221,7 @@ class TicfCriServiceTest {
         TicfCriDto ticfCriResponseWithoutCreds =
                 new TicfCriDto(VTR_VALUE, Vot.P2, TRUSTMARK, USER_ID, GOVUK_JOURNEY_ID, List.of());
 
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
@@ -240,7 +241,7 @@ class TicfCriServiceTest {
         var someCredential = "some credential";
         var ticfResponse = new TicfCriDto(null, null, null, null, null, List.of(someCredential));
 
-        when(mockConfigService.getRestCriConfig(TICF_CRI)).thenReturn(ticfCriConfig);
+        when(mockConfigService.getRestCriConfig(TICF.getId())).thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);

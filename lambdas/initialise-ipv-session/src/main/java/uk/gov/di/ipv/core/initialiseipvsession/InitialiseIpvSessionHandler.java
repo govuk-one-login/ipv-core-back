@@ -71,7 +71,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_EN
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -417,7 +417,7 @@ public class InitialiseIpvSessionHandler
                                     inheritedIdentityJwtList.size())));
         }
 
-        var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION_CRI);
+        var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION.getId());
 
         // The HMRC inherited identity VC will contain an HMRC-specific pairwise identifier
         // rather than our internal user id, so we cannot validate it against the OAuth user id.
@@ -425,7 +425,7 @@ public class InitialiseIpvSessionHandler
         var inheritedIdentityVc =
                 verifiableCredentialValidator.parseAndValidate(
                         userId,
-                        HMRC_MIGRATION_CRI,
+                        HMRC_MIGRATION.getId(),
                         inheritedIdentityJwtList.get(0),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         inheritedIdentityCriConfig.getParsedSigningKey(),
@@ -459,7 +459,7 @@ public class InitialiseIpvSessionHandler
             VerifiableCredential incomingInheritedIdentity, String userId)
             throws CredentialParseException {
         try {
-            var hmrcMigrationVc = verifiableCredentialService.getVc(userId, HMRC_MIGRATION_CRI);
+            var hmrcMigrationVc = verifiableCredentialService.getVc(userId, HMRC_MIGRATION.getId());
             if (hmrcMigrationVc == null) {
                 return false;
             }

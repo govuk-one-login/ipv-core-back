@@ -65,8 +65,8 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
@@ -223,7 +223,10 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             var vcs = getVerifiableCredentials(userId, clientOAuthSessionItem.getEvcsAccessToken());
-            var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F_CRI));
+            for (var vc : vcs) {
+                LOGGER.info("vc : " + vc.getCriId() + " " + vc.getSignedJwt().serialize());
+            }
+            var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
@@ -477,7 +480,7 @@ public class CheckExistingIdentityHandler
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
-        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
+        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.getId().equals(vc.getCriId())).toList();
     }
 
     private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {

@@ -28,7 +28,7 @@ import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class TicfCriService {
@@ -75,7 +75,7 @@ public class TicfCriService {
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
         try {
-            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF_CRI);
+            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF.getId());
 
             TicfCriDto ticfCriRequest =
                     new TicfCriDto(
@@ -102,7 +102,7 @@ public class TicfCriService {
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
-                        configService.getCriPrivateApiKeyForActiveConnection(TICF_CRI));
+                        configService.getCriPrivateApiKeyForActiveConnection(TICF.getId()));
             }
             httpRequestBuilder.header("Content-Type", "application/json; charset=utf-8");
 
@@ -118,7 +118,7 @@ public class TicfCriService {
 
             return jwtValidator.parseAndValidate(
                     clientOAuthSessionItem.getUserId(),
-                    TICF_CRI,
+                    TICF.getId(),
                     ticfCriResponse.credentials(),
                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                     ticfCriConfig.getParsedSigningKey(),

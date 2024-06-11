@@ -14,7 +14,9 @@ import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -22,14 +24,18 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 
 public class EvcsService {
     private final EvcsClient evcsClient;
+    private final Map<String, String> criConfig;
 
     public EvcsService(EvcsClient evcsClient) {
         this.evcsClient = evcsClient;
+        var configService = new ConfigService();
+        this.criConfig = configService.getCriConfigs();
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsService(ConfigService configService) {
         this.evcsClient = new EvcsClient(configService);
+        this.criConfig = configService.getCriConfigs();
     }
 
     @Tracing
@@ -58,26 +64,27 @@ public class EvcsService {
 
     @Tracing
     public List<VerifiableCredential> getVerifiableCredentials(
-            String userId, String evcsAccessToken, EvcsVCState... states) {
-        List<EvcsGetUserVCDto> existingEvcsUserVCs =
+            String userId, String evcsAccessToken, EvcsVCState... states)
+            throws CredentialParseException {
+        List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
-        return existingEvcsUserVCs.stream()
-                .map(
-                        vc -> {
-                            try {
-                                return toVerifiableCredential(userId, vc);
-                            } catch (ParseException | CredentialParseException e) {
-                                return null;
-                            }
-                        })
-                .toList();
-    }
-
-    private VerifiableCredential toVerifiableCredential(String userId, EvcsGetUserVCDto dto)
-            throws ParseException, CredentialParseException {
-        var jwt = SignedJWT.parse(dto.vc());
-        return VerifiableCredential.fromValidJwt(userId, null, jwt);
+        List<VerifiableCredential> credentials = new ArrayList<VerifiableCredential>();
+        for (var vc : vcs) {
+            try {
+                var jwt = SignedJWT.parse(vc.vc());
+                var criId = criConfig.get(jwt.getJWTClaimsSet().getIssuer());
+                if (criId == null) {
+                    throw new CredentialParseException("Failed to find credential issuer for vc");
+                }
+                credentials.add(VerifiableCredential.fromValidJwt(userId, criId, jwt));
+            } catch (ParseException e) {
+                throw new CredentialParseException(
+                        "Encountered a parsing error while attempting to parse evcs credentials",
+                        e);
+            }
+        }
+        return credentials;
     }
 
     @Tracing

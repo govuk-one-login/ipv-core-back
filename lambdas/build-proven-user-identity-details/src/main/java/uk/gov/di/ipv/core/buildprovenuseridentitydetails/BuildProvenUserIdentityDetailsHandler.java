@@ -48,7 +48,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
@@ -185,14 +185,14 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (var vc : vcs) {
-            if (vc.getCriId().equals(ADDRESS_CRI)
+            if (vc.getCriId().equals(ADDRESS.getId())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, configService.getComponentId(vc.getCriId()))) {
                 JsonNode addressNode =
                         mapper.readTree(SignedJWT.parse(vc.getVcString()).getPayload().toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_CRI);
+                                .path(ADDRESS.getId());
 
                 List<Address> addressList =
                         mapper.convertValue(addressNode, new TypeReference<>() {});

@@ -42,7 +42,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
@@ -92,7 +92,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockCriStoringService)
                 .storeVcs(
-                        TICF_CRI,
+                        TICF.getId(),
                         "an-ip-address",
                         "device-information",
                         List.of(mockVerifiableCredential),

@@ -35,8 +35,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
@@ -127,13 +127,13 @@ public class CriStoringService {
             ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
             ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
 
-            if (criId.equals(TICF_CRI)) {
+            if (criId.equals(TICF.getId())) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
             } else {
-                if (criId.equals(ADDRESS_CRI)) {
+                if (criId.equals(ADDRESS.getId())) {
                     // Remove any existing address VC from session credentials - for 6MFC
                     sessionCredentialsService.deleteSessionCredentialsForCri(
-                            ipvSessionItem.getIpvSessionId(), ADDRESS_CRI);
+                            ipvSessionItem.getIpvSessionId(), ADDRESS.getId());
                 }
                 sessionCredentialsService.persistCredentials(
                         List.of(vc), ipvSessionItem.getIpvSessionId(), true);

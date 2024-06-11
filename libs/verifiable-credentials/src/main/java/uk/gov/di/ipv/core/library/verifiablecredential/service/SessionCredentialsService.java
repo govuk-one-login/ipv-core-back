@@ -22,8 +22,8 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CR
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.ADDRESS_ONLY;
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.FAMILY_NAME_ONLY;
 import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.GIVEN_NAMES_ONLY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
 
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -108,14 +108,14 @@ public class SessionCredentialsService {
                         sessionCredentialItems.stream()
                                 .filter(
                                         item ->
-                                                List.of(ADDRESS_CRI, EXPERIAN_FRAUD_CRI)
+                                                List.of(ADDRESS.getId(), EXPERIAN_FRAUD.getId())
                                                         .contains(item.getCriId()))
                                 .toList();
 
             } else if (isNameOnlyJourney(coiSubjourneyType)) {
                 vcsToDelete =
                         sessionCredentialItems.stream()
-                                .filter(item -> !item.getCriId().equals(ADDRESS_CRI))
+                                .filter(item -> !item.getCriId().equals(ADDRESS.getId()))
                                 .toList();
             } else {
                 // if name change & address OR not a COJ journey then delete all session VCs

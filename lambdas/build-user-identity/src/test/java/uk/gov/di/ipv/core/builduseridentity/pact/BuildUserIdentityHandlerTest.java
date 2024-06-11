@@ -47,8 +47,8 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
@@ -120,10 +120,18 @@ class BuildUserIdentityHandlerTest {
         List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
         var passportCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID, DCMAW_CRI, passportVcBuilder.buildSignedJwt(), true, null);
+                        IPV_SESSION_ID,
+                        DCMAW.getId(),
+                        passportVcBuilder.buildSignedJwt(),
+                        true,
+                        null);
         var addressCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID, ADDRESS_CRI, addressVcBuilder.buildSignedJwt(), true, null);
+                        IPV_SESSION_ID,
+                        ADDRESS.getId(),
+                        addressVcBuilder.buildSignedJwt(),
+                        true,
+                        null);
         sessionCredentials.add(passportCredential);
         sessionCredentials.add(addressCredential);
 

@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
-import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -50,15 +49,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.CLAIMED_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_MESSAGE_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER_ID = CriConstants.F2F_CRI;
+    private static final String TEST_CREDENTIAL_ISSUER_ID = F2F.getId();
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
     private static final String TEST_COMPONENT_ID = "f2f";
     private static final String TEST_COMPONENT_ID_ADDRESS = "address";
@@ -399,9 +399,9 @@ class ProcessAsyncCriCredentialHandlerTest {
     private void mockCredentialIssuerConfig() {
         when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS.getComponentId());
-        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+        when(configService.getComponentId(CLAIMED_IDENTITY.getId()))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
     }
 

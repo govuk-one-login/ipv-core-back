@@ -63,7 +63,7 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
@@ -215,7 +215,7 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         } catch (CriApiException e) {
-            if (DCMAW_CRI.equals(callbackRequest.getCredentialIssuerId())
+            if (DCMAW.getId().equals(callbackRequest.getCredentialIssuerId())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(

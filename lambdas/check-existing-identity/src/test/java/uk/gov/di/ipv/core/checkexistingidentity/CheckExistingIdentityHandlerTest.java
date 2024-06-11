@@ -89,8 +89,8 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -1333,7 +1333,7 @@ class CheckExistingIdentityHandlerTest {
     private CriResponseItem createCriResponseStoreItem() {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F_CRI);
+        criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(Instant.now());
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
@@ -1343,7 +1343,7 @@ class CheckExistingIdentityHandlerTest {
     private CriResponseItem createCriErrorResponseStoreItem(Instant dateCreated) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F_CRI);
+        criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
@@ -1356,7 +1356,7 @@ class CheckExistingIdentityHandlerTest {
                         new JWSHeader(JWSAlgorithm.ES256),
                         new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, vot.name()).build());
         jwt.sign(jwtSigner);
-        return VerifiableCredential.fromValidJwt(TEST_USER_ID, HMRC_MIGRATION_CRI, jwt);
+        return VerifiableCredential.fromValidJwt(TEST_USER_ID, HMRC_MIGRATION.getId(), jwt);
     }
 
     private static ECDSASigner createJwtSigner() throws Exception {

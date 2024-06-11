@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
@@ -264,8 +264,9 @@ class VcHelperTest {
 
     private void mockCredentialIssuerConfig() {
         VcHelper.setConfigService(configService);
-        when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
-        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
+                .thenReturn(addressConfig.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY.getId()))
                 .thenReturn(claimedIdentityConfig.getComponentId());
     }
 
