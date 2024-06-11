@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
@@ -385,6 +386,8 @@ public class ProcessJourneyEventHandler
                             .map(String::trim)
                             .toList(),
                     Boolean.parseBoolean(auditContext.get("updateSupported")));
+            case IPV_USER_DETAILS_UPDATE_END -> new AuditExtensionSuccessful(
+                    Boolean.parseBoolean(auditContext.get("successful")));
             default -> null;
         };
     }

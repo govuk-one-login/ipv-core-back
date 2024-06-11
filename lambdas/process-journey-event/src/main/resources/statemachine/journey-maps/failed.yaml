@@ -28,9 +28,17 @@ states:
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
         checkFeatureFlag:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
 
   FAILED_BAV:
     events:
