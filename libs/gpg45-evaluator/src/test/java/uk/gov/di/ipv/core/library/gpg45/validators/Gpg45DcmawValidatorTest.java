@@ -5,7 +5,9 @@ import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 
 import java.util.Collections;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -72,5 +74,34 @@ class Gpg45DcmawValidatorTest {
                         Collections.emptyList());
 
         assertFalse(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
+    void getDcmawVerificationScoreReturnsZeroForNullCheckMethods() {
+        var verificationScore = Gpg45DcmawValidator.getDcmawVerificationScore(null);
+
+        assertEquals(0, verificationScore);
+    }
+
+    @Test
+    void getDcmawVerificationScoreReturnsZeroWhenNoBiometricVerificationProcessLevelExists() {
+        var checkDetailsNoBiometricVerificationProcessLevel = List.of(new CheckDetail());
+        var verificationScore =
+                Gpg45DcmawValidator.getDcmawVerificationScore(
+                        checkDetailsNoBiometricVerificationProcessLevel);
+
+        assertEquals(0, verificationScore);
+    }
+
+    @Test
+    void getDcmawVerificationScoreReturnsScoreWhenBiometricVerificationProcessLevelIsPresent() {}
+
+    {
+        CheckDetail checkDetail = new CheckDetail();
+        checkDetail.setBiometricVerificationProcessLevel(3);
+
+        var verificationScore = Gpg45DcmawValidator.getDcmawVerificationScore(List.of(checkDetail));
+
+        assertEquals(3, verificationScore);
     }
 }

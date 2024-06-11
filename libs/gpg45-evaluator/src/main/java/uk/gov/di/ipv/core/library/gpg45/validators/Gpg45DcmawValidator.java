@@ -22,7 +22,11 @@ public class Gpg45DcmawValidator {
                 && item.getStrengthScore() > 0;
     }
 
-    private static Integer getDcmawVerificationScore(List<CheckDetail> checkMethods) {
+    public static Integer getDcmawVerificationScore(List<CheckDetail> checkMethods) {
+        if (checkMethods == null) {
+            return 0;
+        }
+
         var checkMethodWithVerificationScore =
                 checkMethods.stream()
                         .filter(
