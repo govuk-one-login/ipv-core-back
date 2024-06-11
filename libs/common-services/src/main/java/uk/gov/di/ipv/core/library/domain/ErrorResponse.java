@@ -99,7 +99,8 @@ public enum ErrorResponse {
     FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS"),
     MISSING_IS_COMPLETED_IDENTITY_PARAMETER(1083, "Missing isCompletedIdentity in request"),
     INVALID_COI_JOURNEY_FOR_COI_CHECK(1084, "Invalid coi journey type for coi check"),
-    INVALID_IDENTITY_TYPE_PARAMETER(1085, "Invalid or missing identityType in request");
+    INVALID_IDENTITY_TYPE_PARAMETER(1085, "Invalid or missing identityType in request"),
+    FAILED_TO_UPDATE_IDENTITY(1086, "Failed to update identity");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

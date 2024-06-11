@@ -71,6 +71,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -247,6 +248,8 @@ class CheckExistingIdentityHandlerTest {
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            ArgumentCaptor<List<VerifiableCredential>> vcsToUpdateCaptor =
+                    ArgumentCaptor.forClass(List.class);
 
             JourneyResponse journeyResponse =
                     toResponseClass(
@@ -275,6 +278,8 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(P2, ipvSessionItem.getVot());
             verify(mockEvcsMigrationService)
                     .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc));
+            verify(mockVerifiableCredentialService).updateIdentity(vcsToUpdateCaptor.capture());
+            vcsToUpdateCaptor.getValue().forEach(vc -> assertNotNull(vc.getMigrated()));
         }
 
         @Test
@@ -1273,6 +1278,8 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        ArgumentCaptor<List<VerifiableCredential>> vcsToUpdateCaptor =
+                ArgumentCaptor.forClass(List.class);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1285,6 +1292,8 @@ class CheckExistingIdentityHandlerTest {
         verify(mockSessionCredentialService)
                 .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
         verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, expectedStoredVc);
+        verify(mockVerifiableCredentialService).updateIdentity(vcsToUpdateCaptor.capture());
+        vcsToUpdateCaptor.getValue().forEach(vc -> assertNotNull(vc.getMigrated()));
     }
 
     @Test

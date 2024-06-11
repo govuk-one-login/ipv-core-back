@@ -55,6 +55,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -465,9 +466,12 @@ public class CheckExistingIdentityHandler
         return JOURNEY_REUSE;
     }
 
-    private void migrateCredentialsToEVCS(String userId, List<VerifiableCredential> credentials) {
+    private void migrateCredentialsToEVCS(String userId, List<VerifiableCredential> credentials)
+            throws VerifiableCredentialException {
         if (configService.enabled(EVCS_WRITE_ENABLED)) {
             evcsMigrationService.migrateExistingIdentity(userId, credentials);
+            credentials.forEach(credential -> credential.setMigrated(Instant.now()));
+            verifiableCredentialService.updateIdentity(credentials);
         }
     }
 
