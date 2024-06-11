@@ -55,6 +55,14 @@ class BasicStateTest {
     }
 
     @Test
+    void transitionShouldReturnThisIfAttemptRecoveryEventReceived() throws Exception {
+        var state = new BasicState();
+
+        assertEquals(
+                state, state.transition("attempt-recovery", "startState", journeyContext).state());
+    }
+
+    @Test
     void transitionShouldThrowIfEventNotFound() {
         assertThrows(
                 UnknownEventException.class,

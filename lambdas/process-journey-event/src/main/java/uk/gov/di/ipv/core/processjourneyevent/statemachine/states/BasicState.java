@@ -20,6 +20,8 @@ import java.util.Optional;
 @AllArgsConstructor
 public class BasicState implements State {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
+
     private String name;
     private String parent;
     private BasicState parentObj;
@@ -30,6 +32,11 @@ public class BasicState implements State {
     public TransitionResult transition(
             String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException {
+        // Special recovery event
+        if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
+            return new TransitionResult(this);
+        }
+
         return getEvent(eventName)
                 .orElseThrow(
                         () ->

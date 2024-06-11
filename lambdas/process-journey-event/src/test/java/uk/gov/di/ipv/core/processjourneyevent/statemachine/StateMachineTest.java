@@ -93,20 +93,4 @@ class StateMachineTest {
 
         assertEquals(expectedResult, actualResult);
     }
-
-    @Test
-    void transitionShouldReturnSameStateIfAttemptedRecovery() throws Exception {
-        State startingState = mock(BasicState.class);
-
-        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
-        when(mockStateMachineInitializer.initialize())
-                .thenReturn(Map.of("START_STATE", startingState));
-
-        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
-
-        var actualResult =
-                stateMachine.transition("START_STATE", "attempt-recovery", JOURNEY_CONTEXT, null);
-
-        assertEquals(startingState, actualResult.state());
-    }
 }

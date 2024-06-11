@@ -15,7 +15,6 @@ import java.util.Map;
 
 public class StateMachine {
     public static final String DELIMITER = "/";
-    private static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
 
     private final Map<String, State> states;
 
@@ -43,11 +42,6 @@ public class StateMachine {
                                 "Unexpected page event (%s) from page (%s) received in process state (%s)",
                                 event, currentPage, startState));
             }
-        }
-
-        // Special recovery event
-        if (ATTEMPT_RECOVERY_EVENT.equals(event)) {
-            return new TransitionResult(state);
         }
 
         var result = state.transition(event, startState, journeyContext);
