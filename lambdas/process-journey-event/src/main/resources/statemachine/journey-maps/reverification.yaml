@@ -120,7 +120,7 @@ states:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: ALL_NAMES_AND_DOB
+        checkType: FULL_NAME_AND_DOB
     events:
       coi-check-passed:
         targetState: RETURN_TO_RP
