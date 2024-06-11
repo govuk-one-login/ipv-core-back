@@ -150,13 +150,14 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     ipAddress);
 
             if (isReverification) {
-                setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.SUCCESS);
+                setIpvSessionReverificationStatus(
+                        ipvSession,
+                        coiCheckSuccess
+                                ? ReverificationStatus.SUCCESS
+                                : ReverificationStatus.FAILED);
             }
 
             if (!successfulCheck) {
-                if (isReverification) {
-                    setIpvSessionReverificationStatus(ipvSession, ReverificationStatus.FAILED);
-                }
                 LOGGER.info(
                         LogHelper.buildLogMessage("Failed COI check")
                                 .with(LOG_CHECK_TYPE.getFieldName(), checkType));

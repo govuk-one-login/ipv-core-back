@@ -192,4 +192,26 @@ public class CredentialEvidenceItem {
     public void setCredentialIss(String credentialIss) {
         this.credentialIss = credentialIss;
     }
+
+    public Integer getVerificationScore() {
+        if (isDcmaw()) {
+            if (checkDetails == null) {
+                return 0;
+            }
+
+            var checkMethodWithVerificationScore =
+                    checkDetails.stream()
+                            .filter(
+                                    checkMethod ->
+                                            checkMethod.getBiometricVerificationProcessLevel()
+                                                    != null)
+                            .findFirst();
+
+            return checkMethodWithVerificationScore.isPresent()
+                    ? checkMethodWithVerificationScore.get().getBiometricVerificationProcessLevel()
+                    : 0;
+        } else {
+            return verificationScore;
+        }
+    }
 }

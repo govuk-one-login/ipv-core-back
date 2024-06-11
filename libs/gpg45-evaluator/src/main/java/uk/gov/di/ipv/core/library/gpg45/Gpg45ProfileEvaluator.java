@@ -21,7 +21,6 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator.getDcmawVerificationScore;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -135,7 +134,7 @@ public class Gpg45ProfileEvaluator {
                         .ci(evidenceItem.getCi())
                         .build());
 
-        int verificationScore;
+        int verificationScore = evidenceItem.getVerificationScore();
         if (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
             if (evidenceItem.getActivityHistoryScore() != null) {
                 gpg45CredentialItems.add(
@@ -144,12 +143,6 @@ public class Gpg45ProfileEvaluator {
                                 evidenceItem.getActivityHistoryScore(),
                                 Collections.emptyList()));
             }
-
-            List<CheckDetail> checkDetails = evidenceItem.getCheckDetails();
-            verificationScore = getDcmawVerificationScore(checkDetails);
-
-        } else {
-            verificationScore = evidenceItem.getVerificationScore();
         }
 
         gpg45CredentialItems.add(

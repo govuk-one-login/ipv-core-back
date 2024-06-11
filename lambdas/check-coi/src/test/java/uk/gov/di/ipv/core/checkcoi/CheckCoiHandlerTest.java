@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -103,7 +102,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -137,7 +136,7 @@ class CheckCoiHandlerTest {
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -172,7 +171,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -210,7 +209,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -243,7 +242,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -277,7 +276,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(Arrays.asList(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
