@@ -23,6 +23,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -56,6 +57,7 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -82,6 +84,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -155,6 +158,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CiMitUtilityService ciMitUtilityService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialService;
+    @Mock private EvcsMigrationService mockEvcsMigrationService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
     @Spy private IpvSessionItem ipvSessionItem;
@@ -234,7 +238,9 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
+        void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile_alsoStoreVcsInEvcs()
+                throws Exception {
+            Mockito.lenient().when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, vcHmrcMigration()));
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -267,6 +273,8 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+            verify(mockEvcsMigrationService)
+                    .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc));
         }
 
         @Test
@@ -971,6 +979,7 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
     }
 
     @Test
@@ -1234,6 +1243,48 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         verify(ipvSessionService, never()).updateIpvSession(any());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
+    }
+
+    @Test
+    void
+            shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrueAndAlsoStoreVcsInEvcs()
+                    throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        M1A_ADDRESS_VC,
+                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
+                        vcVerificationM1a(),
+                        M1B_DCMAW_VC);
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
+
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                        any(), eq(P2.getSupportedGpg45Profiles())))
+                .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
+        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+        assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+        var expectedStoredVc =
+                vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
+        verify(mockSessionCredentialService)
+                .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
+        verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, expectedStoredVc);
     }
 
     @Test

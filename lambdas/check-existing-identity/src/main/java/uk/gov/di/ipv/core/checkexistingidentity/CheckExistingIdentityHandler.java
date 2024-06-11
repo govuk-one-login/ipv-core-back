@@ -47,6 +47,7 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -60,6 +61,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -123,6 +125,7 @@ public class CheckExistingIdentityHandler
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final EvcsMigrationService evcsMigrationService;
 
     @SuppressWarnings({
         "unused",
@@ -139,7 +142,8 @@ public class CheckExistingIdentityHandler
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            EvcsMigrationService evcsMigrationService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -151,6 +155,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.evcsMigrationService = evcsMigrationService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -168,6 +173,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.evcsMigrationService = new EvcsMigrationService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -422,10 +428,12 @@ public class CheckExistingIdentityHandler
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && !hasCurrentFraudVc(vcs)) {
+                && !hasCurrentExpiredFraudVc(vcs)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
+            var credentials = allVcsExceptFraud(vcs);
             sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
+                    credentials, auditEventUser.getSessionId(), false);
+            migrateCredentialsToEVCS(auditEventUser.getUserId(), credentials);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -449,19 +457,25 @@ public class CheckExistingIdentityHandler
                     : JOURNEY_OPERATIONAL_PROFILE_REUSE;
         }
 
+        var credentials = VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType());
         sessionCredentialsService.persistCredentials(
-                VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
-                auditEventUser.getSessionId(),
-                false);
+                credentials, auditEventUser.getSessionId(), false);
+        migrateCredentialsToEVCS(auditEventUser.getUserId(), credentials);
 
         return JOURNEY_REUSE;
+    }
+
+    private void migrateCredentialsToEVCS(String userId, List<VerifiableCredential> credentials) {
+        if (configService.enabled(EVCS_WRITE_ENABLED)) {
+            evcsMigrationService.migrateExistingIdentity(userId, credentials);
+        }
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
     }
 
-    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
+    private boolean hasCurrentExpiredFraudVc(List<VerifiableCredential> vcs) {
         var fraudVCs =
                 VcHelper.filterVCBasedOnEvidenceType(
                         vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
