@@ -102,7 +102,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -135,8 +136,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockIpvSessionItem.getCoiSubjourneyType()).thenReturn(coiSubjourneyType);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -171,7 +172,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -182,7 +184,6 @@ class CheckCoiHandlerTest {
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
-                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.SUCCESS);
                 verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
                 var auditEventsCaptured = auditEventCaptor.getAllValues();
 
@@ -199,6 +200,28 @@ class CheckCoiHandlerTest {
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
             }
+
+            @Test
+            void
+                    shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
+                            throws Exception {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.SUCCESS);
+            }
         }
 
         @Nested
@@ -209,7 +232,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -242,7 +266,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -271,15 +296,19 @@ class CheckCoiHandlerTest {
             }
 
             @Test
-            void shouldReturnFailedForFailedReverificationCheck()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-                when(mockUserIdentityService.areVcsCorrelated(
+            void shouldReturnFailedForFailedReverificationCheckandReverificationStatusSetToFailed()
+                    throws Exception {
+                when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims()).thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
 
                 var request =
-                        ProcessRequest.processRequestBuilder().ipvSessionId(IPV_SESSION_ID).build();
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                                .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 

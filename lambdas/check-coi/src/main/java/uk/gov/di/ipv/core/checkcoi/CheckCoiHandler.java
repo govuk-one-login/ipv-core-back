@@ -152,7 +152,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             if (isReverification) {
                 setIpvSessionReverificationStatus(
                         ipvSession,
-                        coiCheckSuccess
+                        successfulCheck
                                 ? ReverificationStatus.SUCCESS
                                 : ReverificationStatus.FAILED);
             }
