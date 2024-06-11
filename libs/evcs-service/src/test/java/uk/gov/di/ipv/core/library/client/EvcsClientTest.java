@@ -173,7 +173,24 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"Forbidden\"}");
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.getUserVcs(
+                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+    }
+
+    @Test
+    void testGetUserVCs_shouldThrowException_non200Response_failedParsingResponseBody()
+            throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{}}");
         // Act
         // Assert
         assertThrows(
