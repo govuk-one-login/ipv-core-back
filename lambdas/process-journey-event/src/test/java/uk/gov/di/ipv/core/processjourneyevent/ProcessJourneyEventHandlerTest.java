@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyTyp
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.dto.JourneyState;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -31,7 +30,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializ
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -546,8 +544,8 @@ class ProcessJourneyEventHandlerTest {
         processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(
-                new JourneyState(TECHNICAL_ERROR, "TECHNICAL_ERROR_PAGE"),
-                mockIpvSessionService.getIpvSession("anyString").getStateStack().pop());
+                "TECHNICAL_ERROR/TECHNICAL_ERROR_PAGE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(2));
     }
 
     @Test
@@ -574,8 +572,8 @@ class ProcessJourneyEventHandlerTest {
         processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(
-                new JourneyState(INITIAL_JOURNEY_SELECTION, "JOURNEY_STATE"),
-                mockIpvSessionService.getIpvSession("anyString").getStateStack().pop());
+                "INITIAL_JOURNEY_SELECTION/JOURNEY_STATE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(1));
     }
 
     @Test
@@ -588,7 +586,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-        mockIpvSessionService.getIpvSession("anyString").setStateStack(new ArrayDeque<>());
+        mockIpvSessionService.getIpvSession("anyString").setStateStack(List.of());
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(

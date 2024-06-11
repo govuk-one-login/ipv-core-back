@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.dto.JourneyState;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -25,7 +24,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
@@ -125,9 +123,7 @@ class IpvSessionServiceTest {
 
         assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
         assertEquals(START_STATE, capturedSessionItem.getUserState());
-        assertEquals(
-                new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE),
-                capturedSessionItem.getStateStack().pop());
+        assertEquals("INITIAL_JOURNEY_SELECTION/START", capturedSessionItem.getStateStack().get(0));
     }
 
     @Test
@@ -164,9 +160,7 @@ class IpvSessionServiceTest {
         assertEquals(ERROR_STATE, capturedSessionItem.getUserState());
         assertEquals(testErrorObject.getCode(), capturedSessionItem.getErrorCode());
         assertEquals(testErrorObject.getDescription(), capturedSessionItem.getErrorDescription());
-        assertEquals(
-                new JourneyState(TECHNICAL_ERROR, ERROR_STATE),
-                capturedSessionItem.getStateStack().pop());
+        assertEquals("TECHNICAL_ERROR/ERROR", capturedSessionItem.getStateStack().get(0));
     }
 
     @Test
@@ -182,9 +176,7 @@ class IpvSessionServiceTest {
         assertNotNull(capturedSessionItem.getCreationDateTime());
         assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
         assertEquals(REVERIFICATION, capturedSessionItem.getJourneyType());
-        assertEquals(
-                new JourneyState(REVERIFICATION, START_STATE),
-                capturedSessionItem.getStateStack().pop());
+        assertEquals("REVERIFICATION/START", capturedSessionItem.getStateStack().get(0));
     }
 
     @Test
