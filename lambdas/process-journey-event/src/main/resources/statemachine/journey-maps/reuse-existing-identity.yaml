@@ -71,6 +71,8 @@ states:
         targetState: RETURN_TO_RP
       update-details:
         targetState: UPDATE_DETAILS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
 
   IDENTITY_REUSE_PAGE_TEST:
     response:

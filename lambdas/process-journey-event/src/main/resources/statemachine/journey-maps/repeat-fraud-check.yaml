@@ -56,20 +56,32 @@ states:
       address-only:
         targetJourney: UPDATE_ADDRESS
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       names-dob:
         targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       given-names-only:
         targetJourney: UPDATE_NAME
         targetState: GIVEN_ONLY_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       family-name-only:
         targetJourney: UPDATE_NAME
         targetState: FAMILY_ONLY_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       given-names-and-address:
         targetJourney: UPDATE_NAME
         targetState: GIVEN_WITH_ADDRESS_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       family-name-and-address:
         targetJourney: UPDATE_NAME
         targetState: FAMILY_WITH_ADDRESS_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       next:
         targetState: FRAUD_CHECK_RFC
 
