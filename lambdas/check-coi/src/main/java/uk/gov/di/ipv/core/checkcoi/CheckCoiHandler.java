@@ -233,12 +233,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             String userId, String ipvSessionId, String evcsAccessToken)
             throws CredentialParseException, VerifiableCredentialException {
 
-        System.out.println("get creds " + configService.enabled(EVCS_READ_ENABLED));
-
         List<VerifiableCredential> credentials = null;
         if (configService.enabled(EVCS_READ_ENABLED)) {
             credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
-            System.out.println("creds from evcs " + credentials);
         }
         if (credentials == null || credentials.size() == 0) {
             credentials = verifiableCredentialService.getVcs(userId);
