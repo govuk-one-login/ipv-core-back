@@ -79,12 +79,6 @@ states:
     events:
       appTriage:
         targetState: CRI_DCMAW
-      appTriageSmartphone:
-        targetState: CRI_DCMAW
-      appTriageSmartphoneIphone:
-        targetState: CRI_DCMAW
-      appTriageSmartphoneAndroid:
-        targetState: CRI_DCMAW
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
