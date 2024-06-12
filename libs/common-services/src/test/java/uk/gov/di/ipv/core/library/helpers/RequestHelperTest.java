@@ -10,6 +10,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,6 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.CriIdentifer.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_NAMES_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_INFORMATION_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
@@ -495,5 +501,75 @@ class RequestHelperTest {
                         () -> RequestHelper.getIdentityType(request));
 
         assertEquals(ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getCoiCheckTypeShouldReturnCoiCheckType() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                        .build();
+
+        assertEquals(GIVEN_NAMES_AND_DOB, RequestHelper.getCoiCheckType(request));
+    }
+
+    @Test
+    void getCoiCheckTypeShouldThrowIfMissingCheckType() {
+        ProcessRequest request = ProcessRequest.processRequestBuilder().build();
+
+        var thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getCoiCheckType(request));
+        assertEquals(MISSING_CHECK_TYPE, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getCoiCheckTypeShouldThrowIfUnknownCheckType() {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("checkType", "wat?"))
+                        .build();
+
+        var thrown =
+                assertThrows(
+                        UnknownCoiCheckTypeException.class,
+                        () -> RequestHelper.getCoiCheckType(request));
+        assertEquals("wat?", thrown.getCheckType());
+    }
+
+    @Test
+    void getSessionCredentialsResetTypeShouldReturnResetType() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("resetType", NAME_ONLY_CHANGE.name()))
+                        .build();
+
+        assertEquals(NAME_ONLY_CHANGE, RequestHelper.getSessionCredentialsResetType(request));
+    }
+
+    @Test
+    void getSessionCredentialsResetTypeShouldThrowIfMissingResetType() {
+        ProcessRequest request = ProcessRequest.processRequestBuilder().build();
+
+        var thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getSessionCredentialsResetType(request));
+        assertEquals(MISSING_RESET_TYPE, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getSessionCredentialsResetTypeShouldThrowIfUnknownResetType() {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("resetType", "nooo"))
+                        .build();
+
+        var thrown =
+                assertThrows(
+                        UnknownResetTypeException.class,
+                        () -> RequestHelper.getSessionCredentialsResetType(request));
+        assertEquals("nooo", thrown.getResetType());
     }
 }

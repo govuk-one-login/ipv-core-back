@@ -113,35 +113,14 @@ states:
       pageId: page-dcmaw-success
     events:
       next:
-        targetState: ADDRESS_AND_FRAUD
-
-  ADDRESS_AND_FRAUD:
-    nestedJourney: ADDRESS_AND_FRAUD
-    exitEvents:
-      next:
-        targetState: EVALUATE_GPG45_SCORES
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  EVALUATE_GPG45_SCORES:
-    response:
-      type: process
-      lambda: evaluate-gpg45-scores
-    events:
-      met:
         targetState: CHECK_COI
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
 
   CHECK_COI:
     response:
       type: process
       lambda: check-coi
+      lambdaInput:
+        checkType: FULL_NAME_AND_DOB
     events:
       coi-check-passed:
         targetState: RETURN_TO_RP

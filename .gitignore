@@ -50,3 +50,5 @@ uuid_results
 
 libs/pact-test-helpers/bin
 local-running/bin/
+
+secrets.gradle

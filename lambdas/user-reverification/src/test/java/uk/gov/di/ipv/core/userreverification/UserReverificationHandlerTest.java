@@ -16,8 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -73,7 +73,7 @@ class UserReverificationHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
-        ipvSessionItem.setVot(Vot.P2);
+        ipvSessionItem.setReverificationStatus(ReverificationStatus.SUCCESS);
         clientOAuthSessionItem = getClientAuthSessionItemWithScope(REVERIFICATION_SCOPE);
     }
 
@@ -107,7 +107,7 @@ class UserReverificationHandlerTest {
     void shouldReturnUnsuccsessfulReverificationResponseOnSuccessfulReverification()
             throws Exception {
         // Arrange
-        ipvSessionItem.setVot(Vot.P0);
+        ipvSessionItem.setReverificationStatus(ReverificationStatus.FAILED);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))

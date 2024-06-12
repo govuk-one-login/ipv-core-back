@@ -98,8 +98,11 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_EVCS_VC(1081, "Failed to parse a vc from EVCS"),
     FAILED_AT_EVCS_HTTP_REQUEST_SEND(1082, "Failed while sending http request to EVCS"),
     MISSING_IS_COMPLETED_IDENTITY_PARAMETER(1083, "Missing isCompletedIdentity in request"),
-    INVALID_COI_JOURNEY_FOR_COI_CHECK(1084, "Invalid coi journey type for coi check"),
-    INVALID_IDENTITY_TYPE_PARAMETER(1085, "Invalid or missing identityType in request");
+    INVALID_IDENTITY_TYPE_PARAMETER(1084, "Invalid or missing identityType in request"),
+    MISSING_CHECK_TYPE(1085, "checkType missing from process request"),
+    UNKNOWN_CHECK_TYPE(1086, "unknown checkType received"),
+    MISSING_RESET_TYPE(1087, "resetType missing from process request"),
+    UNKNOWN_RESET_TYPE(1088, "unknown resetType received");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

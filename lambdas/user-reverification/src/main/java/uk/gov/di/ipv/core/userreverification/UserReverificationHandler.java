@@ -13,7 +13,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.builduseridentity.UserIdentityRequestHandler;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
-import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
@@ -65,7 +65,10 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             closeSession(ipvSessionItem);
 
             ReverificationResponse response;
-            if (ipvSessionItem.getVot().equals(Vot.P2)) {
+            if (ipvSessionItem.getReverificationStatus() != null
+                    && ipvSessionItem
+                            .getReverificationStatus()
+                            .equals(ReverificationStatus.SUCCESS)) {
                 response = ReverificationResponse.successResponse(userId);
             } else {
                 response =

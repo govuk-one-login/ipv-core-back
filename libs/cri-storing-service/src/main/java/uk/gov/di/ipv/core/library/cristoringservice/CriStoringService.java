@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
@@ -124,8 +125,11 @@ public class CriStoringService {
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
-            ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-            ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+            var scopeClaims = clientOAuthSessionItem.getScopeClaims();
+            if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+                ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
+                ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+            }
 
             if (criId.equals(TICF.getId())) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());

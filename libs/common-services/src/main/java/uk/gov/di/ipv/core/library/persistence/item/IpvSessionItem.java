@@ -5,13 +5,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,9 +35,9 @@ public class IpvSessionItem implements DynamodbItem {
     private Vot vot;
     private long ttl;
     private IpvJourneyTypes journeyType;
-    private CoiSubjourneyType coiSubjourneyType;
-    private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
     private String emailAddress;
+    private ReverificationStatus reverificationStatus;
+    private List<String> stateStack = new ArrayList<>();
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
@@ -68,5 +69,18 @@ public class IpvSessionItem implements DynamodbItem {
     public void setFeatureSetFromList(List<String> featureSet) {
         this.featureSet =
                 (featureSet != null && !featureSet.isEmpty()) ? String.join(",", featureSet) : null;
+    }
+
+    public void pushState(IpvJourneyTypes journeyType, String state) {
+        stateStack.add(String.format("%s/%s", journeyType.name(), state));
+    }
+
+    public void pushState(String state) throws NoCurrentStateException {
+        if (this.stateStack.isEmpty()) {
+            throw new NoCurrentStateException();
+        }
+        var currentJourney =
+                IpvJourneyTypes.valueOf(stateStack.get(stateStack.size() - 1).split("/", 2)[0]);
+        pushState(currentJourney, state);
     }
 }

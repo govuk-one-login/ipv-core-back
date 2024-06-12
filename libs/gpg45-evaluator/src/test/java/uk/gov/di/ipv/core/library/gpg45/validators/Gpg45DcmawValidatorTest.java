@@ -5,6 +5,7 @@ import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,17 +14,34 @@ class Gpg45DcmawValidatorTest {
 
     @Test
     void isSuccessfulShouldReturnTrueOnValidCredential() {
+        var testCheckDetail = new CheckDetail();
+        testCheckDetail.setBiometricVerificationProcessLevel(2);
+
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         3,
                         2,
                         1,
                         2,
-                        Collections.singletonList(new CheckDetail()),
+                        Collections.singletonList(testCheckDetail),
                         null,
                         Collections.emptyList());
 
         assertTrue(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
+    void isSuccessfulShouldReturnFalseOnInvalidCredentialWithNoBiometricVerificationProcessLevel() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(3)
+                        .validityScore(2)
+                        .activityHistoryScore(1)
+                        .checkDetails(List.of(new CheckDetail()))
+                        .failedCheckDetails(null)
+                        .build();
+
+        assertFalse(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
     }
 
     @Test

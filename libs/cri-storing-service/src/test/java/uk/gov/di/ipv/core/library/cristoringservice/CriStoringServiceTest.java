@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -160,6 +161,28 @@ class CriStoringServiceTest {
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
+    }
+
+    @Test
+    void storeVcsShouldNotSubmitVcsToCiMitServiceWhenOnReverificationJourney() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
+
+        // Act
+        criStoringService.storeVcs(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
+                List.of(vc),
+                clientOAuthSessionItem,
+                mockIpvSessionItem);
+
+        // Assert
+        verify(mockCiMitService, never()).submitVC(any(), any(), any());
+        verify(mockCiMitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test
@@ -330,6 +353,9 @@ class CriStoringServiceTest {
     }
 
     private ClientOAuthSessionItem buildValidClientOAuthSessionItem() {
-        return ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
+        return ClientOAuthSessionItem.builder()
+                .userId(TEST_USER_ID)
+                .scope(ScopeConstants.OPENID)
+                .build();
     }
 }

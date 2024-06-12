@@ -220,7 +220,7 @@ public class UserIdentityService {
         return true;
     }
 
-    public boolean areGivenNamesAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
+    public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
         var successfulVcs = new ArrayList<VerifiableCredential>();
         for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {

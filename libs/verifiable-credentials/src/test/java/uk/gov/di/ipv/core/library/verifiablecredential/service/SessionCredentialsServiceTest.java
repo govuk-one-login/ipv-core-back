@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator;
@@ -40,6 +39,9 @@ import static uk.gov.di.ipv.core.library.domain.CriIdentifer.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ADDRESS_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -221,7 +223,7 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForJourneyTypeShouldPersistAddressVcForNameChange()
+        void deleteSessionCredentialsForResetTypeShouldPersistAddressVcForNameChange()
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
@@ -236,15 +238,15 @@ class SessionCredentialsServiceTest {
             when(mockDataStore.getItems(SESSION_ID))
                     .thenReturn(List.of(sessionFraudCredentialItem, sessionAddressCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyType.GIVEN_NAMES_ONLY);
+            sessionCredentialService.deleteSessionCredentialsForResetType(
+                    SESSION_ID, NAME_ONLY_CHANGE);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionFraudCredentialItem));
         }
 
         @Test
-        void deleteSessionCredentialsForJourneyTypeShouldDeleteAddressAndFraudForAddressChange()
+        void deleteSessionCredentialsForResetTypeShouldDeleteAddressAndFraudForAddressChange()
                 throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
@@ -274,8 +276,8 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem,
                                     sessionHmrcKbvCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyType.ADDRESS_ONLY);
+            sessionCredentialService.deleteSessionCredentialsForResetType(
+                    SESSION_ID, ADDRESS_ONLY_CHANGE);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore)
@@ -283,8 +285,7 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForJourneyTypeShouldDeleteAllVcsForNameAndAddressChange()
-                throws Exception {
+        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcsForAll() throws Exception {
             var addressVc =
                     VerifiableCredentialGenerator.generateVerifiableCredential(
                             "userId", ADDRESS.getId(), new HashMap<>() {});
@@ -313,51 +314,7 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem,
                                     sessionHmrcKbvCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForSubjourneyType(
-                    SESSION_ID, CoiSubjourneyType.GIVEN_NAMES_AND_ADDRESS);
-
-            verify(mockDataStore).getItems(SESSION_ID);
-            verify(mockDataStore)
-                    .delete(
-                            List.of(
-                                    sessionFraudCredentialItem,
-                                    sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
-        }
-
-        @Test
-        void deleteSessionCredentialsForJourneyTypeShouldDeleteAllVcsIfNullJourneyType()
-                throws Exception {
-            var addressVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS.getId(), new HashMap<>() {});
-            var fraudVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
-
-            var dcmawVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW.getId(), new HashMap<>() {});
-
-            var hmrcKbvVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
-
-            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionHmrcKbvCredentialItem = hmrcKbvVc.toSessionCredentialItem(SESSION_ID, true);
-
-            when(mockDataStore.getItems(SESSION_ID))
-                    .thenReturn(
-                            List.of(
-                                    sessionFraudCredentialItem,
-                                    sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
-
-            sessionCredentialService.deleteSessionCredentialsForSubjourneyType(SESSION_ID, null);
+            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, ALL);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore)

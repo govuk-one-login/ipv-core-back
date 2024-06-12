@@ -33,12 +33,14 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -51,6 +53,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
@@ -132,20 +135,46 @@ class StoreIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnAnIdentityStoredJourney() throws Exception {
+    void shouldReturnAnIdentityStoredJourney_whenEvcsWriteEnabled() throws Exception {
+        reset(mockSessionCredentialService);
+        VCS.forEach(
+                credential -> {
+                    if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                        credential.setMigrated(null);
+                    } else {
+                        credential.setMigrated(Instant.now());
+                    }
+                });
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
         when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         var response =
                 storeIdentityHandler.handleRequest(
                         PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
-        verify(mockVerifiableCredentialService).storeIdentity(VCS, USER_ID);
+        ArgumentCaptor<List<VerifiableCredential>> storesVcsCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(mockVerifiableCredentialService).storeIdentity(storesVcsCaptor.capture(), any());
+        storesVcsCaptor.getValue().forEach(vc -> assertNotNull(vc.getMigrated()));
         verify(mockEvcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
     }
 
     @Test
-    void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityAchieved()
-            throws Exception {
+    void shouldSendAuditEventWithVotExtensionWhenIdentityAchieved() throws Exception {
+        reset(mockSessionCredentialService);
+        VCS.stream()
+                .map(
+                        credential -> {
+                            if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                                credential.setMigrated(null);
+                            } else {
+                                credential.setMigrated(Instant.now());
+                            }
+                            return credential;
+                        })
+                .toList();
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
+
         storeIdentityHandler.handleRequest(PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -160,6 +189,18 @@ class StoreIdentityHandlerTest {
         assertEquals(
                 new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
                 auditEvent.getUser());
+        ArgumentCaptor<List<VerifiableCredential>> storesVcs = ArgumentCaptor.forClass(List.class);
+        verify(mockVerifiableCredentialService).storeIdentity(storesVcs.capture(), any());
+        storesVcs
+                .getValue()
+                .forEach(
+                        vc -> {
+                            if (vc.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                                assertNull(vc.getMigrated());
+                            } else {
+                                assertNotNull(vc.getMigrated());
+                            }
+                        });
         verify(mockEvcsService, times(0)).storeCompletedIdentity(anyString(), any(), any());
     }
 
