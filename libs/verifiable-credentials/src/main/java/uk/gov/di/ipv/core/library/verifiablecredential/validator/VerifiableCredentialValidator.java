@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
@@ -22,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -71,13 +75,22 @@ public class VerifiableCredentialValidator {
             String criId,
             List<String> vcs,
             String vcType,
-            ECKey signingKey,
+            EncryptionAlgorithm signingAlgorithm,
+            String signingKey,
             String componentId)
             throws VerifiableCredentialException {
         var validVcs = new ArrayList<VerifiableCredential>();
         for (String vc : vcs) {
             validVcs.add(
-                    parseAndValidate(userId, criId, vc, vcType, signingKey, componentId, false));
+                    parseAndValidate(
+                            userId,
+                            criId,
+                            vc,
+                            vcType,
+                            signingAlgorithm,
+                            signingKey,
+                            componentId,
+                            false));
         }
         return validVcs;
     }
@@ -87,13 +100,14 @@ public class VerifiableCredentialValidator {
             String criId,
             String vcString,
             String vcType,
-            ECKey signingKey,
+            EncryptionAlgorithm signingAlgorithm,
+            String signingKey,
             String componentId,
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
         try {
             var vcJwt = SignedJWT.parse(vcString);
-            validateSignature(vcJwt, signingKey);
+            validateSignature(vcJwt, signingAlgorithm, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
@@ -127,32 +141,50 @@ public class VerifiableCredentialValidator {
         }
     }
 
-    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey)
+    private void validateSignature(
+            SignedJWT vc, EncryptionAlgorithm signingAlgorithm, String signingKey)
             throws VerifiableCredentialException {
-        SignedJWT concatSignatureVerifiableCredential;
         try {
-            concatSignatureVerifiableCredential =
-                    signatureIsDerFormat(verifiableCredential)
-                            ? transcodeSignature(verifiableCredential)
-                            : verifiableCredential;
-        } catch (JOSEException | ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error transcoding signature", e));
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
-        }
+            var formattedVc = transcodeSignatureIfDerFormat(vc);
 
-        try {
-            ECDSAVerifier verifier = new ECDSAVerifier(signingKey);
-            if (!concatSignatureVerifiableCredential.verify(verifier)) {
+            var verifier = getVerifier(signingAlgorithm, signingKey);
+            if (!formattedVc.verify(verifier)) {
                 LOGGER.error(
                         LogHelper.buildLogMessage("Verifiable credential signature not valid"));
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
             }
+        } catch (ParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Parse exception when parsing signing key", e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("JOSE exception when verifying signature", e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+        }
+    }
+
+    private JWSVerifier getVerifier(EncryptionAlgorithm signingAlgorithm, String signingKey)
+            throws ParseException, JOSEException {
+        return switch (signingAlgorithm) {
+            case ECC -> new ECDSAVerifier(ECKey.parse(signingKey));
+            case RSA -> new RSASSAVerifier(RSAKey.parse(signingKey));
+        };
+    }
+
+    private SignedJWT transcodeSignatureIfDerFormat(SignedJWT verifiableCredential)
+            throws VerifiableCredentialException {
+        try {
+            return signatureIsDerFormat(verifiableCredential)
+                    ? transcodeSignature(verifiableCredential)
+                    : verifiableCredential;
+        } catch (JOSEException | ParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error transcoding signature", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);

@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.jwk.ECKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -23,17 +22,16 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
+import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -229,13 +227,10 @@ public class CiMitService {
                     null,
                     contraIndicatorsVC,
                     VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
-                    ECKey.parse(cimitSigningKey),
+                    EncryptionAlgorithm.ECC,
+                    cimitSigningKey,
                     cimitComponentId,
                     false);
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error parsing CIMIT signing key", e));
-            throw new CiRetrievalException(
-                    ErrorResponse.FAILED_TO_PARSE_CIMIT_SIGNING_KEY.getMessage());
         } catch (VerifiableCredentialException vcEx) {
             LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
             throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());

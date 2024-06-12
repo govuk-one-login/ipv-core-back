@@ -1,14 +1,12 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.nimbusds.jose.jwk.ECKey;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.text.ParseException;
+import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,9 +16,14 @@ import java.text.ParseException;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CriConfig {
     private String componentId;
+    private String signingAlgorithm;
     private String signingKey;
 
-    public ECKey getParsedSigningKey() throws ParseException {
-        return ECKey.parse(signingKey);
+    public EncryptionAlgorithm getSigningAlgorithm() {
+        if (signingAlgorithm == null || signingAlgorithm.isEmpty()) {
+            return EncryptionAlgorithm.ECC;
+        }
+
+        return EncryptionAlgorithm.valueOf(signingAlgorithm);
     }
 }

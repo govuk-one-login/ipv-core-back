@@ -428,7 +428,8 @@ public class InitialiseIpvSessionHandler
                         HMRC_MIGRATION.getId(),
                         inheritedIdentityJwtList.get(0),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        inheritedIdentityCriConfig.getParsedSigningKey(),
+                        inheritedIdentityCriConfig.getSigningAlgorithm(),
+                        inheritedIdentityCriConfig.getSigningKey(),
                         inheritedIdentityCriConfig.getComponentId(),
                         true);
         LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));

@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
@@ -129,7 +130,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                criConfig.getParsedSigningKey(),
+                                criConfig.getSigningAlgorithm(),
+                                criConfig.getSigningKey(),
                                 criConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -174,7 +176,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (VerifiableCredentialException | ParseException | JsonProcessingException e) {
+            } catch (VerifiableCredentialException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -257,7 +259,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -315,7 +318,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -403,7 +406,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -462,7 +466,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -548,7 +552,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -603,7 +608,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -690,7 +695,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -743,7 +749,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -827,7 +833,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -872,7 +879,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -956,7 +963,8 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                EncryptionAlgorithm.ECC,
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {

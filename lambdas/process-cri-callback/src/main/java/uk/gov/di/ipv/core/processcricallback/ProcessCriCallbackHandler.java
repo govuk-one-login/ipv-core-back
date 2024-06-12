@@ -326,7 +326,8 @@ public class ProcessCriCallbackHandler
                             callbackRequest.getCredentialIssuerId(),
                             vcResponse.getVerifiableCredentials(),
                             VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            criConfig.getParsedSigningKey(),
+                            criConfig.getSigningAlgorithm(),
+                            criConfig.getSigningKey(),
                             criConfig.getComponentId());
 
             criStoringService.storeVcs(
