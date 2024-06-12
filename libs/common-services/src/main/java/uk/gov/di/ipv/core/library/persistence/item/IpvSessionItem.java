@@ -6,11 +6,11 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,10 +21,10 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 @Data
 public class IpvSessionItem implements DynamodbItem {
+    public static final String JOURNEY_STATE_DELIMITER = "/";
     private String ipvSessionId;
     private String clientOAuthSessionId;
     private String criOAuthSessionId;
-    private String userState;
     private String creationDateTime;
     private String authorizationCode;
     private AuthorizationCodeMetadata authorizationCodeMetadata;
@@ -34,7 +34,6 @@ public class IpvSessionItem implements DynamodbItem {
     private String errorDescription;
     private Vot vot;
     private long ttl;
-    private IpvJourneyTypes journeyType;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     private List<String> stateStack = new ArrayList<>();
@@ -75,12 +74,35 @@ public class IpvSessionItem implements DynamodbItem {
         stateStack.add(String.format("%s/%s", journeyType.name(), state));
     }
 
-    public void pushState(String state) throws NoCurrentStateException {
-        if (this.stateStack.isEmpty()) {
-            throw new NoCurrentStateException();
+    public void pushState(String state) {
+        if (stateStack.isEmpty()) {
+            throw new IllegalStateException();
         }
         var currentJourney =
-                IpvJourneyTypes.valueOf(stateStack.get(stateStack.size() - 1).split("/", 2)[0]);
+                IpvJourneyTypes.valueOf(
+                        stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2)[0]);
         pushState(currentJourney, state);
+    }
+
+    public JourneyState getState() {
+        if (stateStack.isEmpty()) {
+            throw new IllegalStateException();
+        }
+
+        var currentJourneyState =
+                stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
+        return new JourneyState(
+                IpvJourneyTypes.valueOf(currentJourneyState[0]), currentJourneyState[1]);
+    }
+
+    public JourneyState popState() {
+        if (stateStack.isEmpty()) {
+            throw new IllegalStateException();
+        }
+
+        var currentJourneyState =
+                stateStack.remove(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
+        return new JourneyState(
+                IpvJourneyTypes.valueOf(currentJourneyState[0]), currentJourneyState[1]);
     }
 }

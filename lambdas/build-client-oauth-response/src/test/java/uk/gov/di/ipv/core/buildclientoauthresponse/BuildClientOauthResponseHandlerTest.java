@@ -50,6 +50,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 
 @ExtendWith(MockitoExtension.class)
 class BuildClientOauthResponseHandlerTest {
@@ -58,7 +59,7 @@ class BuildClientOauthResponseHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     public static final String TEST_FEATURE_SET = "fs-001";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
@@ -346,7 +347,7 @@ class BuildClientOauthResponseHandlerTest {
                         .addParameter("state", "test-state")
                         .build();
 
-        ClientResponse responseBody = objectMapper.convertValue(response, ClientResponse.class);
+        ClientResponse responseBody = OBJECT_MAPPER.convertValue(response, ClientResponse.class);
         URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
@@ -358,7 +359,7 @@ class BuildClientOauthResponseHandlerTest {
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        item.setUserState("test-state");
+        item.pushState(INITIAL_JOURNEY_SELECTION, "test-state");
         item.setCreationDateTime(new Date().toString());
         return item;
     }
@@ -376,6 +377,6 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
-        return objectMapper.convertValue(handlerOutput, responseClass);
+        return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
 }

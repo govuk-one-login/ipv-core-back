@@ -23,8 +23,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -185,13 +185,12 @@ public class ProcessJourneyEventHandler
             journeyEvent = NEXT_EVENT;
         }
 
-        var initialState = ipvSessionItem.getUserState();
-        var initialJourneyType = ipvSessionItem.getJourneyType();
+        var initialJourneyState = ipvSessionItem.getState();
 
         try {
             var newState =
                     executeStateTransition(
-                            ipvSessionItem,
+                            initialJourneyState,
                             journeyEvent,
                             currentPage,
                             auditEventUser,
@@ -206,8 +205,6 @@ public class ProcessJourneyEventHandler
                                 .with(
                                         LOG_USER_STATE.getFieldName(),
                                         journeyChangeState.getInitialState()));
-                ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
-                ipvSessionItem.setUserState(journeyChangeState.getInitialState());
                 ipvSessionItem.pushState(
                         journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
 
@@ -215,7 +212,7 @@ public class ProcessJourneyEventHandler
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
                 newState =
                         executeStateTransition(
-                                ipvSessionItem,
+                                ipvSessionItem.getState(),
                                 NEXT_EVENT,
                                 null,
                                 auditEventUser,
@@ -223,10 +220,9 @@ public class ProcessJourneyEventHandler
             }
 
             var basicState = (BasicState) newState;
-            ipvSessionItem.setUserState(basicState.getName());
             ipvSessionItem.pushState(basicState.getName());
 
-            logStateChange(initialState, initialJourneyType, journeyEvent, ipvSessionItem);
+            logStateChange(initialJourneyState, journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
@@ -236,7 +232,9 @@ public class ProcessJourneyEventHandler
                     LogHelper.buildErrorMessage(
                                     "Invalid journey state encountered, failed to execute journey engine step.",
                                     e)
-                            .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
+                            .with(
+                                    LOG_USER_STATE.getFieldName(),
+                                    ipvSessionItem.getState().state()));
             throw new JourneyEngineException();
         } catch (UnknownEventException e) {
             LOGGER.error(
@@ -253,41 +251,36 @@ public class ProcessJourneyEventHandler
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                             .with(
                                     LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getJourneyType()));
-            throw new JourneyEngineException();
-        } catch (NoCurrentStateException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("No current state found for user in stack", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+                                    ipvSessionItem.getState().subJourney().name()));
             throw new JourneyEngineException();
         }
     }
 
     @Tracing
     private State executeStateTransition(
-            IpvSessionItem ipvSessionItem,
+            JourneyState initialJourneyState,
             String journeyEvent,
             String currentPage,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws StateMachineNotFoundException, SqsException, UnknownEventException,
                     UnknownStateException {
-        StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
+        StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
             throw new StateMachineNotFoundException(
                     String.format(
                             "State machine not found for journey type: '%s'",
-                            ipvSessionItem.getJourneyType()));
+                            initialJourneyState.subJourney()));
         }
         LOGGER.debug(
                 LogHelper.buildLogMessage(
                         String.format(
                                 "Found state machine for journey type: %s",
-                                ipvSessionItem.getJourneyType().name())));
+                                initialJourneyState.subJourney())));
 
         var result =
                 stateMachine.transition(
-                        ipvSessionItem.getUserState(),
+                        initialJourneyState.state(),
                         journeyEvent,
                         new JourneyContext(configService),
                         currentPage);
@@ -304,18 +297,16 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private void logStateChange(
-            String oldState,
-            IpvJourneyTypes oldJourneyType,
-            String journeyEvent,
-            IpvSessionItem ipvSessionItem) {
+            JourneyState oldJourneyState, String journeyEvent, IpvSessionItem ipvSessionItem) {
+        var newJourneyState = ipvSessionItem.getState();
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
                         .with("event", journeyEvent)
-                        .with("from", oldState)
-                        .with("to", ipvSessionItem.getUserState())
-                        .with("fromJourney", oldJourneyType.name())
-                        .with("toJourney", ipvSessionItem.getJourneyType().name());
+                        .with("from", oldJourneyState.state())
+                        .with("to", newJourneyState.state())
+                        .with("fromJourney", oldJourneyState.subJourney())
+                        .with("toJourney", newJourneyState.subJourney());
         LOGGER.info(message);
     }
 
@@ -330,22 +321,19 @@ public class ProcessJourneyEventHandler
     private void updateUserSessionForTimeout(
             IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser, String deviceInformation)
             throws SqsException {
-        var oldState = ipvSessionItem.getUserState();
-        var oldJourneyType = ipvSessionItem.getJourneyType();
+        var oldJourneyState = ipvSessionItem.getState();
 
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
         ipvSessionItem.pushState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE);
 
-        logStateChange(oldState, oldJourneyType, "timeout", ipvSessionItem);
+        logStateChange(oldJourneyState, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
     }
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
+        return (!SESSION_TIMEOUT.equals(ipvSessionItem.getState().subJourney()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
