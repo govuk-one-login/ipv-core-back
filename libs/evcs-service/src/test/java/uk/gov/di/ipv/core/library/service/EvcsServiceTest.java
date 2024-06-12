@@ -10,12 +10,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
+import uk.gov.di.ipv.core.library.domain.CriIdentifer;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,12 +25,14 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
@@ -183,5 +187,68 @@ class EvcsServiceTest {
         assertEquals(VC_ADDRESS.getUserId(), stringArgumentCaptor.getValue());
         assertEquals(VC_ADDRESS.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
         assertEquals(PENDING_RETURN, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
+    }
+
+    @Test
+    void testGetVerifiableCredentials() throws CredentialParseException {
+        // Arrange
+        when(mockConfigService.getCriConfigs())
+                .thenReturn(
+                        Map.of(
+                                M1A_ADDRESS_VC.getClaimsSet().getIssuer(),
+                                CriIdentifer.ADDRESS.getId(),
+                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getClaimsSet().getIssuer(),
+                                CriIdentifer.DCMAW.getId()));
+
+        when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
+                .thenReturn(
+                        new EvcsGetUserVCsDto(
+                                List.of(
+                                        new EvcsGetUserVCDto(
+                                                M1A_ADDRESS_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null),
+                                        new EvcsGetUserVCDto(
+                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null))));
+
+        // Act
+        var vcs =
+                evcsService.getVerifiableCredentials(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT);
+        // Assert
+        assertEquals(
+                2,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCriId().equals(CriIdentifer.ADDRESS.getId())
+                                                || vc.getCriId().equals(CriIdentifer.DCMAW.getId()))
+                        .count()));
+    }
+
+    @Test
+    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound() {
+        // Arrange
+        when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
+                .thenReturn(
+                        new EvcsGetUserVCsDto(
+                                List.of(
+                                        new EvcsGetUserVCDto(
+                                                M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null),
+                                        new EvcsGetUserVCDto(
+                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null))));
+
+        // Act/Assert
+        assertThrows(
+                CredentialParseException.class,
+                () -> {
+                    evcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT);
+                });
     }
 }

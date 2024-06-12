@@ -24,17 +24,18 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 
 public class EvcsService {
     private final EvcsClient evcsClient;
-    private final Map<String, String> criConfig;
+    private final ConfigService configService;
+    private static Map<String, String> criConfig;
 
     public EvcsService(EvcsClient evcsClient, ConfigService configService) {
         this.evcsClient = evcsClient;
-        this.criConfig = configService.getCriConfigs();
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsService(ConfigService configService) {
         this.evcsClient = new EvcsClient(configService);
-        this.criConfig = configService.getCriConfigs();
+        this.configService = configService;
     }
 
     @Tracing
@@ -68,13 +69,18 @@ public class EvcsService {
         List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
+        if (criConfig == null) {
+            criConfig = configService.getCriConfigs();
+        }
         List<VerifiableCredential> credentials = new ArrayList<VerifiableCredential>();
         for (var vc : vcs) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var criId = criConfig.get(jwt.getJWTClaimsSet().getIssuer());
                 if (criId == null) {
-                    throw new CredentialParseException("Failed to find credential issuer for vc");
+                    throw new CredentialParseException(
+                            "Failed to find credential issuer for vc "
+                                    + jwt.getJWTClaimsSet().getIssuer());
                 }
                 credentials.add(VerifiableCredential.fromValidJwt(userId, criId, jwt));
             } catch (ParseException e) {
