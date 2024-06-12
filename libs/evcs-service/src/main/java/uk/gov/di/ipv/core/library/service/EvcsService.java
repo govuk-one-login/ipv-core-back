@@ -26,9 +26,8 @@ public class EvcsService {
     private final EvcsClient evcsClient;
     private final Map<String, String> criConfig;
 
-    public EvcsService(EvcsClient evcsClient) {
+    public EvcsService(EvcsClient evcsClient, ConfigService configService) {
         this.evcsClient = evcsClient;
-        var configService = new ConfigService();
         this.criConfig = configService.getCriConfigs();
     }
 

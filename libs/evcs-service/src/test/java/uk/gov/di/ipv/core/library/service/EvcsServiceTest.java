@@ -80,6 +80,7 @@ class EvcsServiceTest {
     @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
     @Mock EvcsClient mockEvcsClient;
+    @Mock ConfigService mockConfigService;
     @InjectMocks EvcsService evcsService;
 
     @Test
