@@ -153,7 +153,7 @@ class EvcsClientTest {
                                         .collect(Collectors.joining(",")))
                         .build();
         assertEquals(expectedUri.toString(), httpRequest.uri().toString());
-        assertTrue(evcsGetUserVCsDto.vcs().size() == 2);
+        assertEquals(2, evcsGetUserVCsDto.vcs().size());
     }
 
     @Test
@@ -213,7 +213,7 @@ class EvcsClientTest {
         assertEquals("GET", httpRequest.method());
         assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-        assertTrue(evcsGetUserVCsDto.vcs().size() == 0);
+        assertEquals(0, evcsGetUserVCsDto.vcs().size());
     }
 
     @Test
