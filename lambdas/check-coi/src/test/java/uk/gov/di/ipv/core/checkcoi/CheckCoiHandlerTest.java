@@ -211,8 +211,7 @@ class CheckCoiHandlerTest {
             @Test
             @MockitoSettings(strictness = LENIENT)
             void shouldUseEvcsServiceWhenEnabled()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                            SqsException {
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
 
                 when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
                 when(mockUserIdentityService.areVcsCorrelated(
@@ -239,8 +238,7 @@ class CheckCoiHandlerTest {
 
             @Test
             void shouldUseVcStoreWhenEvcsEnabledAndReturnsEmpty()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                            SqsException {
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
 
                 when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
                 when(mockUserIdentityService.areVcsCorrelated(

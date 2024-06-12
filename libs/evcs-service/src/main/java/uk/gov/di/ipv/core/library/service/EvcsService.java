@@ -69,7 +69,7 @@ public class EvcsService {
 
         var criConfig = EvcsCriConfig.getInstance(configService);
 
-        List<VerifiableCredential> credentials = new ArrayList<VerifiableCredential>();
+        List<VerifiableCredential> credentials = new ArrayList<>();
         for (var vc : vcs) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());

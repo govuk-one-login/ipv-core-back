@@ -68,6 +68,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     private final UserIdentityService userIdentityService;
     private final EvcsService evcsService;
 
+    @SuppressWarnings({"java:S107"}) // Methods should not have too many parameters
     public CheckCoiHandler(
             ConfigService configService,
             AuditService auditService,
@@ -237,7 +238,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         if (configService.enabled(EVCS_READ_ENABLED)) {
             credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
         }
-        if (credentials == null || credentials.size() == 0) {
+        if (credentials == null || credentials.isEmpty()) {
             credentials = verifiableCredentialService.getVcs(userId);
         }
         return Stream.concat(

@@ -305,7 +305,7 @@ public class CheckExistingIdentityHandler
             String userId, String evcsAccessToken) throws CredentialParseException {
         if (configService.enabled(EVCS_READ_ENABLED)) {
             var vcs = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
-            if (vcs != null && vcs.size() > 0) {
+            if (vcs != null && !vcs.isEmpty()) {
                 return vcs;
             }
         }

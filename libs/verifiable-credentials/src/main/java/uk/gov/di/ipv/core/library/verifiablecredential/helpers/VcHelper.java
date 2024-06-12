@@ -58,8 +58,8 @@ public class VcHelper {
                     .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static ConfigService configService;
     private static final int ONLY = 0;
-    private static List<String> OPERATIONAL_CRIS = CriIdentifer.getOperationalCriIds();
-    private static List<String> NON_EVIDENCE_CRI_TYPES = CriIdentifer.getNonEvidenceCriIds();
+    private static final List<String> OPERATIONAL_CRIS = CriIdentifer.getOperationalCriIds();
+    private static final List<String> NON_EVIDENCE_CRI_TYPES = CriIdentifer.getNonEvidenceCriIds();
 
     private VcHelper() {}
 
