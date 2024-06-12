@@ -236,9 +236,7 @@ public class ConfigService {
         try {
             String secretValue = getCoreSecretValue(ConfigurationVariable.CI_CONFIG);
             List<ContraIndicatorConfig> configList =
-                    OBJECT_MAPPER
-                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                            .readValue(secretValue, new TypeReference<>() {});
+                    OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
             for (ContraIndicatorConfig config : configList) {
                 configMap.put(config.getCi(), config);
