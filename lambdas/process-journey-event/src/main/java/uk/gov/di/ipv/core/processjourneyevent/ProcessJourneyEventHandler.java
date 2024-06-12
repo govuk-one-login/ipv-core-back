@@ -15,6 +15,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -48,6 +50,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepRes
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -378,6 +381,13 @@ public class ProcessJourneyEventHandler
         return switch (auditEventType) {
             case IPV_MITIGATION_START -> new AuditExtensionMitigationType(
                     auditContext.get("mitigationType"));
+            case IPV_USER_DETAILS_UPDATE_SELECTED -> new AuditExtensionUserDetailsUpdateSelected(
+                    Arrays.stream(auditContext.get("updateFields").split(","))
+                            .map(String::trim)
+                            .toList(),
+                    Boolean.parseBoolean(auditContext.get("updateSupported")));
+            case IPV_USER_DETAILS_UPDATE_END -> new AuditExtensionSuccessful(
+                    Boolean.parseBoolean(auditContext.get("successful")));
             default -> null;
         };
     }

@@ -92,6 +92,8 @@ states:
         targetState: RESET_IDENTITY_GIVEN_ONLY
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
@@ -105,9 +107,13 @@ states:
         targetState: RESET_IDENTITY_GIVEN_ONLY
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   FAMILY_ONLY_AFTER_REUSE:
     response:
@@ -118,6 +124,8 @@ states:
         targetState: RESET_IDENTITY_FAMILY_ONLY
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
@@ -131,9 +139,13 @@ states:
         targetState: RESET_IDENTITY_FAMILY_ONLY
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   RESET_IDENTITY_GIVEN_ONLY:
     response:
@@ -250,6 +262,8 @@ states:
         targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
@@ -263,9 +277,13 @@ states:
         targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   FAMILY_WITH_ADDRESS_AFTER_REUSE:
     response:
@@ -276,6 +294,8 @@ states:
         targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: UPDATE_DETAILS_START
@@ -289,9 +309,13 @@ states:
         targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   RESET_IDENTITY_GIVEN_WITH_ADDRESS:
     response:
@@ -451,6 +475,10 @@ states:
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: true
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
