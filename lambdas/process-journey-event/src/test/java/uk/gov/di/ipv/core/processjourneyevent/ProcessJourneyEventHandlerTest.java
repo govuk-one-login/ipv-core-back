@@ -362,6 +362,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         ipvSessionItem.setUserState(TIMEOUT_UNRECOVERABLE_STATE);
+        ipvSessionItem.pushState(SESSION_TIMEOUT, TIMEOUT_UNRECOVERABLE_STATE);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -538,11 +539,95 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(new AuditExtensionSuccessful(false), fourthEvent.getExtensions());
     }
 
+    @Test
+    void shouldUpdateStateStackWithJourneyAndStateWhenStartingNewSubjourney() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testJourneyStep")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "TECHNICAL_ERROR/TECHNICAL_ERROR_PAGE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(2));
+    }
+
+    @Test
+    void shouldUpdateStateStackWithPreviousStateJourneyTypeWhenTransitioningWithinSubjourney()
+            throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST);
+
+        processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "INITIAL_JOURNEY_SELECTION/JOURNEY_STATE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(1));
+    }
+
+    @Test
+    void shouldReturn500IfNoExistingStateInStack() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        mockIpvSessionService.getIpvSession("anyString").setStateStack(List.of());
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
+    }
+
     private void mockIpvSessionItemAndTimeout(String userState) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(userState);
+        ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, userState);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(INITIAL_JOURNEY_SELECTION);
 

@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -60,7 +61,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
 public class ProcessJourneyEventHandler
@@ -208,6 +208,9 @@ public class ProcessJourneyEventHandler
                                         journeyChangeState.getInitialState()));
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
+                ipvSessionItem.pushState(
+                        journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
+
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
                 newState =
@@ -221,6 +224,7 @@ public class ProcessJourneyEventHandler
 
             var basicState = (BasicState) newState;
             ipvSessionItem.setUserState(basicState.getName());
+            ipvSessionItem.pushState(basicState.getName());
 
             logStateChange(initialState, initialJourneyType, journeyEvent, ipvSessionItem);
 
@@ -229,28 +233,33 @@ public class ProcessJourneyEventHandler
             return basicState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "Invalid journey state encountered, failed to execute journey engine step.",
+                                    e)
                             .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
-            throw new JourneyEngineException(
-                    "Invalid journey state encountered, failed to execute journey engine step.");
+            throw new JourneyEngineException();
         } catch (UnknownEventException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "Invalid journey event provided, failed to execute journey engine step.",
+                                    e)
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
-            throw new JourneyEngineException(
-                    "Invalid journey event provided, failed to execute journey engine step.");
+            throw new JourneyEngineException();
         } catch (StateMachineNotFoundException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "State machine not found for journey type, failed to execute journey engine step",
+                                    e)
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                             .with(
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getJourneyType()));
-            throw new JourneyEngineException(
-                    "State machine not found for journey type, failed to execute journey engine step");
+            throw new JourneyEngineException();
+        } catch (NoCurrentStateException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("No current state found for user in stack", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            throw new JourneyEngineException();
         }
     }
 
@@ -328,6 +337,7 @@ public class ProcessJourneyEventHandler
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.pushState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE);
 
         logStateChange(oldState, oldJourneyType, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
