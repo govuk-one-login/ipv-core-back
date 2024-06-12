@@ -37,14 +37,25 @@ public interface VcFixtures {
     String TEST_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
 
     List<TestVc.TestEvidence> SUCCESSFUL_EVIDENCE =
-            List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(2).build());
+            List.of(
+                    TestVc.TestEvidence.builder()
+                            .strengthScore(4)
+                            .validityScore(2)
+                            .verificationScore(2)
+                            .build());
     List<TestVc.TestEvidence> UNSUCCESSFUL_EVIDENCE =
-            List.of(TestVc.TestEvidence.builder().strengthScore(4).validityScore(0).build());
+            List.of(
+                    TestVc.TestEvidence.builder()
+                            .strengthScore(4)
+                            .validityScore(0)
+                            .verificationScore(0)
+                            .build());
     List<TestVc.TestEvidence> TEST_CI_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
                             .strengthScore(4)
                             .validityScore(2)
+                            .verificationScore(2)
                             .ci(List.of("test"))
                             .ciReasons(List.of(Map.of("ci", "testValue", "reason", "testReason")))
                             .build());
@@ -106,6 +117,7 @@ public interface VcFixtures {
                             .txn("bcd2346")
                             .strengthScore(3)
                             .validityScore(2)
+                            .verificationScore(2)
                             .activityHistoryScore(1)
                             .checkDetails(
                                     List.of(
@@ -803,6 +815,7 @@ public interface VcFixtures {
                                                     .txn("bcd2346")
                                                     .strengthScore(3)
                                                     .validityScore(2)
+                                                    .verificationScore(2)
                                                     .activityHistoryScore(1)
                                                     .checkDetails(
                                                             List.of(

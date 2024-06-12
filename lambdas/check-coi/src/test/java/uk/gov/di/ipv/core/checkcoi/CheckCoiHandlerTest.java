@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -100,6 +102,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -132,6 +136,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -166,6 +172,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -192,6 +200,28 @@ class CheckCoiHandlerTest {
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
             }
+
+            @Test
+            void
+                    shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
+                            throws Exception {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.SUCCESS);
+            }
         }
 
         @Nested
@@ -202,6 +232,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -234,6 +266,8 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -259,6 +293,27 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
+            }
+
+            @Test
+            void shouldReturnFailedForFailedReverificationCheckandReverificationStatusSetToFailed()
+                    throws Exception {
+                when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(false);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                                .build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
+                verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.FAILED);
             }
         }
     }

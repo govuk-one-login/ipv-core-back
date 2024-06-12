@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
@@ -134,24 +133,15 @@ public class Gpg45ProfileEvaluator {
                         .ci(evidenceItem.getCi())
                         .build());
 
-        int verificationScore;
-        if (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
-            if (evidenceItem.getActivityHistoryScore() != null) {
-                gpg45CredentialItems.add(
-                        new CredentialEvidenceItem(
-                                CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                                evidenceItem.getActivityHistoryScore(),
-                                Collections.emptyList()));
-            }
+        int verificationScore = evidenceItem.getVerificationScore();
+        if (evidenceItem.getEvidenceType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
+                && evidenceItem.getActivityHistoryScore() != null) {
 
-            List<CheckDetail> checkDetails = evidenceItem.getCheckDetails();
-            if (checkDetails != null) {
-                verificationScore = getVerificationScoreValue(checkDetails);
-            } else {
-                verificationScore = 0;
-            }
-        } else {
-            verificationScore = evidenceItem.getVerificationScore();
+            gpg45CredentialItems.add(
+                    new CredentialEvidenceItem(
+                            CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                            evidenceItem.getActivityHistoryScore(),
+                            Collections.emptyList()));
         }
 
         gpg45CredentialItems.add(
@@ -211,19 +201,5 @@ public class Gpg45ProfileEvaluator {
                 .max(evidenceType.getComparator())
                 .map(evidenceType.getScoreGetter())
                 .orElse(NO_SCORE);
-    }
-
-    private int getVerificationScoreValue(List<CheckDetail> checkMethods) {
-        Optional<CheckDetail> checkMethodWithVerificationScore =
-                checkMethods.stream()
-                        .filter(
-                                checkMethod ->
-                                        checkMethod.getBiometricVerificationProcessLevel() != null)
-                        .findFirst();
-
-        if (checkMethodWithVerificationScore.isPresent()) {
-            return checkMethodWithVerificationScore.get().getBiometricVerificationProcessLevel();
-        }
-        return 0;
     }
 }

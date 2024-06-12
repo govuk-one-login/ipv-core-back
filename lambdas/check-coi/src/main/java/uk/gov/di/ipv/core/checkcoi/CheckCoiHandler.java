@@ -15,6 +15,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -23,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -134,6 +137,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
+            var scopeClaims = clientOAuthSession.getScopeClaims();
+            var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
+
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                     checkType,
@@ -142,6 +148,14 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     ipvSessionId,
                     govukSigninJourneyId,
                     ipAddress);
+
+            if (isReverification) {
+                setIpvSessionReverificationStatus(
+                        ipvSession,
+                        successfulCheck
+                                ? ReverificationStatus.SUCCESS
+                                : ReverificationStatus.FAILED);
+            }
 
             if (!successfulCheck) {
                 LOGGER.info(
@@ -181,6 +195,12 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
         }
+    }
+
+    private void setIpvSessionReverificationStatus(
+            IpvSessionItem ipvSessionItem, ReverificationStatus status) {
+        ipvSessionItem.setReverificationStatus(status);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
     @Tracing

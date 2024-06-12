@@ -430,4 +430,65 @@ class CredentialEvidenceItemTest {
         credentialEvidenceItem.setCredentialIss("someIss");
         assertEquals("someIss", credentialEvidenceItem.getCredentialIss());
     }
+
+    @Test
+    void getVerificationScoreReturnsZeroForDcmawNullCheckMethods() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(3)
+                        .validityScore(2)
+                        .identityFraudScore(null)
+                        .verificationScore(null)
+                        .checkDetails(null)
+                        .failedCheckDetails(List.of(new CheckDetail()))
+                        .build();
+
+        assertEquals(0, credentialEvidenceItem.getVerificationScore());
+    }
+
+    @Test
+    void getVerificationScoreReturnsZeroForDcmawNoBiometricVerificationProcessLevel() {
+        CheckDetail checkDetailNoBiometricVerificationProcessLevel = new CheckDetail();
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(3)
+                        .validityScore(2)
+                        .identityFraudScore(null)
+                        .verificationScore(null)
+                        .checkDetails(List.of(checkDetailNoBiometricVerificationProcessLevel))
+                        .build();
+
+        assertEquals(0, credentialEvidenceItem.getVerificationScore());
+    }
+
+    @Test
+    void getVerificationScoreReturnsScoreForDcmaw() {
+        CheckDetail checkDetail = new CheckDetail();
+        checkDetail.setBiometricVerificationProcessLevel(3);
+
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(3)
+                        .validityScore(2)
+                        .identityFraudScore(null)
+                        .verificationScore(null)
+                        .checkDetails(List.of(checkDetail))
+                        .build();
+
+        assertEquals(3, credentialEvidenceItem.getVerificationScore());
+    }
+
+    @Test
+    void getVerificationScoreReturnsScoreForNonDcmaw() {
+        // Create non-dcmaw evidence item
+        CredentialEvidenceItem credentialEvidenceItem =
+                CredentialEvidenceItem.builder()
+                        .strengthScore(3)
+                        .validityScore(2)
+                        .identityFraudScore(null)
+                        .verificationScore(2)
+                        .build();
+
+        assertEquals(2, credentialEvidenceItem.getVerificationScore());
+    }
 }
