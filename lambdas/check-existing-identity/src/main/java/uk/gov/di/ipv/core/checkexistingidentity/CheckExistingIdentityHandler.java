@@ -223,9 +223,6 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             var vcs = getVerifiableCredentials(userId, clientOAuthSessionItem.getEvcsAccessToken());
-            for (var vc : vcs) {
-                LOGGER.info("vc : " + vc.getCriId() + " " + vc.getSignedJwt().serialize());
-            }
             var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;

@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -25,7 +24,6 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 public class EvcsService {
     private final EvcsClient evcsClient;
     private final ConfigService configService;
-    private static Map<String, String> criConfig;
 
     public EvcsService(EvcsClient evcsClient, ConfigService configService) {
         this.evcsClient = evcsClient;
@@ -69,9 +67,8 @@ public class EvcsService {
         List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
-        if (criConfig == null) {
-            criConfig = configService.getCriConfigs();
-        }
+        var criConfig = EvcsCriConfig.getInstance(configService);
+
         List<VerifiableCredential> credentials = new ArrayList<VerifiableCredential>();
         for (var vc : vcs) {
             try {
