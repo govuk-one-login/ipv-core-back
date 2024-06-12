@@ -106,6 +106,86 @@ states:
         auditContext:
           updateFields: full-name-or-dob
           updateSupported: false
+      dob:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob
+          updateSupported: false
+      dob-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,given-names
+          updateSupported: false
+      dob-family:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,family-name
+          updateSupported: false
+      address-dob:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob
+          updateSupported: false
+      dob-family-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,family-name,given-names
+          updateSupported: false
+      address-dob-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,given-names
+          updateSupported: false
+      address-dob-family:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,family-name
+          updateSupported: false
+      address-dob-family-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,family-name,given-names
+          updateSupported: false
+      family-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name,given-names
+          updateSupported: false
+      address-family-given:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,family-name,given-names
+          updateSupported: false
       next:
         targetState: FRAUD_CHECK_RFC
 
