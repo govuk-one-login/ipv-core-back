@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,7 +77,10 @@ public class EvcsClient {
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
 
             EvcsGetUserVCsDto evcsGetUserVCs =
-                    OBJECT_MAPPER.readValue(evcsHttpResponse.body(), new TypeReference<>() {});
+                    evcsHttpResponse.statusCode() != 404
+                            ? OBJECT_MAPPER.readValue(
+                                    evcsHttpResponse.body(), new TypeReference<>() {})
+                            : new EvcsGetUserVCsDto(Collections.emptyList());
 
             if (CollectionUtils.isEmpty(evcsGetUserVCs.vcs())) {
                 LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
@@ -144,9 +148,12 @@ public class EvcsClient {
 
     private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
-        var uriBuilder =
-                new URIBuilder(configService.getSsmParameter(EVCS_APPLICATION_URL))
-                        .setPathSegments("vcs", userId);
+        URI evcsUri = new URI(configService.getSsmParameter(EVCS_APPLICATION_URL));
+        List<String> pathSegments =
+                evcsUri.getPath() != null
+                        ? List.of(evcsUri.getPath().replaceFirst("/", ""), "vcs", userId)
+                        : List.of("vcs", userId);
+        var uriBuilder = new URIBuilder(evcsUri).setPathSegments(pathSegments);
         if (vcStatesToQueryFor != null) {
             uriBuilder.addParameter(
                     VC_STATE_PARAM,
@@ -176,9 +183,11 @@ public class EvcsClient {
                                             .getMessage())
                             .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode())
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), responseMessage));
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+            if (evcsHttpResponse.statusCode() != 404) {
+                throw new EvcsServiceException(
+                        HTTPResponse.SC_SERVER_ERROR,
+                        ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+            }
         }
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
     }

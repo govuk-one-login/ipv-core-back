@@ -32,6 +32,7 @@ import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -49,7 +51,7 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 @ExtendWith(MockitoExtension.class)
 class EvcsClientTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String EVCS_APPLICATION_URL = "http://localhost";
+    private static final String EVCS_APPLICATION_URL = "http://localhost/v1";
     private static final String EVCS_API_KEY = "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg";
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
@@ -132,7 +134,8 @@ class EvcsClientTest {
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
 
         // Act
-        evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
 
         // Assert
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -140,9 +143,17 @@ class EvcsClientTest {
         assertEquals("GET", httpRequest.method());
         assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-        var expectedUriPrefix =
-                new URIBuilder(EVCS_APPLICATION_URL).setPathSegments("vcs", TEST_USER_ID).build();
-        assertTrue(httpRequest.uri().toString().startsWith(expectedUriPrefix.toString()));
+        var expectedUri =
+                new URIBuilder(EVCS_APPLICATION_URL)
+                        .setPathSegments("v1", "vcs", TEST_USER_ID)
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .build();
+        assertEquals(expectedUri.toString(), httpRequest.uri().toString());
+        assertTrue(evcsGetUserVCsDto.vcs().size() == 2);
     }
 
     @Test
@@ -182,6 +193,27 @@ class EvcsClientTest {
                 () ->
                         evcsClient.getUserVcs(
                                 TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+    }
+
+    @Test
+    void testGetUserVCs_shouldNotThrowException_for404ResponseStatus() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"no data found\"}");
+        when(mockHttpResponse.statusCode()).thenReturn(404);
+        // Act
+        // Assert
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+
+        // Assert
+        verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+        HttpRequest httpRequest = httpRequestCaptor.getValue();
+        assertEquals("GET", httpRequest.method());
+        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
+        assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+        assertTrue(evcsGetUserVCsDto.vcs().size() == 0);
     }
 
     @Test
