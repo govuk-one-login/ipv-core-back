@@ -15,13 +15,16 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.CoiSubjourneyType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -53,12 +56,11 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.CoiSubjourneyType.isCoiSubjourneyEvent;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
 public class ProcessJourneyEventHandler
@@ -69,7 +71,7 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
-            new ProcessStepResponse(END_SESSION_EVENT, null, null, null);
+            new ProcessStepResponse(END_SESSION_EVENT, null);
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -155,34 +157,7 @@ public class ProcessJourneyEventHandler
                             deviceInformation,
                             currentPage);
 
-            if (isCoiSubjourneyEvent(journeyEvent)) {
-                CoiSubjourneyType coiJourneyType = CoiSubjourneyType.fromString(journeyEvent);
-
-                ipvSessionItem.setCoiSubjourneyType(coiJourneyType);
-            }
-
             ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            if (stepResponse.getMitigationStart() != null) {
-                sendMitigationStartAuditEvent(
-                        auditEventUser, stepResponse.getMitigationStart(), deviceInformation);
-            }
-
-            String journeyAuditEvent = stepResponse.getAuditEvent();
-            if (journeyAuditEvent != null) {
-                boolean eventTypeExists =
-                        Arrays.stream(AuditEventTypes.values())
-                                .anyMatch(eventType -> eventType.name().equals(journeyAuditEvent));
-                if (!eventTypeExists) {
-                    LOGGER.error(
-                            LogHelper.buildLogMessage("Invalid audit event type provided")
-                                    .with(LOG_JOURNEY_EVENT.getFieldName(), journeyAuditEvent));
-                    throw new JourneyEngineException(
-                            "Invalid audit event type provided, failed to execute journey engine step.");
-                }
-                AuditEventTypes auditEventType = AuditEventTypes.valueOf(journeyAuditEvent);
-                sendJourneyAuditEvent(auditEventType, auditEventUser, deviceInformation);
-            }
 
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -214,7 +189,13 @@ public class ProcessJourneyEventHandler
         var initialJourneyType = ipvSessionItem.getJourneyType();
 
         try {
-            var newState = executeStateTransition(ipvSessionItem, journeyEvent, currentPage);
+            var newState =
+                    executeStateTransition(
+                            ipvSessionItem,
+                            journeyEvent,
+                            currentPage,
+                            auditEventUser,
+                            deviceInformation);
 
             while (newState instanceof JourneyChangeState journeyChangeState) {
                 LOGGER.info(
@@ -227,13 +208,23 @@ public class ProcessJourneyEventHandler
                                         journeyChangeState.getInitialState()));
                 ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
                 ipvSessionItem.setUserState(journeyChangeState.getInitialState());
+                ipvSessionItem.pushState(
+                        journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
+
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
-                newState = executeStateTransition(ipvSessionItem, NEXT_EVENT, null);
+                newState =
+                        executeStateTransition(
+                                ipvSessionItem,
+                                NEXT_EVENT,
+                                null,
+                                auditEventUser,
+                                deviceInformation);
             }
 
             var basicState = (BasicState) newState;
             ipvSessionItem.setUserState(basicState.getName());
+            ipvSessionItem.pushState(basicState.getName());
 
             logStateChange(initialState, initialJourneyType, journeyEvent, ipvSessionItem);
 
@@ -242,35 +233,45 @@ public class ProcessJourneyEventHandler
             return basicState.getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "Invalid journey state encountered, failed to execute journey engine step.",
+                                    e)
                             .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
-            throw new JourneyEngineException(
-                    "Invalid journey state encountered, failed to execute journey engine step.");
+            throw new JourneyEngineException();
         } catch (UnknownEventException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "Invalid journey event provided, failed to execute journey engine step.",
+                                    e)
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
-            throw new JourneyEngineException(
-                    "Invalid journey event provided, failed to execute journey engine step.");
+            throw new JourneyEngineException();
         } catch (StateMachineNotFoundException e) {
             LOGGER.error(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                    LogHelper.buildErrorMessage(
+                                    "State machine not found for journey type, failed to execute journey engine step",
+                                    e)
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                             .with(
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getJourneyType()));
-            throw new JourneyEngineException(
-                    "State machine not found for journey type, failed to execute journey engine step");
+            throw new JourneyEngineException();
+        } catch (NoCurrentStateException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("No current state found for user in stack", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            throw new JourneyEngineException();
         }
     }
 
     @Tracing
     private State executeStateTransition(
-            IpvSessionItem ipvSessionItem, String journeyEvent, String currentPage)
-            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
+            IpvSessionItem ipvSessionItem,
+            String journeyEvent,
+            String currentPage,
+            AuditEventUser auditEventUser,
+            String deviceInformation)
+            throws StateMachineNotFoundException, SqsException, UnknownEventException,
+                    UnknownStateException {
         StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
         if (stateMachine == null) {
             throw new StateMachineNotFoundException(
@@ -284,11 +285,21 @@ public class ProcessJourneyEventHandler
                                 "Found state machine for journey type: %s",
                                 ipvSessionItem.getJourneyType().name())));
 
-        return stateMachine.transition(
-                ipvSessionItem.getUserState(),
-                journeyEvent,
-                new JourneyContext(configService),
-                currentPage);
+        var result =
+                stateMachine.transition(
+                        ipvSessionItem.getUserState(),
+                        journeyEvent,
+                        new JourneyContext(configService),
+                        currentPage);
+
+        if (!isNullOrEmpty(result.auditEvents())) {
+            for (var auditEventType : result.auditEvents()) {
+                sendJourneyAuditEvent(
+                        auditEventType, result.auditContext(), auditEventUser, deviceInformation);
+            }
+        }
+
+        return result.state();
     }
 
     @Tracing
@@ -326,6 +337,7 @@ public class ProcessJourneyEventHandler
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.pushState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE);
 
         logStateChange(oldState, oldJourneyType, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
@@ -359,29 +371,35 @@ public class ProcessJourneyEventHandler
         return stateMachinesMap;
     }
 
-    private void sendMitigationStartAuditEvent(
-            AuditEventUser auditEventUser, String mitigationType, String deviceInformation)
-            throws SqsException {
-
-        auditService.sendAuditEvent(
-                new AuditEvent(
-                        AuditEventTypes.IPV_MITIGATION_START,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionMitigationType(mitigationType),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
-    }
-
     private void sendJourneyAuditEvent(
-            AuditEventTypes auditEventType, AuditEventUser auditEventUser, String deviceInformation)
+            AuditEventTypes auditEventType,
+            Map<String, String> auditContext,
+            AuditEventUser auditEventUser,
+            String deviceInformation)
             throws SqsException {
-
         auditService.sendAuditEvent(
                 new AuditEvent(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
+                        getAuditExtensions(auditEventType, auditContext),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private AuditExtensions getAuditExtensions(
+            AuditEventTypes auditEventType, Map<String, String> auditContext) {
+        return switch (auditEventType) {
+            case IPV_MITIGATION_START -> new AuditExtensionMitigationType(
+                    auditContext.get("mitigationType"));
+            case IPV_USER_DETAILS_UPDATE_SELECTED -> new AuditExtensionUserDetailsUpdateSelected(
+                    Arrays.stream(auditContext.get("updateFields").split(","))
+                            .map(String::trim)
+                            .toList(),
+                    Boolean.parseBoolean(auditContext.get("updateSupported")));
+            case IPV_USER_DETAILS_UPDATE_END -> new AuditExtensionSuccessful(
+                    Boolean.parseBoolean(auditContext.get("successful")));
+            default -> null;
+        };
     }
 
     private void sendSubJourneyStartAuditEvent(

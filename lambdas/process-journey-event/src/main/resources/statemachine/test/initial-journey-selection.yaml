@@ -33,12 +33,22 @@ states:
         targetState: CRI_STATE_WITH_EVIDENCE_REQUEST
       testWithContextAndEvidenceRequest:
         targetState: CRI_STATE_WITH_CONTEXT_AND_EVIDENCE_REQUEST
-      testWithMitigationStart:
-        targetState: PAGE_STATE_AT_START_OF_MITIGATION
       testWithAuditEvent:
-        targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
-      testWithWrongAuditEvent:
-        targetState: WRONG_AUDIT_EVENT_STATE
+        targetState: ERROR_STATE
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+      testWithAuditEventContext:
+        targetState: ERROR_STATE
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+          - IPV_MITIGATION_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          mitigationType: test-mitigation
+          updateFields: address
+          updateSupported: true
+          successful: false
       testJourneyStep:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -75,29 +85,10 @@ states:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
 
-  PAGE_STATE_AT_START_OF_MITIGATION:
-    response:
-      type: page
-      pageId: page-id-for-some-page
-      mitigationStart: a-mitigation-type
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
-
   PAGE_STATE_AT_START_OF_NO_PHOTO_ID:
     response:
       type: page
       pageId: page-id-for-some-page
-      auditEvent: IPV_NO_PHOTO_ID_JOURNEY_START
-    events:
-      enterNestedJourneyAtStateOne:
-        targetState: NESTED_JOURNEY_INVOKE_STATE
-
-  WRONG_AUDIT_EVENT_STATE:
-    response:
-      type: page
-      pageId: page-id-for-some-page
-      auditEvent: WRONG_AUDIT_EVENT_TYPE
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
@@ -132,3 +123,8 @@ states:
         targetState: JOURNEY_STATE
       exitEventFromDoublyNestedInvokeState:
         targetState: ERROR_STATE
+
+  JOURNEY_STATE:
+    response:
+      type: page
+      pageId: page-id-for-some-page

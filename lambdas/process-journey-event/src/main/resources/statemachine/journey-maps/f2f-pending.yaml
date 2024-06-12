@@ -64,6 +64,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
         targetState: DETAILS_DELETED_PAGE

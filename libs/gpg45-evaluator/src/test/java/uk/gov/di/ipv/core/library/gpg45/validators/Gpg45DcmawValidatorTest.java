@@ -13,13 +13,16 @@ class Gpg45DcmawValidatorTest {
 
     @Test
     void isSuccessfulShouldReturnTrueOnValidCredential() {
+        var testCheckDetail = new CheckDetail();
+        testCheckDetail.setBiometricVerificationProcessLevel(2);
+
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         3,
                         2,
                         1,
                         2,
-                        Collections.singletonList(new CheckDetail()),
+                        Collections.singletonList(testCheckDetail),
                         null,
                         Collections.emptyList());
 

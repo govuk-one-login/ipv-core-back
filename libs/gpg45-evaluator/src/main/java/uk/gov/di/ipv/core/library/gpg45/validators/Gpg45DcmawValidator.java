@@ -13,6 +13,8 @@ public class Gpg45DcmawValidator {
         if (item.getFailedCheckDetails() != null) {
             return false;
         }
+
+        // PYIC-3907 This should also check strength and verification scores
         return item.getValidityScore() != 0;
     }
 }

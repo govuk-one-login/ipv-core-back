@@ -15,13 +15,14 @@ import java.util.Map;
 
 public class StateMachine {
     public static final String DELIMITER = "/";
+
     private final Map<String, State> states;
 
     public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();
     }
 
-    public State transition(
+    public TransitionResult transition(
             String startState, String event, JourneyContext journeyContext, String currentPage)
             throws UnknownEventException, UnknownStateException {
         var state = states.get(startState.split(DELIMITER)[0]);
@@ -31,9 +32,10 @@ public class StateMachine {
                     String.format("Unknown state provided to state machine: %s", startState));
         }
 
+        // Check page event is allowed
         if (currentPage != null && state instanceof BasicState basicState) {
             if (isPageOrCriStateAndOutOfSync(basicState, currentPage)) {
-                return state;
+                return new TransitionResult(state);
             } else if (basicState.getResponse() instanceof ProcessStepResponse) {
                 throw new UnknownStateException(
                         String.format(
@@ -42,12 +44,14 @@ public class StateMachine {
             }
         }
 
-        State newState = state.transition(event, startState, journeyContext);
-        if (newState instanceof NestedJourneyInvokeState) {
-            return newState.transition(event, startState, journeyContext);
+        var result = state.transition(event, startState, journeyContext);
+
+        // Resolve nested journey
+        if (result.state() instanceof NestedJourneyInvokeState) {
+            return result.state().transition(event, startState, journeyContext);
         }
 
-        return newState;
+        return result;
     }
 
     private boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {

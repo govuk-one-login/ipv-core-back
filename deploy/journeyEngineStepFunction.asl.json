@@ -91,7 +91,8 @@
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation",
+        "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney"
     },
@@ -176,7 +177,8 @@
       "Resource": "${CheckCoiFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney"
     },

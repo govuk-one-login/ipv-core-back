@@ -56,20 +56,56 @@ states:
       address-only:
         targetJourney: UPDATE_ADDRESS
         targetState: START
-      names-dob:
-        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address
+          updateSupported: true
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START
+        targetState: GIVEN_ONLY_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: given-names
+          updateSupported: true
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_RFC_START
+        targetState: FAMILY_ONLY_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name
+          updateSupported: true
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START
+        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: given-names,address
+          updateSupported: true
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_RFC_START
+        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name,address
+          updateSupported: true
+      names-dob:
+        targetState: UPDATE_NAME_DOB
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: full-name-or-dob
+          updateSupported: false
       next:
         targetState: FRAUD_CHECK_RFC
 
@@ -105,6 +141,8 @@ states:
         checkFeatureFlag:
           coiEnabled:
             targetState: CONFIRM_DETAILS
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_ABORTED
 
   FRAUD_CHECK_RFC:
     response:
