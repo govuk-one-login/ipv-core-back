@@ -98,14 +98,6 @@ states:
         auditContext:
           updateFields: family-name,address
           updateSupported: true
-      names-dob:
-        targetState: UPDATE_NAME_DOB
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_START
-          - IPV_USER_DETAILS_UPDATE_SELECTED
-        auditContext:
-          updateFields: full-name-or-dob
-          updateSupported: false
       dob:
         targetState: UPDATE_NAME_DOB
         auditEvents:
