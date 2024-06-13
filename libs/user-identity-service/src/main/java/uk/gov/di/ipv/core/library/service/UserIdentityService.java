@@ -186,12 +186,8 @@ public class UserIdentityService {
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        var successfulVcs = new ArrayList<VerifiableCredential>();
-        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                successfulVcs.add(vc);
-            }
-        }
+        var successfulVcs = getSuccessfulVcs(vcs);
+
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
             LOGGER.error(
                     new StringMapMessage()
@@ -222,12 +218,8 @@ public class UserIdentityService {
 
     public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        var successfulVcs = new ArrayList<VerifiableCredential>();
-        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                successfulVcs.add(vc);
-            }
-        }
+        var successfulVcs = getSuccessfulVcs(vcs);
+
         if (!checkNamesForCorrelation(
                 getNameProperty(
                         getIdentityClaimsForNameCorrelation(successfulVcs),
@@ -261,12 +253,8 @@ public class UserIdentityService {
 
     public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        var successfulVcs = new ArrayList<VerifiableCredential>();
-        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                successfulVcs.add(vc);
-            }
-        }
+        var successfulVcs = getSuccessfulVcs(vcs);
+
         if (!checkNamesForCorrelation(
                 getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
             LOGGER.error(
@@ -294,6 +282,17 @@ public class UserIdentityService {
             return false;
         }
         return true;
+    }
+
+    public List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs)
+            throws CredentialParseException {
+        var successfulVcs = new ArrayList<VerifiableCredential>();
+        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
+            if (VcHelper.isSuccessfulVc(vc)) {
+                successfulVcs.add(vc);
+            }
+        }
+        return successfulVcs;
     }
 
     private void buildUserIdentityBasedOnProfileType(
