@@ -76,7 +76,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI message from SQS")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -206,7 +206,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI message from SQS")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -349,7 +349,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI message from SQS")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -498,7 +498,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI with Driving License")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -640,7 +640,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI with Driving License")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -778,7 +778,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI with EEA Card")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -908,7 +908,7 @@ public class ContractTest {
                 .expectsToReceive("A valid F2F CRI with BRP Document")
                 .withContent(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,

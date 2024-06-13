@@ -384,7 +384,7 @@ class CredentialTests {
                 .status(403)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.object(
                                                     "oauth_error",
                                                     (error) -> {

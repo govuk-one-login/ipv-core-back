@@ -578,7 +578,7 @@ class ContractTest {
 
     private DslPart getRequestBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
-                        (body) -> {
+                        body -> {
                             body.stringType("sub", TEST_USER);
                             body.minArrayLike("vtr", 1, PactDslJsonRootValue.stringType("P2"), 1);
                             body.stringValue("vot", "P2");
@@ -598,7 +598,7 @@ class ContractTest {
 
     private DslPart getResponseBody(List<PactJwtBuilder> pactJwtBuilders) {
         return newJsonBody(
-                        (body) -> {
+                        body -> {
                             body.stringValue("sub", TEST_USER);
                             body.minArrayLike("vtr", 1, PactDslJsonRootValue.stringType("P2"), 1);
                             body.stringValue("vot", "P2");
