@@ -23,9 +23,11 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +100,9 @@ public class EvcsClient {
     @Tracing
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to store %d user VCs".formatted(userVCsForEvcs.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -123,6 +128,9 @@ public class EvcsClient {
     @Tracing
     public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to update %d user VCs".formatted(evcsUserVCsToUpdate.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -148,12 +156,12 @@ public class EvcsClient {
 
     private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
-        URI evcsUri = new URI(configService.getSsmParameter(EVCS_APPLICATION_URL));
-        List<String> pathSegments =
-                evcsUri.getPath() != null
-                        ? List.of(evcsUri.getPath().replaceFirst("/", ""), "vcs", userId)
-                        : List.of("vcs", userId);
-        var uriBuilder = new URIBuilder(evcsUri).setPathSegments(pathSegments);
+        var baseUri =
+                "%s/vcs/%s"
+                        .formatted(
+                                configService.getSsmParameter(EVCS_APPLICATION_URL),
+                                URLEncoder.encode(userId, StandardCharsets.UTF_8));
+        var uriBuilder = new URIBuilder(baseUri);
         if (vcStatesToQueryFor != null) {
             uriBuilder.addParameter(
                     VC_STATE_PARAM,
