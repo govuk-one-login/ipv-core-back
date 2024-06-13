@@ -215,6 +215,7 @@ states:
     response:
       type: page
       pageId: update-name-date-birth
+      context: repeatFraudCheck
     events:
       end:
         targetState: CONFIRM_NAME_DOB
