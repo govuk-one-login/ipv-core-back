@@ -76,15 +76,10 @@ class ContractTest {
                         "Bearer " + DUMMY_ACCESS_TOKEN)
                 .willRespondWith()
                 .status(202)
-                .body(
-                        newJsonBody(
-                                        (body) -> {
-                                            body.stringValue("sub", "dummyTestUser");
-                                            body.stringValue(
-                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
-                                                    "pending");
-                                        })
-                                .build())
+                .body(newJsonBody(body -> {
+                    body.stringValue("sub", "dummyTestUser");
+                    body.stringValue("https://vocab.account.gov.uk/v1/credentialStatus", "pending");
+                }).build())
                 .toPact();
     }
 
