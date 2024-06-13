@@ -102,6 +102,7 @@ states:
     response:
       type: page
       pageId: page-update-name
+      context: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_GIVEN_ONLY
@@ -134,6 +135,7 @@ states:
     response:
       type: page
       pageId: page-update-name
+      context: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_FAMILY_ONLY
@@ -272,6 +274,7 @@ states:
     response:
       type: page
       pageId: page-update-name
+      context: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
@@ -304,6 +307,7 @@ states:
     response:
       type: page
       pageId: page-update-name
+      context: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
