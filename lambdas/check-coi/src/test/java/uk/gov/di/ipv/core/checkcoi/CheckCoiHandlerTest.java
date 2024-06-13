@@ -15,6 +15,10 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
+import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
+import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
@@ -35,6 +39,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +99,16 @@ class CheckCoiHandlerTest {
 
     @Nested
     class SuccessAndFailChecks {
+        @BeforeEach
+        void setup() throws Exception {
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
+                    .thenReturn(List.of(M1A_ADDRESS_VC));
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
+                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
+            when(mockUserIdentityService.findIdentityClaim(any()))
+                    .thenReturn(getMockIdentityClaim());
+        }
+
         @Nested
         @DisplayName("Successful checks")
         class SuccessfulChecks {
@@ -564,5 +579,13 @@ class CheckCoiHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(UNKNOWN_CHECK_TYPE.getMessage(), responseMap.get("message"));
         }
+    }
+
+    private Optional<IdentityClaim> getMockIdentityClaim() {
+        var mockName =
+                List.of(new Name(List.of(new NameParts("Kenneth Decerqueira", "full-name"))));
+        var mockBirthDate = List.of(new BirthDate("1965-07-08"));
+
+        return Optional.of(new IdentityClaim(mockName, mockBirthDate));
     }
 }
