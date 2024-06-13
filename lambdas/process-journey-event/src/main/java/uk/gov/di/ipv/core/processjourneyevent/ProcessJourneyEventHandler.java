@@ -44,16 +44,13 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEve
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -284,7 +281,7 @@ public class ProcessJourneyEventHandler
                                 "Found state machine for journey type: %s",
                                 initialJourneyState.subJourney())));
 
-        if (BACK_EVENT.equals(journeyEvent)) {
+        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
             var previousJourneyState = ipvSessionItem.getPreviousState();
 
             if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
@@ -430,33 +427,7 @@ public class ProcessJourneyEventHandler
                             "State machine not found for journey type: '%s'",
                             journeyState.subJourney()));
         }
-
-        var state =
-                getStateFromStatesMap(
-                        stateMachine.getStates(),
-                        new ArrayList<>(Arrays.asList(journeyState.state().split("/"))));
-        if (state == null) {
-            throw new UnknownStateException(
-                    String.format(
-                            "Unknown state provided. State machine: '%s', state: '%s'",
-                            journeyState.subJourney(), journeyState.state()));
-        }
-
-        return state instanceof BasicState basicState
-                && basicState.getResponse() instanceof PageStepResponse;
-    }
-
-    private State getStateFromStatesMap(Map<String, State> statesMap, List<String> stateParts) {
-        if (stateParts.size() == 1) {
-            return statesMap.get(stateParts.get(0));
-        } else {
-            // Recurse into nested states to find the actual state we care about
-            return getStateFromStatesMap(
-                    ((NestedJourneyInvokeState) statesMap.get(stateParts.remove(0)))
-                            .getNestedJourneyDefinition()
-                            .getNestedJourneyStates(),
-                    stateParts);
-        }
+        return stateMachine.isPageState(journeyState);
     }
 
     private BasicState journeyStateToBasicState(JourneyState journeyState) {
@@ -467,5 +438,12 @@ public class ProcessJourneyEventHandler
     private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {
         return new JourneyState(
                 journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
+    }
+
+    private boolean isBackEventDefinedOnState(JourneyState journeyState) {
+        return ((BasicState)
+                        stateMachines.get(journeyState.subJourney()).getState(journeyState.state()))
+                .getEvents()
+                .containsKey(BACK_EVENT);
     }
 }

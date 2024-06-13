@@ -24,6 +24,8 @@ states:
         targetState: ERROR
       eventFour:
         targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
+      eventFive:
+        targetState: PAGE_STATE_WITH_BACK_EVENT
 
   CRI_STATE:
     response:
@@ -97,6 +99,14 @@ states:
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
+
+  PAGE_STATE_WITH_BACK_EVENT:
+    response:
+      type: page
+      pageId: page-id-for-page-state-with-back-event
+    events:
+      back:
+        targetState: PROCESS_STATE
 
   ERROR_STATE:
     response:

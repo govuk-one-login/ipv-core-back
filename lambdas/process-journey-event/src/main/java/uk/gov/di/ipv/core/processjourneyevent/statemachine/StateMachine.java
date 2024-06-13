@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -11,10 +12,14 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
+
 public class StateMachine {
-    public static final String DELIMITER = "/";
 
     private final Map<String, State> states;
 
@@ -25,7 +30,7 @@ public class StateMachine {
     public TransitionResult transition(
             String startState, String event, JourneyContext journeyContext, String currentPage)
             throws UnknownEventException, UnknownStateException {
-        var state = states.get(startState.split(DELIMITER)[0]);
+        var state = states.get(startState.split(JOURNEY_STATE_DELIMITER)[0]);
 
         if (state == null) {
             throw new UnknownStateException(
@@ -54,12 +59,34 @@ public class StateMachine {
         return result;
     }
 
-    public Map<String, State> getStates() {
-        return states;
+    public boolean isPageState(JourneyState journeyState) throws UnknownStateException {
+        var state = getState(journeyState.state());
+        if (state == null) {
+            throw new UnknownStateException(
+                    String.format(
+                            "Unknown state provided. State machine: '%s', state: '%s'",
+                            journeyState.subJourney(), journeyState.state()));
+        }
+        return state instanceof BasicState basicState
+                && basicState.getResponse() instanceof PageStepResponse;
     }
 
     public State getState(String state) {
-        return states.get(state);
+        return recurseToState(
+                states, new ArrayList<>(Arrays.asList(state.split(JOURNEY_STATE_DELIMITER))));
+    }
+
+    private State recurseToState(Map<String, State> statesMap, List<String> stateParts) {
+        if (stateParts.size() == 1) {
+            return statesMap.get(stateParts.get(0));
+        } else {
+            // Recurse into nested states to find the actual state we care about
+            return recurseToState(
+                    ((NestedJourneyInvokeState) statesMap.get(stateParts.remove(0)))
+                            .getNestedJourneyDefinition()
+                            .getNestedJourneyStates(),
+                    stateParts);
+        }
     }
 
     private boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {

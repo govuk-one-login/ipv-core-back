@@ -17,11 +17,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
+
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
 public class IpvSessionItem implements DynamodbItem {
-    public static final String JOURNEY_STATE_DELIMITER = "/";
     private String ipvSessionId;
     private String clientOAuthSessionId;
     private String criOAuthSessionId;
@@ -71,7 +72,7 @@ public class IpvSessionItem implements DynamodbItem {
     }
 
     public void pushState(IpvJourneyTypes journeyType, String state) {
-        stateStack.add(String.format("%s/%s", journeyType.name(), state));
+        stateStack.add(String.format("%s%s%s", journeyType.name(), JOURNEY_STATE_DELIMITER, state));
     }
 
     public void pushState(JourneyState journeyState) {

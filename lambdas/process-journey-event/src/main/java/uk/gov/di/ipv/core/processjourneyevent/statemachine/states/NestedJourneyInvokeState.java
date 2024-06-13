@@ -17,12 +17,13 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class NestedJourneyInvokeState implements State {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String DELIMITER = "/";
     private String nestedJourney;
     private NestedJourneyDefinition nestedJourneyDefinition;
     private Map<String, Event> exitEvents;
@@ -57,19 +58,24 @@ public class NestedJourneyInvokeState implements State {
             }
             result =
                     currentNestedState.transition(
-                            eventName, String.join(DELIMITER, stateNameParts), journeyContext);
+                            eventName,
+                            String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
+                            journeyContext);
         }
 
         if (result.state() instanceof NestedJourneyInvokeState) {
             return result.state()
-                    .transition(eventName, String.join(DELIMITER, stateNameParts), journeyContext);
+                    .transition(
+                            eventName,
+                            String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
+                            journeyContext);
         }
 
         return result;
     }
 
     private Queue<String> getStateNameParts(String stateName) {
-        return new LinkedList<>(Arrays.asList(stateName.split(DELIMITER)));
+        return new LinkedList<>(Arrays.asList(stateName.split(JOURNEY_STATE_DELIMITER)));
     }
 
     @Override
