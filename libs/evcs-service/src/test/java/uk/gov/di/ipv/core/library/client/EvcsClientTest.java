@@ -26,12 +26,15 @@ import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +44,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -49,7 +53,8 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 @ExtendWith(MockitoExtension.class)
 class EvcsClientTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String EVCS_APPLICATION_URL = "http://localhost";
+    private static final String EVCS_APPLICATION_URL = "http://localhost/v1";
+    private static final String EVCS_APPLICATION_URL_WITH_V1_VCS = "http://localhost/v1/ver2";
     private static final String EVCS_API_KEY = "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg";
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
@@ -122,8 +127,11 @@ class EvcsClientTest {
                 .thenReturn(EVCS_API_KEY);
     }
 
-    @Test
-    void testGetUserVCs() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
+    void testGetUserVCs(String appUrl) throws Exception {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn(appUrl);
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
@@ -132,7 +140,8 @@ class EvcsClientTest {
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
 
         // Act
-        evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
 
         // Assert
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -140,9 +149,19 @@ class EvcsClientTest {
         assertEquals("GET", httpRequest.method());
         assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-        var expectedUriPrefix =
-                new URIBuilder(EVCS_APPLICATION_URL).setPathSegments("vcs", TEST_USER_ID).build();
-        assertTrue(httpRequest.uri().toString().startsWith(expectedUriPrefix.toString()));
+        var baseUri =
+                "%s/vcs/%s"
+                        .formatted(appUrl, URLEncoder.encode(TEST_USER_ID, StandardCharsets.UTF_8));
+        var expectedUri =
+                new URIBuilder(baseUri)
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .build();
+        assertEquals(expectedUri.toString(), httpRequest.uri().toString());
+        assertEquals(2, evcsGetUserVCsDto.vcs().size());
     }
 
     @Test
@@ -173,7 +192,45 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"Forbidden\"}");
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.getUserVcs(
+                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+    }
+
+    @Test
+    void testGetUserVCs_shouldNotThrowException_for404ResponseStatus() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"no data found\"}");
+        when(mockHttpResponse.statusCode()).thenReturn(404);
+        // Act
+        // Assert
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+
+        // Assert
+        verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+        HttpRequest httpRequest = httpRequestCaptor.getValue();
+        assertEquals("GET", httpRequest.method());
+        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
+        assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+        assertEquals(0, evcsGetUserVCsDto.vcs().size());
+    }
+
+    @Test
+    void testGetUserVCs_shouldThrowException_non200Response_failedParsingResponseBody()
+            throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{}}");
         // Act
         // Assert
         assertThrows(
