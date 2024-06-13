@@ -105,12 +105,6 @@ class BuildUserIdentityHandlerTest {
         // Configure the config service
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
 
-        // Configure passport and address VCs
-        // 2020-01-01 00:00:00 is 1577836800 in epoch seconds
-        Instant thePast = Instant.ofEpochSecond(1577836800);
-        // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-        Instant theFuture = Instant.ofEpochSecond(1577836800);
-
         var passportVcBuilder =
                 new PactJwtBuilder(
                         VC_HEADER, VALID_UK_PASSPORT_VC_BODY, VALID_UK_PASSPORT_VC_SIGNATURE);
