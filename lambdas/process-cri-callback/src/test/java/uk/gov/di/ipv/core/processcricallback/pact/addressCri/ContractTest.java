@@ -215,7 +215,7 @@ class ContractTest {
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsExperianIssuedCredential(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -329,7 +329,7 @@ class ContractTest {
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedAddressCredential(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -439,8 +439,7 @@ class ContractTest {
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .uponReceiving("Invalid credential request")

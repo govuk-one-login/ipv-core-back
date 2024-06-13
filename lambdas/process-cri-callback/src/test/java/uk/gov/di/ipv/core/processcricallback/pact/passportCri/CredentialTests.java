@@ -66,8 +66,7 @@ class CredentialTests {
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsValidCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsValidCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -163,7 +162,7 @@ class CredentialTests {
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedCredentialWithCi(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -264,7 +263,7 @@ class CredentialTests {
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedCredentialWithScenario2Ci(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")

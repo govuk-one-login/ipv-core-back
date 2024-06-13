@@ -55,8 +55,7 @@ public class ContractTest {
     @Mock private ConfigService mockConfigService;
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidPassportCredential(MessagePactBuilder builder)
-            throws JsonProcessingException {
+    public MessagePact f2fMessageContainsValidPassportCredential(MessagePactBuilder builder) {
         return builder.given("test-subject is a valid subject")
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
@@ -82,7 +81,6 @@ public class ContractTest {
                                                             VALID_VC_HEADER,
                                                             VALID_F2F_VC_WITH_PASSPORT_BODY,
                                                             VALID_F2F_VC_PASSPORT_SIGNATURE);
-
                                             body.nullValue("error");
                                             body.stringValue("iss", "f2f");
                                             body.stringValue("sub", "test-subject");
@@ -183,8 +181,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsFailedPassportCredential(MessagePactBuilder builder)
-            throws JsonProcessingException {
+    public MessagePact f2fMessageContainsFailedPassportCredential(MessagePactBuilder builder) {
         return builder.given("test-subject is a valid subject")
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
@@ -325,8 +322,8 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsFailedWithCiPassportCredential(MessagePactBuilder builder)
-            throws JsonProcessingException {
+    public MessagePact f2fMessageContainsFailedWithCiPassportCredential(
+            MessagePactBuilder builder) {
         return builder.given("test-subject is a valid subject")
                 .given("dummyF2fComponentId is a valid issuer")
                 .given("dummyF2fComponentId is a valid audience")
@@ -472,8 +469,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidDrivingLicenseCredential(MessagePactBuilder builder)
-            throws Exception {
+    public MessagePact f2fMessageContainsValidDrivingLicenseCredential(MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -614,8 +610,8 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidEuDrivingLicenseCredential(MessagePactBuilder builder)
-            throws Exception {
+    public MessagePact f2fMessageContainsValidEuDrivingLicenseCredential(
+            MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -754,8 +750,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidEeaCardCredential(MessagePactBuilder builder)
-            throws Exception {
+    public MessagePact f2fMessageContainsValidEeaCardCredential(MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -884,8 +879,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidBrpCredential(MessagePactBuilder builder)
-            throws Exception {
+    public MessagePact f2fMessageContainsValidBrpCredential(MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
