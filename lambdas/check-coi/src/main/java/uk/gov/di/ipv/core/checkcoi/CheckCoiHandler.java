@@ -11,12 +11,16 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -34,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -118,23 +123,23 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     userId,
                     ipvSessionId,
                     govukSigninJourneyId,
-                    ipAddress);
+                    ipAddress,
+                    null,
+                    null);
 
-            var credentials =
-                    Stream.concat(
-                                    verifiableCredentialService.getVcs(userId).stream(),
-                                    sessionCredentialsService
-                                            .getCredentials(ipvSessionId, userId)
-                                            .stream())
-                            .toList();
+            var oldVcs = verifiableCredentialService.getVcs(userId);
+            var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
+
+            var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
 
             var successfulCheck =
                     switch (checkType) {
                         case GIVEN_NAMES_AND_DOB -> userIdentityService
-                                .areGivenNamesAndDobCorrelated(credentials);
+                                .areGivenNamesAndDobCorrelated(combinedCredentials);
                         case FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
+                                .areFamilyNameAndDobCorrelatedForCoiCheck(combinedCredentials);
+                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                                combinedCredentials);
                     };
 
             var scopeClaims = clientOAuthSession.getScopeClaims();
@@ -147,7 +152,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     userId,
                     ipvSessionId,
                     govukSigninJourneyId,
-                    ipAddress);
+                    ipAddress,
+                    oldVcs,
+                    sessionVcs);
 
             if (isReverification) {
                 setIpvSessionReverificationStatus(
@@ -211,16 +218,45 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             String userId,
             String ipvSessionId,
             String govukSigninJourneyId,
-            String ipAddress)
-            throws SqsException {
+            String ipAddress,
+            List<VerifiableCredential> oldVcs,
+            List<VerifiableCredential> sessionVcs)
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
         var auditEventUser =
                 new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
+        var restrictedData =
+                auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END
+                        ? getRestrictedAuditDataforCheckCoi(oldVcs, sessionVcs)
+                        : null;
         auditService.sendAuditEvent(
                 new AuditEvent(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
+                        new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess),
+                        restrictedData));
+    }
+
+    private AuditRestrictedCheckCoi getRestrictedAuditDataforCheckCoi(
+            List<VerifiableCredential> oldVcs, List<VerifiableCredential> sessionVcs)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        var successfulOldVcs = userIdentityService.getSuccessfulVcs(oldVcs);
+        var successfulSessionVcs = userIdentityService.getSuccessfulVcs(sessionVcs);
+
+        var oldIdentityClaim = userIdentityService.findIdentityClaim(successfulOldVcs);
+        var sessionIdentityClaim = userIdentityService.findIdentityClaim(successfulSessionVcs);
+
+        if (oldIdentityClaim.isEmpty() || sessionIdentityClaim.isEmpty()) {
+            LOGGER.error(LogHelper.buildLogMessage("Failed to generate identity claim"));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+
+        return new AuditRestrictedCheckCoi(
+                List.of(new Name(oldIdentityClaim.get().getNameParts())),
+                List.of(new Name(sessionIdentityClaim.get().getNameParts())),
+                oldIdentityClaim.get().getBirthDate(),
+                sessionIdentityClaim.get().getBirthDate());
     }
 }
