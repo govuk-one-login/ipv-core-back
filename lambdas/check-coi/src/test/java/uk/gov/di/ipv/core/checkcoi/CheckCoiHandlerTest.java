@@ -15,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -49,6 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
@@ -99,14 +102,25 @@ class CheckCoiHandlerTest {
 
     @Nested
     class SuccessAndFailChecks {
+        private static final NameParts mockNameParts =
+                new NameParts("Kenneth Decerqueira", "full-name");
+        private static final BirthDate mockBirthDate = new BirthDate("1965-07-08");
+
         @BeforeEach
         void setup() throws Exception {
             when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
                     .thenReturn(List.of(M1A_ADDRESS_VC));
             when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
                     .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
+
             when(mockUserIdentityService.findIdentityClaim(any()))
                     .thenReturn(getMockIdentityClaim());
+        }
+
+        private Optional<IdentityClaim> getMockIdentityClaim() {
+            return Optional.of(
+                    new IdentityClaim(
+                            List.of(new Name(List.of(mockNameParts))), List.of(mockBirthDate)));
         }
 
         @Nested
@@ -144,6 +158,13 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(GIVEN_NAMES_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
@@ -178,6 +199,13 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
@@ -214,6 +242,13 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
@@ -236,6 +271,29 @@ class CheckCoiHandlerTest {
 
                 assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
                 verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.SUCCESS);
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
         }
 
@@ -274,6 +332,13 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(GIVEN_NAMES_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
@@ -308,12 +373,19 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
             void shouldReturnFailedForFailedReverificationCheckandReverificationStatusSetToFailed()
                     throws Exception {
-                when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
                 when(mockClientSessionItem.getScopeClaims())
@@ -322,13 +394,35 @@ class CheckCoiHandlerTest {
                 var request =
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
                 assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, responseMap.get("journey"));
                 verify(mockIpvSessionItem).setReverificationStatus(ReverificationStatus.FAILED);
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, false),
+                        auditEventsCaptured.get(1).getExtensions());
+                assertEquals(
+                        new AuditRestrictedCheckCoi(
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(new Name(List.of(mockNameParts))),
+                                List.of(mockBirthDate),
+                                List.of(mockBirthDate)),
+                        auditEventsCaptured.get(1).getRestricted());
             }
         }
     }
@@ -579,13 +673,56 @@ class CheckCoiHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(UNKNOWN_CHECK_TYPE.getMessage(), responseMap.get("message"));
         }
-    }
 
-    private Optional<IdentityClaim> getMockIdentityClaim() {
-        var mockName =
-                List.of(new Name(List.of(new NameParts("Kenneth Decerqueira", "full-name"))));
-        var mockBirthDate = List.of(new BirthDate("1965-07-08"));
+        @Test
+        void shouldReturnIfFindIdentityClaimThrowsHttpResponseException() throws Exception {
+            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                    .thenReturn(true);
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
+                    .thenReturn(List.of(M1A_ADDRESS_VC));
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
+                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
+            when(mockUserIdentityService.findIdentityClaim(any()))
+                    .thenThrow(
+                            new HttpResponseExceptionWithErrorBody(
+                                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
 
-        return Optional.of(new IdentityClaim(mockName, mockBirthDate));
+            var request =
+                    ProcessRequest.processRequestBuilder()
+                            .ipvSessionId(IPV_SESSION_ID)
+                            .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                            .build();
+
+            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
+            assertEquals(FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        }
+
+        @Test
+        void shouldReturnErrorIfFindIdentityClaimReturnsEmptyIdentityClaim() throws Exception {
+            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                    .thenReturn(true);
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
+                    .thenReturn(List.of(M1A_ADDRESS_VC));
+            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
+                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
+            when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(Optional.empty());
+
+            var request =
+                    ProcessRequest.processRequestBuilder()
+                            .ipvSessionId(IPV_SESSION_ID)
+                            .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                            .build();
+
+            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
+            assertEquals(FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(), responseMap.get("message"));
+            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        }
     }
 }
