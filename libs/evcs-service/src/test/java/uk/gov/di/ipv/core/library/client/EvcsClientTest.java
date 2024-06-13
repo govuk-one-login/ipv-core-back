@@ -46,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
