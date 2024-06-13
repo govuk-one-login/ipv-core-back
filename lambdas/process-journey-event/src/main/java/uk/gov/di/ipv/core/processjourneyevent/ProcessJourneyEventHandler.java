@@ -44,13 +44,16 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEve
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -72,6 +75,7 @@ public class ProcessJourneyEventHandler
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
             new ProcessStepResponse(END_SESSION_EVENT, null);
+    public static final String BACK_EVENT = "back";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -185,12 +189,13 @@ public class ProcessJourneyEventHandler
             journeyEvent = NEXT_EVENT;
         }
 
-        var initialJourneyState = ipvSessionItem.getState();
+        var currentJourneyState = ipvSessionItem.getState();
 
         try {
             var newState =
                     executeStateTransition(
-                            initialJourneyState,
+                            currentJourneyState,
+                            ipvSessionItem,
                             journeyEvent,
                             currentPage,
                             auditEventUser,
@@ -205,14 +210,13 @@ public class ProcessJourneyEventHandler
                                 .with(
                                         LOG_USER_STATE.getFieldName(),
                                         journeyChangeState.getInitialState()));
-                ipvSessionItem.pushState(
-                        journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
 
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
                 newState =
                         executeStateTransition(
-                                ipvSessionItem.getState(),
+                                journeyStateFrom(journeyChangeState),
+                                ipvSessionItem,
                                 NEXT_EVENT,
                                 null,
                                 auditEventUser,
@@ -220,9 +224,9 @@ public class ProcessJourneyEventHandler
             }
 
             var basicState = (BasicState) newState;
-            ipvSessionItem.pushState(basicState.getName());
+            ipvSessionItem.pushState(basicState.getJourneyType(), basicState.getName());
 
-            logStateChange(initialJourneyState, journeyEvent, ipvSessionItem);
+            logStateChange(currentJourneyState, journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
@@ -259,12 +263,14 @@ public class ProcessJourneyEventHandler
     @Tracing
     private State executeStateTransition(
             JourneyState initialJourneyState,
+            IpvSessionItem ipvSessionItem,
             String journeyEvent,
             String currentPage,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws StateMachineNotFoundException, SqsException, UnknownEventException,
                     UnknownStateException {
+
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
             throw new StateMachineNotFoundException(
@@ -277,6 +283,19 @@ public class ProcessJourneyEventHandler
                         String.format(
                                 "Found state machine for journey type: %s",
                                 initialJourneyState.subJourney())));
+
+        if (BACK_EVENT.equals(journeyEvent)) {
+            var previousJourneyState = ipvSessionItem.getPreviousState();
+
+            if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+                ipvSessionItem.pushState(previousJourneyState);
+                return journeyStateToBasicState(previousJourneyState);
+            }
+
+            throw new UnknownEventException(
+                    String.format(
+                            "Back event provided to state: '%s'", initialJourneyState.state()));
+        }
 
         var result =
                 stateMachine.transition(
@@ -400,5 +419,53 @@ public class ProcessJourneyEventHandler
                         auditEventUser,
                         new AuditExtensionSubjourneyType(journeyType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private boolean isPageState(JourneyState journeyState)
+            throws StateMachineNotFoundException, UnknownStateException {
+        StateMachine stateMachine = stateMachines.get(journeyState.subJourney());
+        if (stateMachine == null) {
+            throw new StateMachineNotFoundException(
+                    String.format(
+                            "State machine not found for journey type: '%s'",
+                            journeyState.subJourney()));
+        }
+
+        var state =
+                getStateFromStatesMap(
+                        stateMachine.getStates(),
+                        new ArrayList<>(Arrays.asList(journeyState.state().split("/"))));
+        if (state == null) {
+            throw new UnknownStateException(
+                    String.format(
+                            "Unknown state provided. State machine: '%s', state: '%s'",
+                            journeyState.subJourney(), journeyState.state()));
+        }
+
+        return state instanceof BasicState basicState
+                && basicState.getResponse() instanceof PageStepResponse;
+    }
+
+    private State getStateFromStatesMap(Map<String, State> statesMap, List<String> stateParts) {
+        if (stateParts.size() == 1) {
+            return statesMap.get(stateParts.get(0));
+        } else {
+            // Recurse into nested states to find the actual state we care about
+            return getStateFromStatesMap(
+                    ((NestedJourneyInvokeState) statesMap.get(stateParts.remove(0)))
+                            .getNestedJourneyDefinition()
+                            .getNestedJourneyStates(),
+                    stateParts);
+        }
+    }
+
+    private BasicState journeyStateToBasicState(JourneyState journeyState) {
+        return (BasicState)
+                stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+    }
+
+    private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {
+        return new JourneyState(
+                journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
     }
 }

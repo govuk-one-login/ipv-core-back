@@ -54,6 +54,14 @@ public class StateMachine {
         return result;
     }
 
+    public Map<String, State> getStates() {
+        return states;
+    }
+
+    public State getState(String state) {
+        return states.get(state);
+    }
+
     private boolean isPageOrCriStateAndOutOfSync(BasicState basicState, String currentPage) {
         return basicState.getResponse() instanceof PageStepResponse pageStepResponse
                         && !pageStepResponse.getPageId().equals(currentPage)

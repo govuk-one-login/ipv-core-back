@@ -8,7 +8,7 @@ states:
   PAGE_STATE:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-page-state
       context: test
     parent: PARENT_STATE
     events:
@@ -19,6 +19,11 @@ states:
         checkIfDisabled:
           aCriId:
             targetState: ERROR_STATE
+      eventThree:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      eventFour:
+        targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
 
   CRI_STATE:
     response:
@@ -88,7 +93,7 @@ states:
   PAGE_STATE_AT_START_OF_NO_PHOTO_ID:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-page-state-at-start-of-no-photo-id
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE

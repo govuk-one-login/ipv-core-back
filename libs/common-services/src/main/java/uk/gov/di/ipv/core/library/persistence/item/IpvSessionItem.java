@@ -74,35 +74,23 @@ public class IpvSessionItem implements DynamodbItem {
         stateStack.add(String.format("%s/%s", journeyType.name(), state));
     }
 
-    public void pushState(String state) {
-        if (stateStack.isEmpty()) {
-            throw new IllegalStateException();
-        }
-        var currentJourney =
-                IpvJourneyTypes.valueOf(
-                        stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2)[0]);
-        pushState(currentJourney, state);
+    public void pushState(JourneyState journeyState) {
+        pushState(journeyState.subJourney(), journeyState.state());
     }
 
     public JourneyState getState() {
         if (stateStack.isEmpty()) {
             throw new IllegalStateException();
         }
-
-        var currentJourneyState =
-                stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
-        return new JourneyState(
-                IpvJourneyTypes.valueOf(currentJourneyState[0]), currentJourneyState[1]);
+        var journeyState = stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
+        return new JourneyState(IpvJourneyTypes.valueOf(journeyState[0]), journeyState[1]);
     }
 
-    public JourneyState popState() {
-        if (stateStack.isEmpty()) {
+    public JourneyState getPreviousState() {
+        if (stateStack.size() < 2) {
             throw new IllegalStateException();
         }
-
-        var currentJourneyState =
-                stateStack.remove(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
-        return new JourneyState(
-                IpvJourneyTypes.valueOf(currentJourneyState[0]), currentJourneyState[1]);
+        var journeyState = stateStack.get(stateStack.size() - 2).split(JOURNEY_STATE_DELIMITER, 2);
+        return new JourneyState(IpvJourneyTypes.valueOf(journeyState[0]), journeyState[1]);
     }
 }
