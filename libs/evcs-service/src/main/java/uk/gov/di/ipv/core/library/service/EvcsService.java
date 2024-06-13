@@ -68,7 +68,7 @@ public class EvcsService {
         List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
-        var criConfig = EvcsCriConfig.getInstance(configService);
+        var criConfig = configService.getCriConfigs();
 
         List<VerifiableCredential> credentials = new ArrayList<>();
         for (var vc : vcs) {
