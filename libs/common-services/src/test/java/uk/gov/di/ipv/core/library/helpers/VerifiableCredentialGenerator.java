@@ -195,6 +195,7 @@ public class VerifiableCredentialGenerator {
     }
 
     // TODO: PYIC-5171 Replace this method
+    // Same comments for signTestVcWithRSA
     private static VerifiableCredential signTestVcWithEc(
             String userId, String criId, JWTClaimsSet claimsSet) throws Exception {
         KeyFactory kf = KeyFactory.getInstance(EncryptionAlgorithm.EC.name());
@@ -213,7 +214,6 @@ public class VerifiableCredentialGenerator {
                 userId, criId, SignedJWT.parse(signedJWT.serialize()));
     }
 
-    // TODO: PYIC-5171 Same comments as for signTestVcWithEc
     private static VerifiableCredential signTestVcWithRSA(
             String userId, String criId, JWTClaimsSet claimsSet) throws Exception {
         KeyFactory kf = KeyFactory.getInstance(EncryptionAlgorithm.RSA.name());

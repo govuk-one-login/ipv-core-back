@@ -58,7 +58,6 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
-import java.text.ParseException;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -193,7 +192,7 @@ public class ProcessCriCallbackHandler
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
-        } catch (ParseException | UnrecognisedVotException e) {
+        } catch (UnrecognisedVotException e) {
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -243,10 +242,10 @@ public class ProcessCriCallbackHandler
     }
 
     public JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
-            throws SqsException, ParseException, JsonProcessingException,
-                    HttpResponseExceptionWithErrorBody, ConfigException, CiRetrievalException,
-                    CriApiException, VerifiableCredentialException, CiPostMitigationsException,
-                    CiPutException, CredentialParseException, InvalidCriCallbackRequestException,
+            throws SqsException, JsonProcessingException, HttpResponseExceptionWithErrorBody,
+                    ConfigException, CiRetrievalException, CriApiException,
+                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+                    CredentialParseException, InvalidCriCallbackRequestException,
                     UnrecognisedVotException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
