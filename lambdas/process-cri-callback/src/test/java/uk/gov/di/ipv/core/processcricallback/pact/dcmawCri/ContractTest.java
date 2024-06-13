@@ -104,7 +104,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
@@ -238,7 +238,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -364,7 +364,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -487,7 +487,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -613,7 +613,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -740,7 +740,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -869,7 +869,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -995,7 +995,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1114,7 +1114,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1233,7 +1233,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1354,7 +1354,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1470,7 +1470,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1589,7 +1589,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1712,7 +1712,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,

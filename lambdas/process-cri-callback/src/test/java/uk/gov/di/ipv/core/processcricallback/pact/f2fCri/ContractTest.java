@@ -78,7 +78,7 @@ class ContractTest {
                 .status(202)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringValue("sub", "dummyTestUser");
                                             body.stringValue(
                                                     "https://vocab.account.gov.uk/v1/credentialStatus",
@@ -160,7 +160,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
