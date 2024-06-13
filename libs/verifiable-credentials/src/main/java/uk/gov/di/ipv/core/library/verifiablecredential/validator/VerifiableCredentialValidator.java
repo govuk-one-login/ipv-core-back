@@ -95,6 +95,7 @@ public class VerifiableCredentialValidator {
         return validVcs;
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public VerifiableCredential parseAndValidate(
             String userId,
             String criId,
@@ -145,7 +146,10 @@ public class VerifiableCredentialValidator {
             SignedJWT vc, EncryptionAlgorithm signingAlgorithm, String signingKey)
             throws VerifiableCredentialException {
         try {
-            var formattedVc = transcodeSignatureIfDerFormat(vc);
+            var formattedVc =
+                    EncryptionAlgorithm.EC.equals(signingAlgorithm)
+                            ? transcodeSignatureIfDerFormat(vc)
+                            : vc;
 
             var verifier = getVerifier(signingAlgorithm, signingKey);
             if (!formattedVc.verify(verifier)) {
@@ -172,7 +176,7 @@ public class VerifiableCredentialValidator {
     private JWSVerifier getVerifier(EncryptionAlgorithm signingAlgorithm, String signingKey)
             throws ParseException, JOSEException {
         return switch (signingAlgorithm) {
-            case ECC -> new ECDSAVerifier(ECKey.parse(signingKey));
+            case EC -> new ECDSAVerifier(ECKey.parse(signingKey));
             case RSA -> new RSASSAVerifier(RSAKey.parse(signingKey));
         };
     }

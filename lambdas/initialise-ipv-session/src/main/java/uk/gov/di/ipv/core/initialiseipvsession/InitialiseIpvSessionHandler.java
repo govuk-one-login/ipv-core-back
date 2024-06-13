@@ -399,7 +399,7 @@ public class InitialiseIpvSessionHandler
 
     private VerifiableCredential validateHmrcInheritedIdentity(
             String userId, StringListClaim inheritedIdentityJwtClaim)
-            throws JarValidationException, ParseException, VerifiableCredentialException {
+            throws JarValidationException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
                 Optional.ofNullable(inheritedIdentityJwtClaim.values())

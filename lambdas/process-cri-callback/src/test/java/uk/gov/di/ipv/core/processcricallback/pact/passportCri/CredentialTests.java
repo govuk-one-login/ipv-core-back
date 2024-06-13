@@ -126,7 +126,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                EncryptionAlgorithm.ECC,
+                                                EncryptionAlgorithm.EC,
                                                 CRI_SIGNING_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
@@ -221,7 +221,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                EncryptionAlgorithm.ECC,
+                                                EncryptionAlgorithm.EC,
                                                 CRI_SIGNING_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
@@ -324,7 +324,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                EncryptionAlgorithm.ECC,
+                                                EncryptionAlgorithm.EC,
                                                 CRI_SIGNING_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);

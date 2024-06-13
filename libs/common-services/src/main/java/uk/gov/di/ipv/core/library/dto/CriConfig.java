@@ -20,8 +20,8 @@ public class CriConfig {
     private String signingKey;
 
     public EncryptionAlgorithm getSigningAlgorithm() {
-        if (signingAlgorithm == null || signingAlgorithm.isEmpty()) {
-            return EncryptionAlgorithm.ECC;
+        if (signingAlgorithm == null) {
+            return EncryptionAlgorithm.EC;
         }
 
         return EncryptionAlgorithm.valueOf(signingAlgorithm);

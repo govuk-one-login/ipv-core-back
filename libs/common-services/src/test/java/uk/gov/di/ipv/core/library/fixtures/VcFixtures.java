@@ -5,6 +5,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.Instant;
@@ -322,6 +323,20 @@ public interface VcFixtures {
                             .evidence(SUCCESSFUL_EVIDENCE)
                             .build(),
                     Instant.ofEpochSecond(1705986521));
+
+    VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC =
+            generateVerifiableCredential(
+                    TEST_SUBJECT,
+                    PASSPORT_CRI,
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .passport(PASSPORT_DETAILS)
+                                            .build())
+                            .evidence(SUCCESSFUL_EVIDENCE)
+                            .build(),
+                    Instant.ofEpochSecond(1705986521),
+                    EncryptionAlgorithm.RSA);
 
     static VerifiableCredential vcPassportM1aFailed() {
         TestVc.TestCredentialSubject credentialSubject =

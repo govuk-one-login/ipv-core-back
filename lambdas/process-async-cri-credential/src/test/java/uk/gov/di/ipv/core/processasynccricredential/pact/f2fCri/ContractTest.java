@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriRespon
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -259,7 +258,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -406,7 +405,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -552,7 +551,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -695,7 +694,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -833,7 +832,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -939,7 +938,7 @@ public class ContractTest {
             pactMethod = "f2fMessageContainsValidBrpCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedBrpCredential(List<Message> messageList, MockServer mockServer)
-            throws URISyntaxException, ParseException {
+            throws URISyntaxException {
         VerifiableCredentialValidator verifiableCredentialValidator =
                 new VerifiableCredentialValidator(
                         mockConfigService,
@@ -963,7 +962,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.ECC,
+                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(

@@ -227,7 +227,7 @@ public class CiMitService {
                     null,
                     contraIndicatorsVC,
                     VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
-                    EncryptionAlgorithm.ECC,
+                    EncryptionAlgorithm.EC,
                     cimitSigningKey,
                     cimitComponentId,
                     false);
