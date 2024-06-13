@@ -108,11 +108,6 @@ class CheckCoiHandlerTest {
 
         @BeforeEach
         void setup() throws Exception {
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
-                    .thenReturn(List.of(M1A_ADDRESS_VC));
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
-                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
-
             when(mockUserIdentityService.findIdentityClaim(any()))
                     .thenReturn(getMockIdentityClaim());
         }
@@ -679,10 +674,6 @@ class CheckCoiHandlerTest {
             when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenReturn(true);
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
-                    .thenReturn(List.of(M1A_ADDRESS_VC));
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
-                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
             when(mockUserIdentityService.findIdentityClaim(any()))
                     .thenThrow(
                             new HttpResponseExceptionWithErrorBody(
@@ -706,10 +697,6 @@ class CheckCoiHandlerTest {
             when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenReturn(true);
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_ADDRESS_VC)))
-                    .thenReturn(List.of(M1A_ADDRESS_VC));
-            when(mockUserIdentityService.getSuccessfulVcs(List.of(M1A_EXPERIAN_FRAUD_VC)))
-                    .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
             when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(Optional.empty());
 
             var request =

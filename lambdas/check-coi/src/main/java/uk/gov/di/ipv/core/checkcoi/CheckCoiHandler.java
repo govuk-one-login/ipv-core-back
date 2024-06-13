@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -123,23 +122,23 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     userId,
                     ipvSessionId,
                     govukSigninJourneyId,
-                    ipAddress,
-                    null,
-                    null);
+                    ipAddress);
 
-            var oldVcs = verifiableCredentialService.getVcs(userId);
-            var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
-
-            var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
+            var credentials =
+                    Stream.concat(
+                                    verifiableCredentialService.getVcs(userId).stream(),
+                                    sessionCredentialsService
+                                            .getCredentials(ipvSessionId, userId)
+                                            .stream())
+                            .toList();
 
             var successfulCheck =
                     switch (checkType) {
                         case GIVEN_NAMES_AND_DOB -> userIdentityService
-                                .areGivenNamesAndDobCorrelated(combinedCredentials);
+                                .areGivenNamesAndDobCorrelated(credentials);
                         case FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areFamilyNameAndDobCorrelatedForCoiCheck(combinedCredentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
-                                combinedCredentials);
+                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
+                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
                     };
 
             var scopeClaims = clientOAuthSession.getScopeClaims();
@@ -152,9 +151,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     userId,
                     ipvSessionId,
                     govukSigninJourneyId,
-                    ipAddress,
-                    oldVcs,
-                    sessionVcs);
+                    ipAddress);
 
             if (isReverification) {
                 setIpvSessionReverificationStatus(
@@ -218,17 +215,17 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             String userId,
             String ipvSessionId,
             String govukSigninJourneyId,
-            String ipAddress,
-            List<VerifiableCredential> oldVcs,
-            List<VerifiableCredential> sessionVcs)
-            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
+            String ipAddress)
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException,
+                    VerifiableCredentialException {
         var auditEventUser =
                 new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
         var restrictedData =
                 auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END
-                        ? getRestrictedAuditDataforCheckCoi(oldVcs, sessionVcs)
+                        ? getRestrictedAuditDataforCheckCoi(userId, ipvSessionId)
                         : null;
+
         auditService.sendAuditEvent(
                 new AuditEvent(
                         auditEventType,
@@ -239,13 +236,14 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     }
 
     private AuditRestrictedCheckCoi getRestrictedAuditDataforCheckCoi(
-            List<VerifiableCredential> oldVcs, List<VerifiableCredential> sessionVcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        var successfulOldVcs = userIdentityService.getSuccessfulVcs(oldVcs);
-        var successfulSessionVcs = userIdentityService.getSuccessfulVcs(sessionVcs);
+            String userId, String ipvSessionId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                    VerifiableCredentialException {
+        var oldVcs = verifiableCredentialService.getVcs(userId);
+        var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-        var oldIdentityClaim = userIdentityService.findIdentityClaim(successfulOldVcs);
-        var sessionIdentityClaim = userIdentityService.findIdentityClaim(successfulSessionVcs);
+        var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
+        var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);
 
         if (oldIdentityClaim.isEmpty() || sessionIdentityClaim.isEmpty()) {
             LOGGER.error(LogHelper.buildLogMessage("Failed to generate identity claim"));
