@@ -11,12 +11,17 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -34,6 +39,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -99,6 +105,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
         try {
             var ipAddress = request.getIpAddress();
+            var deviceInformation = request.getDeviceInformation();
             var ipvSession =
                     ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
             var ipvSessionId = ipvSession.getIpvSessionId();
@@ -111,30 +118,30 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             var checkType = RequestHelper.getCoiCheckType(request);
+            var auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                     checkType,
                     null,
-                    userId,
-                    ipvSessionId,
-                    govukSigninJourneyId,
-                    ipAddress);
+                    auditEventUser,
+                    null,
+                    null,
+                    deviceInformation);
 
-            var credentials =
-                    Stream.concat(
-                                    verifiableCredentialService.getVcs(userId).stream(),
-                                    sessionCredentialsService
-                                            .getCredentials(ipvSessionId, userId)
-                                            .stream())
-                            .toList();
+            var oldVcs = verifiableCredentialService.getVcs(userId);
+            var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
+
+            var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
 
             var successfulCheck =
                     switch (checkType) {
                         case GIVEN_NAMES_AND_DOB -> userIdentityService
-                                .areGivenNamesAndDobCorrelated(credentials);
+                                .areGivenNamesAndDobCorrelated(combinedCredentials);
                         case FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areFamilyNameAndDobCorrelatedForCoiCheck(credentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(credentials);
+                                .areFamilyNameAndDobCorrelatedForCoiCheck(combinedCredentials);
+                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                                combinedCredentials);
                     };
 
             var scopeClaims = clientOAuthSession.getScopeClaims();
@@ -144,10 +151,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                     checkType,
                     successfulCheck,
-                    userId,
-                    ipvSessionId,
-                    govukSigninJourneyId,
-                    ipAddress);
+                    auditEventUser,
+                    oldVcs,
+                    sessionVcs,
+                    deviceInformation);
 
             if (isReverification) {
                 setIpvSessionReverificationStatus(
@@ -208,19 +215,39 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             AuditEventTypes auditEventType,
             CoiCheckType coiCheckType,
             Boolean coiCheckSuccess,
-            String userId,
-            String ipvSessionId,
-            String govukSigninJourneyId,
-            String ipAddress)
-            throws SqsException {
-        var auditEventUser =
-                new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+            AuditEventUser auditEventUser,
+            List<VerifiableCredential> oldVcs,
+            List<VerifiableCredential> sessionsVcs,
+            String deviceInformation)
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
+
+        var restrictedData =
+                auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END
+                        ? getRestrictedCheckCoiAuditData(oldVcs, sessionsVcs, deviceInformation)
+                        : new AuditRestrictedDeviceInformation(deviceInformation);
 
         auditService.sendAuditEvent(
                 new AuditEvent(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess)));
+                        new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess),
+                        restrictedData));
+    }
+
+    private AuditRestrictedCheckCoi getRestrictedCheckCoiAuditData(
+            List<VerifiableCredential> oldVcs,
+            List<VerifiableCredential> sessionVcs,
+            String deviceInformation)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
+        var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);
+
+        return new AuditRestrictedCheckCoi(
+                oldIdentityClaim.map(IdentityClaim::getName).orElse(null),
+                sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
+                oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
+                sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
+                new DeviceInformation(deviceInformation));
     }
 }
