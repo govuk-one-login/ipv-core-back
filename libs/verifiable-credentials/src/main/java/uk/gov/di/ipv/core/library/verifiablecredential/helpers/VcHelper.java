@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.CriIdentifer;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -58,8 +58,8 @@ public class VcHelper {
                     .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static ConfigService configService;
     private static final int ONLY = 0;
-    private static final List<String> OPERATIONAL_CRIS = CriIdentifer.getOperationalCriIds();
-    private static final List<String> NON_EVIDENCE_CRI_TYPES = CriIdentifer.getNonEvidenceCriIds();
+    private static final List<String> OPERATIONAL_CRIS = Cri.getOperationalCriIds();
+    private static final List<String> NON_EVIDENCE_CRI_TYPES = Cri.getNonEvidenceCriIds();
 
     private VcHelper() {}
 

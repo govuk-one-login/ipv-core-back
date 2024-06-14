@@ -24,6 +24,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -113,12 +114,13 @@ class ConfigServiceTest {
         void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
-            OauthCriConfig result = configService.getOauthCriActiveConnectionConfig("passportCri");
+            OauthCriConfig result =
+                    configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT.getId());
 
             assertEquals(expectedOauthCriConfig, result);
         }
@@ -127,13 +129,13 @@ class ConfigServiceTest {
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
             OauthCriConfig result =
                     configService.getOauthCriConfig(
                             CriOAuthSessionItem.builder()
-                                    .criId("passportCri")
+                                    .criId(Cri.PASSPORT.getId())
                                     .connection("stub")
                                     .build());
 
@@ -143,10 +145,10 @@ class ConfigServiceTest {
         @Test
         void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
-            var result = configService.getOauthCriConfigForConnection("stub", "passportCri");
+            var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT.getId());
 
             assertEquals(expectedOauthCriConfig, result);
         }
@@ -154,27 +156,29 @@ class ConfigServiceTest {
         @Test
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenThrow(ParameterNotFoundException.builder().build());
 
             assertThrows(
                     NoConfigForConnectionException.class,
-                    () -> configService.getOauthCriConfigForConnection("stub", "passportCri"));
+                    () ->
+                            configService.getOauthCriConfigForConnection(
+                                    "stub", Cri.PASSPORT.getId()));
         }
 
         @Test
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/restCri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/restCri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
                             String.format(
                                     "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            RestCriConfig restCriConfig = configService.getRestCriConfig("restCri");
+            RestCriConfig restCriConfig = configService.getRestCriConfig(Cri.ADDRESS.getId());
 
             var expectedRestCriConfig =
                     RestCriConfig.builder()
@@ -191,15 +195,15 @@ class ConfigServiceTest {
         void getCriConfigShouldReturnACriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             String.format(
                                     "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            CriConfig criConfig = configService.getCriConfig("cri");
+            CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT.getId());
 
             var expectedCriConfig =
                     CriConfig.builder()
@@ -215,15 +219,15 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
 
             final String testComponentId = "testComponentId";
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             String.format(
                                     "{\"signingKey\":%s,\"componentId\":\"%s\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED, testComponentId));
 
-            assertEquals(testComponentId, configService.getComponentId("cri"));
+            assertEquals(testComponentId, configService.getComponentId(Cri.PASSPORT.getId()));
         }
     }
 
@@ -273,7 +277,7 @@ class ConfigServiceTest {
                 String featureSetActiveConnection,
                 String featureSet,
                 String expectedActiveConnection) {
-            final String credentialIssuer = "passportCri";
+            final String credentialIssuer = Cri.PASSPORT.getId();
             setupTestData(
                     credentialIssuer,
                     "activeConnection",
@@ -291,7 +295,7 @@ class ConfigServiceTest {
                 String featureSetIsEnabled,
                 String featureSet,
                 String expectedIsEnabled) {
-            final String credentialIssuer = "passportCri";
+            final String credentialIssuer = Cri.PASSPORT.getId();
             setupTestData(
                     credentialIssuer, "enabled", baseIsEnabled, featureSet, featureSetIsEnabled);
             assertEquals(
@@ -311,7 +315,7 @@ class ConfigServiceTest {
                 String featureSetAllowedSharedAttributes,
                 String featureSet,
                 String expectedIAllowedSharedAttributes) {
-            final String credentialIssuer = "passportCri";
+            final String credentialIssuer = Cri.PASSPORT.getId();
             setupTestData(
                     credentialIssuer,
                     "allowedSharedAttributes",
@@ -394,7 +398,7 @@ class ConfigServiceTest {
         when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                 .thenReturn("stub");
 
-        String apiKey = configService.getCriPrivateApiKeyForActiveConnection("ukPassport");
+        String apiKey = configService.getCriPrivateApiKeyForActiveConnection(Cri.PASSPORT.getId());
 
         assertEquals("api-key-value", apiKey);
     }

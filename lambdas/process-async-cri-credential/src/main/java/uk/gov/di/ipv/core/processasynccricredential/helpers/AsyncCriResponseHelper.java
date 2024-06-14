@@ -10,7 +10,7 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.F2F;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 
 public class AsyncCriResponseHelper {
     private static final Logger LOGGER = LogManager.getLogger();

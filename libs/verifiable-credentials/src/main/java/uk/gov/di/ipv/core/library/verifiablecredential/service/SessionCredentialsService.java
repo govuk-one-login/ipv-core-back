@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();

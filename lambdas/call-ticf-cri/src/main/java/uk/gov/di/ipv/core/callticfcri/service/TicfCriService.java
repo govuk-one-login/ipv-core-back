@@ -28,7 +28,7 @@ import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class TicfCriService {

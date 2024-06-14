@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -68,19 +69,14 @@ public class EvcsService {
         List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
-        var criConfig = configService.getCriConfigs();
-
         List<VerifiableCredential> credentials = new ArrayList<>();
         for (var vc : vcs) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
-                var criId = criConfig.get(jwt.getJWTClaimsSet().getIssuer());
-                if (criId == null) {
-                    throw new CredentialParseException(
-                            "Failed to find credential issuer for vc "
-                                    + jwt.getJWTClaimsSet().getIssuer());
-                }
-                credentials.add(VerifiableCredential.fromValidJwt(userId, criId, jwt));
+                var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+                credentials.add(VerifiableCredential.fromValidJwt(userId, cri.getId(), jwt));
+            } catch (NoCriForIssuerException e) {
+                throw new CredentialParseException("Failed to find credential issuer for vc", e);
             } catch (ParseException e) {
                 throw new CredentialParseException(
                         "Encountered a parsing error while attempting to parse evcs credentials",

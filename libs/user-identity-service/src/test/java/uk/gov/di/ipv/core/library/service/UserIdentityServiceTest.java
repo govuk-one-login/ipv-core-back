@@ -24,7 +24,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
-import uk.gov.di.ipv.core.library.domain.CriIdentifer;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -64,11 +64,11 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.BAV;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.EXPERIAN_FRAUD;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -101,7 +101,7 @@ class UserIdentityServiceTest {
                     RETURN_CODES_NON_CI_BREACHING_P0,
                     "🐧");
 
-    private static List<String> NON_EVIDENCE_CRI_TYPES = CriIdentifer.getNonEvidenceCriIds();
+    private static List<String> NON_EVIDENCE_CRI_TYPES = Cri.getNonEvidenceCriIds();
     public static OauthCriConfig claimedIdentityConfig;
 
     @Mock private ConfigService mockConfigService;

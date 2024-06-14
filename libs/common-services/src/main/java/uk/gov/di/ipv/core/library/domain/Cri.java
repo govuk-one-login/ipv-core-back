@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @ExcludeFromGeneratedCoverageReport
-public enum CriIdentifer {
+public enum Cri {
     PASSPORT("ukPassport"),
     DRIVING_LICENCE("drivingLicence"),
     EXPERIAN_FRAUD("fraud"),
@@ -27,27 +27,27 @@ public enum CriIdentifer {
     private final boolean isOperationalCri;
     private final boolean isNonEvidenceCri;
 
-    CriIdentifer(String id) {
+    Cri(String id) {
         this(id, false, false);
     }
 
-    CriIdentifer(String id, boolean isOperational, boolean isNonEvidence) {
+    Cri(String id, boolean isOperational, boolean isNonEvidence) {
         this.id = id;
         this.isOperationalCri = isOperational;
         this.isNonEvidenceCri = isNonEvidence;
     }
 
     public static final List<String> getOperationalCriIds() {
-        return Arrays.stream(CriIdentifer.values())
+        return Arrays.stream(Cri.values())
                 .filter(criId -> criId.isOperationalCri())
-                .map(CriIdentifer::getId)
+                .map(Cri::getId)
                 .toList();
     }
 
     public static final List<String> getNonEvidenceCriIds() {
-        return Arrays.stream(CriIdentifer.values())
+        return Arrays.stream(Cri.values())
                 .filter(criId -> criId.isNonEvidenceCri())
-                .map(CriIdentifer::getId)
+                .map(Cri::getId)
                 .toList();
     }
 }

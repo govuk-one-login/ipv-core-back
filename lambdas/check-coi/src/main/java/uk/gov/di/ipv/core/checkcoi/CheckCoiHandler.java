@@ -131,7 +131,14 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     ipAddress);
 
             var credentials =
-                    getCredentials(userId, ipvSessionId, clientOAuthSession.getEvcsAccessToken());
+                    Stream.concat(
+                                    getOldIdentity(
+                                            userId,
+                                            ipvSessionId,
+                                            clientOAuthSession.getEvcsAccessToken())
+                                            .stream(),
+                                    getNewIdentity(userId, ipvSessionId).stream())
+                            .toList();
 
             var successfulCheck =
                     switch (checkType) {
@@ -230,7 +237,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     }
 
     @Tracing
-    private List<VerifiableCredential> getCredentials(
+    private List<VerifiableCredential> getOldIdentity(
             String userId, String ipvSessionId, String evcsAccessToken)
             throws CredentialParseException, VerifiableCredentialException {
 
@@ -241,9 +248,13 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         if (credentials == null || credentials.isEmpty()) {
             credentials = verifiableCredentialService.getVcs(userId);
         }
-        return Stream.concat(
-                        credentials.stream(),
-                        sessionCredentialsService.getCredentials(ipvSessionId, userId).stream())
-                .toList();
+        return credentials;
+    }
+
+    @Tracing
+    private List<VerifiableCredential> getNewIdentity(String userId, String ipvSessionId)
+            throws CredentialParseException, VerifiableCredentialException {
+
+        return sessionCredentialsService.getCredentials(ipvSessionId, userId);
     }
 }

@@ -42,7 +42,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.TICF;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {

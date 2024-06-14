@@ -42,7 +42,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdentifer.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
