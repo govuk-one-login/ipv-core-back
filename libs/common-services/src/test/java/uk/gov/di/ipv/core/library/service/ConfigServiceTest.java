@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
@@ -54,6 +56,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -759,5 +765,47 @@ class ConfigServiceTest {
         return (featureSet != null && !featureSet.isBlank())
                 ? Collections.singletonList(featureSet)
                 : Collections.emptyList();
+    }
+
+    @Nested
+    @MockitoSettings(strictness = LENIENT)
+    class GetCriByIssuerTests {
+        @BeforeEach
+        void setup() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            for (var cri : Cri.values()) {
+                var mainConfig =
+                        String.format(
+                                "{\"componentId\":\"https://main-%s-component-id\"}", cri.getId());
+                var stubConfig =
+                        String.format(
+                                "{\"componentId\":\"https://stub-%s-component-id\"}", cri.getId());
+                when(ssmProvider.getMultiple(
+                                String.format(
+                                        "/test/core/credentialIssuers/%s/connections",
+                                        cri.getId())))
+                        .thenReturn(Map.of("stub", stubConfig, "main", mainConfig));
+            }
+        }
+
+        @Test
+        void shouleReturnCriForValidIssuers() throws NoCriForIssuerException {
+            assertEquals(
+                    configService.getCriByIssuer("https://main-ukPassport-component-id"), PASSPORT);
+            assertEquals(
+                    configService.getCriByIssuer("https://stub-ukPassport-component-id"), PASSPORT);
+            assertEquals(
+                    configService.getCriByIssuer("https://main-address-component-id"), ADDRESS);
+            assertEquals(
+                    configService.getCriByIssuer("https://stub-drivingLicence-component-id"),
+                    DRIVING_LICENCE);
+        }
+
+        @Test
+        void shouleErrorForInvalidIssuer() throws NoCriForIssuerException {
+            assertThrows(
+                    NoCriForIssuerException.class,
+                    () -> configService.getCriByIssuer("https://non-existant-component-id"));
+        }
     }
 }
