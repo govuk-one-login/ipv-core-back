@@ -417,6 +417,18 @@ class ConfigServiceTest {
     }
 
     @Test
+    void getCriOAuthClientSecretShouldReturnOAuthClientSecret() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(secretsProvider.get(
+                        "/test/credential-issuers/ukPassport/connections/main/oauth-client-secret"))
+                .thenReturn("oauth-client-secret-value");
+
+        String oauthSecret = configService.getCriOAuthClientSecret(CRI_OAUTH_SESSION_ITEM);
+
+        assertEquals("oauth-client-secret-value", oauthSecret);
+    }
+
+    @Test
     void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
         DecryptionFailureException decryptionFailureException =
                 DecryptionFailureException.builder().message("Test decryption error").build();

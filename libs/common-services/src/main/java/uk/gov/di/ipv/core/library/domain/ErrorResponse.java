@@ -103,7 +103,8 @@ public enum ErrorResponse {
     UNKNOWN_CHECK_TYPE(1086, "unknown checkType received"),
     MISSING_RESET_TYPE(1087, "resetType missing from process request"),
     UNKNOWN_RESET_TYPE(1088, "unknown resetType received"),
-    FAILED_TO_UPDATE_IDENTITY(1089, "Failed to update identity");
+    ERROR_CALLING_DCMAW_ASYNC_CRI(1089, "Error calling the DCMAW Async CRI"),
+    FAILED_TO_UPDATE_IDENTITY(1090, "Failed to update identity");
     ;
 
     private static final String ERROR = "error";

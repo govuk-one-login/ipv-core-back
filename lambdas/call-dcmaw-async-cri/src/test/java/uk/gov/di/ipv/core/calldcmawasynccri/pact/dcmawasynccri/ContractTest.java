@@ -1,0 +1,311 @@
+package uk.gov.di.ipv.core.calldcmawasynccri.pact.dcmawasynccri;
+
+import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
+import au.com.dius.pact.consumer.junit.MockServerConfig;
+import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
+import au.com.dius.pact.consumer.junit5.PactTestFor;
+import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.annotations.Pact;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.token.AccessTokenType;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Base64;
+
+import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+
+@ExtendWith(PactConsumerTestExt.class)
+@ExtendWith(MockitoExtension.class)
+@PactTestFor(providerName = "DcmawAsyncCriProvider")
+@MockServerConfig(hostInterface = "localhost")
+class ContractTest {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    @Mock private ConfigService mockConfigService;
+    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SecureTokenHelper mockSecureTokenHelper;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String SUBJECT_ID = "dummySubjectId";
+    private static final String CALLBACK_URL =
+            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmawAsync";
+    private static final String TEST_ISSUER = "dummyDcmawAsyncComponentId";
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
+            new CriOAuthSessionItem(
+                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
+        return builder.given("dummySecret is a valid basic auth secret")
+                .given("dummyDcmawAsyncComponentId is the dcmaw async CRI component ID")
+                .uponReceiving("Valid basic auth credentials")
+                .path("/async/token")
+                .method("POST")
+                .body("grant_type=client_credentials")
+                .headers(
+                        "Content-Type",
+                        "application/x-www-form-urlencoded",
+                        "Authorization",
+                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "dummySecret"))
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            body.stringType("access_token");
+                                            body.stringValue("token_type", "Bearer");
+                                            body.integerType("expires_in");
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
+    void fetchAccessToken_whenCalledAgainstDcmawAsyncCri_retrievesAValidAccessToken(
+            MockServer mockServer) throws URISyntaxException, CriApiException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        BearerAccessToken accessToken =
+                underTest.fetchAccessToken(
+                        IPV_CORE_CLIENT_ID, "dummySecret", CRI_OAUTH_SESSION_ITEM);
+
+        // Assert
+        assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
+        assertThat(accessToken.getValue(), notNullValue());
+        assertThat(accessToken.getLifetime(), greaterThan(0L));
+    }
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidRequestReturns401(PactDslWithProvider builder) {
+        return builder.given("badDummySecret is not a valid basic auth secret")
+                .given("dummyDcmawAsyncComponentId is the dcmaw async CRI component ID")
+                .uponReceiving("Invalid basic auth credentials")
+                .path("/async/token")
+                .method("POST")
+                .body("grant_type=client_credentials")
+                .headers(
+                        "Content-Type",
+                        "application/x-www-form-urlencoded",
+                        "Authorization",
+                        getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "badDummySecret"))
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidRequestReturns401")
+    void fetchAccessToken_whenCalledAgainstDcmawAsyncCri_throwsErrorWithInvalidAuthCode(
+            MockServer mockServer) throws URISyntaxException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () -> {
+                            underTest.fetchAccessToken(
+                                    IPV_CORE_CLIENT_ID, "badDummySecret", CRI_OAUTH_SESSION_ITEM);
+                        });
+        // Assert
+        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
+    }
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsPendingCredential(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("dummyAccessToken is a valid access token")
+                .uponReceiving("Valid credential request")
+                .path("/async/credential")
+                .method("POST")
+                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
+                .headers(
+                        "Content-Type",
+                        "application/json",
+                        "Authorization",
+                        "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            body.stringValue("sub", SUBJECT_ID);
+                                            body.stringValue(
+                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
+                                                    "pending");
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsPendingCredential")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCri_retrievesAPendingVc(
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        DCMAW_ASYNC_CRI,
+                        CRI_OAUTH_SESSION_ITEM,
+                        getCredentialRequestBody(SUBJECT_ID));
+
+        // Assert
+        assertEquals(
+                VerifiableCredentialStatus.PENDING,
+                verifiableCredentialResponse.getCredentialStatus());
+    }
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("badAccessToken is not a valid access token")
+                .uponReceiving("Valid credential request")
+                .path("/async/credential")
+                .method("POST")
+                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
+                .headers(
+                        "Content-Type",
+                        "application/json",
+                        "Authorization",
+                        "Bearer badAccessToken")
+                .willRespondWith()
+                .status(403)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    void
+            fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriWithInvalidAccessToken_throwsAnException(
+                    MockServer mockServer) throws URISyntaxException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService,
+                        mockKmsEs256SignerFactory,
+                        mockSecureTokenHelper,
+                        CURRENT_TIME);
+
+        // Act
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () ->
+                                underTest.fetchVerifiableCredential(
+                                        new BearerAccessToken("badAccessToken"),
+                                        DCMAW_ASYNC_CRI,
+                                        CRI_OAUTH_SESSION_ITEM,
+                                        getCredentialRequestBody(SUBJECT_ID)));
+
+        // Assert
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+    }
+
+    private AsyncCredentialRequestBodyDto getCredentialRequestBody(String userId) {
+        return new AsyncCredentialRequestBodyDto(
+                userId,
+                "dummyJourneyId",
+                IPV_CORE_CLIENT_ID,
+                "DUMMY_RANDOM_OAUTH_STATE",
+                CALLBACK_URL);
+    }
+
+    @NotNull
+    private static OauthCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
+            throws URISyntaxException {
+        return OauthCriConfig.builder()
+                .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/async/token"))
+                .credentialUrl(
+                        new URI("http://localhost:" + mockServer.getPort() + "/async/credential"))
+                .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
+                .clientId(IPV_CORE_CLIENT_ID)
+                .componentId(TEST_ISSUER)
+                .clientCallbackUrl(URI.create(CALLBACK_URL))
+                .requiresApiKey(false)
+                .requiresAdditionalEvidence(false)
+                .build();
+    }
+
+    private String getBasicAuthHeaderValue(String clientId, String secret) {
+        String idAndSecret = clientId + ":" + secret;
+        String encodedIdAndSecret = Base64.getEncoder().encodeToString(idAndSecret.getBytes());
+        return "Basic " + encodedIdAndSecret;
+    }
+}

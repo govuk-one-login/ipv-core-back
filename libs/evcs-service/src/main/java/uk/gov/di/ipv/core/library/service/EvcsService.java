@@ -20,6 +20,7 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 public class EvcsService {
     private final EvcsClient evcsClient;
 
+    @ExcludeFromGeneratedCoverageReport
     public EvcsService(EvcsClient evcsClient) {
         this.evcsClient = evcsClient;
     }

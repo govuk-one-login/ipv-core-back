@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.criapiservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -23,9 +25,9 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -62,8 +64,11 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 @ExtendWith(MockitoExtension.class)
 class CriApiServiceTest {
     private static final String TEST_CRI_ID = "test-cri-id";
+    private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
+    private static final String TEST_BASIC_AUTH_USER = "test_basic_auth_user";
+    private static final String TEST_BASIC_AUTH_SECRET = "test_basic_auth_secret";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
     private static final VerifiableCredential PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -107,7 +112,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -136,7 +141,7 @@ class CriApiServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 String.format(
-                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n",
+                                                        "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
                                                         TEST_ACCESS_TOKEN))));
 
         // Act
@@ -207,32 +212,36 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldGetApiKeyIfPresent() throws Exception {
+    void buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldGetApiKeyIfPresent()
+            throws Exception {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
                 .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
-        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+        var request =
+                criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertEquals(TEST_API_KEY, request.getHeaderMap().get(API_KEY_HEADER).get(0));
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldUseCorrectTokenEndpoint(
-            WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldUseCorrectTokenEndpoint(
+                    WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
                 .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
-        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+        var request =
+                criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertEquals(
@@ -241,7 +250,8 @@ class CriApiServiceTest {
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldHandleJOSEException() throws Exception {
+    void buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldHandleJOSEException()
+            throws Exception {
         // Arrange
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
@@ -251,64 +261,108 @@ class CriApiServiceTest {
             when(mockKmsEs256SignerFactory.getSigner(any()))
                     .thenReturn(new ECDSASigner(getPrivateKey()));
 
-            var callbackRequest = getValidCallbackRequest();
-
             // Act & Assert
             assertThrows(
                     CriApiException.class,
-                    () -> criApiService.buildFetchAccessTokenRequest(callbackRequest, null));
+                    () ->
+                            criApiService
+                                    .buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                                            TEST_CRI_ID, TEST_AUTHORISATION_CODE, null));
         }
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldFailGracefullyWithInvalidApiKey() throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldFailGracefullyWithInvalidApiKey()
+                    throws Exception {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn("InvalidApiKey");
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
                 .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
-        var httpRequest = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+        var httpRequest =
+                criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertNotEquals("InvalidApiKey", httpRequest.getAuthorization());
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldIncludeAuthorizationCodeInRequestBody()
-            throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeAuthorizationCodeInRequestBody()
+                    throws Exception {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
                 .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
-        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+        var request =
+                criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
-        assertTrue(request.getQuery().contains("code=" + TEST_AUTHORISATION_CODE));
+        assertTrue(request.getBody().contains("code=" + TEST_AUTHORISATION_CODE));
     }
 
     @Test
-    void buildFetchAccessTokenRequestShouldIncludeRedirectionUriInRequestBody() throws Exception {
+    void
+            buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeRedirectionUriInRequestBody()
+                    throws Exception {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockKmsEs256SignerFactory.getSigner(any()))
                 .thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
-        var request = criApiService.buildFetchAccessTokenRequest(callbackRequest, null);
+        var request =
+                criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
 
         // Assert
-        assertTrue(request.getQuery().contains("redirect_uri="));
+        assertTrue(request.getBody().contains("redirect_uri="));
     }
 
     @Test
-    void getVerifiableCredentialCorrectlyCallsACredentialIssuer() throws CriApiException {
+    void
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldBuildAnAuthorizationHeader() {
+        // Arrange
+        var criOauthSession = new CriOAuthSessionItem();
+        criOauthSession.setCriId(TEST_CRI_ID);
+
+        // Act
+        var request =
+                criApiService.buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+                        TEST_BASIC_AUTH_USER, TEST_BASIC_AUTH_SECRET, criOauthSession);
+
+        // Assert
+        assertEquals(
+                "Basic dGVzdF9iYXNpY19hdXRoX3VzZXI6dGVzdF9iYXNpY19hdXRoX3NlY3JldA==",
+                request.getAuthorization());
+    }
+
+    @Test
+    void
+            buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldIncludeGrantTypeInRequestBody() {
+        // Arrange
+        var criOauthSession = new CriOAuthSessionItem();
+        criOauthSession.setCriId(TEST_CRI_ID);
+
+        // Act
+        var request =
+                criApiService.buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+                        TEST_BASIC_AUTH_USER, TEST_BASIC_AUTH_SECRET, criOauthSession);
+
+        // Assert
+        assertEquals("grant_type=client_credentials", request.getBody());
+    }
+
+    @Test
+    void getVerifiableCredentialCorrectlyCallsACredentialIssuer()
+            throws CriApiException, JsonProcessingException {
         // Arrange
         stubFor(
                 post("/credentials/issue")
@@ -320,8 +374,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(
-                        accessToken, getValidCallbackRequest(), null);
+                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
 
         // Assert
         assertEquals(
@@ -334,7 +387,7 @@ class CriApiServiceTest {
 
     @Test
     void getVerifiableCredentialCorrectlyGetsAPendingResponseFromCredentialIssuer()
-            throws CriApiException {
+            throws CriApiException, JsonProcessingException {
         // Arrange
         final String testUserId = "urn:uuid" + UUID.randomUUID();
         final String pendingResponse =
@@ -352,8 +405,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(
-                        accessToken, getValidCallbackRequest(), null);
+                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
 
         // Assert
         assertEquals(testUserId, verifiableCredentialResponse.getUserId());
@@ -367,7 +419,7 @@ class CriApiServiceTest {
 
     @Test
     void getVerifiableCredentialCorrectlyCallsACredentialIssuerWithoutApiKey()
-            throws CriApiException {
+            throws CriApiException, JsonProcessingException {
         // Arrange
         stubFor(
                 post("/credentials/issue")
@@ -379,8 +431,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(
-                        accessToken, getValidCallbackRequest(), null);
+                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
 
         // Assert
         assertEquals(
@@ -409,8 +460,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(
-                        accessToken, getValidCallbackRequest(), null);
+                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
 
         // Assert
         assertEquals(
@@ -438,9 +488,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"),
-                                        getValidCallbackRequest(),
-                                        null));
+                                        new BearerAccessToken("validToken"), TEST_CRI_ID, null));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -466,9 +514,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"),
-                                        callbackRequest,
-                                        null));
+                                        new BearerAccessToken("validToken"), DCMAW_CRI_ID, null));
 
         assertEquals(HTTPResponse.SC_NOT_FOUND, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -490,53 +536,88 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"),
-                                        getValidCallbackRequest(),
-                                        null));
+                                        new BearerAccessToken("validToken"), TEST_CRI_ID, null));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     @Test
-    void buildFetchVerifiableCredentialRequestShouldSetCorrectHeaders() {
+    void buildFetchVerifiableCredentialRequestShouldSetApiKeyHeader()
+            throws JsonProcessingException {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getCriPrivateApiKey(any())).thenReturn(TEST_API_KEY);
 
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), callbackRequest, null);
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
 
         // Assert
         assertEquals(TEST_API_KEY, request.getHeaderMap().get("x-api-key").get(0));
     }
 
     @Test
-    void buildFetchVerifiableCredentialRequestShouldSetCorrectAuthorizationHeader() {
-        // Arrange
-        var callbackRequest = getValidCallbackRequest();
-
+    void buildFetchVerifiableCredentialRequestShouldSetCorrectAuthorizationHeader()
+            throws JsonProcessingException {
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), callbackRequest, null);
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
 
         // Assert
         assertEquals("Bearer validToken", request.getAuthorization());
     }
 
     @Test
-    void buildFetchVerifiableCredentialRequestShouldSetCorrectCredentialUrl(
-            WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+    void buildFetchVerifiableCredentialRequestShouldSetContentTypeHeaderWhenABodyIsProvided()
+            throws JsonProcessingException {
         // Arrange
-        var callbackRequest = getValidCallbackRequest();
+        var body =
+                new AsyncCredentialRequestBodyDto(
+                        "userId",
+                        "journeyId",
+                        TEST_CRI_ID,
+                        "RANDOM_STATE_VALUE",
+                        "https://example.com");
 
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), callbackRequest, null);
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+
+        // Assert
+        assertEquals("application/json", request.getHeaderMap().get("Content-Type").get(0));
+    }
+
+    @Test
+    void buildFetchVerifiableCredentialRequestShouldSetBodyWhenABodyIsProvided()
+            throws JsonProcessingException {
+        // Arrange
+        var body =
+                new AsyncCredentialRequestBodyDto(
+                        "userId",
+                        "journeyId",
+                        TEST_CRI_ID,
+                        "RANDOM_STATE_VALUE",
+                        "https://example.com");
+
+        // Act
+        var request =
+                criApiService.buildFetchVerifiableCredentialRequest(
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+
+        // Assert
+        assertTrue(request.getBody().contains("userId"));
+    }
+
+    @Test
+    void buildFetchVerifiableCredentialRequestShouldSetCorrectCredentialUrl(
+            WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
+        // Act
+        var request =
+                criApiService.buildFetchVerifiableCredentialRequest(
+                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
         // Assert
         assertEquals(
                 String.format("http://localhost:%s/credentials/issue", wmRuntimeInfo.getHttpPort()),

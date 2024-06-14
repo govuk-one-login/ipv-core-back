@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.criapiservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,21 +6,28 @@ import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
+import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -34,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -50,6 +56,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE
 public class CriApiService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final KmsEs256SignerFactory signerFactory;
@@ -77,12 +84,36 @@ public class CriApiService {
     public BearerAccessToken fetchAccessToken(
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
-        var criId = callbackRequest.getCredentialIssuerId();
+
+        var accessTokenRequest =
+                buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+                        callbackRequest.getCredentialIssuerId(),
+                        callbackRequest.getAuthorizationCode(),
+                        criOAuthSessionItem);
+
+        return fetchAccessToken(
+                callbackRequest.getCredentialIssuerId(), criOAuthSessionItem, accessTokenRequest);
+    }
+
+    public BearerAccessToken fetchAccessToken(
+            String basicAuthClientId,
+            String basicAuthClientSecret,
+            CriOAuthSessionItem criOAuthSessionItem)
+            throws CriApiException {
+        var httpRequest =
+                buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+                        basicAuthClientId, basicAuthClientSecret, criOAuthSessionItem);
+
+        return fetchAccessToken(criOAuthSessionItem.getCriId(), criOAuthSessionItem, httpRequest);
+    }
+
+    private BearerAccessToken fetchAccessToken(
+            String criId, CriOAuthSessionItem criOAuthSessionItem, HTTPRequest accessTokenRequest)
+            throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
 
         try {
-            var httpRequest = buildFetchAccessTokenRequest(callbackRequest, criOAuthSessionItem);
-            var httpResponse = httpRequest.send();
+            var httpResponse = accessTokenRequest.send();
             var tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
@@ -113,13 +144,10 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildFetchAccessTokenRequest(
-            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
+    public HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+            String criId, String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var authorisationCode = callbackRequest.getAuthorizationCode();
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
-        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
         var authorizationCode = new AuthorizationCode(authorisationCode);
 
         try {
@@ -143,25 +171,11 @@ public class CriApiService {
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 
-            var tokenRequest =
-                    new TokenRequest(
-                            criConfig.getTokenUrl(),
-                            clientAuthentication,
-                            new AuthorizationCodeGrant(authorizationCode, redirectionUri));
-
-            var httpRequest = tokenRequest.toHTTPRequest();
-            if (apiKey != null) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "CRI has API key, sending key in header for token request.")
-                                .with(LOG_CRI_ID.getFieldName(), criId);
-                LOGGER.info(message);
-                httpRequest.setHeader(API_KEY_HEADER, apiKey);
-            }
-
-            return httpRequest;
+            return buildAccessTokenRequest(
+                    criId,
+                    criOAuthSessionItem,
+                    clientAuthentication,
+                    new AuthorizationCodeGrant(authorizationCode, redirectionUri));
         } catch (JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CriApiException(
@@ -170,16 +184,73 @@ public class CriApiService {
         }
     }
 
+    public HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+            String basicAuthClientId,
+            String basicAuthClientSecret,
+            CriOAuthSessionItem criOAuthSessionItem) {
+
+        var clientAuthentication =
+                new ClientSecretBasic(
+                        new ClientID(basicAuthClientId), new Secret(basicAuthClientSecret));
+
+        return buildAccessTokenRequest(
+                criOAuthSessionItem.getCriId(),
+                criOAuthSessionItem,
+                clientAuthentication,
+                new ClientCredentialsGrant());
+    }
+
+    private HTTPRequest buildAccessTokenRequest(
+            String criId,
+            CriOAuthSessionItem criOAuthSessionItem,
+            ClientAuthentication clientAuthentication,
+            AuthorizationGrant authorizationGrant) {
+        var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
+        var apiKey = getApiKey(criConfig, criOAuthSessionItem);
+
+        var tokenRequest =
+                new TokenRequest(criConfig.getTokenUrl(), clientAuthentication, authorizationGrant);
+
+        var httpRequest = tokenRequest.toHTTPRequest();
+        if (apiKey != null) {
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "CRI has API key, sending key in header for token request.")
+                            .with(LOG_CRI_ID.getFieldName(), criId);
+            LOGGER.info(message);
+            httpRequest.setHeader(API_KEY_HEADER, apiKey);
+        }
+
+        return httpRequest;
+    }
+
     public VerifiableCredentialResponse fetchVerifiableCredential(
             BearerAccessToken accessToken,
-            CriCallbackRequest callbackRequest,
-            CriOAuthSessionItem criOAuthSessionItem)
-            throws CriApiException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var credentialRequest =
+            String criId,
+            CriOAuthSessionItem criOAuthSessionItem,
+            AsyncCredentialRequestBodyDto requestBody)
+            throws CriApiException, JsonProcessingException {
+        var request =
                 buildFetchVerifiableCredentialRequest(
-                        accessToken, callbackRequest, criOAuthSessionItem);
+                        accessToken, criId, criOAuthSessionItem, requestBody);
 
+        return fetchVerifiableCredential(criId, request);
+    }
+
+    public VerifiableCredentialResponse fetchVerifiableCredential(
+            BearerAccessToken accessToken, String criId, CriOAuthSessionItem criOAuthSessionItem)
+            throws CriApiException, JsonProcessingException {
+        var request =
+                buildFetchVerifiableCredentialRequest(
+                        accessToken, criId, criOAuthSessionItem, null);
+
+        return fetchVerifiableCredential(criId, request);
+    }
+
+    private VerifiableCredentialResponse fetchVerifiableCredential(
+            String criId, HTTPRequest credentialRequest) throws CriApiException {
         try {
             var response = credentialRequest.send();
 
@@ -200,7 +271,8 @@ public class CriApiService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            var responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
+            var responseContentType = response.getHeaderValue(HEADER_CONTENT_TYPE);
+
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
                 var verifiableCredentialResponse =
                         VerifiableCredentialResponse.builder()
@@ -243,15 +315,24 @@ public class CriApiService {
 
     public HTTPRequest buildFetchVerifiableCredentialRequest(
             BearerAccessToken accessToken,
-            CriCallbackRequest callbackRequest,
-            CriOAuthSessionItem criOAuthSessionItem) {
-        var criId = callbackRequest.getCredentialIssuerId();
+            String criId,
+            CriOAuthSessionItem criOAuthSessionItem,
+            AsyncCredentialRequestBodyDto requestBody)
+            throws JsonProcessingException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
-        request.setHeader(
-                "Content-Type", ""); // remove the default, no request body so we don't need
+
+        if (requestBody != null) {
+            var bodyString = OBJECT_MAPPER.writeValueAsString(requestBody);
+            request.setBody(bodyString);
+            request.setHeader(HEADER_CONTENT_TYPE, "application/json");
+        } else {
+            request.setHeader(
+                    HEADER_CONTENT_TYPE,
+                    ""); // remove the default, no request body so we don't need a content type
+        }
 
         if (apiKey != null) {
             LOGGER.info(

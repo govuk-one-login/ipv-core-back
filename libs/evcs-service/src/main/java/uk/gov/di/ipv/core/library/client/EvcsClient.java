@@ -23,16 +23,22 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class EvcsClient {
@@ -50,6 +56,7 @@ public class EvcsClient {
         this.httpClient = HttpClient.newHttpClient();
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public EvcsClient(ConfigService configService, HttpClient httpClient) {
         this.configService = configService;
         this.httpClient = httpClient;
@@ -72,7 +79,10 @@ public class EvcsClient {
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
 
             EvcsGetUserVCsDto evcsGetUserVCs =
-                    OBJECT_MAPPER.readValue(evcsHttpResponse.body(), new TypeReference<>() {});
+                    evcsHttpResponse.statusCode() != 404
+                            ? OBJECT_MAPPER.readValue(
+                                    evcsHttpResponse.body(), new TypeReference<>() {})
+                            : new EvcsGetUserVCsDto(Collections.emptyList());
 
             if (CollectionUtils.isEmpty(evcsGetUserVCs.vcs())) {
                 LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
@@ -90,6 +100,9 @@ public class EvcsClient {
     @Tracing
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to store %d user VCs".formatted(userVCsForEvcs.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -115,6 +128,9 @@ public class EvcsClient {
     @Tracing
     public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to update %d user VCs".formatted(evcsUserVCsToUpdate.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -140,9 +156,12 @@ public class EvcsClient {
 
     private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
-        var uriBuilder =
-                new URIBuilder(configService.getSsmParameter(EVCS_APPLICATION_URL))
-                        .setPathSegments("vcs", userId);
+        var baseUri =
+                "%s/vcs/%s"
+                        .formatted(
+                                configService.getSsmParameter(EVCS_APPLICATION_URL),
+                                URLEncoder.encode(userId, StandardCharsets.UTF_8));
+        var uriBuilder = new URIBuilder(baseUri);
         if (vcStatesToQueryFor != null) {
             uriBuilder.addParameter(
                     VC_STATE_PARAM,
@@ -156,14 +175,27 @@ public class EvcsClient {
     private void checkResponseStatusCode(HttpResponse<String> evcsHttpResponse)
             throws EvcsServiceException {
         if (200 > evcsHttpResponse.statusCode() || evcsHttpResponse.statusCode() > 299) {
+            String responseMessage;
+            try {
+                Map<String, String> responseBody =
+                        OBJECT_MAPPER.readValue(evcsHttpResponse.body(), new TypeReference<>() {});
+                responseMessage =
+                        Optional.ofNullable(responseBody.get("message"))
+                                .orElse("Received no evcs response body.");
+            } catch (JsonProcessingException e) {
+                responseMessage = "Failed to parse evcs response body.";
+            }
             LOGGER.info(
                     LogHelper.buildLogMessage(
                                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
                                             .getMessage())
-                            .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode()));
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+                            .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode())
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), responseMessage));
+            if (evcsHttpResponse.statusCode() != 404) {
+                throw new EvcsServiceException(
+                        HTTPResponse.SC_SERVER_ERROR,
+                        ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+            }
         }
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
     }

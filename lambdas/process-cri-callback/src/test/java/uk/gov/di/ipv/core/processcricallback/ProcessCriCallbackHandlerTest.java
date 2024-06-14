@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processcricallback;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -24,9 +27,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
@@ -88,7 +89,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockVerifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any()))
@@ -146,7 +147,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
                         List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID))
@@ -158,7 +159,7 @@ class ProcessCriCallbackHandlerTest {
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         verify(mockCriCheckingService).validateSessionIds(callbackRequest);
-        verify(mockCriStoringService).storeCriResponse(callbackRequest, clientOAuthSessionItem);
+        verify(mockCriStoringService).recordCriResponse(callbackRequest, clientOAuthSessionItem);
     }
 
     @Test
@@ -203,7 +204,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, callbackRequest, criOAuthSessionItem))
+                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -250,7 +251,7 @@ class ProcessCriCallbackHandlerTest {
 
     @Test
     void getJourneyResponseShouldThrowWhenVerifiableCredentialCannotBeFetched()
-            throws CriApiException {
+            throws CriApiException, JsonProcessingException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var ipvSessionItem = buildValidIpvSessionItem();
@@ -275,7 +276,7 @@ class ProcessCriCallbackHandlerTest {
                 .when(mockCriApiService)
                 .fetchVerifiableCredential(
                         any(BearerAccessToken.class),
-                        eq(callbackRequest),
+                        eq(TEST_CRI_ID),
                         any(CriOAuthSessionItem.class));
 
         // Act & Assert

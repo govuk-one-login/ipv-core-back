@@ -73,7 +73,7 @@ class CriStoringServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
-        criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
+        criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem);
 
         // Assert
         verify(mockCriResponseService)
@@ -113,7 +113,7 @@ class CriStoringServiceTest {
         // Act & Assert
         assertThrows(
                 SqsException.class,
-                () -> criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem));
+                () -> criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem));
     }
 
     @Test
