@@ -165,11 +165,10 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenThrow(ParameterNotFoundException.builder().build());
 
+            var criId = Cri.PASSPORT.getId();
             assertThrows(
                     NoConfigForConnectionException.class,
-                    () ->
-                            configService.getOauthCriConfigForConnection(
-                                    "stub", Cri.PASSPORT.getId()));
+                    () -> configService.getOauthCriConfigForConnection("stub", criId));
         }
 
         @Test
@@ -791,18 +790,18 @@ class ConfigServiceTest {
         @Test
         void shouleReturnCriForValidIssuers() throws NoCriForIssuerException {
             assertEquals(
-                    configService.getCriByIssuer("https://main-ukPassport-component-id"), PASSPORT);
+                    PASSPORT, configService.getCriByIssuer("https://main-ukPassport-component-id"));
             assertEquals(
-                    configService.getCriByIssuer("https://stub-ukPassport-component-id"), PASSPORT);
+                    PASSPORT, configService.getCriByIssuer("https://stub-ukPassport-component-id"));
             assertEquals(
-                    configService.getCriByIssuer("https://main-address-component-id"), ADDRESS);
+                    ADDRESS, configService.getCriByIssuer("https://main-address-component-id"));
             assertEquals(
-                    configService.getCriByIssuer("https://stub-drivingLicence-component-id"),
-                    DRIVING_LICENCE);
+                    DRIVING_LICENCE,
+                    configService.getCriByIssuer("https://stub-drivingLicence-component-id"));
         }
 
         @Test
-        void shouleErrorForInvalidIssuer() throws NoCriForIssuerException {
+        void shouleErrorForInvalidIssuer() {
             assertThrows(
                     NoCriForIssuerException.class,
                     () -> configService.getCriByIssuer("https://non-existant-component-id"));

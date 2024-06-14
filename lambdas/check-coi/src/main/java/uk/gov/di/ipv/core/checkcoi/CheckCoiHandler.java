@@ -239,7 +239,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @Tracing
     private List<VerifiableCredential> getOldIdentity(
             String userId, String ipvSessionId, String evcsAccessToken)
-            throws CredentialParseException, VerifiableCredentialException {
+            throws CredentialParseException {
 
         List<VerifiableCredential> credentials = null;
         if (configService.enabled(EVCS_READ_ENABLED)) {
@@ -253,7 +253,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
     @Tracing
     private List<VerifiableCredential> getNewIdentity(String userId, String ipvSessionId)
-            throws CredentialParseException, VerifiableCredentialException {
+            throws VerifiableCredentialException {
 
         return sessionCredentialsService.getCredentials(ipvSessionId, userId);
     }
