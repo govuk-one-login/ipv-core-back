@@ -197,6 +197,8 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

@@ -169,6 +169,8 @@ public class ProcessJourneyEventHandler
         } catch (SqsException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

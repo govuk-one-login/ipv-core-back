@@ -12,6 +12,7 @@ repositories {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkUrlConnectionClient,
+			libs.awsSdkCrtClient,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),

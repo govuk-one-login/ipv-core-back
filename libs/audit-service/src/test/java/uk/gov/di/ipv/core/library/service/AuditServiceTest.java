@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -46,7 +46,7 @@ class AuditServiceTest {
 
     private AuditService auditService;
 
-    @Mock private SqsClient mockSqs;
+    @Mock private SqsAsyncClient mockSqs;
     @Mock private ConfigService mockConfigService;
 
     @BeforeEach

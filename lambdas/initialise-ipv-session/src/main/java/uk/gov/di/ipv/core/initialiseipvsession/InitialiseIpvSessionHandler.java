@@ -305,6 +305,8 @@ public class InitialiseIpvSessionHandler
                     LogHelper.buildErrorMessage("Failed to check if stronger vot vc present.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
