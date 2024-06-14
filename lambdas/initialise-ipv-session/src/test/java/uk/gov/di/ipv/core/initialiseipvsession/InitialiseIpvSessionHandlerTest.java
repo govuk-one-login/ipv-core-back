@@ -48,7 +48,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -581,7 +580,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL250_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -602,7 +600,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(EncryptionAlgorithm.EC),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -647,7 +644,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -665,7 +661,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(EncryptionAlgorithm.EC),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -710,7 +705,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -787,7 +781,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -808,7 +801,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(EncryptionAlgorithm.EC),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -856,7 +848,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -1095,7 +1086,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             "🌭",
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            TEST_CRI_CONFIG.getSigningAlgorithm(),
                             TEST_CRI_CONFIG.getSigningKey(),
                             TEST_CRI_CONFIG.getComponentId(),
                             true))
@@ -1166,7 +1156,6 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            EncryptionAlgorithm.EC,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))

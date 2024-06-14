@@ -1,11 +1,11 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
+import com.nimbusds.jose.jwk.KeyType;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.Instant;
@@ -336,7 +336,7 @@ public interface VcFixtures {
                             .evidence(SUCCESSFUL_EVIDENCE)
                             .build(),
                     Instant.ofEpochSecond(1705986521),
-                    EncryptionAlgorithm.RSA);
+                    KeyType.RSA);
 
     static VerifiableCredential vcPassportM1aFailed() {
         TestVc.TestCredentialSubject credentialSubject =

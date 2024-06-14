@@ -188,7 +188,6 @@ class CiMitServiceTest {
                         eq(SIGNED_CONTRA_INDICATOR_VC),
                         eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
                         any(),
-                        any(),
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
                 .thenReturn(
@@ -254,7 +253,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any(), any(), eq(false)))
+                        any(), any(), any(), any(), any(), any(), eq(false)))
                 .thenThrow(
                         new VerifiableCredentialException(
                                 500, ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL));
@@ -306,7 +305,7 @@ class CiMitServiceTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
                 .when(verifiableCredentialValidator)
-                .parseAndValidate(any(), any(), any(), any(), any(), any(), any(), anyBoolean());
+                .parseAndValidate(any(), any(), any(), any(), any(), any(), anyBoolean());
 
         assertThrows(
                 CiRetrievalException.class,
@@ -324,7 +323,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID,
@@ -371,7 +370,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID,
@@ -408,7 +407,6 @@ class CiMitServiceTest {
                         eq(null),
                         eq(SIGNED_CONTRA_INDICATOR_VC),
                         eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
-                        any(),
                         any(),
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
@@ -457,7 +455,6 @@ class CiMitServiceTest {
                         eq(null),
                         eq(SIGNED_CONTRA_INDICATOR_VC),
                         eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
-                        any(),
                         eq("INVALID_CIMIT_KEY"),
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
@@ -490,7 +487,7 @@ class CiMitServiceTest {
                                 .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC))
                                 .build());
         when(verifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
+                        any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID,
@@ -523,7 +520,7 @@ class CiMitServiceTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
                 .when(verifiableCredentialValidator)
-                .parseAndValidate(any(), any(), any(), any(), any(), any(), any(), anyBoolean());
+                .parseAndValidate(any(), any(), any(), any(), any(), any(), anyBoolean());
 
         assertThrows(
                 CiRetrievalException.class,

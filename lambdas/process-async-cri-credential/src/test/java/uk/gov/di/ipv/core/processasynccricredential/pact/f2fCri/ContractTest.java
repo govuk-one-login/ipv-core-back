@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
@@ -129,7 +128,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                criConfig.getSigningAlgorithm(),
                                 criConfig.getSigningKey(),
                                 criConfig.getComponentId())
                         .forEach(
@@ -258,7 +256,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -405,7 +402,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -551,7 +547,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -694,7 +689,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -832,7 +826,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -962,7 +955,6 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                EncryptionAlgorithm.EC,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(

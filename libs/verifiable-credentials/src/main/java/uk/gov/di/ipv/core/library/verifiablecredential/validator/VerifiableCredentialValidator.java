@@ -9,6 +9,8 @@ import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.nimbusds.jose.util.Base64URL;
@@ -25,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -39,6 +40,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
+import static com.nimbusds.jose.jwk.KeyType.EC;
+import static com.nimbusds.jose.jwk.KeyType.RSA;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -75,22 +78,13 @@ public class VerifiableCredentialValidator {
             String criId,
             List<String> vcs,
             String vcType,
-            EncryptionAlgorithm signingAlgorithm,
             String signingKey,
             String componentId)
             throws VerifiableCredentialException {
         var validVcs = new ArrayList<VerifiableCredential>();
         for (String vc : vcs) {
             validVcs.add(
-                    parseAndValidate(
-                            userId,
-                            criId,
-                            vc,
-                            vcType,
-                            signingAlgorithm,
-                            signingKey,
-                            componentId,
-                            false));
+                    parseAndValidate(userId, criId, vc, vcType, signingKey, componentId, false));
         }
         return validVcs;
     }
@@ -101,14 +95,13 @@ public class VerifiableCredentialValidator {
             String criId,
             String vcString,
             String vcType,
-            EncryptionAlgorithm signingAlgorithm,
             String signingKey,
             String componentId,
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
         try {
             var vcJwt = SignedJWT.parse(vcString);
-            validateSignature(vcJwt, signingAlgorithm, signingKey);
+            validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
@@ -142,16 +135,13 @@ public class VerifiableCredentialValidator {
         }
     }
 
-    private void validateSignature(
-            SignedJWT vc, EncryptionAlgorithm signingAlgorithm, String signingKey)
+    private void validateSignature(SignedJWT vc, String signingKey)
             throws VerifiableCredentialException {
         try {
-            var formattedVc =
-                    EncryptionAlgorithm.EC.equals(signingAlgorithm)
-                            ? transcodeSignatureIfDerFormat(vc)
-                            : vc;
+            var signingKeyType = JWK.parse(signingKey).getKeyType();
+            var formattedVc = EC.equals(signingKeyType) ? transcodeSignatureIfDerFormat(vc) : vc;
 
-            var verifier = getVerifier(signingAlgorithm, signingKey);
+            var verifier = getVerifier(signingKeyType, signingKey);
             if (!formattedVc.verify(verifier)) {
                 LOGGER.error(
                         LogHelper.buildLogMessage("Verifiable credential signature not valid"));
@@ -173,12 +163,21 @@ public class VerifiableCredentialValidator {
         }
     }
 
-    private JWSVerifier getVerifier(EncryptionAlgorithm signingAlgorithm, String signingKey)
-            throws ParseException, JOSEException {
-        return switch (signingAlgorithm) {
-            case EC -> new ECDSAVerifier(ECKey.parse(signingKey));
-            case RSA -> new RSASSAVerifier(RSAKey.parse(signingKey));
-        };
+    private JWSVerifier getVerifier(KeyType signingKeyType, String signingKey)
+            throws ParseException, JOSEException, VerifiableCredentialException {
+        if (EC.equals(signingKeyType)) {
+            return new ECDSAVerifier(ECKey.parse(signingKey));
+        }
+
+        if (RSA.equals(signingKeyType)) {
+            return new RSASSAVerifier(RSAKey.parse(signingKey));
+        }
+
+        LOGGER.error(
+                LogHelper.buildErrorMessage(
+                        "Signing key not valid type", "Signing key is not of type EC or RSA"));
+        throw new VerifiableCredentialException(
+                HTTPResponse.SC_SERVER_ERROR, ErrorResponse.INVALID_SIGNING_KEY_TYPE);
     }
 
     private SignedJWT transcodeSignatureIfDerFormat(SignedJWT verifiableCredential)

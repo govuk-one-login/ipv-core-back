@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -74,7 +73,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
@@ -92,7 +90,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT_CRI,
                         PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.RSA,
                         VALID_RSA_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
@@ -113,7 +110,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         vcString,
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
@@ -131,7 +127,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID);
 
@@ -149,7 +144,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         true);
@@ -169,7 +163,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
@@ -191,7 +184,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     VALID_EC_SIGNING_KEY,
                                     "not the component id",
                                     false);
@@ -213,7 +205,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     INVALID_EC_SIGNING_KEY, // intentionally not valid
                                     TEST_COMPONENT_ID,
                                     false);
@@ -241,7 +232,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         verifiableCredentialsWithDerSignature.serialize(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
@@ -272,7 +262,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     verifiableCredentialsWithDerSignature.serialize(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
@@ -297,7 +286,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
@@ -318,7 +306,6 @@ class VerifiableCredentialValidatorTest {
                         PASSPORT.getId(),
                         vcString,
                         VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
-                        EncryptionAlgorithm.EC,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
@@ -348,7 +335,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT.getId(),
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
@@ -371,7 +357,6 @@ class VerifiableCredentialValidatorTest {
                                     PASSPORT_CRI,
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                    EncryptionAlgorithm.EC,
                                     "not a valid signing key",
                                     TEST_COMPONENT_ID,
                                     false);

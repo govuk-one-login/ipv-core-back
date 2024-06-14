@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -227,7 +226,6 @@ public class CiMitService {
                     null,
                     contraIndicatorsVC,
                     VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
-                    EncryptionAlgorithm.EC,
                     cimitSigningKey,
                     cimitComponentId,
                     false);

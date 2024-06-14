@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.EncryptionAlgorithm;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -206,7 +205,7 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             String.format(
-                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"signingAlgorithm\":\"RSA\"}",
+                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
             CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT.getId());
@@ -214,28 +213,10 @@ class ConfigServiceTest {
             var expectedCriConfig =
                     CriConfig.builder()
                             .signingKey(EC_PRIVATE_KEY_JWK)
-                            .signingAlgorithm(EncryptionAlgorithm.RSA.toString())
                             .componentId("https://testComponentId")
                             .build();
 
             assertEquals(expectedCriConfig, criConfig);
-        }
-
-        @Test
-        void getCriConfigSigningAlgorithmShouldDefaultToEC() {
-            environmentVariables.set("ENVIRONMENT", "test");
-
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/cri/connections/stub"))
-                    .thenReturn(
-                            String.format(
-                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
-                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
-
-            CriConfig criConfig = configService.getCriConfig("cri");
-
-            assertEquals(EncryptionAlgorithm.EC, criConfig.getSigningAlgorithm());
         }
 
         @Test

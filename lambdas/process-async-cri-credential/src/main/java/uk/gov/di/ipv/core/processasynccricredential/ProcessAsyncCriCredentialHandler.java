@@ -186,7 +186,6 @@ public class ProcessAsyncCriCredentialHandler
                         successAsyncCriResponse.getCredentialIssuer(),
                         successAsyncCriResponse.getVerifiableCredentialJWTs(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        oauthCriConfig.getSigningAlgorithm(),
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
 

@@ -118,7 +118,6 @@ class ProcessAsyncCriCredentialHandlerTest {
                         anyList(),
                         any(),
                         any(),
-                        any(),
                         any()))
                 .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
@@ -195,7 +194,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         doThrow(VerifiableCredentialException.class)
                 .when(verifiableCredentialValidator)
-                .parseAndValidate(any(), any(), anyList(), any(), any(), any(), any());
+                .parseAndValidate(any(), any(), anyList(), any(), any(), any());
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -212,7 +211,6 @@ class ProcessAsyncCriCredentialHandlerTest {
                         eq(TEST_USER_ID),
                         eq(TEST_CREDENTIAL_ISSUER_ID),
                         anyList(),
-                        any(),
                         any(),
                         any(),
                         any()))
@@ -249,7 +247,6 @@ class ProcessAsyncCriCredentialHandlerTest {
                         eq(TEST_USER_ID),
                         eq(TEST_CREDENTIAL_ISSUER_ID),
                         anyList(),
-                        any(),
                         any(),
                         any(),
                         any()))
@@ -310,7 +307,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     private void verifyVerifiableCredentialJwtValidator() throws Exception {
         verify(verifiableCredentialValidator)
-                .parseAndValidate(any(), any(), anyList(), any(), any(), any(), any());
+                .parseAndValidate(any(), any(), anyList(), any(), any(), any());
     }
 
     private void verifyAuditService() throws SqsException {

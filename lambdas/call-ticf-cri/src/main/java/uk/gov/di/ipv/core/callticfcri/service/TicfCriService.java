@@ -120,7 +120,6 @@ public class TicfCriService {
                     TICF.getId(),
                     ticfCriResponse.credentials(),
                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                    ticfCriConfig.getSigningAlgorithm(),
                     ticfCriConfig.getSigningKey(),
                     ticfCriConfig.getComponentId());
         } catch (VerifiableCredentialException | JsonProcessingException e) {
