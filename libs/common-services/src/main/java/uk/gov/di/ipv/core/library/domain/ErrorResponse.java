@@ -102,7 +102,8 @@ public enum ErrorResponse {
     MISSING_CHECK_TYPE(1085, "checkType missing from process request"),
     UNKNOWN_CHECK_TYPE(1086, "unknown checkType received"),
     MISSING_RESET_TYPE(1087, "resetType missing from process request"),
-    UNKNOWN_RESET_TYPE(1088, "unknown resetType received");
+    UNKNOWN_RESET_TYPE(1088, "unknown resetType received"),
+    ERROR_CALLING_DCMAW_ASYNC_CRI(1089, "Error calling the DCMAW Async CRI");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

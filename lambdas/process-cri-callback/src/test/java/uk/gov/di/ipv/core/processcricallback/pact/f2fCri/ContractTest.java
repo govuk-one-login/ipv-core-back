@@ -7,6 +7,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -28,8 +31,6 @@ import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -91,7 +93,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "issueCredentialsUri_returnsValidPendingVc")
     void testCallToDummyPassportIssueCredential(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockF2FCredentialIssuerConfig(mockServer);
 
@@ -111,17 +113,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(DUMMY_ACCESS_TOKEN),
-                        new CriCallbackRequest(
-                                "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
-                                credentialIssuerConfig.getClientId(),
-                                "dummySessionId",
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
-                                "dummyState",
-                                null,
-                                null,
-                                "dummyIpAddress",
-                                "dummyDeviceInformation",
-                                List.of("dummyFeatureSet")),
+                        F2F_CRI,
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -65,19 +66,51 @@ public class CriStoringService {
         VcHelper.setConfigService(configService);
     }
 
-    public void storeCriResponse(
+    public void recordCriResponse(
+            JourneyRequest journeyRequest,
+            String criId,
+            String criOAuthSessionId,
+            ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException, JsonProcessingException {
+
+        recordCriResponse(
+                criId,
+                criOAuthSessionId,
+                journeyRequest.getIpvSessionId(),
+                journeyRequest.getIpAddress(),
+                journeyRequest.getDeviceInformation(),
+                clientOAuthSessionItem);
+    }
+
+    public void recordCriResponse(
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException, JsonProcessingException {
+
+        recordCriResponse(
+                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getState(),
+                callbackRequest.getIpvSessionId(),
+                callbackRequest.getIpAddress(),
+                callbackRequest.getDeviceInformation(),
+                clientOAuthSessionItem);
+    }
+
+    private void recordCriResponse(
+            String criId,
+            String criOAuthSessionId,
+            String ipvSessionId,
+            String ipAddress,
+            String deviceInformation,
+            ClientOAuthSessionItem clientOAuthSessionItem)
             throws JsonProcessingException, SqsException {
-        var criId = callbackRequest.getCredentialIssuerId();
-        var criOAuthSessionId = callbackRequest.getState();
         var userId = clientOAuthSessionItem.getUserId();
 
         var auditEventUser =
                 new AuditEventUser(
                         userId,
-                        callbackRequest.getIpvSessionId(),
+                        ipvSessionId,
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        callbackRequest.getIpAddress());
+                        ipAddress);
 
         var vcResponseDto =
                 VerifiableCredentialResponseDto.builder()
@@ -96,7 +129,7 @@ public class CriStoringService {
                 CriResourceRetrievedType.PENDING.getType(),
                 criId,
                 auditEventUser,
-                callbackRequest.getDeviceInformation());
+                deviceInformation);
     }
 
     public void storeVcs(

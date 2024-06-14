@@ -26,6 +26,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
@@ -39,8 +41,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -129,7 +129,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsBavIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstBavCri_retrievesAValidVc(MockServer mockServer)
-            throws URISyntaxException, CriApiException {
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -146,9 +146,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken(VALID_ACCESS_TOKEN),
-                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken(VALID_ACCESS_TOKEN), BAV_CRI, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -248,7 +246,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsBavResponseWithCi")
     void fetchVerifiableCredential_whenCalledAgainstBavCri_retrievesAVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -266,7 +265,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(VALID_ACCESS_TOKEN_FOR_CI),
-                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
+                        BAV_CRI,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -363,7 +362,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
+                                        BAV_CRI,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -441,8 +440,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest(VALID_AUTH_CODE, credentialIssuerConfig),
-                        CRI_OAUTH_SESSION_ITEM);
+                        getCallbackRequest(VALID_AUTH_CODE), CRI_OAUTH_SESSION_ITEM);
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -510,8 +508,7 @@ class ContractTest {
                         CriApiException.class,
                         () ->
                                 underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyInvalidAuthCode"),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -520,11 +517,10 @@ class ContractTest {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                BAV_CRI,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav",
                 "dummyState",
