@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -55,7 +56,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +112,7 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
-    public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
+    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
     private final ConfigService configService;
@@ -279,7 +279,9 @@ public class CheckExistingIdentityHandler
                             contraIndicators)
                     : buildNoMatchResponse(contraIndicators);
 
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+        } catch (HttpResponseExceptionWithErrorBody
+                | VerifiableCredentialException
+                | EvcsServiceException e) {
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -343,7 +345,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException, VerifiableCredentialException {
+                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -359,6 +361,7 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
+                            clientOAuthSessionItem,
                             vcs,
                             auditEventUser,
                             deviceInformation));
@@ -422,19 +425,21 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, VerifiableCredentialException {
+            throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
+        String userId = auditEventUser.getUserId();
+        String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && !hasCurrentExpiredFraudVc(vcs)) {
+                && !hasCurrentFraudVc(vcs)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
-            var credentials = allVcsExceptFraud(vcs);
             sessionCredentialsService.persistCredentials(
-                    credentials, auditEventUser.getSessionId(), false);
-            migrateCredentialsToEVCS(auditEventUser.getUserId(), credentials);
+                    allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
+            migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -458,20 +463,19 @@ public class CheckExistingIdentityHandler
                     : JOURNEY_OPERATIONAL_PROFILE_REUSE;
         }
 
-        var credentials = VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType());
         sessionCredentialsService.persistCredentials(
-                credentials, auditEventUser.getSessionId(), false);
-        migrateCredentialsToEVCS(auditEventUser.getUserId(), credentials);
-
+                VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
+                auditEventUser.getSessionId(),
+                false);
+        migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
         return JOURNEY_REUSE;
     }
 
-    private void migrateCredentialsToEVCS(String userId, List<VerifiableCredential> credentials)
-            throws VerifiableCredentialException {
+    private void migrateCredentialsToEVCS(
+            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            throws EvcsServiceException, VerifiableCredentialException {
         if (configService.enabled(EVCS_WRITE_ENABLED)) {
-            evcsMigrationService.migrateExistingIdentity(userId, credentials);
-            credentials.forEach(credential -> credential.setMigrated(Instant.now()));
-            verifiableCredentialService.updateIdentity(credentials);
+            evcsMigrationService.migrateExistingIdentity(userId, credentials, evcsAccessToken);
         }
     }
 
@@ -479,7 +483,7 @@ public class CheckExistingIdentityHandler
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
     }
 
-    private boolean hasCurrentExpiredFraudVc(List<VerifiableCredential> vcs) {
+    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
         var fraudVCs =
                 VcHelper.filterVCBasedOnEvidenceType(
                         vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);

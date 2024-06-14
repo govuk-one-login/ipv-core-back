@@ -55,7 +55,7 @@ public class EvcsService {
     }
 
     @Tracing
-    public void storePendingVc(VerifiableCredential credential) {
+    public void storePendingVc(VerifiableCredential credential) throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 credential.getUserId(),
                 List.of(
@@ -123,9 +123,10 @@ public class EvcsService {
                                     existingPendingReturnEvcsUserVcsToUpdate.stream())
                             .toList();
 
-            evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
+            if (evcsUserVCsToUpdate.size() > 0)
+                evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
         }
-        evcsClient.storeUserVCs(userId, userVCsForEvcs);
+        if (userVCsForEvcs.size() > 0) evcsClient.storeUserVCs(userId, userVCsForEvcs);
     }
 
     private static String getVcSignature(EvcsGetUserVCDto vc) {

@@ -14,7 +14,8 @@ dependencies {
 			libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.powertoolsParameters,
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:verifiable-credentials")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
