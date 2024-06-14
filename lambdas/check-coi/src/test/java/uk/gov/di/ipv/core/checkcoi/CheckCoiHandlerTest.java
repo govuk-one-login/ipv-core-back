@@ -374,7 +374,7 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(GIVEN_NAMES_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
-                var restrictedData = auditEventsCaptured.get(1).getRestricted();
+
                 var restrictedAuditData =
                         getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
                 assertTrue(restrictedAuditData.has("newName"));

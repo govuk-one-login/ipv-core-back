@@ -218,8 +218,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             List<VerifiableCredential> oldVcs,
             List<VerifiableCredential> sessionsVcs,
             String deviceInformation)
-            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException,
-                    VerifiableCredentialException {
+            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
 
         var restrictedData =
                 auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END
