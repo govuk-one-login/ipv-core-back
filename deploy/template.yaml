@@ -2970,6 +2970,8 @@ Resources:
             QueueName: !ImportValue AuditEventQueueName
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBReadPolicy:

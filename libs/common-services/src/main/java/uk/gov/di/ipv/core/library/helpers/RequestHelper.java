@@ -8,8 +8,12 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
+import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +24,8 @@ import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class RequestHelper {
@@ -165,6 +171,26 @@ public class RequestHelper {
         } catch (IllegalArgumentException e) {
             throw new HttpResponseExceptionWithErrorBody(
                     SC_BAD_REQUEST, ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER);
+        }
+    }
+
+    public static CoiCheckType getCoiCheckType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        String checkType = extractValueFromLambdaInput(request, "checkType", MISSING_CHECK_TYPE);
+        try {
+            return CoiCheckType.valueOf(checkType);
+        } catch (IllegalArgumentException e) {
+            throw new UnknownCoiCheckTypeException(checkType);
+        }
+    }
+
+    public static SessionCredentialsResetType getSessionCredentialsResetType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownResetTypeException {
+        String resetType = extractValueFromLambdaInput(request, "resetType", MISSING_RESET_TYPE);
+        try {
+            return SessionCredentialsResetType.valueOf(resetType);
+        } catch (IllegalArgumentException e) {
+            throw new UnknownResetTypeException(resetType);
         }
     }
 

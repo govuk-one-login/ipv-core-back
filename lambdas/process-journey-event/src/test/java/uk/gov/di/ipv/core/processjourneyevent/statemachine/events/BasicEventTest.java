@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.LinkedHashMap;
@@ -24,11 +24,11 @@ class BasicEventTest {
 
     @Test
     void resolveShouldReturnAState() throws Exception {
-        BasicState targetState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         BasicEvent basicEvent = new BasicEvent();
-        basicEvent.setTargetStateObj(targetState);
+        basicEvent.setTargetStateObj(expectedResult.state());
 
-        assertEquals(targetState, basicEvent.resolve(journeyContext));
+        assertEquals(expectedResult, basicEvent.resolve(journeyContext));
     }
 
     @Test
@@ -47,9 +47,9 @@ class BasicEventTest {
         checkIfDisabled.put("aDisabledCri", alternativeEvent);
         basicEventWithCheckIfDisabledConfigured.setCheckIfDisabled(checkIfDisabled);
 
-        State resolve = basicEventWithCheckIfDisabledConfigured.resolve(journeyContext);
+        var result = basicEventWithCheckIfDisabledConfigured.resolve(journeyContext);
 
-        assertEquals(alternativeTargetState, resolve);
+        assertEquals(alternativeTargetState, result.state());
     }
 
     @Test
@@ -66,9 +66,9 @@ class BasicEventTest {
                 CoreFeatureFlag.UNUSED_PLACEHOLDER.getName(), eventWithCheckFeatureFlagConfigured);
         defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
 
-        State resolve = defaultEvent.resolve(journeyContext);
+        var result = defaultEvent.resolve(journeyContext);
 
-        assertEquals(featureFlagTargetState, resolve);
+        assertEquals(featureFlagTargetState, result.state());
     }
 
     @Test

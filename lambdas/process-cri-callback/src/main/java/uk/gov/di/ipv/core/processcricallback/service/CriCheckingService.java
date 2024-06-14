@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -219,16 +220,20 @@ public class CriCheckingService {
             String ipvSessionId)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException, VerifiableCredentialException {
-        var cis =
-                ciMitService.getContraIndicators(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        callbackRequest.getIpAddress());
 
-        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-            return ciMitUtilityService
-                    .getCiMitigationJourneyResponse(cis)
-                    .orElse(JOURNEY_FAIL_WITH_CI);
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
+        if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+            var cis =
+                    ciMitService.getContraIndicators(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            callbackRequest.getIpAddress());
+
+            if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
+                return ciMitUtilityService
+                        .getCiMitigationJourneyResponse(cis)
+                        .orElse(JOURNEY_FAIL_WITH_CI);
+            }
         }
 
         if (!userIdentityService.areVcsCorrelated(

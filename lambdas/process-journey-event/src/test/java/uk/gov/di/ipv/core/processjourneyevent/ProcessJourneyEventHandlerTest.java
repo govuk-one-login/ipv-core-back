@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
@@ -359,6 +362,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
         ipvSessionItem.setUserState(TIMEOUT_UNRECOVERABLE_STATE);
+        ipvSessionItem.pushState(SESSION_TIMEOUT, TIMEOUT_UNRECOVERABLE_STATE);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -465,32 +469,6 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldSendAuditEventForMitigationStart() throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("testWithMitigationStart")
-                        .ipvSessionId(TEST_IP)
-                        .build();
-        mockIpvSessionItemAndTimeout("CRI_STATE");
-
-        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
-                .handleRequest(input, mockContext);
-
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
-
-        assertEquals(AuditEventTypes.IPV_MITIGATION_START, capturedAuditEvent.getEventName());
-        assertEquals("core", capturedAuditEvent.getComponentId());
-        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
-        assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
-        assertEquals(
-                "a-mitigation-type",
-                ((AuditExtensionMitigationType) capturedAuditEvent.getExtensions())
-                        .mitigationType());
-    }
-
-    @Test
     void shouldSendAuditEventWhenThereIsAuditEventInJourneyMap() throws Exception {
         var input =
                 JourneyRequest.builder()
@@ -514,17 +492,130 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenWrongAuditEvenTypeProvidedInJourneyMap() throws Exception {
+    void shouldSendMultipleAuditEventsWithContext() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("testWithWrongAuditEvent")
+                        .journey("testWithAuditEventContext")
                         .ipvSessionId(TEST_IP)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
-        Map<String, Object> output =
-                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+        getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                .handleRequest(input, mockContext);
+
+        verify(mockAuditService, times(4)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvents = auditEventCaptor.getAllValues();
+        assertEquals(4, capturedAuditEvents.size());
+
+        var firstEvent = capturedAuditEvents.get(0);
+        assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
+        assertEquals("core", firstEvent.getComponentId());
+        assertEquals("testuserid", firstEvent.getUser().getUserId());
+        assertEquals("testjourneyid", firstEvent.getUser().getGovukSigninJourneyId());
+
+        var secondEvent = capturedAuditEvents.get(1);
+        assertEquals(AuditEventTypes.IPV_MITIGATION_START, secondEvent.getEventName());
+        assertEquals("core", secondEvent.getComponentId());
+        assertEquals("testuserid", secondEvent.getUser().getUserId());
+        assertEquals("testjourneyid", secondEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(
+                new AuditExtensionMitigationType("test-mitigation"), secondEvent.getExtensions());
+
+        var thirdEvent = capturedAuditEvents.get(2);
+        assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_SELECTED, thirdEvent.getEventName());
+        assertEquals("core", thirdEvent.getComponentId());
+        assertEquals("testuserid", thirdEvent.getUser().getUserId());
+        assertEquals("testjourneyid", thirdEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(
+                new AuditExtensionUserDetailsUpdateSelected(List.of("address"), true),
+                thirdEvent.getExtensions());
+
+        var fourthEvent = capturedAuditEvents.get(3);
+        assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_END, fourthEvent.getEventName());
+        assertEquals("core", fourthEvent.getComponentId());
+        assertEquals("testuserid", fourthEvent.getUser().getUserId());
+        assertEquals("testjourneyid", fourthEvent.getUser().getGovukSigninJourneyId());
+        assertEquals(new AuditExtensionSuccessful(false), fourthEvent.getExtensions());
+    }
+
+    @Test
+    void shouldUpdateStateStackWithJourneyAndStateWhenStartingNewSubjourney() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("testJourneyStep")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("CRI_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST);
+
+        processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "TECHNICAL_ERROR/TECHNICAL_ERROR_PAGE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(2));
+    }
+
+    @Test
+    void shouldUpdateStateStackWithPreviousStateJourneyTypeWhenTransitioningWithinSubjourney()
+            throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST);
+
+        processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(
+                "INITIAL_JOURNEY_SELECTION/JOURNEY_STATE",
+                mockIpvSessionService.getIpvSession("anyString").getStateStack().get(1));
+    }
+
+    @Test
+    void shouldReturn500IfNoExistingStateInStack() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        mockIpvSessionService.getIpvSession("anyString").setStateStack(List.of());
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST);
+
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
@@ -536,6 +627,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(userState);
+        ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, userState);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setJourneyType(INITIAL_JOURNEY_SELECTION);
 

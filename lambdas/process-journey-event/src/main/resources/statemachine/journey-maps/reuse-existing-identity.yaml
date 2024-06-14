@@ -71,6 +71,8 @@ states:
         targetState: RETURN_TO_RP
       update-details:
         targetState: UPDATE_DETAILS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
 
   IDENTITY_REUSE_PAGE_TEST:
     response:
@@ -97,6 +99,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
@@ -122,24 +126,121 @@ states:
       address-only:
         targetJourney: UPDATE_ADDRESS
         targetState: START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address
+          updateSupported: true
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START
+        targetState: GIVEN_ONLY_AFTER_REUSE_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: given-names
+          updateSupported: true
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITHOUT_ADDRESS_AFTER_REUSE_START
+        targetState: FAMILY_ONLY_AFTER_REUSE_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name
+          updateSupported: true
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START
+        targetState: GIVEN_WITH_ADDRESS_AFTER_REUSE_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: given-names,address
+          updateSupported: true
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: UPDATE_NAME_WITH_ADDRESS_AFTER_REUSE_START
-      names-dob:
+        targetState: FAMILY_WITH_ADDRESS_AFTER_REUSE_START
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name,address
+          updateSupported: true
+      dob:
         targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob
+          updateSupported: false
+      dob-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,given-names
+          updateSupported: false
+      dob-family:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,family-name
+          updateSupported: false
+      address-dob:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob
+          updateSupported: false
+      dob-family-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: dob,family-name,given-names
+          updateSupported: false
+      address-dob-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,given-names
+          updateSupported: false
+      address-dob-family:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,family-name
+          updateSupported: false
+      address-dob-family-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,dob,family-name,given-names
+          updateSupported: false
+      family-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: family-name,given-names
+          updateSupported: false
+      address-family-given:
+        targetState: UPDATE_NAME_DOB_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_SELECTED
+        auditContext:
+          updateFields: address,family-name,given-names
+          updateSupported: false
       cancel:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
         targetState: IDENTITY_REUSE_PAGE_COI
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   DETAILS_DELETED_PAGE:
     response:

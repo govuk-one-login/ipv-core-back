@@ -33,8 +33,6 @@ public class CriStepResponse implements StepResponse {
     private String criId;
     private String context;
     private EvidenceRequest evidenceRequest;
-    private String mitigationStart;
-    private String auditEvent;
 
     public Map<String, Object> value() {
         try {

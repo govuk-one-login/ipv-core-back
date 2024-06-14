@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -26,11 +27,13 @@ public class NestedJourneyInvokeState implements State {
     private Map<String, Event> exitEvents;
     private String name;
 
-    public State transition(String eventName, String startState, JourneyContext journeyContext)
+    @Override
+    public TransitionResult transition(
+            String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException, UnknownStateException {
         Queue<String> stateNameParts = getStateNameParts(startState);
 
-        State nextState;
+        TransitionResult result;
         if (stateNameParts.size() == 1) { // We've not descended into the nested-states yet
             Event event = nestedJourneyDefinition.getEntryEvents().get(eventName);
             if (event == null) {
@@ -39,7 +42,7 @@ public class NestedJourneyInvokeState implements State {
                                 "Unknown entry event '%s' for '%s' state nested journey definition",
                                 eventName, name));
             }
-            nextState = event.resolve(journeyContext);
+            result = event.resolve(journeyContext);
         } else {
             stateNameParts.remove();
             State currentNestedState =
@@ -50,17 +53,17 @@ public class NestedJourneyInvokeState implements State {
                                 "State '%s' not found in nested journey definition for `%s`",
                                 stateNameParts.peek(), name));
             }
-            nextState =
+            result =
                     currentNestedState.transition(
                             eventName, String.join(DELIMITER, stateNameParts), journeyContext);
         }
 
-        if (nextState instanceof NestedJourneyInvokeState) {
-            return nextState.transition(
-                    eventName, String.join(DELIMITER, stateNameParts), journeyContext);
+        if (result.state() instanceof NestedJourneyInvokeState) {
+            return result.state()
+                    .transition(eventName, String.join(DELIMITER, stateNameParts), journeyContext);
         }
 
-        return nextState;
+        return result;
     }
 
     private Queue<String> getStateNameParts(String stateName) {

@@ -49,6 +49,8 @@ states:
     response:
       type: process
       lambda: reset-session-identity
+      lambdaInput:
+        resetType: ADDRESS_ONLY_CHANGE
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
@@ -88,6 +90,10 @@ states:
     events:
       identity-stored:
         targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: true
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

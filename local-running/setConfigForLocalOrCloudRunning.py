@@ -29,6 +29,7 @@ def get_local_running_params(environment, client_id_suffix):
         Param(f"/{environment}/core/credentialIssuers/nino/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/hmrcKbv/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/bav/activeConnection", "local"),
+        Param(f"/{environment}/core/credentialIssuers/dwpKbv/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/ticf/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/dcmawAsync/activeConnection", "stub"),
 
@@ -174,6 +175,19 @@ def get_local_running_params(environment, client_id_suffix):
             "requiresApiKey":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
+
+        Param(f'/{environment}/core/credentialIssuers/dwpKbv/connections/local', f'''{{
+            "authorizeUrl":"http://localhost:3015/authorize",
+            "tokenUrl":"http://host.docker.internal:3015/token",
+            "credentialUrl":"http://host.docker.internal:3015/credentials/issue",
+            "clientId":"ipv-core-dev{client_id_suffix}",
+            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
+            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "componentId":"https://dwpKbv-cri.stubs.account.gov.uk",
+            "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/dwpKbv",
+            "requiresApiKey":"false",
+            "requiresAdditionalEvidence":"false"
+        }}'''),
     ]
 
 
@@ -193,6 +207,7 @@ def get_cloud_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/nino/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/hmrcKbv/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/bav/activeConnection", "stub"),
+        Param(f"/{environment}/core/credentialIssuers/dwpKbv/activeConnection", "stub"),
     ]
 
 

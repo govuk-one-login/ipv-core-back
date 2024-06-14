@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -22,9 +23,9 @@ class NestedJourneyInvokeStateTest {
 
     @Test
     void transitionShouldUseEntryEventsWhenStartStateHasOnePart() throws Exception {
-        BasicState expectedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         BasicEvent basicEvent = mock(BasicEvent.class);
-        when(basicEvent.resolve(any(JourneyContext.class))).thenReturn(expectedEndState);
+        when(basicEvent.resolve(any(JourneyContext.class))).thenReturn(expectedResult);
 
         NestedJourneyDefinition nestedJourneyDefinition = new NestedJourneyDefinition();
         nestedJourneyDefinition.setEntryEvents(Map.of("next", basicEvent));
@@ -32,10 +33,10 @@ class NestedJourneyInvokeStateTest {
         NestedJourneyInvokeState nestedJourneyInvokeState = new NestedJourneyInvokeState();
         nestedJourneyInvokeState.setNestedJourneyDefinition(nestedJourneyDefinition);
 
-        State transitionedToState =
+        var actualResult =
                 nestedJourneyInvokeState.transition("next", "INVOKE_STATE", JOURNEY_CONTEXT);
 
-        assertEquals(expectedEndState, transitionedToState);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
@@ -45,19 +46,19 @@ class NestedJourneyInvokeStateTest {
         BasicState currentNestedState = mock(BasicState.class);
         nestedJourneyDefinition.setNestedJourneyStates(Map.of("NESTED_STATE", currentNestedState));
 
-        BasicState expectedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         when(currentNestedState.transition(
                         eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
-                .thenReturn(expectedEndState);
+                .thenReturn(expectedResult);
 
         NestedJourneyInvokeState nestedJourneyInvokeState = new NestedJourneyInvokeState();
         nestedJourneyInvokeState.setNestedJourneyDefinition(nestedJourneyDefinition);
 
-        State transitionedToState =
+        var actualResult =
                 nestedJourneyInvokeState.transition(
                         "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
 
-        assertEquals(expectedEndState, transitionedToState);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
@@ -71,19 +72,19 @@ class NestedJourneyInvokeStateTest {
 
         NestedJourneyInvokeState nestedNestedJourneyInvokeState =
                 mock(NestedJourneyInvokeState.class);
-        BasicState expectedEndState = new BasicState();
+        var expectedResult = new TransitionResult(new BasicState());
         when(nestedNestedJourneyInvokeState.transition(
                         eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
-                .thenReturn(expectedEndState);
+                .thenReturn(expectedResult);
         when(currentNestedState.transition(
                         eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
-                .thenReturn(nestedNestedJourneyInvokeState);
+                .thenReturn(new TransitionResult(nestedNestedJourneyInvokeState));
 
-        State transitionedToState =
+        var actualResult =
                 nestedJourneyInvokeState.transition(
                         "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
 
-        assertEquals(expectedEndState, transitionedToState);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test

@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,7 +24,7 @@ class BasicStateTest {
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
         BasicState targetState = new BasicState();
-        PageStepResponse stepResponse = new PageStepResponse("stepId", "context", null, null);
+        PageStepResponse stepResponse = new PageStepResponse("stepId", "context");
         targetState.setResponse(stepResponse);
 
         BasicState currentState = new BasicState();
@@ -33,11 +32,9 @@ class BasicStateTest {
         currentToTargetEvent.setTargetStateObj(targetState);
         currentState.setEvents(Map.of("next", currentToTargetEvent));
 
-        BasicState transitionedState =
-                (BasicState) currentState.transition("next", "startState", journeyContext);
+        var result = currentState.transition("next", "startState", journeyContext);
 
-        assertEquals(targetState, transitionedState);
-        assertEquals(stepResponse, transitionedState.getResponse());
+        assertEquals(targetState, result.state());
     }
 
     @Test
@@ -52,17 +49,17 @@ class BasicStateTest {
         BasicState currentState = new BasicState();
         currentState.setParentObj(parentState);
 
-        State transitionedState =
-                currentState.transition("parent-event", "startState", journeyContext);
+        var result = currentState.transition("parent-event", "startState", journeyContext);
 
-        assertEquals(parentEventTargetState, transitionedState);
+        assertEquals(parentEventTargetState, result.state());
     }
 
     @Test
     void transitionShouldReturnThisIfAttemptRecoveryEventReceived() throws Exception {
-        State state = new BasicState();
+        var state = new BasicState();
 
-        assertSame(state, state.transition("attempt-recovery", "startState", journeyContext));
+        assertEquals(
+                state, state.transition("attempt-recovery", "startState", journeyContext).state());
     }
 
     @Test
