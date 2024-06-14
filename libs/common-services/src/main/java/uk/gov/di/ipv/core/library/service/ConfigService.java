@@ -379,10 +379,7 @@ public class ConfigService {
         try {
             var parameters = ssmProvider.getMultiple(resolvePath(pathTemplate, criId));
             for (var parameter : parameters.values()) {
-                var criConfig =
-                        OBJECT_MAPPER
-                                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                .readValue(parameter, CriConfig.class);
+                var criConfig = OBJECT_MAPPER.readValue(parameter, CriConfig.class);
 
                 result.add(criConfig.getComponentId());
             }

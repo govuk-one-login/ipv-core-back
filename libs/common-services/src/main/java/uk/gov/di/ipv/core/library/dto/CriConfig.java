@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.jose.jwk.ECKey;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -14,6 +15,7 @@ import java.text.ParseException;
 @SuperBuilder
 @EqualsAndHashCode
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CriConfig {
     private String componentId;
     private String signingKey;
