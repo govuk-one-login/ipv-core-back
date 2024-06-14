@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.checkcoi;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -45,6 +47,8 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -71,6 +75,7 @@ class CheckCoiHandlerTest {
     private static final String IPV_SESSION_ID = "ipv-session-id";
     private static final String CLIENT_SESSION_ID = "client-session-id";
     private static final String USER_ID = "user-id";
+    private static final String DEVICE_INFORMATION = "dummy-device-information";
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -102,10 +107,6 @@ class CheckCoiHandlerTest {
 
     @Nested
     class SuccessAndFailChecks {
-        private static final NameParts mockNameParts =
-                new NameParts("Kenneth Decerqueira", "full-name");
-        private static final BirthDate mockBirthDate = new BirthDate("1965-07-08");
-
         @BeforeEach
         void setup() throws Exception {
             when(mockUserIdentityService.findIdentityClaim(any()))
@@ -113,6 +114,8 @@ class CheckCoiHandlerTest {
         }
 
         private Optional<IdentityClaim> getMockIdentityClaim() {
+            var mockNameParts = new NameParts("Kenneth Decerqueira", "full-name");
+            var mockBirthDate = new BirthDate("1965-07-08");
             return Optional.of(
                     new IdentityClaim(
                             List.of(new Name(List.of(mockNameParts))), List.of(mockBirthDate)));
@@ -153,13 +156,14 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(GIVEN_NAMES_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
 
             @Test
@@ -194,19 +198,17 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
 
             @Test
-            void shouldReturnPassedForSuccessfulFullNameAndDobCheck()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                            SqsException {
+            void shouldReturnPassedForSuccessfulFullNameAndDobCheck() throws Exception {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
@@ -237,13 +239,14 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
 
             @Test
@@ -282,13 +285,57 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
+            }
+
+            @Test
+            void shouldSendOnlyDeviceInformationInRestrictedDataIfNoIdentityClaimsFound()
+                    throws Exception {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(Optional.empty());
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
                 assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
+
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertFalse(restrictedAuditData.has("newName"));
+                assertFalse(restrictedAuditData.has("oldName"));
+                assertFalse(restrictedAuditData.has("newBirthDate"));
+                assertFalse(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
         }
 
@@ -327,13 +374,14 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(GIVEN_NAMES_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+                var restrictedData = auditEventsCaptured.get(1).getRestricted();
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
 
             @Test
@@ -348,6 +396,7 @@ class CheckCoiHandlerTest {
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
                                 .lambdaInput(Map.of("checkType", FAMILY_NAME_AND_DOB.name()))
+                                .deviceInformation(DEVICE_INFORMATION)
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -368,13 +417,6 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FAMILY_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
             }
 
             @Test
@@ -411,14 +453,20 @@ class CheckCoiHandlerTest {
                 assertEquals(
                         new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
-                assertEquals(
-                        new AuditRestrictedCheckCoi(
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(new Name(List.of(mockNameParts))),
-                                List.of(mockBirthDate),
-                                List.of(mockBirthDate)),
-                        auditEventsCaptured.get(1).getRestricted());
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
             }
+        }
+
+        private JsonNode getRestrictedAuditDataNodeFromEvent(AuditEvent auditEvent)
+                throws Exception {
+            var coiCheckEndAuditEvent = getJsonNodeForAuditEvent(auditEvent);
+            return coiCheckEndAuditEvent.get("restricted");
         }
     }
 
@@ -691,25 +739,12 @@ class CheckCoiHandlerTest {
             assertEquals(FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(), responseMap.get("message"));
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         }
+    }
 
-        @Test
-        void shouldReturnErrorIfFindIdentityClaimReturnsEmptyIdentityClaim() throws Exception {
-            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenReturn(true);
-            when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(Optional.empty());
-
-            var request =
-                    ProcessRequest.processRequestBuilder()
-                            .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
-                            .build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(), responseMap.get("message"));
-            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        }
+    private JsonNode getJsonNodeForAuditEvent(AuditEvent object) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(object);
+        JsonParser parser = mapper.createParser(json);
+        return mapper.readTree(parser);
     }
 }
