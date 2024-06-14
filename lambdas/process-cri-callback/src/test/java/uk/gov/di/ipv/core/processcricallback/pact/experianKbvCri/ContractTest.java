@@ -25,6 +25,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
@@ -38,8 +40,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuil
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -408,8 +408,7 @@ class ContractTest {
         // Act
         BearerAccessToken accessToken =
                 underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
-                        getCriOAuthSessionItem());
+                        getCallbackRequest("dummyAuthCode"), getCriOAuthSessionItem());
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
         assertThat(accessToken.getValue(), notNullValue());
@@ -482,8 +481,7 @@ class ContractTest {
                         CriApiException.class,
                         () ->
                                 underTest.fetchAccessToken(
-                                        getCallbackRequest(
-                                                "dummyInvalidAuthCode", credentialIssuerConfig),
+                                        getCallbackRequest("dummyInvalidAuthCode"),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -533,7 +531,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredential")
     void fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVc(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -551,7 +550,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_KBV.getId(),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -672,7 +671,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithFailedAnswer")
     void
             fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVcWithFailedAnswer(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -690,7 +690,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_KBV.getId(),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -803,7 +803,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        EXPERIAN_KBV.getId(),
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -856,7 +856,8 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "validRequestReturnsIssuedCredentialWithCi")
     void fetchVerifiableCredential_whenCalledAgainstExperianKbvCri_retrievesAValidVcWithACi(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -874,7 +875,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_KBV.getId(),
                         getCriOAuthSessionItem());
 
         // Assert
@@ -1003,11 +1004,10 @@ class ContractTest {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
+    private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                credentialIssuerConfig.getClientId(),
+                EXPERIAN_KBV.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=kbv",
                 "dummyState",

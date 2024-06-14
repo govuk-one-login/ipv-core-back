@@ -15,6 +15,7 @@ public enum Cri {
     EXPERIAN_KBV("kbv"),
     ADDRESS("address", false, true),
     DCMAW("dcmaw"),
+    DCMAW_ASYNC("dcmawAsync"),
     CLAIMED_IDENTITY("claimedIdentity", false, true),
     F2F("f2f"),
     NINO("nino"),

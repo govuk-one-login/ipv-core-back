@@ -19,10 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
-import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
@@ -32,8 +33,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuil
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,7 +42,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -103,7 +101,8 @@ class CredentialTests {
     @PactTestFor(pactMethod = "validRequestReturnsExperianFraudCheckIssuedCredential")
     void
             fetchVerifiableCredential_whenCalledAgainstFraudCheckCri_retrievesAValidExperianFraudCheckVc(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -121,7 +120,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_FRAUD.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -220,7 +219,8 @@ class CredentialTests {
             pactMethod = "validRequestReturnsExperianFraudCheckIssuedCredentialWithoutPepCheck")
     void
             fetchVerifiableCredential_whenCalledAgainstFraudCheckCri_retrievesAValidExperianFraudCheckVc_withoutPepCheck(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -238,7 +238,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_FRAUD.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -334,7 +334,8 @@ class CredentialTests {
     @PactTestFor(pactMethod = "validRequestReturnsExperianFraudCheckResponseWithCi")
     void
             fetchVerifiableCredential_whenCalledAgainstFraudCheckCri_retrievesAExperianFraudCheckVcWithACi(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -352,7 +353,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                        EXPERIAN_FRAUD.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -459,7 +460,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        getCallbackRequest("dummyAuthCode", credentialIssuerConfig),
+                                        EXPERIAN_FRAUD.getId(),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -467,22 +468,6 @@ class CredentialTests {
                 exception.getErrorResponse(),
                 is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
         assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
-    }
-
-    @NotNull
-    private static CriCallbackRequest getCallbackRequest(
-            String authCode, OauthCriConfig credentialIssuerConfig) {
-        return new CriCallbackRequest(
-                authCode,
-                credentialIssuerConfig.getClientId(),
-                "dummySessionId",
-                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=fraud",
-                "dummyState",
-                null,
-                null,
-                "dummyIpAddress",
-                "dummyDeviceInformation",
-                List.of("dummyFeatureSe)t"));
     }
 
     @NotNull

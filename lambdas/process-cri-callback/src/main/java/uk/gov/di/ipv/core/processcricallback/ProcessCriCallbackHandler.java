@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -52,10 +54,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.CriApiException;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
-import uk.gov.di.ipv.core.processcricallback.service.CriApiService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.text.ParseException;
@@ -284,7 +284,7 @@ public class ProcessCriCallbackHandler
         var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
         var vcResponse =
                 criApiService.fetchVerifiableCredential(
-                        accessToken, callbackRequest, criOAuthSessionItem);
+                        accessToken, callbackRequest.getCredentialIssuerId(), criOAuthSessionItem);
         var vcs =
                 validateAndStoreResponse(
                         callbackRequest,
@@ -308,7 +308,7 @@ public class ProcessCriCallbackHandler
                     CiPostMitigationsException, UnrecognisedVotException, CredentialParseException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
-            criStoringService.storeCriResponse(callbackRequest, clientOAuthSessionItem);
+            criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem);
 
             return Collections.emptyList();
         } else {
