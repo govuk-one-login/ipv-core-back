@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -242,17 +243,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
         var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);
 
-        if (oldIdentityClaim.isEmpty() || sessionIdentityClaim.isEmpty()) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to get identity claim."));
-            return new AuditRestrictedCheckCoi(
-                    null, null, null, null, new DeviceInformation(deviceInformation));
-        }
-
         return new AuditRestrictedCheckCoi(
-                oldIdentityClaim.get().getName(),
-                sessionIdentityClaim.get().getName(),
-                oldIdentityClaim.get().getBirthDate(),
-                sessionIdentityClaim.get().getBirthDate(),
+                oldIdentityClaim.map(IdentityClaim::getName).orElse(null),
+                sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
+                oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
+                sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 new DeviceInformation(deviceInformation));
     }
 }
