@@ -42,18 +42,19 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonD
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
-    public static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
+    private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
             List.of(vcDrivingPermit(), VC_ADDRESS, M1A_EXPERIAN_FRAUD_VC);
-    public static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =
+    private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =
             List.of(
                     vcDrivingPermit(),
                     VC_ADDRESS,
                     M1A_EXPERIAN_FRAUD_VC,
                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
     private static final String TEST_USER_ID = "a-user-id";
-    public static final List<EvcsVCState> VC_STATES_TO_QUERY_FOR = List.of(CURRENT, PENDING_RETURN);
+    private static final List<EvcsVCState> VC_STATES_TO_QUERY_FOR =
+            List.of(CURRENT, PENDING_RETURN);
 
-    public static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
+    private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
             new EvcsGetUserVCsDto(
                     List.of(

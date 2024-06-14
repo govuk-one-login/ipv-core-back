@@ -25,6 +25,7 @@ public class EvcsService {
     private final EvcsClient evcsClient;
     private final ConfigService configService;
 
+    @ExcludeFromGeneratedCoverageReport
     public EvcsService(EvcsClient evcsClient, ConfigService configService) {
         this.evcsClient = evcsClient;
         this.configService = configService;
