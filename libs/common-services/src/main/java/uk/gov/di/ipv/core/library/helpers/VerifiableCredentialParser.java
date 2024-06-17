@@ -17,6 +17,9 @@ import uk.gov.di.model.VerifiableCredentialType;
 import java.text.ParseException;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
+
 public class VerifiableCredentialParser {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -28,9 +31,9 @@ public class VerifiableCredentialParser {
     public static VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
             throws CredentialParseException {
         try {
-            var vcClaim = claimsSet.getJSONObjectClaim("vc");
+            var vcClaim = claimsSet.getJSONObjectClaim(VC_CLAIM);
 
-            if (vcClaim != null && vcClaim.get("type") instanceof List<?> type) {
+            if (vcClaim != null && vcClaim.get(VC_TYPE) instanceof List<?> type) {
                 if (type.contains(VerifiableCredentialType.ADDRESS_CREDENTIAL.value())) {
                     return parseCredentialOfType(vcClaim, AddressCredential.class);
                 }
