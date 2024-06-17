@@ -43,7 +43,7 @@ import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 
 @Disabled("Queue based PACT tests should not be run in build pipelines at this time")
@@ -128,7 +128,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 criConfig.getParsedSigningKey(),
@@ -257,7 +257,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),
@@ -403,7 +403,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),
@@ -549,7 +549,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),
@@ -691,7 +691,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),
@@ -829,7 +829,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),
@@ -959,7 +959,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F_CRI,
+                                F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getParsedSigningKey(),

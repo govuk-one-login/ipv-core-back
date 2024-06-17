@@ -48,7 +48,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
@@ -260,7 +260,7 @@ public class CriApiService {
                                 "Error retrieving credential",
                                 response.getStatusMessage(),
                                 response.getStatusCode()));
-                if (DCMAW_CRI.equals(criId)
+                if (DCMAW.getId().equals(criId)
                         && response.getStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                     throw new CriApiException(
                             HTTPResponse.SC_NOT_FOUND,

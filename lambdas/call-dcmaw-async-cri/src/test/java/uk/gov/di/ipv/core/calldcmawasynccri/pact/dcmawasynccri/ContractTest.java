@@ -43,7 +43,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -216,7 +216,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_ASYNC_CRI,
+                        DCMAW_ASYNC.getId(),
                         CRI_OAUTH_SESSION_ITEM,
                         getCredentialRequestBody(SUBJECT_ID));
 
@@ -268,7 +268,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("badAccessToken"),
-                                        DCMAW_ASYNC_CRI,
+                                        DCMAW_ASYNC.getId(),
                                         CRI_OAUTH_SESSION_ITEM,
                                         getCredentialRequestBody(SUBJECT_ID)));
 

@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_NAMES_AND_DOB;
@@ -249,7 +249,7 @@ class RequestHelperTest {
                         .ipvSessionId(ipvSessionId)
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(DCMAW_CRI)
+                        .journey(DCMAW.getId())
                         .featureSet(featureSet)
                         .build();
 
@@ -269,7 +269,7 @@ class RequestHelperTest {
                 JourneyRequest.builder()
                         .ipAddress(ipAddress)
                         .clientOAuthSessionId(clientSessionId)
-                        .journey(DCMAW_CRI)
+                        .journey(DCMAW.getId())
                         .featureSet(featureSet)
                         .build();
 
@@ -359,7 +359,7 @@ class RequestHelperTest {
                         .journey(journey)
                         .build();
 
-        assertEquals(CLAIMED_IDENTITY_CRI, event.getJourneyUri().getPath());
+        assertEquals(CLAIMED_IDENTITY.getId(), event.getJourneyUri().getPath());
         assertEquals(expectedContext, RequestHelper.getJourneyParameter(event, CONTEXT));
         assertEquals(expectedScope, RequestHelper.getJourneyParameter(event, SCOPE));
     }

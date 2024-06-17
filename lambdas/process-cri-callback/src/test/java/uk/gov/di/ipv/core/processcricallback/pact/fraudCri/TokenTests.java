@@ -46,7 +46,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -206,7 +206,7 @@ class TokenTests {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                EXPERIAN_FRAUD_CRI,
+                EXPERIAN_FRAUD.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=fraud",
                 "dummyState",

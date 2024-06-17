@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 
 public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -103,11 +103,11 @@ public class SessionCredentialsService {
                         case ADDRESS_ONLY_CHANGE -> sessionCredentialItems.stream()
                                 .filter(
                                         item ->
-                                                List.of(ADDRESS_CRI, EXPERIAN_FRAUD_CRI)
+                                                List.of(ADDRESS.getId(), EXPERIAN_FRAUD.getId())
                                                         .contains(item.getCriId()))
                                 .toList();
                         case NAME_ONLY_CHANGE -> sessionCredentialItems.stream()
-                                .filter(item -> !item.getCriId().equals(ADDRESS_CRI))
+                                .filter(item -> !item.getCriId().equals(ADDRESS.getId()))
                                 .toList();
                     };
 

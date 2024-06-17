@@ -39,7 +39,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -100,7 +100,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
-        LogHelper.attachCriIdToLogs(TICF_CRI);
+        LogHelper.attachCriIdToLogs(TICF.getId());
 
         IpvSessionItem ipvSessionItem = null;
         try {
@@ -156,7 +156,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
 
         criStoringService.storeVcs(
-                TICF_CRI,
+                TICF.getId(),
                 request.getIpAddress(),
                 request.getDeviceInformation(),
                 ticfVcs,

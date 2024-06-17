@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 @ExtendWith(MockitoExtension.class)
 class CallDcmawAsyncCriHandlerTest {
@@ -85,7 +85,7 @@ class CallDcmawAsyncCriHandlerTest {
         verify(mockCriStoringService)
                 .recordCriResponse(
                         eq(input),
-                        eq(DCMAW_ASYNC_CRI),
+                        eq(DCMAW_ASYNC.getId()),
                         any(String.class),
                         eq(clientOAuthSessionItem));
 

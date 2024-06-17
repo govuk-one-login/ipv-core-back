@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
@@ -17,6 +18,8 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +27,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -31,6 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
@@ -89,6 +94,7 @@ class EvcsServiceTest {
     @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
     @Mock EvcsClient mockEvcsClient;
+    @Mock ConfigService mockConfigService;
     @InjectMocks EvcsService evcsService;
 
     @Test
@@ -227,5 +233,71 @@ class EvcsServiceTest {
         assertEquals(
                 VC_ADDRESS_TEST.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
         assertEquals(PENDING_RETURN, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
+    }
+
+    @Test
+    void testGetVerifiableCredentials()
+            throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
+        // Arrange
+        when(mockConfigService.getCriByIssuer(M1A_ADDRESS_VC.getClaimsSet().getIssuer()))
+                .thenReturn(Cri.ADDRESS);
+        when(mockConfigService.getCriByIssuer(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getClaimsSet().getIssuer()))
+                .thenReturn(Cri.DCMAW);
+
+        when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
+                .thenReturn(
+                        new EvcsGetUserVCsDto(
+                                List.of(
+                                        new EvcsGetUserVCDto(
+                                                M1A_ADDRESS_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null),
+                                        new EvcsGetUserVCDto(
+                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null))));
+
+        // Act
+        var vcs =
+                evcsService.getVerifiableCredentials(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT);
+        // Assert
+        assertEquals(
+                2,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCriId().equals(Cri.ADDRESS.getId())
+                                                || vc.getCriId().equals(Cri.DCMAW.getId()))
+                        .count()));
+    }
+
+    @Test
+    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound()
+            throws NoCriForIssuerException, EvcsServiceException {
+        // Arrange
+        when(mockConfigService.getCriByIssuer(any()))
+                .thenThrow(new NoCriForIssuerException("not found"));
+
+        when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
+                .thenReturn(
+                        new EvcsGetUserVCsDto(
+                                List.of(
+                                        new EvcsGetUserVCDto(
+                                                M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null),
+                                        new EvcsGetUserVCDto(
+                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                EvcsVCState.CURRENT,
+                                                null))));
+
+        // Act/Assert
+        assertThrows(
+                CredentialParseException.class,
+                () -> {
+                    evcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT);
+                });
     }
 }

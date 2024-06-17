@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -57,12 +58,14 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,12 +86,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -145,7 +149,6 @@ class CheckExistingIdentityHandlerTest {
     private static VerifiableCredential pcl200Vc;
     private static VerifiableCredential pcl250Vc;
     private static VerifiableCredential gpg45Vc = vcDrivingPermit();
-
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -157,6 +160,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CiMitService ciMitService;
     @Mock private CiMitUtilityService ciMitUtilityService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private EvcsService mockEvcsService;
     @Mock private SessionCredentialsService mockSessionCredentialService;
     @Mock private EvcsMigrationService mockEvcsMigrationService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
@@ -237,10 +241,39 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
+        void shouldUseEvcsServiceWhenEnabled() throws Exception {
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+            when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
+                    .thenReturn(List.of(gpg45Vc, vcHmrcMigration()));
+
+            checkExistingIdentityHandler.handleRequest(event, context);
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockEvcsService, times(1))
+                    .getVerifiableCredentials(TEST_USER_ID, EVCS_TEST_TOKEN, EvcsVCState.CURRENT);
+            verify(mockVerifiableCredentialService, never()).getVcs(TEST_USER_ID);
+        }
+
+        @Test
+        void shouldUseVcServiceWhenEvcsServiceWhenAndReturnsEmpty() throws Exception {
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+            when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
+                    .thenReturn(new ArrayList<VerifiableCredential>());
+
+            checkExistingIdentityHandler.handleRequest(event, context);
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockEvcsService, times(1))
+                    .getVerifiableCredentials(TEST_USER_ID, EVCS_TEST_TOKEN, EvcsVCState.CURRENT);
+            verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
+        }
+
+        @Test
         void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile_alsoStoreVcsInEvcs()
                 throws Exception {
             Mockito.lenient().when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             VerifiableCredential hmrcMigrationVC = vcHmrcMigration();
+
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, hmrcMigrationVC));
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -1025,6 +1058,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
@@ -1069,6 +1103,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
         when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
@@ -1225,6 +1260,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
@@ -1272,6 +1308,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1302,6 +1339,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
@@ -1350,7 +1388,7 @@ class CheckExistingIdentityHandlerTest {
     private CriResponseItem createCriResponseStoreItem() {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F_CRI);
+        criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(Instant.now());
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
@@ -1360,7 +1398,7 @@ class CheckExistingIdentityHandlerTest {
     private CriResponseItem createCriErrorResponseStoreItem(Instant dateCreated) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F_CRI);
+        criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
@@ -1373,7 +1411,7 @@ class CheckExistingIdentityHandlerTest {
                         new JWSHeader(JWSAlgorithm.ES256),
                         new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, vot.name()).build());
         jwt.sign(jwtSigner);
-        return VerifiableCredential.fromValidJwt(TEST_USER_ID, HMRC_MIGRATION_CRI, jwt);
+        return VerifiableCredential.fromValidJwt(TEST_USER_ID, HMRC_MIGRATION.getId(), jwt);
     }
 
     private static ECDSASigner createJwtSigner() throws Exception {

@@ -66,7 +66,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -280,7 +280,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -293,7 +293,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -406,7 +406,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -419,7 +419,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -529,7 +529,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -542,7 +542,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -655,7 +655,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -668,7 +668,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -782,7 +782,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -795,7 +795,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -911,7 +911,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -924,7 +924,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1037,7 +1037,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1050,7 +1050,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1156,7 +1156,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1169,7 +1169,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1275,7 +1275,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1288,7 +1288,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1396,7 +1396,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1409,7 +1409,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1512,7 +1512,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1525,7 +1525,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1631,7 +1631,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1644,7 +1644,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1754,7 +1754,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_CRI,
+                        DCMAW.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -1767,7 +1767,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DCMAW_CRI,
+                                                DCMAW.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -1863,7 +1863,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        DCMAW_CRI,
+                                        DCMAW.getId(),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -1877,7 +1877,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                DCMAW_CRI,
+                DCMAW.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw",
                 "dummyState",

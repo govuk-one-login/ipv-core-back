@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -67,7 +67,7 @@ public class VerifiableCredentialService {
 
     public void deleteHmrcInheritedIdentityIfPresent(List<VerifiableCredential> vcs) {
         for (var vc : vcs) {
-            if (HMRC_MIGRATION_CRI.equals(vc.getCriId())) {
+            if (HMRC_MIGRATION.getId().equals(vc.getCriId())) {
                 deleteVcStoreItem(vc.getUserId(), vc.getCriId());
             }
         }

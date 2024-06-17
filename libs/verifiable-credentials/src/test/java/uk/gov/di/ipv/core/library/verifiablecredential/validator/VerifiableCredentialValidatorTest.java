@@ -31,7 +31,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
@@ -76,7 +76,7 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
@@ -84,7 +84,7 @@ class VerifiableCredentialValidatorTest {
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(PASSPORT.getId(), vc.getCriId());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vc.getVcString());
     }
 
@@ -96,7 +96,7 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         vcString,
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
@@ -104,7 +104,7 @@ class VerifiableCredentialValidatorTest {
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(PASSPORT.getId(), vc.getCriId());
         assertEquals(vcString, vc.getVcString());
     }
 
@@ -113,14 +113,14 @@ class VerifiableCredentialValidatorTest {
         var vcs =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
                         TEST_COMPONENT_ID);
 
         assertEquals(TEST_USER, vcs.get(0).getUserId());
-        assertEquals(PASSPORT_CRI, vcs.get(0).getCriId());
+        assertEquals(PASSPORT.getId(), vcs.get(0).getCriId());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vcs.get(0).getVcString());
     }
 
@@ -130,14 +130,14 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         "not the user",
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         true);
 
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(PASSPORT.getId(), vc.getCriId());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vc.getVcString());
     }
 
@@ -149,7 +149,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     "not the user",
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY,
@@ -170,7 +170,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY,
@@ -191,7 +191,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY2, // intentionally not valid
@@ -218,7 +218,7 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         verifiableCredentialsWithDerSignature.serialize(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
@@ -226,7 +226,7 @@ class VerifiableCredentialValidatorTest {
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(PASSPORT.getId(), vc.getCriId());
         assertEquals(verifiableCredentialsWithDerSignature.serialize(), vc.getVcString());
     }
 
@@ -248,7 +248,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     verifiableCredentialsWithDerSignature.serialize(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY,
@@ -272,7 +272,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY,
@@ -292,7 +292,7 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        PASSPORT.getId(),
                         vcString,
                         VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
                         TEST_SIGNING_KEY,
@@ -300,7 +300,7 @@ class VerifiableCredentialValidatorTest {
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(PASSPORT.getId(), vc.getCriId());
         assertEquals(vcString, vc.getVcString());
     }
 
@@ -321,7 +321,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             underTest.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    PASSPORT.getId(),
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     TEST_SIGNING_KEY,

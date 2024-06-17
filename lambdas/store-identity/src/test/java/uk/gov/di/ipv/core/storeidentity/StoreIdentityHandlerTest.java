@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
@@ -139,7 +139,7 @@ class StoreIdentityHandlerTest {
         reset(mockSessionCredentialService);
         VCS.forEach(
                 credential -> {
-                    if (credential.getCriId().equals(EXPERIAN_FRAUD_CRI)) {
+                    if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
                         credential.setMigrated(null);
                     } else {
                         credential.setMigrated(Instant.now());
@@ -165,7 +165,7 @@ class StoreIdentityHandlerTest {
         VCS.stream()
                 .map(
                         credential -> {
-                            if (credential.getCriId().equals(EXPERIAN_FRAUD_CRI)) {
+                            if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
                                 credential.setMigrated(null);
                             } else {
                                 credential.setMigrated(Instant.now());
@@ -195,7 +195,7 @@ class StoreIdentityHandlerTest {
                 .getValue()
                 .forEach(
                         vc -> {
-                            if (vc.getCriId().equals(EXPERIAN_FRAUD_CRI)) {
+                            if (vc.getCriId().equals(EXPERIAN_FRAUD.getId())) {
                                 assertNull(vc.getMigrated());
                             } else {
                                 assertNotNull(vc.getMigrated());

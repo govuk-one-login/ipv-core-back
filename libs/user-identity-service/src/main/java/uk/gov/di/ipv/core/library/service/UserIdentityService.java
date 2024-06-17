@@ -46,13 +46,13 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.BAV_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.NINO_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -67,14 +67,14 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 public class UserIdentityService {
     public static final String NAME_PROPERTY_NAME = "name";
     public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
-    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT_CRI, DCMAW_CRI);
+    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT.getId(), DCMAW.getId());
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
-            List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
+            List.of(DCMAW.getId(), DRIVING_LICENCE.getId());
 
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION =
-            List.of(ADDRESS_CRI);
+            List.of(ADDRESS.getId());
     private static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
-            List.of(ADDRESS_CRI, BAV_CRI);
+            List.of(ADDRESS.getId(), BAV.getId());
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String ADDRESS_PROPERTY_NAME = "address";
@@ -564,7 +564,7 @@ public class UserIdentityService {
 
     private Optional<JsonNode> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
-        var addressVc = findVc(ADDRESS_CRI, vcs);
+        var addressVc = findVc(ADDRESS.getId(), vcs);
 
         if (addressVc.isEmpty()) {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
@@ -591,7 +591,7 @@ public class UserIdentityService {
             List<VerifiableCredential> vcs, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
         String criToExtractFrom =
-                profileType.equals(ProfileType.GPG45) ? NINO_CRI : HMRC_MIGRATION_CRI;
+                profileType.equals(ProfileType.GPG45) ? NINO.getId() : HMRC_MIGRATION.getId();
         var ninoVc = findVc(criToExtractFrom, vcs);
 
         if (ninoVc.isEmpty()) {

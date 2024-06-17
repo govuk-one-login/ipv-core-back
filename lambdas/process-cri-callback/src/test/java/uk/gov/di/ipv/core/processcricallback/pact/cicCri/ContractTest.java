@@ -63,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -138,7 +138,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(CIC_ACCESS_TOKEN),
-                        CLAIMED_IDENTITY_CRI,
+                        CLAIMED_IDENTITY.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -151,7 +151,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                CLAIMED_IDENTITY_CRI,
+                                                CLAIMED_IDENTITY.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -222,7 +222,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        CLAIMED_IDENTITY_CRI,
+                                        CLAIMED_IDENTITY.getId(),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -416,7 +416,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                CLAIMED_IDENTITY_CRI,
+                CLAIMED_IDENTITY.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity",
                 "dummyState",

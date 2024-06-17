@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -10,7 +11,11 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -19,15 +24,18 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 
 public class EvcsService {
     private final EvcsClient evcsClient;
+    private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
-    public EvcsService(EvcsClient evcsClient) {
+    public EvcsService(EvcsClient evcsClient, ConfigService configService) {
         this.evcsClient = evcsClient;
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsService(ConfigService configService) {
         this.evcsClient = new EvcsClient(configService);
+        this.configService = configService;
     }
 
     @Tracing
@@ -52,6 +60,30 @@ public class EvcsService {
                         .vcs();
 
         persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, true);
+    }
+
+    @Tracing
+    public List<VerifiableCredential> getVerifiableCredentials(
+            String userId, String evcsAccessToken, EvcsVCState... states)
+            throws CredentialParseException, EvcsServiceException {
+        List<EvcsGetUserVCDto> vcs =
+                evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
+
+        List<VerifiableCredential> credentials = new ArrayList<>();
+        for (var vc : vcs) {
+            try {
+                var jwt = SignedJWT.parse(vc.vc());
+                var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+                credentials.add(VerifiableCredential.fromValidJwt(userId, cri.getId(), jwt));
+            } catch (NoCriForIssuerException e) {
+                throw new CredentialParseException("Failed to find credential issuer for vc", e);
+            } catch (ParseException e) {
+                throw new CredentialParseException(
+                        "Encountered a parsing error while attempting to parse evcs credentials",
+                        e);
+            }
+        }
+        return credentials;
     }
 
     @Tracing

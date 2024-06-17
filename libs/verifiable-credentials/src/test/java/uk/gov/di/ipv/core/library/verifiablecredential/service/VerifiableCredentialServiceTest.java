@@ -41,7 +41,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -202,7 +202,7 @@ class VerifiableCredentialServiceTest {
         verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
 
         // Assert
-        verify(mockDataStore, times(0)).delete(any(), eq(HMRC_MIGRATION_CRI));
+        verify(mockDataStore, times(0)).delete(any(), eq(HMRC_MIGRATION.getId()));
     }
 
     @Test

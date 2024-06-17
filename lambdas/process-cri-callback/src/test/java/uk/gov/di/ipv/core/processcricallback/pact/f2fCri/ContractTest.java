@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -113,7 +113,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(DUMMY_ACCESS_TOKEN),
-                        F2F_CRI,
+                        F2F.getId(),
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",

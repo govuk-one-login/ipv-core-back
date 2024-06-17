@@ -34,7 +34,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -85,7 +85,7 @@ public class CallDcmawAsyncCriHandler
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
-        LogHelper.attachCriIdToLogs(DCMAW_ASYNC_CRI);
+        LogHelper.attachCriIdToLogs(DCMAW_ASYNC.getId());
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
 
         IpvSessionItem ipvSessionItem = null;
@@ -113,7 +113,7 @@ public class CallDcmawAsyncCriHandler
 
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.recordCriResponse(
-                    request, DCMAW_ASYNC_CRI, oauthState, clientOAuthSessionItem);
+                    request, DCMAW_ASYNC.getId(), oauthState, clientOAuthSessionItem);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

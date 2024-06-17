@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 
 import java.time.Clock;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 public class DcmawAsyncCriService {
     private final ConfigService configService;
@@ -54,7 +54,7 @@ public class DcmawAsyncCriService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws CriApiException, JsonProcessingException {
-        final String criId = DCMAW_ASYNC_CRI;
+        final String criId = DCMAW_ASYNC.getId();
         String connection = configService.getActiveConnection(criId);
 
         ipvSessionItem.setCriOAuthSessionId(oauthState);

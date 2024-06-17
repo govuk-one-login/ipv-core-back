@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -34,6 +35,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -45,9 +47,11 @@ import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
@@ -67,7 +71,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
+    private final EvcsService evcsService;
 
+    @SuppressWarnings({"java:S107"}) // Methods should not have too many parameters
     public CheckCoiHandler(
             ConfigService configService,
             AuditService auditService,
@@ -75,7 +81,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
-            UserIdentityService userIdentityService) {
+            UserIdentityService userIdentityService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
@@ -83,6 +90,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.userIdentityService = userIdentityService;
+        this.evcsService = evcsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -94,6 +102,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
+        this.evcsService = new EvcsService(configService);
     }
 
     @Override
@@ -129,11 +138,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     null,
                     deviceInformation);
 
-            var oldVcs = verifiableCredentialService.getVcs(userId);
+            var oldVcs =
+                    getOldIdentity(userId, ipvSessionId, clientOAuthSession.getEvcsAccessToken());
+
             var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
-
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
-
             var successfulCheck =
                     switch (checkType) {
                         case GIVEN_NAMES_AND_DOB -> userIdentityService
@@ -177,7 +186,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
             return JOURNEY_COI_CHECK_PASSED.toObjectMap();
 
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+        } catch (HttpResponseExceptionWithErrorBody
+                | EvcsServiceException
+                | VerifiableCredentialException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
@@ -249,5 +260,20 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 new DeviceInformation(deviceInformation));
+    }
+
+    @Tracing
+    private List<VerifiableCredential> getOldIdentity(
+            String userId, String ipvSessionId, String evcsAccessToken)
+            throws CredentialParseException, EvcsServiceException {
+
+        List<VerifiableCredential> credentials = null;
+        if (configService.enabled(EVCS_READ_ENABLED)) {
+            credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
+        }
+        if (credentials == null || credentials.isEmpty()) {
+            credentials = verifiableCredentialService.getVcs(userId);
+        }
+        return credentials;
     }
 }

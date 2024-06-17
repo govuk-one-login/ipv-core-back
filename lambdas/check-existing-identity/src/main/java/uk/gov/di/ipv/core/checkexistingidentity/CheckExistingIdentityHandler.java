@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -62,15 +63,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -126,6 +129,7 @@ public class CheckExistingIdentityHandler
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final EvcsService evcsService;
     private final EvcsMigrationService evcsMigrationService;
 
     @SuppressWarnings({
@@ -144,6 +148,7 @@ public class CheckExistingIdentityHandler
             CiMitUtilityService ciMitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
+            EvcsService evcsService,
             EvcsMigrationService evcsMigrationService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -156,6 +161,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.evcsService = evcsService;
         this.evcsMigrationService = evcsMigrationService;
         VcHelper.setConfigService(this.configService);
     }
@@ -174,6 +180,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.evcsService = new EvcsService(configService);
         this.evcsMigrationService = new EvcsMigrationService(configService);
         VcHelper.setConfigService(this.configService);
     }
@@ -222,8 +229,8 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            var vcs = verifiableCredentialService.getVcs(userId);
-            var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F_CRI));
+            var vcs = getVerifiableCredentials(userId, clientOAuthSessionItem.getEvcsAccessToken());
+            var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
@@ -300,6 +307,19 @@ public class CheckExistingIdentityHandler
         } catch (MitigationRouteException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         }
+    }
+
+    @Tracing
+    private List<VerifiableCredential> getVerifiableCredentials(
+            String userId, String evcsAccessToken)
+            throws CredentialParseException, EvcsServiceException {
+        if (configService.enabled(EVCS_READ_ENABLED)) {
+            var vcs = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
+            if (vcs != null && !vcs.isEmpty()) {
+                return vcs;
+            }
+        }
+        return verifiableCredentialService.getVcs(userId);
     }
 
     @Tracing
@@ -480,7 +500,7 @@ public class CheckExistingIdentityHandler
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
-        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD_CRI.equals(vc.getCriId())).toList();
+        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.getId().equals(vc.getCriId())).toList();
     }
 
     private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {

@@ -26,7 +26,10 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -36,11 +39,13 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,10 +55,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
@@ -83,6 +90,7 @@ class CheckCoiHandlerTest {
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialService;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private EvcsService mockEvcsService;
     @Mock private Context mockContext;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private ClientOAuthSessionItem mockClientSessionItem;
@@ -250,6 +258,61 @@ class CheckCoiHandlerTest {
             }
 
             @Test
+            @MockitoSettings(strictness = LENIENT)
+            void shouldUseEvcsServiceWhenEnabled()
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                            EvcsServiceException {
+
+                when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
+
+                when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
+                        .thenReturn(List.of(M1A_ADDRESS_VC));
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .build();
+
+                checkCoiHandler.handleRequest(request, mockContext);
+
+                verify(mockEvcsService, times(1))
+                        .getVerifiableCredentials(USER_ID, null, EvcsVCState.CURRENT);
+                verify(mockVerifiableCredentialService, never()).getVcs(USER_ID);
+            }
+
+            @Test
+            void shouldUseVcStoreWhenEvcsEnabledAndReturnsEmpty()
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                            EvcsServiceException {
+
+                when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getScopeClaims())
+                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
+                        .thenReturn(new ArrayList<VerifiableCredential>());
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .build();
+
+                checkCoiHandler.handleRequest(request, mockContext);
+
+                verify(mockEvcsService, times(1))
+                        .getVerifiableCredentials(USER_ID, null, EvcsVCState.CURRENT);
+                verify(mockVerifiableCredentialService, times(1)).getVcs(USER_ID);
+            }
+
             void
                     shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
                             throws Exception {

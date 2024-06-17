@@ -37,8 +37,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.TICF_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
@@ -195,7 +195,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                ADDRESS_CRI,
+                ADDRESS.getId(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
@@ -204,7 +204,8 @@ class CriStoringServiceTest {
 
         // Assert
         verify(mockSessionCredentialsService)
-                .deleteSessionCredentialsForCri(mockIpvSessionItem.getIpvSessionId(), ADDRESS_CRI);
+                .deleteSessionCredentialsForCri(
+                        mockIpvSessionItem.getIpvSessionId(), ADDRESS.getId());
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
@@ -219,7 +220,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                TICF_CRI,
+                TICF.getId(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),

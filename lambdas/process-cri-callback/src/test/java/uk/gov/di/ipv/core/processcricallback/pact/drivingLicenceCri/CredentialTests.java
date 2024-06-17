@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -117,7 +117,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE_CRI,
+                        DRIVING_LICENCE.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -130,7 +130,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE_CRI,
+                                                DRIVING_LICENCE.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -228,7 +228,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE_CRI,
+                        DRIVING_LICENCE.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -241,7 +241,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE_CRI,
+                                                DRIVING_LICENCE.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -344,7 +344,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE_CRI,
+                        DRIVING_LICENCE.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -357,7 +357,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE_CRI,
+                                                DRIVING_LICENCE.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -455,7 +455,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE_CRI,
+                        DRIVING_LICENCE.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -468,7 +468,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE_CRI,
+                                                DRIVING_LICENCE.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -564,7 +564,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        DRIVING_LICENCE_CRI,
+                                        DRIVING_LICENCE.getId(),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

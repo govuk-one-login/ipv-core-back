@@ -62,8 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -123,7 +123,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV_CRI,
+                        HMRC_KBV.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -136,7 +136,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                HMRC_MIGRATION_CRI,
+                                                HMRC_MIGRATION.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -220,7 +220,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV_CRI,
+                        HMRC_KBV.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -233,7 +233,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                HMRC_MIGRATION_CRI,
+                                                HMRC_MIGRATION.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -328,7 +328,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        HMRC_KBV_CRI,
+                                        HMRC_KBV.getId(),
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -387,7 +387,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV_CRI,
+                        HMRC_KBV.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -400,7 +400,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                HMRC_MIGRATION_CRI,
+                                                HMRC_MIGRATION.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -630,7 +630,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                HMRC_KBV_CRI,
+                HMRC_KBV.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=hmrcKbv",
                 "dummyState",

@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -210,7 +210,7 @@ class TokenTests {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                PASSPORT_CRI,
+                PASSPORT.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
                 "dummyState",

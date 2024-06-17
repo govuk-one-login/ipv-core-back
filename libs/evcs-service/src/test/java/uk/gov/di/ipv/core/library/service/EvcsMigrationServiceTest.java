@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.EXPERIAN_FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
@@ -34,7 +34,7 @@ class EvcsMigrationServiceTest {
     void testMigrateExistingIdentity() throws Exception {
         VCS.forEach(
                 credential -> {
-                    if (credential.getCriId().equals(EXPERIAN_FRAUD_CRI)) {
+                    if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
                         credential.setMigrated(null);
                     } else {
                         credential.setMigrated(Instant.now());

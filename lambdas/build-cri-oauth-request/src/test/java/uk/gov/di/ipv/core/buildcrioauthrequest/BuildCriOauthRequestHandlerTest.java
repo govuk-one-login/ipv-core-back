@@ -81,11 +81,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -101,6 +101,11 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String ADDRESS_CRI = ADDRESS.getId();
+    private static final String CLAIMED_IDENTITY_CRI = CLAIMED_IDENTITY.getId();
+    private static final String DCMAW_CRI = DCMAW.getId();
+    private static final String F2F_CRI = F2F.getId();
+    private static final String HMRC_KBV_CRI = HMRC_KBV.getId();
     private static final String CRI_ID = "PassportIssuer";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";

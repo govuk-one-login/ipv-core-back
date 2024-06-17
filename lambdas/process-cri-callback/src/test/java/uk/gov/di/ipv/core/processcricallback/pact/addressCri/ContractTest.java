@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -275,7 +275,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS_CRI,
+                        ADDRESS.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
@@ -286,7 +286,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                ADDRESS_CRI,
+                                                ADDRESS.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -387,7 +387,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS_CRI,
+                        ADDRESS.getId(),
                         CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
@@ -398,7 +398,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                ADDRESS_CRI,
+                                                ADDRESS.getId(),
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
@@ -483,7 +483,7 @@ class ContractTest {
                         () -> {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
-                                    ADDRESS_CRI,
+                                    ADDRESS.getId(),
                                     CRI_OAUTH_SESSION_ITEM);
                         });
 
@@ -496,7 +496,7 @@ class ContractTest {
     private static CriCallbackRequest getCriCallbackRequest(String dummyAuthCode) {
         return new CriCallbackRequest(
                 dummyAuthCode,
-                ADDRESS_CRI,
+                ADDRESS.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
                 "dummyState",

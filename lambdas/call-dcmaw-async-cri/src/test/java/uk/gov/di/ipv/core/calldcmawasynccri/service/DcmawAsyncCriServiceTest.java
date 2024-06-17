@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_ASYNC_CRI;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 @ExtendWith(MockitoExtension.class)
 class DcmawAsyncCriServiceTest {
@@ -75,19 +75,19 @@ class DcmawAsyncCriServiceTest {
 
         var criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
-                        .criId(DCMAW_ASYNC_CRI)
+                        .criId(DCMAW_ASYNC.getId())
                         .criOAuthSessionId(CRI_OAUTH_STATE)
                         .clientOAuthSessionId(CLIENT_OAUTH_SESSION_ID)
                         .build();
 
         when(mockCriOAuthSessionService.persistCriOAuthSession(
-                        CRI_OAUTH_STATE, DCMAW_ASYNC_CRI, CLIENT_OAUTH_SESSION_ID, CONNECTION))
+                        CRI_OAUTH_STATE, DCMAW_ASYNC.getId(), CLIENT_OAUTH_SESSION_ID, CONNECTION))
                 .thenReturn(criOAuthSessionItem);
 
         when(mockConfigService.getOauthCriConfig(criOAuthSessionItem)).thenReturn(criConfig);
         when(mockConfigService.getCriOAuthClientSecret(criOAuthSessionItem))
                 .thenReturn(TEST_SECRET);
-        when(mockConfigService.getActiveConnection(DCMAW_ASYNC_CRI)).thenReturn(CONNECTION);
+        when(mockConfigService.getActiveConnection(DCMAW_ASYNC.getId())).thenReturn(CONNECTION);
 
         var accessToken = new BearerAccessToken(ACCESS_TOKEN);
         when(mockCriApiService.fetchAccessToken(CRI_CLIENT_ID, TEST_SECRET, criOAuthSessionItem))
@@ -100,7 +100,7 @@ class DcmawAsyncCriServiceTest {
                         .build();
         when(mockCriApiService.fetchVerifiableCredential(
                         argThat(bat -> ACCESS_TOKEN.equals(bat.getValue())),
-                        eq(DCMAW_ASYNC_CRI),
+                        eq(DCMAW_ASYNC.getId()),
                         eq(criOAuthSessionItem),
                         argThat(
                                 crbd ->
