@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventFactory;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
@@ -225,8 +225,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         ? getRestrictedCheckCoiAuditData(oldVcs, sessionsVcs, deviceInformation)
                         : new AuditRestrictedDeviceInformation(deviceInformation);
 
+        var auditEventFactory = new AuditEventFactory();
         auditService.sendAuditEvent(
-                new AuditEvent(
+                auditEventFactory.createAuditEventWithDeviceInformation(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
