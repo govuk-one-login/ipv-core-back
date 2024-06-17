@@ -43,6 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_MIGRATION_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
@@ -240,6 +241,46 @@ class VerifiableCredentialServiceTest {
 
         assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
         assertEquals(FAILED_TO_STORE_IDENTITY, verifiableCredentialException.getErrorResponse());
+    }
+
+    @Test
+    void updateIdentityShouldClearVcsAndStoreNewOnes() throws Exception {
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
+                        M1A_ADDRESS_VC);
+
+        verifiableCredentialService.updateIdentity(vcs);
+
+        verify(mockDataStore, times(3)).update(vcStoreItemCaptor.capture());
+
+        var capturedItems = vcStoreItemCaptor.getAllValues();
+
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                capturedItems.get(0).getCredential());
+        assertEquals(
+                EXPIRED_M1A_EXPERIAN_FRAUD_VC.getVcString(), capturedItems.get(1).getCredential());
+        assertEquals(M1A_ADDRESS_VC.getVcString(), capturedItems.get(2).getCredential());
+    }
+
+    @Test
+    void updateIdentityShouldThrowExceptionOnUpdate() {
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
+                        M1A_ADDRESS_VC);
+        doThrow(new IllegalStateException()).when(mockDataStore).update(any());
+
+        var verifiableCredentialException =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> verifiableCredentialService.updateIdentity(vcs));
+
+        assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+        assertEquals(FAILED_TO_UPDATE_IDENTITY, verifiableCredentialException.getErrorResponse());
     }
 
     @Test

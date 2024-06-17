@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -47,6 +48,7 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -60,6 +62,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -109,7 +112,7 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
-    public static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
+    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
             List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
     private final ConfigService configService;
@@ -123,6 +126,7 @@ public class CheckExistingIdentityHandler
     private final CiMitUtilityService ciMitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final EvcsMigrationService evcsMigrationService;
 
     @SuppressWarnings({
         "unused",
@@ -139,7 +143,8 @@ public class CheckExistingIdentityHandler
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            EvcsMigrationService evcsMigrationService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -151,6 +156,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = ciMitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.evcsMigrationService = evcsMigrationService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -168,6 +174,7 @@ public class CheckExistingIdentityHandler
         this.ciMitUtilityService = new CiMitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.evcsMigrationService = new EvcsMigrationService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -272,7 +279,9 @@ public class CheckExistingIdentityHandler
                             contraIndicators)
                     : buildNoMatchResponse(contraIndicators);
 
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+        } catch (HttpResponseExceptionWithErrorBody
+                | VerifiableCredentialException
+                | EvcsServiceException e) {
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -336,7 +345,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException, VerifiableCredentialException {
+                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
         // Check for attained vot from vtr
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -352,6 +361,7 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
+                            clientOAuthSessionItem,
                             vcs,
                             auditEventUser,
                             deviceInformation));
@@ -415,17 +425,21 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, VerifiableCredentialException {
+            throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
+        String userId = auditEventUser.getUserId();
+        String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
                 && !hasCurrentFraudVc(vcs)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
+            migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -453,8 +467,16 @@ public class CheckExistingIdentityHandler
                 VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-
+        migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
         return JOURNEY_REUSE;
+    }
+
+    private void migrateCredentialsToEVCS(
+            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            throws EvcsServiceException, VerifiableCredentialException {
+        if (configService.enabled(EVCS_WRITE_ENABLED)) {
+            evcsMigrationService.migrateExistingIdentity(userId, credentials, evcsAccessToken);
+        }
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {

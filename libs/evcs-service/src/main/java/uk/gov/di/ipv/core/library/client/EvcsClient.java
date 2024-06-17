@@ -42,11 +42,10 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class EvcsClient {
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String X_API_KEY_HEADER = "x-api-key";
     public static final String VC_STATE_PARAM = "state";
-
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final HttpClient httpClient;
     private final ConfigService configService;
 
@@ -66,6 +65,7 @@ public class EvcsClient {
     public EvcsGetUserVCsDto getUserVcs(
             String userId, String evcsAccessToken, List<EvcsVCState> vcStatesToQueryFor)
             throws EvcsServiceException {
+        LOGGER.info(LogHelper.buildLogMessage("Retrieving existing user VCs from Evcs."));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
