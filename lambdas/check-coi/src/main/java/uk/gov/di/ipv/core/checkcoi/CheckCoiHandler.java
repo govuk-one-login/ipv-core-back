@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -248,6 +247,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
-                new DeviceInformation(deviceInformation));
+                deviceInformation);
     }
 }
