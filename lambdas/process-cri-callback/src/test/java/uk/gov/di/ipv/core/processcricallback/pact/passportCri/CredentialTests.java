@@ -399,7 +399,7 @@ class CredentialTests {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);

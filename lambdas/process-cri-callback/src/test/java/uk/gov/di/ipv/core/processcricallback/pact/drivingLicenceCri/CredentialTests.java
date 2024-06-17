@@ -543,7 +543,7 @@ class CredentialTests {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns500")
     void
             fetchVerifiableCredential_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);

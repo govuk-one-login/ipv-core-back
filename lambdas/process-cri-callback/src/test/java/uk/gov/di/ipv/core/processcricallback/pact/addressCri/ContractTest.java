@@ -169,7 +169,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstAddressCri_throwsErrorWithInvalidAuthCode(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+            MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 

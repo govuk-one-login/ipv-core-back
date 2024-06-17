@@ -307,7 +307,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void fetchVerifiableCredential_whenCalledAgainstHmrcKbvCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);

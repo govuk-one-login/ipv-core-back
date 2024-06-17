@@ -781,7 +781,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void
             fetchVerifiableCredential_whenCalledAgainstExperianKbvCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);

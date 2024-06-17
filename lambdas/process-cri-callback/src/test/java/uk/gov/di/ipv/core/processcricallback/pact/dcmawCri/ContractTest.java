@@ -181,7 +181,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+            MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -1842,7 +1842,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void fetchVerifiableCredential_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
