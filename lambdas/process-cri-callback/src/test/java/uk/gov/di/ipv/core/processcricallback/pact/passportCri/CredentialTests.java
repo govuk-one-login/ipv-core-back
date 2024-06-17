@@ -386,7 +386,7 @@ class CredentialTests {
                                         body -> {
                                             body.object(
                                                     "oauth_error",
-                                                    (error) -> {
+                                                    error -> {
                                                         error.stringType("error");
                                                         error.stringType("error_description");
                                                     });
