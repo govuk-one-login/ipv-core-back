@@ -628,7 +628,7 @@ class ContractTest {
 
     @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredentialWithFailedAnswer(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
