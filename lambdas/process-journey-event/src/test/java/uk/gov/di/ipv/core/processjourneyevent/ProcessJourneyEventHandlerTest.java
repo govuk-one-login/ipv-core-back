@@ -365,7 +365,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.pushState(SESSION_TIMEOUT, TIMEOUT_UNRECOVERABLE_STATE);
+        ipvSessionItem.pushState(new JourneyState(SESSION_TIMEOUT, TIMEOUT_UNRECOVERABLE_STATE));
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -635,14 +635,17 @@ class ProcessJourneyEventHandlerTest {
 
         processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
         inOrder.verify(ipvSessionItem)
-                .pushState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID");
+                .pushState(
+                        new JourneyState(
+                                INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"));
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
                 ipvSessionItem.getState());
 
         processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
-        inOrder.verify(ipvSessionItem).pushState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE");
+        inOrder.verify(ipvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"));
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
@@ -798,8 +801,8 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE");
-        ipvSession.pushState(INITIAL_JOURNEY_SELECTION, "CRI_STATE");
+        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
+        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(
@@ -828,8 +831,8 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(INITIAL_JOURNEY_SELECTION, "CRI_STATE");
-        ipvSession.pushState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE");
+        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
+        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(
@@ -858,8 +861,8 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(TECHNICAL_ERROR, "CRI_STATE");
-        ipvSession.pushState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE");
+        ipvSession.pushState(new JourneyState(TECHNICAL_ERROR, "CRI_STATE"));
+        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
 
         ProcessJourneyEventHandler processJourneyEventHandler =
                 new ProcessJourneyEventHandler(
@@ -881,7 +884,7 @@ class ProcessJourneyEventHandlerTest {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, userState);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState));
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
 
         when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("core");

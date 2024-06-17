@@ -46,7 +46,7 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, START_STATE);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -183,7 +183,7 @@ class IpvSessionServiceTest {
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, START_STATE);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.updateIpvSession(ipvSessionItem);

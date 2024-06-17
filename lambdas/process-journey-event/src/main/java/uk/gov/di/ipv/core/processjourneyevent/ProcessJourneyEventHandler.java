@@ -306,7 +306,8 @@ public class ProcessJourneyEventHandler
         }
 
         if (result.state() instanceof BasicState basicState) {
-            ipvSessionItem.pushState(basicState.getJourneyType(), basicState.getName());
+            ipvSessionItem.pushState(
+                    new JourneyState(basicState.getJourneyType(), basicState.getName()));
         }
 
         return result.state();
@@ -342,7 +343,7 @@ public class ProcessJourneyEventHandler
 
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.pushState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.pushState(new JourneyState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE));
 
         logStateChange(oldJourneyState, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
@@ -431,9 +432,8 @@ public class ProcessJourneyEventHandler
         return stateMachine.isPageState(journeyState);
     }
 
-    private BasicState journeyStateToBasicState(JourneyState journeyState) {
-        return (BasicState)
-                stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+    private State journeyStateToBasicState(JourneyState journeyState) {
+        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
     }
 
     private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {

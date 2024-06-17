@@ -5,7 +5,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -16,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -71,12 +68,8 @@ public class IpvSessionItem implements DynamodbItem {
                 (featureSet != null && !featureSet.isEmpty()) ? String.join(",", featureSet) : null;
     }
 
-    public void pushState(IpvJourneyTypes journeyType, String state) {
-        stateStack.add(String.format("%s%s%s", journeyType.name(), JOURNEY_STATE_DELIMITER, state));
-    }
-
     public void pushState(JourneyState journeyState) {
-        pushState(journeyState.subJourney(), journeyState.state());
+        stateStack.add(journeyState.toSessionItemString());
     }
 
     public void popState() {
@@ -87,15 +80,13 @@ public class IpvSessionItem implements DynamodbItem {
         if (stateStack.isEmpty()) {
             throw new IllegalStateException();
         }
-        var journeyState = stateStack.get(stateStack.size() - 1).split(JOURNEY_STATE_DELIMITER, 2);
-        return new JourneyState(IpvJourneyTypes.valueOf(journeyState[0]), journeyState[1]);
+        return new JourneyState(stateStack.get(stateStack.size() - 1));
     }
 
     public JourneyState getPreviousState() {
         if (stateStack.size() < 2) {
             throw new IllegalStateException();
         }
-        var journeyState = stateStack.get(stateStack.size() - 2).split(JOURNEY_STATE_DELIMITER, 2);
-        return new JourneyState(IpvJourneyTypes.valueOf(journeyState[0]), journeyState[1]);
+        return new JourneyState(stateStack.get(stateStack.size() - 2));
     }
 }

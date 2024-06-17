@@ -7,7 +7,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -21,6 +21,9 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
 public class IpvSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -102,12 +105,12 @@ public class IpvSessionService {
 
         if (errorObject == null) {
             if (isReverification) {
-                ipvSessionItem.pushState(IpvJourneyTypes.REVERIFICATION, START_STATE);
+                ipvSessionItem.pushState(new JourneyState(REVERIFICATION, START_STATE));
             } else {
-                ipvSessionItem.pushState(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, START_STATE);
+                ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
             }
         } else {
-            ipvSessionItem.pushState(IpvJourneyTypes.TECHNICAL_ERROR, ERROR_STATE);
+            ipvSessionItem.pushState(new JourneyState(TECHNICAL_ERROR, ERROR_STATE));
             ipvSessionItem.setErrorCode(errorObject.getCode());
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }

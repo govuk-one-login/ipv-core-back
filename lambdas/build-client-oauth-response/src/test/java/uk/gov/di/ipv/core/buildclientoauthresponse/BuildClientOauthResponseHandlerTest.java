@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -359,7 +360,7 @@ class BuildClientOauthResponseHandlerTest {
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        item.pushState(INITIAL_JOURNEY_SELECTION, "test-state");
+        item.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "test-state"));
         item.setCreationDateTime(new Date().toString());
         return item;
     }
