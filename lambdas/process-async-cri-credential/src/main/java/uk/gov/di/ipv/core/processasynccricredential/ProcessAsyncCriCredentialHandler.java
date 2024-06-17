@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -121,7 +122,8 @@ public class ProcessAsyncCriCredentialHandler
                     | AsyncVerifiableCredentialException
                     | UnrecognisedVotException
                     | CiPostMitigationsException
-                    | CredentialParseException e) {
+                    | CredentialParseException
+                    | EvcsServiceException e) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage("Failed to process VC response message.", e));
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
@@ -171,7 +173,7 @@ public class ProcessAsyncCriCredentialHandler
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
-                    UnrecognisedVotException, CredentialParseException {
+                    UnrecognisedVotException, CredentialParseException, EvcsServiceException {
         validateOAuthState(successAsyncCriResponse);
 
         var oauthCriConfig =

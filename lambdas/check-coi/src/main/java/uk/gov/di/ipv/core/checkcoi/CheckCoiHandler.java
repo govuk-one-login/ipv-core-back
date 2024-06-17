@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -185,7 +186,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
             return JOURNEY_COI_CHECK_PASSED.toObjectMap();
 
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+        } catch (HttpResponseExceptionWithErrorBody
+                | EvcsServiceException
+                | VerifiableCredentialException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
@@ -262,7 +265,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @Tracing
     private List<VerifiableCredential> getOldIdentity(
             String userId, String ipvSessionId, String evcsAccessToken)
-            throws CredentialParseException {
+            throws CredentialParseException, EvcsServiceException {
 
         List<VerifiableCredential> credentials = null;
         if (configService.enabled(EVCS_READ_ENABLED)) {

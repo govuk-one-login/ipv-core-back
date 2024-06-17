@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.exception;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.ErrorResponseException;
 
-public class EvcsServiceException extends RuntimeException implements ErrorResponseException {
+public class EvcsServiceException extends Exception implements ErrorResponseException {
     private final ErrorResponse errorResponse;
 
     private final int responseCode;

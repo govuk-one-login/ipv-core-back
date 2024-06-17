@@ -65,7 +65,7 @@ public class EvcsService {
     @Tracing
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
-            throws CredentialParseException {
+            throws CredentialParseException, EvcsServiceException {
         List<EvcsGetUserVCDto> vcs =
                 evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
 
@@ -87,7 +87,7 @@ public class EvcsService {
     }
 
     @Tracing
-    public void storePendingVc(VerifiableCredential credential) {
+    public void storePendingVc(VerifiableCredential credential) throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 credential.getUserId(),
                 List.of(
@@ -155,9 +155,10 @@ public class EvcsService {
                                     existingPendingReturnEvcsUserVcsToUpdate.stream())
                             .toList();
 
-            evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
+            if (!evcsUserVCsToUpdate.isEmpty())
+                evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
         }
-        evcsClient.storeUserVCs(userId, userVCsForEvcs);
+        if (!userVCsForEvcs.isEmpty()) evcsClient.storeUserVCs(userId, userVCsForEvcs);
     }
 
     private static String getVcSignature(EvcsGetUserVCDto vc) {

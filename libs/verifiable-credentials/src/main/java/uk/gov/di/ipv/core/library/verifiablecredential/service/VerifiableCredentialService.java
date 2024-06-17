@@ -20,6 +20,7 @@ import java.util.List;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class VerifiableCredentialService {
@@ -103,6 +104,15 @@ public class VerifiableCredentialService {
             vcs.stream().map(VerifiableCredential::toVcStoreItem).forEach(dataStore::create);
         } catch (Exception e) {
             throw new VerifiableCredentialException(SC_SERVER_ERROR, FAILED_TO_STORE_IDENTITY);
+        }
+    }
+
+    public void updateIdentity(List<VerifiableCredential> vcs)
+            throws VerifiableCredentialException {
+        try {
+            vcs.stream().map(VerifiableCredential::toVcStoreItem).forEach(dataStore::update);
+        } catch (Exception e) {
+            throw new VerifiableCredentialException(SC_SERVER_ERROR, FAILED_TO_UPDATE_IDENTITY);
         }
     }
 }

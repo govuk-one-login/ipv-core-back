@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -259,7 +260,8 @@ class CheckCoiHandlerTest {
             @Test
             @MockitoSettings(strictness = LENIENT)
             void shouldUseEvcsServiceWhenEnabled()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                            EvcsServiceException {
 
                 when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
                 when(mockUserIdentityService.areVcsCorrelated(
@@ -286,7 +288,8 @@ class CheckCoiHandlerTest {
 
             @Test
             void shouldUseVcStoreWhenEvcsEnabledAndReturnsEmpty()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+                            EvcsServiceException {
 
                 when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
                 when(mockUserIdentityService.areVcsCorrelated(

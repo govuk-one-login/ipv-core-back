@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 
@@ -27,6 +28,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,14 +45,20 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonD
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
+    private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcDrivingPermit();
+    private static final VerifiableCredential VC_ADDRESS_TEST = VC_ADDRESS;
+    private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
+            PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
-            List.of(vcDrivingPermit(), VC_ADDRESS, M1A_EXPERIAN_FRAUD_VC);
+            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, M1A_EXPERIAN_FRAUD_VC);
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =
             List.of(
-                    vcDrivingPermit(),
-                    VC_ADDRESS,
+                    VC_DRIVING_PERMIT_TEST,
+                    VC_ADDRESS_TEST,
                     M1A_EXPERIAN_FRAUD_VC,
-                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+                    VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST);
+    private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS =
+            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST);
     private static final String TEST_USER_ID = "a-user-id";
     private static final List<EvcsVCState> VC_STATES_TO_QUERY_FOR =
             List.of(CURRENT, PENDING_RETURN);
@@ -74,7 +82,7 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                    VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
                                     EvcsVCState.CURRENT,
                                     Map.of(
                                             "reason", "testing",
@@ -90,7 +98,7 @@ class EvcsServiceTest {
     @InjectMocks EvcsService evcsService;
 
     @Test
-    void testStoreIdentity_whenNoExistingEvcsUserVCs() {
+    void testStoreIdentity_whenNoExistingEvcsUserVCs() throws Exception {
         // Arrange
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
@@ -118,7 +126,7 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() {
+    void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() throws Exception {
         // Arrange
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
@@ -144,7 +152,7 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testStoreIdentity_for_6MFCJourney() {
+    void testStoreIdentity_for_6MFCJourney() throws Exception {
         // Arrange
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
@@ -179,20 +187,57 @@ class EvcsServiceTest {
     }
 
     @Test
-    void storeAsyncVcShouldStoreVcWithPendingReturnState() {
-        evcsService.storePendingVc(VC_ADDRESS);
+    void testStoreCompleteIdentity_onSuccessfulJourney_whenAllVCsExistInEvcs() throws Exception {
+        // Arrange
+        EvcsGetUserVCsDto EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VC_ADDRESS_TEST.getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        Map.of("reason", "testing")),
+                                new EvcsGetUserVCDto(
+                                        VC_DRIVING_PERMIT_TEST.getVcString(),
+                                        EvcsVCState.PENDING_RETURN,
+                                        Map.of("reason", "testing"))));
+        when(mockEvcsClient.getUserVcs(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
+                .thenReturn(EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO);
+        // Act
+        evcsService.storeCompletedIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
+        // Assert
+        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
+        mockOrderVerifier
+                .verify(mockEvcsClient, times(1))
+                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
+        var updateUserVCsForEvcs = evcsUpdateUserVCsDtosCaptor.getValue();
+        assertTrue(
+                updateUserVCsForEvcs.stream()
+                        .anyMatch(dto -> dto.state().equals(EvcsVCState.ABANDONED)));
+        mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+    }
+
+    @Test
+    void storeAsyncVcShouldStoreVcWithPendingReturnState() throws EvcsServiceException {
+        evcsService.storePendingVc(VC_ADDRESS_TEST);
 
         verify(mockEvcsClient)
                 .storeUserVCs(
                         stringArgumentCaptor.capture(), evcsCreateUserVCsDtosCaptor.capture());
 
-        assertEquals(VC_ADDRESS.getUserId(), stringArgumentCaptor.getValue());
-        assertEquals(VC_ADDRESS.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
+        assertEquals(VC_ADDRESS_TEST.getUserId(), stringArgumentCaptor.getValue());
+        assertEquals(
+                VC_ADDRESS_TEST.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
         assertEquals(PENDING_RETURN, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
     }
 
     @Test
-    void testGetVerifiableCredentials() throws CredentialParseException, NoCriForIssuerException {
+    void testGetVerifiableCredentials()
+            throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
         // Arrange
         when(mockConfigService.getCriByIssuer(M1A_ADDRESS_VC.getClaimsSet().getIssuer()))
                 .thenReturn(Cri.ADDRESS);
@@ -228,7 +273,8 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound() throws NoCriForIssuerException {
+    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound()
+            throws NoCriForIssuerException, EvcsServiceException {
         // Arrange
         when(mockConfigService.getCriByIssuer(any()))
                 .thenThrow(new NoCriForIssuerException("not found"));

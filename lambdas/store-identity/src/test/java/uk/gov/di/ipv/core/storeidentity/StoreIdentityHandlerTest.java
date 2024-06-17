@@ -380,8 +380,8 @@ class StoreIdentityHandlerTest {
     }
 
     @Test
-    void
-            shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsWriteEnabled_forPendingF2f() {
+    void shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsWriteEnabled_forPendingF2f()
+            throws Exception {
         reset(mockIpvSessionService);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.REPEAT_FRAUD_CHECK);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
