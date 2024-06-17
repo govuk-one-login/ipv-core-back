@@ -151,7 +151,7 @@ public class CriStoringService {
 
         for (var vc : vcs) {
             auditService.sendAuditEvent(
-                    AuditEvent.createAuditEventWithDeviceInformation(
+                    AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
@@ -202,7 +202,7 @@ public class CriStoringService {
                         .with(LOG_CRI_ID.getFieldName(), criId));
 
         auditService.sendAuditEvent(
-                AuditEvent.createAuditEventWithDeviceInformation(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

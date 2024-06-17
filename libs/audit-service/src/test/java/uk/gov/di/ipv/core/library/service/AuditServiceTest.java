@@ -62,7 +62,7 @@ class AuditServiceTest {
 
         // Arrange
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
 
         // Act
@@ -95,7 +95,7 @@ class AuditServiceTest {
                         .build();
 
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
@@ -142,7 +142,7 @@ class AuditServiceTest {
                         "someIp.Address");
 
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START, null, auditEventUser, extensions);
 
         // Act
@@ -182,7 +182,7 @@ class AuditServiceTest {
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, null);
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
@@ -220,7 +220,7 @@ class AuditServiceTest {
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, auditEventReturnCodes);
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
@@ -249,7 +249,7 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueueWithRestrictedDeviceInfo() throws Exception {
         // Arrange
         var event =
-                AuditEvent.createAuditEventWithDeviceInformation(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
                         null,
                         null,
@@ -281,7 +281,7 @@ class AuditServiceTest {
         // Arrange
         List<Name> name = List.of(new Name(List.of(new NameParts("first_name", "TestUser"))));
         var event =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
                         null,
                         null,
@@ -318,7 +318,7 @@ class AuditServiceTest {
                 SqsException.class,
                 () ->
                         underTest.sendAuditEvent(
-                                AuditEvent.createAuditEventWithoutDeviceInformation(
+                                AuditEvent.createWithoutDeviceInformation(
                                         AuditEventTypes.IPV_JOURNEY_START,
                                         "{\\}",
                                         new AuditEventUser("1234", "1234", "1234", "1.1.1.1"))));

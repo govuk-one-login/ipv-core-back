@@ -234,7 +234,7 @@ public class ProcessAsyncCriCredentialHandler
             boolean isSuccessful)
             throws SqsException, UnrecognisedVotException {
         AuditEvent auditEvent =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -246,7 +246,7 @@ public class ProcessAsyncCriCredentialHandler
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
             throws SqsException, CredentialParseException {
         AuditEvent auditEvent =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -268,7 +268,7 @@ public class ProcessAsyncCriCredentialHandler
                         .build();
 
         AuditEvent auditEvent =
-                AuditEvent.createAuditEventWithoutDeviceInformation(
+                AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_ERROR,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

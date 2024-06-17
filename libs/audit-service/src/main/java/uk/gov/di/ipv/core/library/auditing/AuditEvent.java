@@ -52,7 +52,7 @@ public class AuditEvent {
         this.restricted = restricted;
     }
 
-    public static AuditEvent createAuditEventWithDeviceInformation(
+    public static AuditEvent createWithDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
             AuditEventUser user,
@@ -61,7 +61,7 @@ public class AuditEvent {
         return new AuditEvent(eventType, componentId, user, extensions, restricted);
     }
 
-    public static AuditEvent createAuditEventWithDeviceInformation(
+    public static AuditEvent createWithDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
             AuditEventUser user,
@@ -69,7 +69,7 @@ public class AuditEvent {
         return new AuditEvent(eventType, componentId, user, null, restricted);
     }
 
-    public static AuditEvent createAuditEventWithoutDeviceInformation(
+    public static AuditEvent createWithoutDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
             AuditEventUser user,
@@ -78,7 +78,7 @@ public class AuditEvent {
         return new AuditEvent(eventType, componentId, user, extensions, restricted);
     }
 
-    public static AuditEvent createAuditEventWithoutDeviceInformation(
+    public static AuditEvent createWithoutDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
             AuditEventUser user,
@@ -86,7 +86,7 @@ public class AuditEvent {
         return new AuditEvent(eventType, componentId, user, extensions, null);
     }
 
-    public static AuditEvent createAuditEventWithoutDeviceInformation(
+    public static AuditEvent createWithoutDeviceInformation(
             AuditEventTypes eventType, String componentId, AuditEventUser user) {
         return new AuditEvent(eventType, componentId, user, null, null);
     }
