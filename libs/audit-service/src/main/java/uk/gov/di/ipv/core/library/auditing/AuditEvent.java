@@ -52,26 +52,6 @@ public class AuditEvent {
         this.restricted = restricted;
     }
 
-    public AuditEvent(AuditEventTypes eventName, String componentId, AuditEventUser user) {
-        this(eventName, componentId, user, null, null);
-    }
-
-    public AuditEvent(
-            AuditEventTypes eventName,
-            String componentId,
-            AuditEventUser user,
-            AuditExtensions extensions) {
-        this(eventName, componentId, user, extensions, null);
-    }
-
-    public AuditEvent(
-            AuditEventTypes eventName,
-            String componentId,
-            AuditEventUser user,
-            AuditRestricted restricted) {
-        this(eventName, componentId, user, null, restricted);
-    }
-
     public static AuditEvent createAuditEventWithDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
@@ -81,6 +61,14 @@ public class AuditEvent {
         return new AuditEvent(eventType, componentId, user, extensions, restricted);
     }
 
+    public static AuditEvent createAuditEventWithDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditRestrictedWithDeviceInformation restricted) {
+        return new AuditEvent(eventType, componentId, user, null, restricted);
+    }
+
     public static AuditEvent createAuditEventWithoutDeviceInformation(
             AuditEventTypes eventType,
             String componentId,
@@ -88,5 +76,18 @@ public class AuditEvent {
             AuditExtensions extensions,
             AuditRestricted restricted) {
         return new AuditEvent(eventType, componentId, user, extensions, restricted);
+    }
+
+    public static AuditEvent createAuditEventWithoutDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditExtensions extensions) {
+        return new AuditEvent(eventType, componentId, user, extensions, null);
+    }
+
+    public static AuditEvent createAuditEventWithoutDeviceInformation(
+            AuditEventTypes eventType, String componentId, AuditEventUser user) {
+        return new AuditEvent(eventType, componentId, user, null, null);
     }
 }

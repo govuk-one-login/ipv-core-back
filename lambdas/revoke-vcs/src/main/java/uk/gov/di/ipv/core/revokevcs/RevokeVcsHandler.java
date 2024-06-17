@@ -172,7 +172,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         AuditExtensionsVcEvidence auditExtensions =
                 getExtensionsForAudit(VerifiableCredential.fromVcStoreItem(vcStoreItem), null);
         var auditEvent =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_VC_REVOKED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -186,7 +186,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
 
         var auditExtensions = new AuditExtensionCriId(criId);
         var auditEvent =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_VC_REVOKED_FAILURE,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

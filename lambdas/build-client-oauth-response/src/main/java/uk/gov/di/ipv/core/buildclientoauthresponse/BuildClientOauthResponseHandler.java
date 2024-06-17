@@ -172,7 +172,7 @@ public class BuildClientOauthResponseHandler
                                 clientOAuthSessionItem, authorizationCode.getValue());
             }
             auditService.sendAuditEvent(
-                    new AuditEvent(
+                    AuditEvent.createAuditEventWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_END,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,

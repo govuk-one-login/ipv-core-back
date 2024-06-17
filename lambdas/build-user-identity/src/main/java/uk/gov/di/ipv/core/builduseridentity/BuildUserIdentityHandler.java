@@ -189,7 +189,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
         LOGGER.info(LogHelper.buildLogMessage("Sending audit event IPV_IDENTITY_ISSUED message."));
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_IDENTITY_ISSUED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

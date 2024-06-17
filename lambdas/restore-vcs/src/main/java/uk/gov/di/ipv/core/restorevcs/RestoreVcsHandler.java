@@ -190,7 +190,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                 getExtensionsForAudit(VerifiableCredential.fromVcStoreItem(vcStoreItem), null);
 
         var auditEvent =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_VC_RESTORED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

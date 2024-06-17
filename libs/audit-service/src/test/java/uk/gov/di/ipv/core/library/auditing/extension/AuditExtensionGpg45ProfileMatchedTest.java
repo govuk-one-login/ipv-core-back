@@ -52,7 +52,7 @@ class AuditExtensionGpg45ProfileMatchedTest {
                 new AuditEventUser("user-id", "session-id", "journey-id", "ip-address");
 
         AuditEvent auditEvent =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED, "component-id", user, extension);
 
         String expected =

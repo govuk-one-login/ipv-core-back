@@ -61,7 +61,9 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
 
         // Arrange
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
+        var event =
+                AuditEvent.createAuditEventWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -92,7 +94,9 @@ class AuditServiceTest {
                         .setErrorDescription(errorDescription)
                         .build();
 
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+        var event =
+                AuditEvent.createAuditEventWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -138,7 +142,8 @@ class AuditServiceTest {
                         "someIp.Address");
 
         var event =
-                new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, auditEventUser, extensions);
+                AuditEvent.createAuditEventWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START, null, auditEventUser, extensions);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -176,7 +181,9 @@ class AuditServiceTest {
         // Arrange
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, null);
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+        var event =
+                AuditEvent.createAuditEventWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -212,7 +219,9 @@ class AuditServiceTest {
                         new AuditEventReturnCode("V", List.of("https://review-k.account.gov.uk")));
         AuditExtensionsUserIdentity extensions =
                 new AuditExtensionsUserIdentity(Vot.P2, false, false, auditEventReturnCodes);
-        var event = new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
+        var event =
+                AuditEvent.createAuditEventWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START, null, null, extensions);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -240,7 +249,7 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueueWithRestrictedDeviceInfo() throws Exception {
         // Arrange
         var event =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
                         null,
                         null,
@@ -272,7 +281,7 @@ class AuditServiceTest {
         // Arrange
         List<Name> name = List.of(new Name(List.of(new NameParts("first_name", "TestUser"))));
         var event =
-                new AuditEvent(
+                AuditEvent.createAuditEventWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
                         null,
                         null,
@@ -309,7 +318,7 @@ class AuditServiceTest {
                 SqsException.class,
                 () ->
                         underTest.sendAuditEvent(
-                                new AuditEvent(
+                                AuditEvent.createAuditEventWithoutDeviceInformation(
                                         AuditEventTypes.IPV_JOURNEY_START,
                                         "{\\}",
                                         new AuditEventUser("1234", "1234", "1234", "1.1.1.1"))));

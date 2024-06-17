@@ -12,5 +12,5 @@ public record AuditRestrictedInheritedIdentity(
         List<Name> name,
         List<BirthDate> birthDate,
         List<SocialSecurityRecord> socialSecurityRecord,
-        AuditRestrictedDeviceInformation deviceInformation)
-        implements AuditRestricted {}
+        DeviceInformation deviceInformation)
+        implements AuditRestrictedWithDeviceInformation {}
