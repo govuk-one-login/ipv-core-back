@@ -13,7 +13,7 @@ states:
     parent: PARENT_STATE
     events:
       eventOne:
-        targetState: JOURNEY_STATE
+        targetState: ANOTHER_PAGE_STATE
       eventTwo:
         targetState: CRI_STATE
         checkIfDisabled:
@@ -99,6 +99,8 @@ states:
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
+      anotherPageState:
+        targetState: ANOTHER_PAGE_STATE
 
   PAGE_STATE_WITH_BACK_EVENT:
     response:
@@ -135,11 +137,11 @@ states:
     nestedJourney: NESTED_JOURNEY_DEFINITION
     exitEvents:
       exitEventFromNestedStateTwo:
-        targetState: JOURNEY_STATE
+        targetState: ANOTHER_PAGE_STATE
       exitEventFromDoublyNestedInvokeState:
         targetState: ERROR_STATE
 
-  JOURNEY_STATE:
+  ANOTHER_PAGE_STATE:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-another-page-state

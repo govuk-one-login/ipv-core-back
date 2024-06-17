@@ -79,6 +79,10 @@ public class IpvSessionItem implements DynamodbItem {
         pushState(journeyState.subJourney(), journeyState.state());
     }
 
+    public void popState() {
+        stateStack.remove(stateStack.size() - 1);
+    }
+
     public JourneyState getState() {
         if (stateStack.isEmpty()) {
             throw new IllegalStateException();

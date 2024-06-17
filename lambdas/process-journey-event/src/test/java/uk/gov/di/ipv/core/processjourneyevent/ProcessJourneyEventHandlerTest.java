@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -41,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -589,16 +592,23 @@ class ProcessJourneyEventHandlerTest {
         processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(
-                new JourneyState(INITIAL_JOURNEY_SELECTION, "JOURNEY_STATE"),
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
                 mockIpvSessionService.getIpvSession("anyString").getState());
     }
 
     @Test
     void shouldGoBackIfCurrentAndPreviousStatesArePages() throws Exception {
-        var inputToNextPageState =
+        var firstTransitionInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventFour")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        var secondTransitionInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("anotherPageState")
                         .ipvSessionId(TEST_IP)
                         .build();
 
@@ -621,15 +631,33 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST);
 
-        var nextResponse =
-                processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
-        assertEquals("page-id-for-page-state-at-start-of-no-photo-id", nextResponse.get("page"));
+        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+
+        processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
+        inOrder.verify(ipvSessionItem)
+                .pushState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID");
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
                 ipvSessionItem.getState());
 
-        var backResponse = processJourneyEventHandler.handleRequest(backInput, mockContext);
-        assertEquals("page-id-for-page-state", backResponse.get("page"));
+        processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
+        inOrder.verify(ipvSessionItem).pushState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE");
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
+                ipvSessionItem.getState());
+
+        processJourneyEventHandler.handleRequest(backInput, mockContext);
+        inOrder.verify(ipvSessionItem).popState();
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
+                ipvSessionItem.getState());
+
+        processJourneyEventHandler.handleRequest(backInput, mockContext);
+        inOrder.verify(ipvSessionItem).popState();
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"),
                 ipvSessionItem.getState());
@@ -850,7 +878,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) {
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.pushState(INITIAL_JOURNEY_SELECTION, userState);

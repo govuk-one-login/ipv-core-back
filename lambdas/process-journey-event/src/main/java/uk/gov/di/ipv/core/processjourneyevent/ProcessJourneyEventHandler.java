@@ -220,14 +220,11 @@ public class ProcessJourneyEventHandler
                                 deviceInformation);
             }
 
-            var basicState = (BasicState) newState;
-            ipvSessionItem.pushState(basicState.getJourneyType(), basicState.getName());
-
             logStateChange(currentJourneyState, journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
-            return basicState.getResponse();
+            return ((BasicState) newState).getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -285,7 +282,7 @@ public class ProcessJourneyEventHandler
             var previousJourneyState = ipvSessionItem.getPreviousState();
 
             if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
-                ipvSessionItem.pushState(previousJourneyState);
+                ipvSessionItem.popState();
                 return journeyStateToBasicState(previousJourneyState);
             }
 
@@ -306,6 +303,10 @@ public class ProcessJourneyEventHandler
                 sendJourneyAuditEvent(
                         auditEventType, result.auditContext(), auditEventUser, deviceInformation);
             }
+        }
+
+        if (result.state() instanceof BasicState basicState) {
+            ipvSessionItem.pushState(basicState.getJourneyType(), basicState.getName());
         }
 
         return result.state();

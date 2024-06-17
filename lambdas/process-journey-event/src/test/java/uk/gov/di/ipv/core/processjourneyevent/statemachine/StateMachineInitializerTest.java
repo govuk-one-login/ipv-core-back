@@ -65,7 +65,7 @@ class StateMachineInitializerTest {
 
         State parentState = journeyMap.get("PARENT_STATE");
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
-        BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
+        BasicState anotherPageState = (BasicState) journeyMap.get("ANOTHER_PAGE_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
         BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
         BasicState criWithEvidenceRequest =
@@ -82,7 +82,7 @@ class StateMachineInitializerTest {
         assertEquals(parentState, pageState.getParentObj());
         assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(
-                journeyState,
+                anotherPageState,
                 ((BasicEvent) pageState.getEvents().get("eventOne")).getTargetStateObj());
         assertEquals(
                 criState, ((BasicEvent) pageState.getEvents().get("eventTwo")).getTargetStateObj());
@@ -144,7 +144,7 @@ class StateMachineInitializerTest {
         // nested journey invoke state assertions
         assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(
-                journeyState,
+                anotherPageState,
                 ((BasicEvent)
                                 nestedJourneyInvokeState
                                         .getExitEvents()
