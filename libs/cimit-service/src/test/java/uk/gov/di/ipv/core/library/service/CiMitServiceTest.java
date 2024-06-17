@@ -451,13 +451,13 @@ class CiMitServiceTest {
                                 .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
                                 .build());
         when(verifiableCredentialValidator.parseAndValidate(
-                        eq(TEST_USER_ID),
-                        eq(null),
-                        eq(SIGNED_CONTRA_INDICATOR_VC),
-                        eq(VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE),
-                        eq("INVALID_CIMIT_KEY"),
-                        eq(CIMIT_COMPONENT_ID),
-                        eq(false)))
+                        TEST_USER_ID,
+                        null,
+                        SIGNED_CONTRA_INDICATOR_VC,
+                        VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
+                        "INVALID_CIMIT_KEY",
+                        CIMIT_COMPONENT_ID,
+                        false))
                 .thenThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
