@@ -10,10 +10,10 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 public record AuditRestrictedCheckCoi(
-        @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty List<Name> oldName,
-        @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty List<Name> newName,
-        @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty List<BirthDate> oldBirthDate,
-        @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty List<BirthDate> newBirthDate,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Name> oldName,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Name> newName,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<BirthDate> oldBirthDate,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<BirthDate> newBirthDate,
         @JsonProperty(value = "device_information", required = true)
                 DeviceInformation deviceInformation)
         implements AuditRestrictedWithDeviceInformation {}
