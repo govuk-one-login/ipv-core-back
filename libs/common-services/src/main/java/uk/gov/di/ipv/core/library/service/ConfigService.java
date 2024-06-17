@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -371,19 +370,12 @@ public class ConfigService {
     }
 
     private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {
-        return getCriConfigForType(connection, criId, configType, true);
-    }
-
-    private <T> T getCriConfigForType(
-            String connection, String criId, Class<T> configType, boolean failOnUnknown) {
 
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {
             String parameter = ssmProvider.get(resolvePath(pathTemplate, criId, connection));
-            return OBJECT_MAPPER
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, failOnUnknown)
-                    .readValue(parameter, configType);
+            return OBJECT_MAPPER.readValue(parameter, configType);
         } catch (ParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format(
