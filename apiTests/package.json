@@ -1,0 +1,12 @@
+{
+  "name": "apitests",
+  "version": "1.0.0",
+  "description": "API tests for core-back",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
