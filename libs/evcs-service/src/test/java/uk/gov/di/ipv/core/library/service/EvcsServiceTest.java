@@ -183,7 +183,7 @@ class EvcsServiceTest {
     @Test
     void testStoreCompleteIdentity_onSuccessfulJourney_whenAllVCsExistInEvcs() throws Exception {
         // Arrange
-        EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
+        EvcsGetUserVCsDto EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO =
                 new EvcsGetUserVCsDto(
                         List.of(
                                 new EvcsGetUserVCDto(
@@ -196,7 +196,7 @@ class EvcsServiceTest {
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
-                .thenReturn(EVCS_GET_USER_VCS_DTO);
+                .thenReturn(EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO);
         // Act
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);

@@ -123,10 +123,10 @@ public class EvcsService {
                                     existingPendingReturnEvcsUserVcsToUpdate.stream())
                             .toList();
 
-            if (evcsUserVCsToUpdate.size() > 0)
+            if (!evcsUserVCsToUpdate.isEmpty())
                 evcsClient.updateUserVCs(userId, evcsUserVCsToUpdate);
         }
-        if (userVCsForEvcs.size() > 0) evcsClient.storeUserVCs(userId, userVCsForEvcs);
+        if (!userVCsForEvcs.isEmpty()) evcsClient.storeUserVCs(userId, userVCsForEvcs);
     }
 
     private static String getVcSignature(EvcsGetUserVCDto vc) {
