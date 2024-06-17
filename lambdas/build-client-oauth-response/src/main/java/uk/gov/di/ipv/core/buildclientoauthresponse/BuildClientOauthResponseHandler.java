@@ -57,6 +57,8 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 public class BuildClientOauthResponseHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String STATE = "state";
+
     private final IpvSessionService sessionService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
@@ -226,7 +228,7 @@ public class BuildClientOauthResponseHandler
                         .addParameter("code", authorizationCode);
 
         if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
-            redirectUri.addParameter("state", clientOAuthSessionItem.getState());
+            redirectUri.addParameter(STATE, clientOAuthSessionItem.getState());
         }
 
         return new ClientResponse(new ClientDetails(redirectUri.build().toString()));
@@ -240,7 +242,7 @@ public class BuildClientOauthResponseHandler
         uriBuilder.addParameter("error_description", ipvSessionItem.getErrorDescription());
 
         if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
-            uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
+            uriBuilder.addParameter(STATE, clientOAuthSessionItem.getState());
         }
 
         return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
@@ -253,7 +255,7 @@ public class BuildClientOauthResponseHandler
         uriBuilder.addParameter("error_description", "Missing Context");
 
         if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
-            uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
+            uriBuilder.addParameter(STATE, clientOAuthSessionItem.getState());
         }
 
         return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
