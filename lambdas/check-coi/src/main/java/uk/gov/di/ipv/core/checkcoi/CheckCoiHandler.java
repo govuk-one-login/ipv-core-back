@@ -7,12 +7,13 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.auditing.AuditEventFactory;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -225,9 +226,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         ? getRestrictedCheckCoiAuditData(oldVcs, sessionsVcs, deviceInformation)
                         : new AuditRestrictedDeviceInformation(deviceInformation);
 
-        var auditEventFactory = new AuditEventFactory();
         auditService.sendAuditEvent(
-                auditEventFactory.createAuditEventWithDeviceInformation(
+                AuditEvent.createAuditEventWithDeviceInformation(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -248,6 +248,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
-                deviceInformation);
+                new DeviceInformation(deviceInformation));
     }
 }

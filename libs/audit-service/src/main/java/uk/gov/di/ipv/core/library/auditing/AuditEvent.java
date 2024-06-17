@@ -7,6 +7,7 @@ import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestricted;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedWithDeviceInformation;
 
 import java.time.Instant;
 
@@ -35,7 +36,7 @@ public class AuditEvent {
     private final AuditRestricted restricted;
 
     @JsonCreator
-    public AuditEvent(
+    private AuditEvent(
             @JsonProperty(value = "event_name", required = true) AuditEventTypes eventName,
             @JsonProperty(value = "component_id", required = false) String componentId,
             @JsonProperty(value = "user", required = false) AuditEventUser user,
@@ -69,5 +70,23 @@ public class AuditEvent {
             AuditEventUser user,
             AuditRestricted restricted) {
         this(eventName, componentId, user, null, restricted);
+    }
+
+    public static AuditEvent createAuditEventWithDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditExtensions extensions,
+            AuditRestrictedWithDeviceInformation restricted) {
+        return new AuditEvent(eventType, componentId, user, extensions, restricted);
+    }
+
+    public static AuditEvent createAuditEventWithoutDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditExtensions extensions,
+            AuditRestricted restricted) {
+        return new AuditEvent(eventType, componentId, user, extensions, restricted);
     }
 }
