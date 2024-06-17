@@ -442,9 +442,8 @@ public class ProcessJourneyEventHandler
     }
 
     private boolean isBackEventDefinedOnState(JourneyState journeyState) {
-        return ((BasicState)
-                        stateMachines.get(journeyState.subJourney()).getState(journeyState.state()))
-                .getEvents()
-                .containsKey(BACK_EVENT);
+        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
+                        instanceof BasicState basicState
+                && basicState.getEvents().containsKey(BACK_EVENT);
     }
 }
