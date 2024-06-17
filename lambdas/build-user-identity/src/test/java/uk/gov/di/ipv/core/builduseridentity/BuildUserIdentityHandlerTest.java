@@ -747,17 +747,17 @@ class BuildUserIdentityHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        Map<String, Object> responseBody =
+        Map<String, Object> responseBodyJson =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(403, response.getStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBodyJson.get("error"));
         assertEquals(
                 OAuth2Error.ACCESS_DENIED
                         .appendDescription(
                                 " - The supplied access token was not found in the database")
                         .getDescription(),
-                responseBody.get("error_description"));
+                responseBodyJson.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
