@@ -34,7 +34,7 @@ public class TicfCriService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String TRUSTMARK = "https://oidc.account.gov.uk/trustmark";
-    public static final String X_API_KEY_HEADER = "x-api-key"; // pragma: allowlist secret
+    public static final String X_API_KEY_HEADER = "x-api-key";
 
     private final ConfigService configService;
     private final HttpClient httpClient;
