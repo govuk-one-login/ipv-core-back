@@ -4,10 +4,6 @@ plugins {
 	id "jacoco"
 }
 
-repositories {
-	mavenCentral()
-}
-
 dependencies {
 	implementation libs.bundles.log4j,
 			libs.jacksonDatabind,
