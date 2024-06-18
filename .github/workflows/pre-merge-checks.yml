@@ -89,6 +89,8 @@ jobs:
 
       - name: Build and unit tests
         run: ./gradlew clean build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Perform Static Analysis
         if: ${{ github.actor != 'dependabot[bot]' }}
@@ -127,3 +129,5 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - run: sam build -t deploy/template.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

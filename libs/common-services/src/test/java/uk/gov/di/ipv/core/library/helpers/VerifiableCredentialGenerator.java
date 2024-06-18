@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -36,6 +37,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 public class VerifiableCredentialGenerator {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     public static VerifiableCredential generateVerifiableCredential(
             String userId, String criId, Map<String, Object> vcClaim) throws Exception {
         return generateVerifiableCredential(userId, criId, vcClaim, "https://subject.example.com");
@@ -50,7 +53,7 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, userId)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, vcClaim)
+                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
                         .build();
         return signTestVc(userId, criId, claimsSet);
     }
@@ -63,7 +66,7 @@ public class VerifiableCredentialGenerator {
                             .claim(SUBJECT, userId)
                             .claim(ISSUER, issuer)
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
-                            .claim(VC_CLAIM, vcClaim)
+                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
                             .build();
             return signTestVc(userId, criId, claimsSet);
         } catch (Exception e) {

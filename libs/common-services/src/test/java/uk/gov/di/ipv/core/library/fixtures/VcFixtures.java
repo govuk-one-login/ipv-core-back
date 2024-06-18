@@ -55,7 +55,6 @@ public interface VcFixtures {
                             .validityScore(2)
                             .verificationScore(2)
                             .ci(List.of("test"))
-                            .ciReasons(List.of(Map.of("ci", "testValue", "reason", "testReason")))
                             .build());
 
     List<TestVc.TestEvidence> FRAUD_EVIDENCE_NO_CHECK_DETAILS =
@@ -170,21 +169,19 @@ public interface VcFixtures {
                     TestVc.TestEvidence.builder()
                             .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
                             .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                            .checkDetails(null)
                             .build());
     Map<String, String> ADDRESS_1 =
             Map.ofEntries(
-                    Map.entry("validFrom", "2000-01-01"),
                     Map.entry("uprn", "100120012077"),
-                    Map.entry("addressRegion", "Illinois"),
-                    Map.entry("streetAddress", "35 Idsworth Road"),
-                    Map.entry("addressLocality", "Sheffield"),
-                    Map.entry("type", "PostalAddress"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("organizationName", "Software Ltd"),
                     Map.entry("subBuildingName", ""),
-                    Map.entry("buildingNumber", "8"),
+                    Map.entry("buildingNumber", "35"),
                     Map.entry("buildingName", ""),
-                    Map.entry("postalCode", "S5 6UN"));
+                    Map.entry("streetName", "IDSWORTH ROAD"),
+                    Map.entry("addressLocality", "SHEFFIELD"),
+                    Map.entry("postalCode", "S5 6UN"),
+                    Map.entry("addressCountry", "GB"),
+                    Map.entry("validFrom", "2000-01-01"));
 
     Map<String, String> ADDRESS_2 =
             Map.ofEntries(
@@ -213,7 +210,7 @@ public interface VcFixtures {
                     Map.entry("uprn", "10022812929"),
                     Map.entry("organisationName", "FINCH GROUP"),
                     Map.entry("subBuildingName", "UNIT 2B"),
-                    Map.entry("buildingNumber ", "16"),
+                    Map.entry("buildingNumber", "16"),
                     Map.entry("buildingName", "COY POND BUSINESS PARK"),
                     Map.entry("dependentStreetName", "KINGS PARK"),
                     Map.entry("streetName", "BIG STREET"),

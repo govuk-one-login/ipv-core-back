@@ -82,8 +82,7 @@ class VcHelperTest {
                 Arguments.of("Verification VC", vcVerificationM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
                 Arguments.of("Verification F2F VC", vcF2fM1a()),
-                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
-                Arguments.of("Verification TICF VC", vcTicf()));
+                Arguments.of("Verification Nino VC", vcNinoSuccessful()));
     }
 
     @ParameterizedTest

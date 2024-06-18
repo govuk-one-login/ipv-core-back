@@ -37,6 +37,8 @@ jobs:
           cache: 'gradle'
       - name: Run consumer contract tests
         run: ./gradlew --parallel pactConsumerTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pacts to broker with gradle
         # Dependabot PRs do not have access to secrets, so cannot access the pacts broker
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}

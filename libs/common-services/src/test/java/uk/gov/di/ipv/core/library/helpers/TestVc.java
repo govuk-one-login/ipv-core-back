@@ -71,7 +71,6 @@ public class TestVc {
         private Integer validityScore;
         private Integer verificationScore;
         @Builder.Default private List<Object> ci = Collections.emptyList();
-        @Builder.Default private List<Object> ciReasons = Collections.emptyList();
         private Integer identityFraudScore;
         private Integer activityHistoryScore;
 
