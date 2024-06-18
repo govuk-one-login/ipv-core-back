@@ -368,7 +368,7 @@ class IssueClientAccessTokenHandlerTest {
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {
         HTTPResponse httpErrorResponse = new HTTPResponse(HttpStatus.SC_BAD_REQUEST);
         httpErrorResponse.setContentType(ContentType.APPLICATION_JSON.getType());
-        httpErrorResponse.setContent(responseBody);
+        httpErrorResponse.setBody(responseBody);
         return ErrorObject.parse(httpErrorResponse);
     }
 

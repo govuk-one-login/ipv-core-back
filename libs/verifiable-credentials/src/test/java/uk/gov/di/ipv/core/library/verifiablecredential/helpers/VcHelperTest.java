@@ -217,7 +217,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnFalseIfEmptyEvidenceType() throws Exception {
+    void shouldReturnFalseIfEmptyEvidenceType() {
         var vcs = List.of(vcEmptyEvidence());
         // Call the method under test
         List<VerifiableCredential> result =
@@ -228,7 +228,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnTrueWhenVcIsExpired() throws Exception {
+    void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudExpired();
@@ -242,7 +242,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnFalseWhenVcIsNotExpired() throws Exception {
+    void shouldReturnFalseWhenVcIsNotExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudNotExpired();

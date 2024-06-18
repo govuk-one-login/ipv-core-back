@@ -66,8 +66,7 @@ class CredentialTests {
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsValidCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsValidCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -163,7 +162,7 @@ class CredentialTests {
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedCredentialWithCi(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -264,7 +263,7 @@ class CredentialTests {
 
     @Pact(provider = "PassportVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsFailedCredentialWithScenario2Ci(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -384,10 +383,10 @@ class CredentialTests {
                 .status(403)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.object(
                                                     "oauth_error",
-                                                    (error) -> {
+                                                    error -> {
                                                         error.stringType("error");
                                                         error.stringType("error_description");
                                                     });
@@ -400,7 +399,7 @@ class CredentialTests {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstPassportCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);

@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,12 +103,6 @@ class BuildUserIdentityHandlerTest {
 
         // Configure the config service
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
-
-        // Configure passport and address VCs
-        // 2020-01-01 00:00:00 is 1577836800 in epoch seconds
-        Instant thePast = Instant.ofEpochSecond(1577836800);
-        // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-        Instant theFuture = Instant.ofEpochSecond(1577836800);
 
         var passportVcBuilder =
                 new PactJwtBuilder(

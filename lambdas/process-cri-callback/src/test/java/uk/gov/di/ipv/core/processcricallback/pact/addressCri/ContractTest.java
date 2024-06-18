@@ -92,7 +92,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
@@ -169,7 +169,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstAddressCri_throwsErrorWithInvalidAuthCode(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+            MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -215,7 +215,7 @@ class ContractTest {
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsExperianIssuedCredential(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -329,7 +329,7 @@ class ContractTest {
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedAddressCredential(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -439,8 +439,7 @@ class ContractTest {
     }
 
     @Pact(provider = "AddressCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .uponReceiving("Invalid credential request")

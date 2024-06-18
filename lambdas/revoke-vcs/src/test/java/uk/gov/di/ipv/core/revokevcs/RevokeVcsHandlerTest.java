@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -71,8 +70,7 @@ class RevokeVcsHandlerTest {
     }
 
     @Test
-    void shouldNotRevokeVcIfDoesNotExist()
-            throws IOException, SqsException, CredentialParseException {
+    void shouldNotRevokeVcIfDoesNotExist() throws IOException, SqsException {
         // Arrange
         InputStream inputStream =
                 RevokeVcsHandlerTest.class.getResourceAsStream("/testRevokeVcsRequest.json");

@@ -366,7 +366,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
@@ -490,8 +490,7 @@ class ContractTest {
     }
 
     @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -629,7 +628,7 @@ class ContractTest {
 
     @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredentialWithFailedAnswer(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -782,7 +781,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void
             fetchVerifiableCredential_whenCalledAgainstExperianKbvCriWithInvalidAuthCode_throwsAnException(
-                    MockServer mockServer) throws URISyntaxException, CriApiException {
+                    MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
@@ -815,7 +814,7 @@ class ContractTest {
 
     @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredentialWithCi(
-            PactDslWithProvider builder) throws Exception {
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")

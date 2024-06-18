@@ -84,7 +84,7 @@ class TokenTests {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
@@ -162,7 +162,7 @@ class TokenTests {
     @Test
     @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
     void fetchAccessToken_whenCalledAgainstDrivingLicenceCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+            MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
