@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class VerifiableCredentialParserTest {
     private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @Disabled("Disabled pending https://github.com/govuk-one-login/data-vocab/pull/96")
     @Test
     void shouldParseAddressCredential() throws Exception {
         var claimsSet = getTestClaimsSet("/AddressCredential.json");
@@ -120,8 +118,26 @@ class VerifiableCredentialParserTest {
     }
 
     @Test
-    void shouldThrowOnInvalidTypes() throws Exception {
+    void shouldThrowOnInvalidProperties() throws Exception {
+        var claimsSet = getTestClaimsSet("/InvalidPropertyCredential.json");
+
+        assertThrows(
+                CredentialParseException.class,
+                () -> VerifiableCredentialParser.parseCredential(claimsSet));
+    }
+
+    @Test
+    void shouldThrowOnInvalidCredentialType() throws Exception {
         var claimsSet = getTestClaimsSet("/InvalidTypeCredential.json");
+
+        assertThrows(
+                CredentialParseException.class,
+                () -> VerifiableCredentialParser.parseCredential(claimsSet));
+    }
+
+    @Test
+    void shouldThrowOnMissingCredentialType() throws Exception {
+        var claimsSet = getTestClaimsSet("/MissingTypeCredential.json");
 
         assertThrows(
                 CredentialParseException.class,

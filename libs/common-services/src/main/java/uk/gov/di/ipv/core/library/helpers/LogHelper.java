@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -21,8 +19,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public enum LogField {
         LOG_ACCESS_TOKEN("accessToken"),

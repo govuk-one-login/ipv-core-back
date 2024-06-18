@@ -97,19 +97,13 @@ public class VerifiableCredentialValidator {
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
+
             if (configService.enabled(CoreFeatureFlag.PARSE_VC_CLASSES)) {
                 // This only checks newly received VCs (behind a feature flag)
                 // but once comfortable we will move this into the VerifiableCredential class itself
-                try {
-                    VerifiableCredentialParser.parseCredential(vc.getClaimsSet());
-                } catch (CredentialParseException e) {
-                    // For now, we just log a warning here that we can fix
-                    // In future this should return a CredentialParseException instead
-                    LOGGER.warn(
-                            LogHelper.buildErrorMessage(
-                                    "Failed to parse verifiable credential", e));
-                }
+                tryParseVc(vc);
             }
+
             if (VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE.equals(vcType)) {
                 validateCiCodes(vc);
             }
@@ -120,6 +114,16 @@ public class VerifiableCredentialValidator {
             LOGGER.error(LogHelper.buildErrorMessage("Error parsing credentials", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        }
+    }
+
+    private void tryParseVc(VerifiableCredential vc) {
+        try {
+            VerifiableCredentialParser.parseCredential(vc.getClaimsSet());
+        } catch (CredentialParseException e) {
+            // For now, we just log a warning here that we can fix
+            // In future this should return a CredentialParseException instead
+            LOGGER.warn(LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
         }
     }
 
