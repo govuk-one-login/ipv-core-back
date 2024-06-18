@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "test"
+    "cucumber": "cucumber-js"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.8.0",
