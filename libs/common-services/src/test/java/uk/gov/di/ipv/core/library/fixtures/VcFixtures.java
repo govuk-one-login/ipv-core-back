@@ -327,7 +327,7 @@ public interface VcFixtures {
     VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    PASSPORT_CRI,
+                    Cri.PASSPORT.getId(),
                     TestVc.builder()
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -87,7 +88,7 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT_CRI,
+                        Cri.PASSPORT.getId(),
                         PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC.getVcString(),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         VALID_RSA_SIGNING_KEY,
@@ -95,7 +96,7 @@ class VerifiableCredentialValidatorTest {
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT_CRI, vc.getCriId());
+        assertEquals(Cri.PASSPORT.getId(), vc.getCriId());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC.getVcString(), vc.getVcString());
     }
 
@@ -354,7 +355,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT_CRI,
+                                    Cri.PASSPORT.getId(),
                                     vcPassportM1aWithCI().getVcString(),
                                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                     "not a valid signing key",
