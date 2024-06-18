@@ -232,7 +232,7 @@ public class EvaluateGpg45ScoresHandler
                         ipvSessionItem.getIpvSessionId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         ipAddress);
-        return new AuditEvent(
+        return AuditEvent.createWithDeviceInformation(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                 configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,

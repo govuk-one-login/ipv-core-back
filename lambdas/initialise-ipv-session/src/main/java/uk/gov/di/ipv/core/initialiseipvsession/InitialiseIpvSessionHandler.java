@@ -233,7 +233,7 @@ public class InitialiseIpvSessionHandler
                     new AuditExtensionsIpvJourneyStart(isReproveIdentity(claimsSet), vtr);
 
             AuditEvent auditEvent =
-                    new AuditEvent(
+                    AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
@@ -494,7 +494,7 @@ public class InitialiseIpvSessionHandler
             throws SqsException, CredentialParseException, UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
-                    new AuditEvent(
+                    AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,

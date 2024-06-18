@@ -7,6 +7,7 @@ import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestricted;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedWithDeviceInformation;
 
 import java.time.Instant;
 
@@ -35,7 +36,7 @@ public class AuditEvent {
     private final AuditRestricted restricted;
 
     @JsonCreator
-    public AuditEvent(
+    private AuditEvent(
             @JsonProperty(value = "event_name", required = true) AuditEventTypes eventName,
             @JsonProperty(value = "component_id", required = false) String componentId,
             @JsonProperty(value = "user", required = false) AuditEventUser user,
@@ -51,23 +52,42 @@ public class AuditEvent {
         this.restricted = restricted;
     }
 
-    public AuditEvent(AuditEventTypes eventName, String componentId, AuditEventUser user) {
-        this(eventName, componentId, user, null, null);
+    public static AuditEvent createWithDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditExtensions extensions,
+            AuditRestrictedWithDeviceInformation restricted) {
+        return new AuditEvent(eventType, componentId, user, extensions, restricted);
     }
 
-    public AuditEvent(
-            AuditEventTypes eventName,
+    public static AuditEvent createWithDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditRestrictedWithDeviceInformation restricted) {
+        return new AuditEvent(eventType, componentId, user, null, restricted);
+    }
+
+    public static AuditEvent createWithoutDeviceInformation(
+            AuditEventTypes eventType,
+            String componentId,
+            AuditEventUser user,
+            AuditExtensions extensions,
+            AuditRestricted restricted) {
+        return new AuditEvent(eventType, componentId, user, extensions, restricted);
+    }
+
+    public static AuditEvent createWithoutDeviceInformation(
+            AuditEventTypes eventType,
             String componentId,
             AuditEventUser user,
             AuditExtensions extensions) {
-        this(eventName, componentId, user, extensions, null);
+        return new AuditEvent(eventType, componentId, user, extensions, null);
     }
 
-    public AuditEvent(
-            AuditEventTypes eventName,
-            String componentId,
-            AuditEventUser user,
-            AuditRestricted restricted) {
-        this(eventName, componentId, user, null, restricted);
+    public static AuditEvent createWithoutDeviceInformation(
+            AuditEventTypes eventType, String componentId, AuditEventUser user) {
+        return new AuditEvent(eventType, componentId, user, null, null);
     }
 }

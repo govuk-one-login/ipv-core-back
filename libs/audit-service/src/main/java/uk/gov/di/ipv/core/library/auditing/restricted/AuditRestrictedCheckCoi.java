@@ -16,4 +16,4 @@ public record AuditRestrictedCheckCoi(
         @JsonInclude(JsonInclude.Include.NON_NULL) List<BirthDate> newBirthDate,
         @JsonProperty(value = "device_information", required = true)
                 DeviceInformation deviceInformation)
-        implements AuditRestricted {}
+        implements AuditRestrictedWithDeviceInformation {}

@@ -209,7 +209,7 @@ public class BuildCriOauthRequestHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
-                    new AuditEvent(
+                    AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,

@@ -521,7 +521,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -644,7 +644,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws SqsException {
         var auditEvent =
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

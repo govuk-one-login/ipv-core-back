@@ -119,7 +119,7 @@ public class CriCheckingService {
                         .build();
 
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

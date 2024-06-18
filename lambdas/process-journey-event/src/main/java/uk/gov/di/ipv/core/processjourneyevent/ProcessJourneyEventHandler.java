@@ -378,7 +378,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -406,7 +406,7 @@ public class ProcessJourneyEventHandler
             AuditEventUser auditEventUser, IpvJourneyTypes journeyType, String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

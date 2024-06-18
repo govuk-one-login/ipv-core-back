@@ -109,7 +109,7 @@ class AuditExtensionsHelperTest {
                 "[{\"personalNumber\":\"AB123456C\"}]",
                 OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
         assertEquals(
-                "{\"device_information\":{\"encoded\":\"test_device_data\"}}",
+                "{\"encoded\":\"test_device_data\"}",
                 OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
 }
