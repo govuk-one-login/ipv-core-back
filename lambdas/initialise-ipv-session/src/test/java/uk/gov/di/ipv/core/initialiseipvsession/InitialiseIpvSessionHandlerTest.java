@@ -113,7 +113,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 class InitialiseIpvSessionHandlerTest {
     public static final String TEST_COMPONENT_ID = "test-component-id";
     public static final String TEST_SIGNING_KEY =
-            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"; // pragma: allowlist secret
+            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}";
     public static final String TEST_USER_ID = "test-user-id";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final CriConfig TEST_CRI_CONFIG =
