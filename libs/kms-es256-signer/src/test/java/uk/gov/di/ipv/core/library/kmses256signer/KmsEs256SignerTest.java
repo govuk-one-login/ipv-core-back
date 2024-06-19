@@ -26,7 +26,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 @ExtendWith(MockitoExtension.class)
 class KmsEs256SignerTest {
     private static final Base64.Decoder B64_DECODER = Base64.getDecoder();
-    private static final String SIGNATURE = "GS0KQ+D9O4llxqaQ+BROVqvr9EPP0m3ybj/8hHxJHQY=";
+    private static final String SIGNATURE =
+            "GS0KQ+D9O4llxqaQ+BROVqvr9EPP0m3ybj/8hHxJHQY="; // pragma: allowlist secret
     private static final String KMS_KEY_ID = "kmsKeyId";
     @Mock private KmsClient kmsClient;
     @Mock private SignResponse signResponse;
