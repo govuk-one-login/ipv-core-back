@@ -198,7 +198,7 @@ class CriApiServiceTest {
                                 aResponse()
                                         .withHeader("Content-Type", "application/xml;charset=utf-8")
                                         .withBody(
-                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
+                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n"))); // pragma: allowlist secret
 
         // Act & Assert
         var exception =
