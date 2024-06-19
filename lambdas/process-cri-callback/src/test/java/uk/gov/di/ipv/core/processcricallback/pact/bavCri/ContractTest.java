@@ -598,7 +598,7 @@ class ContractTest {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlCYXZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "Cg7VaW9q94XBCp3XhYRyifqAEASrg1HIYxhHdcJ949lqpFjmvuDM5T1Dh4OzNAQWe5LqoWpA4IGwhklnuKcilA";
+            "Cg7VaW9q94XBCp3XhYRyifqAEASrg1HIYxhHdcJ949lqpFjmvuDM5T1Dh4OzNAQWe5LqoWpA4IGwhklnuKcilA"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -670,7 +670,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "Mf2vUI7tchtEhiafnyp7oGFO0n_ngPgDseuZXGcc2aboVSErdJPiPp-6KrlRCxCq4h-1Js1Q9Ic_R8FUSRn3AA";
+            "Mf2vUI7tchtEhiafnyp7oGFO0n_ngPgDseuZXGcc2aboVSErdJPiPp-6KrlRCxCq4h-1Js1Q9Ic_R8FUSRn3AA"; // pragma: allowlist secret
 
     private static final String FAILED_BAV_VC_BODY =
             """
@@ -734,5 +734,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "_sW-3UzTjh0x6n1v0uvuZSOIwQ9GAMCv-HIlWdbaCYCgSjysIQg2e3rBaJAuqg21qm6uldYSYW3O1XFtVFtwJw";
+            "_sW-3UzTjh0x6n1v0uvuZSOIwQ9GAMCv-HIlWdbaCYCgSjysIQg2e3rBaJAuqg21qm6uldYSYW3O1XFtVFtwJw"; // pragma: allowlist secret
 }
