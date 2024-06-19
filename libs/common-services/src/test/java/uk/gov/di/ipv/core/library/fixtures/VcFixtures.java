@@ -984,7 +984,11 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigration() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
                 TestVc.TestEvidence.builder()
