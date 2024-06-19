@@ -1946,7 +1946,7 @@ class ContractTest {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEY21hd0NvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "42XAVWAIET_BI7FpFQHVIaoW3yRx9yt8HGgMRFMJdxjBey6tQLDRM_04cddot-pNCqYk8x6TueAOdHFsy6N9_A";
+            "42XAVWAIET_BI7FpFQHVIaoW3yRx9yt8HGgMRFMJdxjBey6tQLDRM_04cddot-pNCqYk8x6TueAOdHFsy6N9_A"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -2062,7 +2062,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw";
+            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
@@ -2160,7 +2160,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
-            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q";
+            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -2265,7 +2265,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
-            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw";
+            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1045-AC1
@@ -2372,7 +2372,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_NO_CI_SIGNATURE =
-            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg";
+            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1559-AC2
@@ -2478,7 +2478,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA";
+            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-4733-AC1
@@ -2584,7 +2584,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
-            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw";
+            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
@@ -2670,7 +2670,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "hhP8sfn4tvMUwKA79ywi1zG4ZEGJ1ojwoZf8mEaGMvbju1NL3VpjDeqxzRNj8FLIUeOyq9h7lqQuyTybrrWRPw";
+            "hhP8sfn4tvMUwKA79ywi1zG4ZEGJ1ojwoZf8mEaGMvbju1NL3VpjDeqxzRNj8FLIUeOyq9h7lqQuyTybrrWRPw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3146-AC1
@@ -2756,7 +2756,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NLD_PASSPORT_VC_SIGNATURE =
-            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ";
+            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3171-AC2
@@ -2845,7 +2845,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_WITH_CI_SIGNATURE =
-            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A";
+            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRP DCMAW-5176-AC1 (there is also a BRC version!)
@@ -2928,7 +2928,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g";
+            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
@@ -3014,7 +3014,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRP_VC_SIGNATURE =
-            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg";
+            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRC DCMAW-5176-AC1 (there is also a BRP version!)
@@ -3097,7 +3097,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRC_VC_SIGNATURE =
-            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ";
+            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC2
@@ -3181,5 +3181,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRC_VC_SIGNATURE =
-            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA";
+            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA"; // pragma: allowlist secret
 }
