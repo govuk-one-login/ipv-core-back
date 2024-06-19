@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
@@ -74,6 +75,7 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -90,6 +92,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -97,6 +100,8 @@ public class CheckExistingIdentityHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
+    private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
+            new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
     private static final JourneyResponse JOURNEY_OPERATIONAL_PROFILE_REUSE =
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
@@ -185,6 +190,13 @@ public class CheckExistingIdentityHandler
         VcHelper.setConfigService(this.configService);
     }
 
+    private record VerifiableCredentialBundle(
+            List<VerifiableCredential> credentials, boolean isPendingEvcsIdentity) {
+        private boolean isF2fIdenity() {
+            return credentials.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
+        }
+    }
+
     @Override
     @Tracing
     @Logging(clearState = true)
@@ -229,12 +241,16 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            var vcs = getVerifiableCredentials(userId, clientOAuthSessionItem.getEvcsAccessToken());
-            var hasF2fVc = vcs.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
+            var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
+            var vcs = getVerifiableCredentials(userId, evcsAccessToken);
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
-            final boolean isF2FComplete = !Objects.isNull(f2fRequest) && hasF2fVc;
-
+            final boolean isF2f = vcs.isF2fIdenity();
+            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !isF2f;
+            final boolean isF2FComplete =
+                    !Objects.isNull(f2fRequest)
+                            && isF2f
+                            && (!configService.enabled(EVCS_READ_ENABLED)
+                                    || vcs.isPendingEvcsIdentity);
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -258,7 +274,7 @@ public class CheckExistingIdentityHandler
             }
 
             // Check for credentials correlation failure
-            var areGpg45VcsCorrelated = userIdentityService.areVcsCorrelated(vcs);
+            var areGpg45VcsCorrelated = userIdentityService.areVcsCorrelated(vcs.credentials);
 
             var profileMatchResponse =
                     checkForProfileMatch(
@@ -310,16 +326,24 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private List<VerifiableCredential> getVerifiableCredentials(
+    private VerifiableCredentialBundle getVerifiableCredentials(
             String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
         if (configService.enabled(EVCS_READ_ENABLED)) {
-            var vcs = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
-            if (vcs != null && !vcs.isEmpty()) {
-                return vcs;
+            var vcs =
+                    evcsService.getVerifiableCredentialsByState(
+                            userId, evcsAccessToken, CURRENT, PENDING_RETURN);
+            var pendingReturnVcs = vcs.get(PENDING_RETURN);
+            // use pending return vcs to determine identity if available
+            if (!isNullOrEmpty(pendingReturnVcs)) {
+                return new VerifiableCredentialBundle(pendingReturnVcs, true);
+            }
+            var currentVcs = vcs.get(CURRENT);
+            if (!isNullOrEmpty(currentVcs)) {
+                return new VerifiableCredentialBundle(currentVcs, false);
             }
         }
-        return verifiableCredentialService.getVcs(userId);
+        return new VerifiableCredentialBundle(verifiableCredentialService.getVcs(userId), false);
     }
 
     @Tracing
@@ -362,7 +386,7 @@ public class CheckExistingIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            List<VerifiableCredential> vcs,
+            VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
                     CredentialParseException, VerifiableCredentialException, EvcsServiceException {
@@ -370,7 +394,7 @@ public class CheckExistingIdentityHandler
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
                         clientOAuthSessionItem.getVtr(),
-                        vcs,
+                        vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
                         areGpg45VcsCorrelated);
@@ -382,7 +406,7 @@ public class CheckExistingIdentityHandler
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            vcs,
+                            vcBundle,
                             auditEventUser,
                             deviceInformation));
         }
@@ -446,7 +470,7 @@ public class CheckExistingIdentityHandler
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            List<VerifiableCredential> vcs,
+            VerifiableCredentialBundle vcBundle,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws SqsException, VerifiableCredentialException, EvcsServiceException {
@@ -455,11 +479,11 @@ public class CheckExistingIdentityHandler
         String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && !hasCurrentFraudVc(vcs)) {
+                && !hasCurrentFraudVc(vcBundle.credentials)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
-            migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
+                    allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
+            migrateCredentialsToEVCS(userId, vcBundle, evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -474,7 +498,7 @@ public class CheckExistingIdentityHandler
             boolean isCurrentlyMigrating = ipvSessionItem.isInheritedIdentityReceivedThisSession();
 
             sessionCredentialsService.persistCredentials(
-                    VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC),
+                    VcHelper.filterVCBasedOnProfileType(vcBundle.credentials, OPERATIONAL_HMRC),
                     auditEventUser.getSessionId(),
                     isCurrentlyMigrating);
 
@@ -484,18 +508,25 @@ public class CheckExistingIdentityHandler
         }
 
         sessionCredentialsService.persistCredentials(
-                VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
+                VcHelper.filterVCBasedOnProfileType(
+                        vcBundle.credentials, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-        migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
-        return JOURNEY_REUSE;
+        migrateCredentialsToEVCS(userId, vcBundle, evcsAccessToken);
+
+        return vcBundle.isPendingEvcsIdentity && vcBundle.isF2fIdenity()
+                ? JOURNEY_REUSE_WITH_STORE
+                : JOURNEY_REUSE;
     }
 
     private void migrateCredentialsToEVCS(
-            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            String userId, VerifiableCredentialBundle vcBundle, String evcsAccessToken)
             throws EvcsServiceException, VerifiableCredentialException {
-        if (configService.enabled(EVCS_WRITE_ENABLED)) {
-            evcsMigrationService.migrateExistingIdentity(userId, credentials, evcsAccessToken);
+        if (configService.enabled(EVCS_WRITE_ENABLED)
+                && !vcBundle.isPendingEvcsIdentity
+                && !vcBundle.isF2fIdenity()) {
+            evcsMigrationService.migrateExistingIdentity(
+                    userId, vcBundle.credentials, evcsAccessToken);
         }
     }
 
