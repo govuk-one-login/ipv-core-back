@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 
 class StateMachineInitializerTest {
 
@@ -36,7 +37,7 @@ class StateMachineInitializerTest {
         StateMachineInitializerMode modeMock = mock(StateMachineInitializerMode.class);
         when(modeMock.getPathPart()).thenReturn("some-rubbish");
         StateMachineInitializer initializer =
-                new StateMachineInitializer(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION, modeMock);
+                new StateMachineInitializer(INITIAL_JOURNEY_SELECTION, modeMock);
         assertThrows(JourneyMapDeserializationException.class, initializer::initialize);
     }
 
@@ -59,13 +60,12 @@ class StateMachineInitializerTest {
     void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
-                                IpvJourneyTypes.INITIAL_JOURNEY_SELECTION,
-                                StateMachineInitializerMode.TEST)
+                                INITIAL_JOURNEY_SELECTION, StateMachineInitializerMode.TEST)
                         .initialize();
 
         State parentState = journeyMap.get("PARENT_STATE");
         BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
-        BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
+        BasicState anotherPageState = (BasicState) journeyMap.get("ANOTHER_PAGE_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
         BasicState criWithContextState = (BasicState) journeyMap.get("CRI_STATE_WITH_CONTEXT");
         BasicState criWithEvidenceRequest =
@@ -78,10 +78,11 @@ class StateMachineInitializerTest {
                 (NestedJourneyInvokeState) journeyMap.get("NESTED_JOURNEY_INVOKE_STATE");
 
         // page state assertions
-        assertEquals("page-id-for-some-page", pageState.getResponse().value().get("page"));
+        assertEquals("page-id-for-page-state", pageState.getResponse().value().get("page"));
         assertEquals(parentState, pageState.getParentObj());
+        assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(
-                journeyState,
+                anotherPageState,
                 ((BasicEvent) pageState.getEvents().get("eventOne")).getTargetStateObj());
         assertEquals(
                 criState, ((BasicEvent) pageState.getEvents().get("eventTwo")).getTargetStateObj());
@@ -141,8 +142,9 @@ class StateMachineInitializerTest {
                 ((BasicEvent) processState.getEvents().get("unmet")).getTargetStateObj());
 
         // nested journey invoke state assertions
+        assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(
-                journeyState,
+                anotherPageState,
                 ((BasicEvent)
                                 nestedJourneyInvokeState
                                         .getExitEvents()

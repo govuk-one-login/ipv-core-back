@@ -200,8 +200,6 @@ states:
         targetState: FRAUD_CHECK_RFC
       next:
         targetState: ADDRESS_AND_FRAUD_RFC
-      back:
-        targetState: CONFIRM_NAME_DOB
 
   UPDATE_NAME_DOB:
     response:

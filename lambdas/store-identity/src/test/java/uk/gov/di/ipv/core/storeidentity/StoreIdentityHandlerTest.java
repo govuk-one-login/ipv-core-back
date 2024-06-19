@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
@@ -354,7 +353,6 @@ class StoreIdentityHandlerTest {
             shouldStoreIdentityInEvcsAndSendAuditEventAndSendIdentityStoredJourney_whenEvcsWriteEnabled_forPendingF2f()
                     throws Exception {
         reset(mockIpvSessionService);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.REPEAT_FRAUD_CHECK);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
 
@@ -383,7 +381,6 @@ class StoreIdentityHandlerTest {
     void shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsWriteEnabled_forPendingF2f()
             throws Exception {
         reset(mockIpvSessionService);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.REPEAT_FRAUD_CHECK);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         doThrow(

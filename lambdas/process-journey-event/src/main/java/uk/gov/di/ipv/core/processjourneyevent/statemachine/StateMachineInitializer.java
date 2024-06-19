@@ -76,6 +76,7 @@ public class StateMachineInitializer {
             Map<String, State> eventTargetsStatesMap,
             Map<String, Event> nestedJourneyExitEvents) {
         state.setName(stateName);
+        state.setJourneyType(journeyType);
         linkBasicStateParents(state, journeyStates);
         initializeBasicStateEvents(state, eventTargetsStatesMap, nestedJourneyExitEvents);
     }
@@ -110,6 +111,7 @@ public class StateMachineInitializer {
     void initializeNestedJourneyInvokeState(
             NestedJourneyInvokeState state, String stateName, Map<String, State> journeyStates) {
         state.setName(stateName);
+        state.setJourneyType(journeyType);
         NestedJourneyDefinition nestedJourneyDefinition =
                 nestedJourneyDefinitions.get(state.getNestedJourney());
         NestedJourneyDefinition nestedJourneyDefinitionCopy =

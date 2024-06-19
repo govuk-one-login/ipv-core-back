@@ -5,12 +5,11 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +23,6 @@ public class IpvSessionItem implements DynamodbItem {
     private String ipvSessionId;
     private String clientOAuthSessionId;
     private String criOAuthSessionId;
-    private String userState;
     private String creationDateTime;
     private String authorizationCode;
     private AuthorizationCodeMetadata authorizationCodeMetadata;
@@ -34,7 +32,6 @@ public class IpvSessionItem implements DynamodbItem {
     private String errorDescription;
     private Vot vot;
     private long ttl;
-    private IpvJourneyTypes journeyType;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     private List<String> stateStack = new ArrayList<>();
@@ -71,16 +68,25 @@ public class IpvSessionItem implements DynamodbItem {
                 (featureSet != null && !featureSet.isEmpty()) ? String.join(",", featureSet) : null;
     }
 
-    public void pushState(IpvJourneyTypes journeyType, String state) {
-        stateStack.add(String.format("%s/%s", journeyType.name(), state));
+    public void pushState(JourneyState journeyState) {
+        stateStack.add(journeyState.toSessionItemString());
     }
 
-    public void pushState(String state) throws NoCurrentStateException {
-        if (this.stateStack.isEmpty()) {
-            throw new NoCurrentStateException();
+    public void popState() {
+        stateStack.remove(stateStack.size() - 1);
+    }
+
+    public JourneyState getState() {
+        if (stateStack.isEmpty()) {
+            throw new IllegalStateException();
         }
-        var currentJourney =
-                IpvJourneyTypes.valueOf(stateStack.get(stateStack.size() - 1).split("/", 2)[0]);
-        pushState(currentJourney, state);
+        return new JourneyState(stateStack.get(stateStack.size() - 1));
+    }
+
+    public JourneyState getPreviousState() {
+        if (stateStack.size() < 2) {
+            throw new IllegalStateException();
+        }
+        return new JourneyState(stateStack.get(stateStack.size() - 2));
     }
 }

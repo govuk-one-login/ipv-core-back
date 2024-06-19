@@ -207,6 +207,9 @@ class JourneyMapTest {
                     }
 
                     var pageEvents = new HashSet<>(basicState.getEvents().keySet());
+                    pageEvents.remove(
+                            "back"); // the back event is a special case that may or may not be
+                    // defined
                     if (basicState.getParent() != null) {
                         pageEvents.addAll(
                                 ((BasicState) stateMachine.get(basicState.getParent()))

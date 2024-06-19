@@ -10,6 +10,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 
@@ -31,7 +33,8 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 class IpvSessionServiceTest {
     private static final String START_STATE = "START";
     private static final String ERROR_STATE = "ERROR";
-    private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
+    private static final JourneyState INITIAL_START_JOURNEY_STATE =
+            new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE);
 
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
@@ -43,7 +46,7 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.setUserState(START_STATE);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -54,7 +57,7 @@ class IpvSessionServiceTest {
         verify(mockDataStore).getItem(ipvSessionIDArgumentCaptor.capture());
         assertEquals(ipvSessionID, ipvSessionIDArgumentCaptor.getValue());
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
-        assertEquals(ipvSessionItem.getUserState(), result.getUserState());
+        assertEquals(ipvSessionItem.getState(), result.getState());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
     }
 
@@ -122,8 +125,7 @@ class IpvSessionServiceTest {
         assertNotNull(capturedSessionItem.getCreationDateTime());
 
         assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
-        assertEquals(START_STATE, capturedSessionItem.getUserState());
-        assertEquals("INITIAL_JOURNEY_SELECTION/START", capturedSessionItem.getStateStack().get(0));
+        assertEquals(INITIAL_START_JOURNEY_STATE, capturedSessionItem.getState());
     }
 
     @Test
@@ -139,7 +141,7 @@ class IpvSessionServiceTest {
         assertNotNull(capturedSessionItem.getCreationDateTime());
 
         assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
-        assertEquals(START_STATE, capturedSessionItem.getUserState());
+        assertEquals(INITIAL_START_JOURNEY_STATE, capturedSessionItem.getState());
         assertEquals("test@test.com", capturedSessionItem.getEmailAddress());
     }
 
@@ -156,11 +158,10 @@ class IpvSessionServiceTest {
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());
         assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
-        assertEquals(TECHNICAL_ERROR, capturedSessionItem.getJourneyType());
-        assertEquals(ERROR_STATE, capturedSessionItem.getUserState());
         assertEquals(testErrorObject.getCode(), capturedSessionItem.getErrorCode());
         assertEquals(testErrorObject.getDescription(), capturedSessionItem.getErrorDescription());
-        assertEquals("TECHNICAL_ERROR/ERROR", capturedSessionItem.getStateStack().get(0));
+        assertEquals(
+                new JourneyState(TECHNICAL_ERROR, ERROR_STATE), capturedSessionItem.getState());
     }
 
     @Test
@@ -175,15 +176,14 @@ class IpvSessionServiceTest {
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());
         assertEquals(ipvSessionItem.getIpvSessionId(), capturedSessionItem.getIpvSessionId());
-        assertEquals(REVERIFICATION, capturedSessionItem.getJourneyType());
-        assertEquals("REVERIFICATION/START", capturedSessionItem.getStateStack().get(0));
+        assertEquals(new JourneyState(REVERIFICATION, START_STATE), capturedSessionItem.getState());
     }
 
     @Test
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setUserState(START_STATE);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -196,7 +196,6 @@ class IpvSessionServiceTest {
         AuthorizationCode testCode = new AuthorizationCode();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.setAuthorizationCode(
@@ -212,7 +211,6 @@ class IpvSessionServiceTest {
         BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.setAccessToken(ipvSessionItem, accessToken);
