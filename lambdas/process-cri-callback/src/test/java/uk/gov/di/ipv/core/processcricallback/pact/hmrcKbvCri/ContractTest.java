@@ -678,7 +678,7 @@ class ContractTest {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "Qm36kQ8RhRM4iu4PVvRqXFqrBJ6qo65NMjxwTgaMBaFNTGb_u8OX_Cbcn6Vn88Wl_6l0jCUCcxh8U5o8Ns7fEw";
+            "Qm36kQ8RhRM4iu4PVvRqXFqrBJ6qo65NMjxwTgaMBaFNTGb_u8OX_Cbcn6Vn88Wl_6l0jCUCcxh8U5o8Ns7fEw"; // pragma: allowlist secret
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
     private static final String VALID_VC_HEADER =
@@ -754,7 +754,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg";
+            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg"; // pragma: allowlist secret
 
     private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
             """
@@ -825,7 +825,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
-            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew";
+            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -892,5 +892,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw";
+            "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw"; // pragma: allowlist secret
 }
