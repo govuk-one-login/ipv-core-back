@@ -620,7 +620,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "tv8Dm1d6xzt7NZzc6rNi4vdy8Nolp5_pUuw29HU3TsQqaxBvbTOOU8-RGtx-lE3n2HGXHeCiHQsHRL3f6qofFg";
+            "tv8Dm1d6xzt7NZzc6rNi4vdy8Nolp5_pUuw29HU3TsQqaxBvbTOOU8-RGtx-lE3n2HGXHeCiHQsHRL3f6qofFg"; // pragma: allowlist secret
 
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_BODY =
             """
@@ -707,7 +707,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "yACRsUiWnx8YcXSHSEGScsJmsIfn0ToTnWl0hDYmYaPFa4wdHEUBc1oACfbHZLP5lTzbzen3rh8hLs71avj6Lw";
+            "yACRsUiWnx8YcXSHSEGScsJmsIfn0ToTnWl0hDYmYaPFa4wdHEUBc1oACfbHZLP5lTzbzen3rh8hLs71avj6Lw"; // pragma: allowlist secret
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_BODY =
             """
@@ -794,5 +794,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "U0xZDzMygdiOc9oII4CXYfjb71K15dsGFlMMfnv3cwOb_gn8HFsFaLbV7UMID4IbgLRqjZf12ie8F5IDIvcJkA";
+            "U0xZDzMygdiOc9oII4CXYfjb71K15dsGFlMMfnv3cwOb_gn8HFsFaLbV7UMID4IbgLRqjZf12ie8F5IDIvcJkA"; // pragma: allowlist secret
 }
