@@ -464,17 +464,17 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-api.identity.${Environment}.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
           - IsDevelopment
           - !If
             - IsDev01
-            - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "internal-api.identity.${Environment}.account.gov.uk"
+            - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
           HostedZoneId: !If
             - IsDevelopment
             - !If
@@ -494,9 +494,9 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-api.identity.${Environment}.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref IPVCoreInternalTestingApiSSLCert
           EndpointType: REGIONAL
@@ -510,9 +510,9 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-api.identity.${Environment}.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       ApiId: !Ref IPVCoreInternalTestingApi
       Stage: !Ref IPVCoreInternalTestingApi.Stage
     DependsOn:
@@ -528,9 +528,9 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-api.identity.${Environment}.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       HostedZoneId: !If
         - IsDevelopment
         - !If
