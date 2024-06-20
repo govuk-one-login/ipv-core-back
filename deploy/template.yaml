@@ -122,9 +122,7 @@ Conditions:
   UseIndividualCiMitStubs: !And
     - !Condition IsDevelopment
     - !Equals [ !Ref IndividualCiMitStubs, "True"]
-  IsTestApiEnv: !Or
-    - !Condition IsDevelopment
-    - !Equals [ !Ref Environment, build ]
+  IsTestApiEnv: !Condition IsDevelopment
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
