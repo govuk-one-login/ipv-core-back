@@ -95,9 +95,7 @@ public class EvcsService {
     private List<EvcsGetUserVCDto> getEvcsGetUserVCDtos(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws EvcsServiceException {
-        List<EvcsGetUserVCDto> existingEvcsUserVCs =
-                evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
-        return existingEvcsUserVCs;
+        return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
     @Tracing
