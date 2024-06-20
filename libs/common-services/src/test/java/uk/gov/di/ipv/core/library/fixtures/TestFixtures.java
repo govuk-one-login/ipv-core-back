@@ -207,6 +207,9 @@ public interface TestFixtures {
     String SIGNED_CONTRA_INDICATOR_NO_VC =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.JEB0XsBplsmqz18ntjz_0hpDhjBus1HNvU280S7Mcjo"; // pragma: allowlist secret
 
+    String EXAMPLE_GENERATED_SECURE_TOKEN =
+            "ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY"; // pragma: allowlist secret
+
     static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
             throws HttpResponseExceptionWithErrorBody {
         try {
