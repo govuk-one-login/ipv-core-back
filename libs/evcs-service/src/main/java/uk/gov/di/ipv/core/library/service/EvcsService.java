@@ -17,8 +17,6 @@ import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
@@ -124,15 +122,17 @@ public class EvcsService {
                         .toList();
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
-            updateExistingUserVCs(userId, credentials, existingEvcsUserVCs);
+            updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
         if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
     }
 
     private void updateExistingUserVCs(
             String userId,
             List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs)
+            List<EvcsGetUserVCDto> existingEvcsUserVCs,
+            boolean isPendingIdentity)
             throws EvcsServiceException {
+        var vcsToUpdates = new ArrayList<EvcsUpdateUserVCsDto>();
         var existingPendingReturnUserVcsNotInSessionToUpdate =
                 existingEvcsUserVCs.stream()
                         .filter(vc -> vc.state().equals(PENDING_RETURN))
@@ -147,53 +147,49 @@ public class EvcsService {
                         .map(
                                 vc ->
                                         new EvcsUpdateUserVCsDto(
-                                                getVcSignature(vc), EvcsVCState.ABANDONED, null));
-        Supplier<Stream<EvcsUpdateUserVCsDto>> existingPendingReturnUserVcsInSessionToUpdate =
-                () ->
-                        existingEvcsUserVCs.stream()
-                                .filter(vc -> vc.state().equals(PENDING_RETURN))
-                                .filter(
-                                        vc ->
-                                                credentials.stream()
-                                                        .anyMatch(
-                                                                credential ->
-                                                                        credential
-                                                                                .getVcString()
-                                                                                .equals(vc.vc())))
-                                .map(
-                                        vc ->
-                                                new EvcsUpdateUserVCsDto(
-                                                        getVcSignature(vc),
-                                                        EvcsVCState.CURRENT,
-                                                        null));
-        var existingCurrentUserVcsNotInSessionToUpdate =
-                existingPendingReturnUserVcsInSessionToUpdate.get().findAny().isPresent()
-                        ? Stream.<EvcsUpdateUserVCsDto>empty()
-                        : existingEvcsUserVCs.stream()
-                                .filter(vc -> vc.state().equals(CURRENT))
-                                .filter(
-                                        vc ->
-                                                credentials.stream()
-                                                        .noneMatch(
-                                                                credential ->
-                                                                        credential
-                                                                                .getVcString()
-                                                                                .equals(vc.vc())))
-                                .map(
-                                        vc ->
-                                                new EvcsUpdateUserVCsDto(
-                                                        getVcSignature(vc),
-                                                        EvcsVCState.HISTORIC,
-                                                        null));
-        var userVCsToUpdate =
-                Stream.concat(
-                                Stream.concat(
-                                        existingPendingReturnUserVcsInSessionToUpdate.get(),
-                                        existingPendingReturnUserVcsNotInSessionToUpdate),
-                                existingCurrentUserVcsNotInSessionToUpdate)
+                                                getVcSignature(vc), EvcsVCState.ABANDONED, null))
                         .toList();
+        vcsToUpdates.addAll(existingPendingReturnUserVcsNotInSessionToUpdate);
 
-        if (!userVCsToUpdate.isEmpty()) evcsClient.updateUserVCs(userId, userVCsToUpdate);
+        if (!isPendingIdentity) {
+            var existingPendingReturnUserVcsInSessionToUpdate =
+                    existingEvcsUserVCs.stream()
+                            .filter(vc -> vc.state().equals(PENDING_RETURN))
+                            .filter(
+                                    vc ->
+                                            credentials.stream()
+                                                    .anyMatch(
+                                                            credential ->
+                                                                    credential
+                                                                            .getVcString()
+                                                                            .equals(vc.vc())))
+                            .map(
+                                    vc ->
+                                            new EvcsUpdateUserVCsDto(
+                                                    getVcSignature(vc), EvcsVCState.CURRENT, null))
+                            .toList();
+            vcsToUpdates.addAll(existingPendingReturnUserVcsInSessionToUpdate);
+
+            var existingCurrentUserVcsNotInSessionToUpdate =
+                    existingEvcsUserVCs.stream()
+                            .filter(vc -> vc.state().equals(CURRENT))
+                            .filter(
+                                    vc ->
+                                            credentials.stream()
+                                                    .noneMatch(
+                                                            credential ->
+                                                                    credential
+                                                                            .getVcString()
+                                                                            .equals(vc.vc())))
+                            .map(
+                                    vc ->
+                                            new EvcsUpdateUserVCsDto(
+                                                    getVcSignature(vc), EvcsVCState.HISTORIC, null))
+                            .toList();
+            vcsToUpdates.addAll(existingCurrentUserVcsNotInSessionToUpdate);
+        }
+
+        if (!vcsToUpdates.isEmpty()) evcsClient.updateUserVCs(userId, vcsToUpdates);
     }
 
     private static String getVcSignature(EvcsGetUserVCDto vc) {
