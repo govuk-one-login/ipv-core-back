@@ -88,7 +88,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has no interventions or warnings")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
@@ -155,7 +155,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has no interventions but has B00 warning")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
@@ -228,7 +228,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has intervention with code 01 and reason 007")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
@@ -300,7 +300,7 @@ class ContractTest {
     public RequestResponsePact validPassportVcReturnsEmptyVc(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF times out")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
                 .given("Time is GMT Thursday, 1 January 2099 00:00:00")
@@ -362,7 +362,7 @@ class ContractTest {
     public RequestResponsePact validVcsReturnVcWithNoInterventions(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VCs can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VCs can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has no interventions or warnings")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
@@ -494,7 +494,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has no interventions but has B00 warning")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")

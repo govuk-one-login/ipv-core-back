@@ -584,9 +584,9 @@ class ContractTest {
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final String VALID_AUTH_CODE = "1e93b714-4838-4ced-9567-6da749f1c616";
     private static final String VALID_ACCESS_TOKEN =
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJhODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjMxMjU0MjR9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJhODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjMxMjU0MjR9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg"; // pragma: allowlist secret
     private static final String VALID_ACCESS_TOKEN_FOR_CI =
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJiODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJkdW1teUJhdkNvbXBvbmVudElkIiwiaXNzIjoiZHVtbXlCYXZDb21wb25lbnRJZCIsImV4cCI6NDg2MzIyNTIwN30.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJiODY0ODliMi0zZjNhLTQ3OTktOTI4MS0zMGU0YjIyMDg2NmQiLCJhdWQiOiJkdW1teUJhdkNvbXBvbmVudElkIiwiaXNzIjoiZHVtbXlCYXZDb21wb25lbnRJZCIsImV4cCI6NDg2MzIyNTIwN30.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg"; // pragma: allowlist secret
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =

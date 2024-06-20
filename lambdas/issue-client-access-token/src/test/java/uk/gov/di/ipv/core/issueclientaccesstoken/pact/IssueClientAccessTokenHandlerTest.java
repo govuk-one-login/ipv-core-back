@@ -122,12 +122,10 @@ class IssueClientAccessTokenHandlerTest {
     }
 
     @State(
-            "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}")
+            "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}") // pragma: allowlist secret
     public void setSigningKey() {
         var signingKey =
-                """
-                {"kty":"EC","d":"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A","crv":"P-256","kid":"14342354354353","x":"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw","y":"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw","alg":"ES256"}
-                """;
+                "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
         when(configService.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))

@@ -451,7 +451,7 @@ class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final String CIC_ACCESS_TOKEN =
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJlNWUzOGI2Mi0zNmYzLTQwYTAtODRmZS1iNzVkMzc3NTg3ZGEiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjI5NDMyMzB9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg";
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZCJ9.eyJzdWIiOiJlNWUzOGI2Mi0zNmYzLTQwYTAtODRmZS1iNzVkMzc3NTg3ZGEiLCJhdWQiOiJpc3N1ZXIiLCJpc3MiOiJpc3N1ZXIiLCJleHAiOjQ4NjI5NDMyMzB9.KClzxkHU35ck5Wck7jECzt0_TAkiy4iXRrUg_aftDg2uUpLOC0Bnb-77lyTlhSTuotEQbqB1YZqV3X_SotEQbg"; // pragma: allowlist secret
     private static final String CIC_AUTH_CODE = "b7359129-2106-412b-b3d3-7dd7d8253c39";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
