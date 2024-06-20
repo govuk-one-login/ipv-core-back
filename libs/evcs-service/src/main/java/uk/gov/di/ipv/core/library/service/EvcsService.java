@@ -16,7 +16,9 @@ import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
@@ -63,14 +65,25 @@ public class EvcsService {
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
-        List<EvcsGetUserVCDto> vcs = getEvcsGetUserVCDtos(userId, evcsAccessToken, states);
+        return getVerifiableCredentialsByState(userId, evcsAccessToken, states).values().stream()
+                .flatMap(List::stream)
+                .toList();
+    }
 
-        List<VerifiableCredential> credentials = new ArrayList<>();
-        for (var vc : vcs) {
+    @Tracing
+    public Map<EvcsVCState, List<VerifiableCredential>> getVerifiableCredentialsByState(
+            String userId, String evcsAccessToken, EvcsVCState... states)
+            throws CredentialParseException, EvcsServiceException {
+        Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
+        for (var vc : getEvcsGetUserVCDtos(userId, evcsAccessToken, states)) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
-                credentials.add(VerifiableCredential.fromValidJwt(userId, cri.getId(), jwt));
+                var credential = VerifiableCredential.fromValidJwt(userId, cri.getId(), jwt);
+                if (!credentials.containsKey(vc.state())) {
+                    credentials.put(vc.state(), new ArrayList<>());
+                }
+                credentials.get(vc.state()).add(credential);
             } catch (NoCriForIssuerException e) {
                 throw new CredentialParseException("Failed to find credential issuer for vc", e);
             } catch (ParseException e) {
