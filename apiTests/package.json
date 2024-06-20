@@ -4,7 +4,7 @@
   "description": "API tests for core-back",
   "type": "module",
   "scripts": {
-    "cucumber": "cucumber-js"
+    "test": "cucumber-js"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.8.0",
