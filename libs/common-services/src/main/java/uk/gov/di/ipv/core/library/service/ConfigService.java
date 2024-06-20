@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
@@ -91,15 +91,13 @@ public class ConfigService {
 
         this.ssmProvider =
                 ParamManager.getSsmProvider(
-                                SsmClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
-                                        .build())
+                                SsmClient.builder().httpClient(AwsCrtHttpClient.create()).build())
                         .defaultMaxAge(cacheDuration, MINUTES);
 
         this.secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .httpClient(AwsCrtHttpClient.create())
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
     }
