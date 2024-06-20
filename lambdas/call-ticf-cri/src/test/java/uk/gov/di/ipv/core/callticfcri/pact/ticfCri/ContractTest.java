@@ -44,6 +44,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -53,10 +54,6 @@ class ContractTest {
     private static final String TEST_USER = "dummyUserId";
     private static final String API_PATH = "/risk-assessment";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
-    private static final String PRIVATE_TICF_SIGNING_KEY =
-            """
-                    {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
     private static final String APPLICATION_JSON = "application/json";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
@@ -636,7 +633,7 @@ class ContractTest {
     private static RestCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
         return RestCriConfig.builder()
-                .signingKey(PRIVATE_TICF_SIGNING_KEY)
+                .signingKey(EC_PRIVATE_KEY_JWK)
                 .componentId("https://ticf.account.gov.uk")
                 .credentialUrl(
                         new URI("http://localhost:" + mockServer.getPort() + "/risk-assessment"))
