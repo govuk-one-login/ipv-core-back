@@ -356,5 +356,5 @@ class BuildUserIdentityHandlerTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_ADDRESS_VC_SIGNATURE =
-            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
+            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw"; // pragma: allowlist secret
 }

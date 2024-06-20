@@ -85,7 +85,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw") // pragma: accesslist secret
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw") // pragma: allowlist secret
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -123,7 +123,7 @@ class ContractTest {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
@@ -157,7 +157,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw") // pragma: allowlist secret
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -187,7 +187,7 @@ class ContractTest {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
@@ -651,5 +651,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
+            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw"; // pragma: allowlist secret
 }

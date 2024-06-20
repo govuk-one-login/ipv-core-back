@@ -466,7 +466,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion=" // pragma: accesslist secret
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3DhmrcKbv&client_assertion=" // pragma: allowlist secret
                                 + CLIENT_ASSERTION_HEADER
                                 + "."
                                 + CLIENT_ASSERTION_BODY
@@ -675,7 +675,7 @@ class ContractTest {
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ";
+            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlIbXJjS2J2Q29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
             "Qm36kQ8RhRM4iu4PVvRqXFqrBJ6qo65NMjxwTgaMBaFNTGb_u8OX_Cbcn6Vn88Wl_6l0jCUCcxh8U5o8Ns7fEw";
