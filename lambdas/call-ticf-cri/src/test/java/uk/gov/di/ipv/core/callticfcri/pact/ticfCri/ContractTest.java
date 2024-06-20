@@ -85,7 +85,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(
-                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}")
+                        "Provided VC can be validated with {\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}") // pragma: allowlist secret
                 .given("TICF VC has no interventions or warnings")
                 .given("TICF VC risk assessment has id dummyRiskAssessmentId")
                 .given("TICF VC issuer is https://ticf.account.gov.uk")
