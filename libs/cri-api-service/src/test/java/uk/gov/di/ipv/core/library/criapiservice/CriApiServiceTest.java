@@ -70,7 +70,8 @@ class CriApiServiceTest {
     private static final String TEST_BASIC_AUTH_USER = "test_basic_auth_user";
     private static final String TEST_BASIC_AUTH_SECRET = "test_basic_auth_secret";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
-    private static final String TEST_ACCESS_TOKEN = "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4";
+    private static final String TEST_ACCESS_TOKEN =
+            "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4"; // pragma: allowlist secret
     private static final VerifiableCredential PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
     private static final Map<String, Object> DCMAW_SUCCESS_RESPONSE =
             Map.of(

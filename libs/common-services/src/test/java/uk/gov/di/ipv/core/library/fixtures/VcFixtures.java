@@ -1014,7 +1014,11 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigrationNoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -1030,7 +1034,11 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
                 TestVc.TestEvidence.builder()
@@ -1057,7 +1065,11 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
