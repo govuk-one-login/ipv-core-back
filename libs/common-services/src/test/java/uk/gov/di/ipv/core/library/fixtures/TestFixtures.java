@@ -207,6 +207,10 @@ public interface TestFixtures {
     String SIGNED_CONTRA_INDICATOR_NO_VC =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.JEB0XsBplsmqz18ntjz_0hpDhjBus1HNvU280S7Mcjo"; // pragma: allowlist secret
 
+    // Signature generated using JWT.io
+    String CLIENT_ASSERTION_SIGNATURE =
+            "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"; // pragma: allowlist secret
+
     static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
             throws HttpResponseExceptionWithErrorBody {
         try {
