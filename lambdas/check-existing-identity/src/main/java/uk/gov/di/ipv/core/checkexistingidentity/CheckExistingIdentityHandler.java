@@ -191,8 +191,10 @@ public class CheckExistingIdentityHandler
     }
 
     private record VerifiableCredentialBundle(
-            List<VerifiableCredential> credentials, boolean isPendingEvcsIdentity) {
-        private boolean isF2fIdenity() {
+            List<VerifiableCredential> credentials,
+            boolean isEvcsIdentity,
+            boolean isPendingEvcsIdentity) {
+        private boolean isF2fIdentity() {
             return credentials.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
         }
     }
@@ -244,7 +246,7 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var vcs = getVerifiableCredentials(userId, evcsAccessToken);
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            final boolean hasF2fVc = vcs.isF2fIdenity();
+            final boolean hasF2fVc = vcs.isF2fIdentity();
             final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete =
                     !Objects.isNull(f2fRequest)
@@ -336,14 +338,15 @@ public class CheckExistingIdentityHandler
             var pendingReturnVcs = vcs.get(PENDING_RETURN);
             // use pending return vcs to determine identity if available
             if (!isNullOrEmpty(pendingReturnVcs)) {
-                return new VerifiableCredentialBundle(pendingReturnVcs, true);
+                return new VerifiableCredentialBundle(pendingReturnVcs, true, true);
             }
             var currentVcs = vcs.get(CURRENT);
             if (!isNullOrEmpty(currentVcs)) {
-                return new VerifiableCredentialBundle(currentVcs, false);
+                return new VerifiableCredentialBundle(currentVcs, true, false);
             }
         }
-        return new VerifiableCredentialBundle(verifiableCredentialService.getVcs(userId), false);
+        return new VerifiableCredentialBundle(
+                verifiableCredentialService.getVcs(userId), false, false);
     }
 
     @Tracing
@@ -514,17 +517,13 @@ public class CheckExistingIdentityHandler
                 false);
         migrateCredentialsToEVCS(userId, vcBundle, evcsAccessToken);
 
-        return vcBundle.isPendingEvcsIdentity && vcBundle.isF2fIdenity()
-                ? JOURNEY_REUSE_WITH_STORE
-                : JOURNEY_REUSE;
+        return vcBundle.isPendingEvcsIdentity ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private void migrateCredentialsToEVCS(
             String userId, VerifiableCredentialBundle vcBundle, String evcsAccessToken)
             throws EvcsServiceException, VerifiableCredentialException {
-        if (configService.enabled(EVCS_WRITE_ENABLED)
-                && !vcBundle.isPendingEvcsIdentity
-                && !vcBundle.isF2fIdenity()) {
+        if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.isEvcsIdentity) {
             evcsMigrationService.migrateExistingIdentity(
                     userId, vcBundle.credentials, evcsAccessToken);
         }
