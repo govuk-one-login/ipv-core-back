@@ -2,7 +2,6 @@
   "name": "apitests",
   "version": "1.0.0",
   "description": "API tests for core-back",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "cucumber": "cucumber-js"
