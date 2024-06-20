@@ -244,11 +244,11 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var vcs = getVerifiableCredentials(userId, evcsAccessToken);
             CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            final boolean isF2f = vcs.isF2fIdenity();
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !isF2f;
+            final boolean hasF2fVc = vcs.isF2fIdenity();
+            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
             final boolean isF2FComplete =
                     !Objects.isNull(f2fRequest)
-                            && isF2f
+                            && hasF2fVc
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity);
             var contraIndicators =
