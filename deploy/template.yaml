@@ -122,7 +122,9 @@ Conditions:
   UseIndividualCiMitStubs: !And
     - !Condition IsDevelopment
     - !Equals [ !Ref IndividualCiMitStubs, "True"]
-  IsTestApiEnv: !Condition IsDevelopment
+  IsTestApiEnv: !Or
+    - !Condition IsDevelopment
+    - !Equals [ !Ref Environment, build ]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -452,6 +454,10 @@ Resources:
                 - "repo:govuk-one-login/ipv-core-back:*"
       ManagedPolicyArns:
         - !Ref IPVCoreInternalTestingApiTokenFetchPolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   # ssl cert
   IPVCoreInternalTestingApiSSLCert:
