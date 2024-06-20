@@ -91,9 +91,9 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIB
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_4;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
@@ -785,7 +785,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, (vcAttributes.get("address")).size());
         assertEquals(2, (vcAttributes.get("birthDate")).size());
 
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
         assertTrue(signedJWT.verify(verifier));
     }
 
@@ -813,7 +813,7 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode birtDate = vcAttributes.get("birthDate");
         assertTrue(birtDate.isEmpty());
 
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
         assertTrue(signedJWT.verify(verifier));
     }
 

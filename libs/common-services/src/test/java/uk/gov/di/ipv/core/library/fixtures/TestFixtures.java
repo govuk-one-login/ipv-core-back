@@ -27,7 +27,7 @@ public interface TestFixtures {
             "\"{\\\"kty\\\":\\\"EC\\\",\\\"d\\\":\\\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\\\",\\\"crv\\\":\\\"P-256\\\",\\\"x\\\":\\\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\\\",\\\"y\\\":\\\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\\\"}\""; // pragma: allowlist secret
     String EC_PUBLIC_KEY =
             "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEE9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIMqVMxm2EdlSRjPkCV5NDyN9/RMmJLerY4H0vkXDjEDTg=="; // pragma: allowlist secret
-    String EC_PUBLIC_JWK =
+    String TEST_EC_PUBLIC_JWK =
             "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"; // pragma: allowlist secret
     String EC_PUBLIC_JWK_2 =
             "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MjTFSolNjla11Dl8Zk9UpcpnMyWumfjIbO1E-0c8v-E\",\"y\":\"xTdKNukh5sOvMgNTKjo0hVYNNcAS-N7X1R1S0cjllTo\"}"; // pragma: allowlist secret

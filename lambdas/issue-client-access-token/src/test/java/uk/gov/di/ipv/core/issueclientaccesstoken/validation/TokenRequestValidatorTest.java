@@ -84,7 +84,7 @@ class TokenRequestValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.EC_PUBLIC_JWK);
+                .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
         when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
