@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
@@ -27,6 +28,7 @@ public class BasicState implements State {
     private BasicState parentObj;
     private StepResponse response;
     private Map<String, Event> events = new HashMap<>();
+    private IpvJourneyTypes journeyType;
 
     @Override
     public TransitionResult transition(

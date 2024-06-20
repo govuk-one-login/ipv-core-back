@@ -125,7 +125,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
             Vot vot = ipvSessionItem.getVot();
             auditService.sendAuditEvent(
-                    new AuditEvent(
+                    AuditEvent.createWithDeviceInformation(
                             IPV_IDENTITY_STORED,
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(

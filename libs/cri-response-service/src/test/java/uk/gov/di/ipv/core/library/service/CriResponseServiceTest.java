@@ -24,7 +24,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
-public class CriResponseServiceTest {
+class CriResponseServiceTest {
     @Mock private DataStore<CriResponseItem> mockDataStore;
 
     private CriResponseService criResponseService;

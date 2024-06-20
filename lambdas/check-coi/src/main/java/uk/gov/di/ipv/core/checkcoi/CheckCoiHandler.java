@@ -238,7 +238,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         : new AuditRestrictedDeviceInformation(deviceInformation);
 
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,

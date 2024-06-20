@@ -77,8 +77,7 @@ class ContractTest {
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given(CIC_ACCESS_TOKEN + " is a valid access token")
                 .given("test-subject is a valid subject")
@@ -95,7 +94,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -259,7 +258,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");

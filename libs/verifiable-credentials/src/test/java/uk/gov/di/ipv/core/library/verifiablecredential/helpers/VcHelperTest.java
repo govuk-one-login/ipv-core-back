@@ -82,8 +82,7 @@ class VcHelperTest {
                 Arguments.of("Verification VC", vcVerificationM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
                 Arguments.of("Verification F2F VC", vcF2fM1a()),
-                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
-                Arguments.of("Verification TICF VC", vcTicf()));
+                Arguments.of("Verification Nino VC", vcNinoSuccessful()));
     }
 
     @ParameterizedTest
@@ -217,7 +216,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnFalseIfEmptyEvidenceType() throws Exception {
+    void shouldReturnFalseIfEmptyEvidenceType() {
         var vcs = List.of(vcEmptyEvidence());
         // Call the method under test
         List<VerifiableCredential> result =
@@ -228,7 +227,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnTrueWhenVcIsExpired() throws Exception {
+    void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudExpired();
@@ -242,7 +241,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnFalseWhenVcIsNotExpired() throws Exception {
+    void shouldReturnFalseWhenVcIsNotExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudNotExpired();

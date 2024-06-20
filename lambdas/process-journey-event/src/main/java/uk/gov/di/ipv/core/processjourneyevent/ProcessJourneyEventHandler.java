@@ -23,8 +23,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoCurrentStateException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -72,6 +72,7 @@ public class ProcessJourneyEventHandler
     private static final String END_SESSION_EVENT = "build-client-oauth-response";
     private static final StepResponse END_SESSION_RESPONSE =
             new ProcessStepResponse(END_SESSION_EVENT, null);
+    public static final String BACK_EVENT = "back";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -185,12 +186,12 @@ public class ProcessJourneyEventHandler
             journeyEvent = NEXT_EVENT;
         }
 
-        var initialState = ipvSessionItem.getUserState();
-        var initialJourneyType = ipvSessionItem.getJourneyType();
+        var currentJourneyState = ipvSessionItem.getState();
 
         try {
             var newState =
                     executeStateTransition(
+                            currentJourneyState,
                             ipvSessionItem,
                             journeyEvent,
                             currentPage,
@@ -206,15 +207,12 @@ public class ProcessJourneyEventHandler
                                 .with(
                                         LOG_USER_STATE.getFieldName(),
                                         journeyChangeState.getInitialState()));
-                ipvSessionItem.setJourneyType(journeyChangeState.getJourneyType());
-                ipvSessionItem.setUserState(journeyChangeState.getInitialState());
-                ipvSessionItem.pushState(
-                        journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
 
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
                 newState =
                         executeStateTransition(
+                                journeyStateFrom(journeyChangeState),
                                 ipvSessionItem,
                                 NEXT_EVENT,
                                 null,
@@ -222,21 +220,19 @@ public class ProcessJourneyEventHandler
                                 deviceInformation);
             }
 
-            var basicState = (BasicState) newState;
-            ipvSessionItem.setUserState(basicState.getName());
-            ipvSessionItem.pushState(basicState.getName());
-
-            logStateChange(initialState, initialJourneyType, journeyEvent, ipvSessionItem);
+            logStateChange(currentJourneyState, journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
-            return basicState.getResponse();
+            return ((BasicState) newState).getResponse();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                                     "Invalid journey state encountered, failed to execute journey engine step.",
                                     e)
-                            .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
+                            .with(
+                                    LOG_USER_STATE.getFieldName(),
+                                    ipvSessionItem.getState().state()));
             throw new JourneyEngineException();
         } catch (UnknownEventException e) {
             LOGGER.error(
@@ -253,18 +249,14 @@ public class ProcessJourneyEventHandler
                             .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                             .with(
                                     LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getJourneyType()));
-            throw new JourneyEngineException();
-        } catch (NoCurrentStateException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("No current state found for user in stack", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+                                    ipvSessionItem.getState().subJourney().name()));
             throw new JourneyEngineException();
         }
     }
 
     @Tracing
     private State executeStateTransition(
+            JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
             String journeyEvent,
             String currentPage,
@@ -272,22 +264,36 @@ public class ProcessJourneyEventHandler
             String deviceInformation)
             throws StateMachineNotFoundException, SqsException, UnknownEventException,
                     UnknownStateException {
-        StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
+
+        StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
             throw new StateMachineNotFoundException(
                     String.format(
                             "State machine not found for journey type: '%s'",
-                            ipvSessionItem.getJourneyType()));
+                            initialJourneyState.subJourney()));
         }
         LOGGER.debug(
                 LogHelper.buildLogMessage(
                         String.format(
                                 "Found state machine for journey type: %s",
-                                ipvSessionItem.getJourneyType().name())));
+                                initialJourneyState.subJourney())));
+
+        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
+            var previousJourneyState = ipvSessionItem.getPreviousState();
+
+            if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+                ipvSessionItem.popState();
+                return journeyStateToBasicState(previousJourneyState);
+            }
+
+            throw new UnknownEventException(
+                    String.format(
+                            "Back event provided to state: '%s'", initialJourneyState.state()));
+        }
 
         var result =
                 stateMachine.transition(
-                        ipvSessionItem.getUserState(),
+                        initialJourneyState.state(),
                         journeyEvent,
                         new JourneyContext(configService),
                         currentPage);
@@ -299,23 +305,26 @@ public class ProcessJourneyEventHandler
             }
         }
 
+        if (result.state() instanceof BasicState basicState) {
+            ipvSessionItem.pushState(
+                    new JourneyState(basicState.getJourneyType(), basicState.getName()));
+        }
+
         return result.state();
     }
 
     @Tracing
     private void logStateChange(
-            String oldState,
-            IpvJourneyTypes oldJourneyType,
-            String journeyEvent,
-            IpvSessionItem ipvSessionItem) {
+            JourneyState oldJourneyState, String journeyEvent, IpvSessionItem ipvSessionItem) {
+        var newJourneyState = ipvSessionItem.getState();
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
                         .with("event", journeyEvent)
-                        .with("from", oldState)
-                        .with("to", ipvSessionItem.getUserState())
-                        .with("fromJourney", oldJourneyType.name())
-                        .with("toJourney", ipvSessionItem.getJourneyType().name());
+                        .with("from", oldJourneyState.state())
+                        .with("to", newJourneyState.state())
+                        .with("fromJourney", oldJourneyState.subJourney())
+                        .with("toJourney", newJourneyState.subJourney());
         LOGGER.info(message);
     }
 
@@ -330,22 +339,19 @@ public class ProcessJourneyEventHandler
     private void updateUserSessionForTimeout(
             IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser, String deviceInformation)
             throws SqsException {
-        var oldState = ipvSessionItem.getUserState();
-        var oldJourneyType = ipvSessionItem.getJourneyType();
+        var oldJourneyState = ipvSessionItem.getState();
 
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setJourneyType(SESSION_TIMEOUT);
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
-        ipvSessionItem.pushState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.pushState(new JourneyState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE));
 
-        logStateChange(oldState, oldJourneyType, "timeout", ipvSessionItem);
+        logStateChange(oldJourneyState, "timeout", ipvSessionItem);
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
     }
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!SESSION_TIMEOUT.equals(ipvSessionItem.getJourneyType()))
+        return (!SESSION_TIMEOUT.equals(ipvSessionItem.getState().subJourney()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
@@ -378,7 +384,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         auditEventType,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
@@ -406,11 +412,38 @@ public class ProcessJourneyEventHandler
             AuditEventUser auditEventUser, IpvJourneyTypes journeyType, String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
-                new AuditEvent(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionSubjourneyType(journeyType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private boolean isPageState(JourneyState journeyState)
+            throws StateMachineNotFoundException, UnknownStateException {
+        StateMachine stateMachine = stateMachines.get(journeyState.subJourney());
+        if (stateMachine == null) {
+            throw new StateMachineNotFoundException(
+                    String.format(
+                            "State machine not found for journey type: '%s'",
+                            journeyState.subJourney()));
+        }
+        return stateMachine.isPageState(journeyState);
+    }
+
+    private State journeyStateToBasicState(JourneyState journeyState) {
+        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+    }
+
+    private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {
+        return new JourneyState(
+                journeyChangeState.getJourneyType(), journeyChangeState.getInitialState());
+    }
+
+    private boolean isBackEventDefinedOnState(JourneyState journeyState) {
+        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
+                        instanceof BasicState basicState
+                && basicState.getEvents().containsKey(BACK_EVENT);
     }
 }

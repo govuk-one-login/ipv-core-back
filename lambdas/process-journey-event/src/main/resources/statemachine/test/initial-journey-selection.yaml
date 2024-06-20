@@ -8,17 +8,24 @@ states:
   PAGE_STATE:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-page-state
       context: test
     parent: PARENT_STATE
     events:
       eventOne:
-        targetState: JOURNEY_STATE
+        targetState: ANOTHER_PAGE_STATE
       eventTwo:
         targetState: CRI_STATE
         checkIfDisabled:
           aCriId:
             targetState: ERROR_STATE
+      eventThree:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      eventFour:
+        targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
+      eventFive:
+        targetState: PAGE_STATE_WITH_BACK_EVENT
 
   CRI_STATE:
     response:
@@ -88,10 +95,20 @@ states:
   PAGE_STATE_AT_START_OF_NO_PHOTO_ID:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-page-state-at-start-of-no-photo-id
     events:
       enterNestedJourneyAtStateOne:
         targetState: NESTED_JOURNEY_INVOKE_STATE
+      anotherPageState:
+        targetState: ANOTHER_PAGE_STATE
+
+  PAGE_STATE_WITH_BACK_EVENT:
+    response:
+      type: page
+      pageId: page-id-for-page-state-with-back-event
+    events:
+      back:
+        targetState: PROCESS_STATE
 
   ERROR_STATE:
     response:
@@ -120,11 +137,11 @@ states:
     nestedJourney: NESTED_JOURNEY_DEFINITION
     exitEvents:
       exitEventFromNestedStateTwo:
-        targetState: JOURNEY_STATE
+        targetState: ANOTHER_PAGE_STATE
       exitEventFromDoublyNestedInvokeState:
         targetState: ERROR_STATE
 
-  JOURNEY_STATE:
+  ANOTHER_PAGE_STATE:
     response:
       type: page
-      pageId: page-id-for-some-page
+      pageId: page-id-for-another-page-state

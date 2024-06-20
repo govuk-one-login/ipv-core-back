@@ -37,6 +37,7 @@ public class LogHelper {
         LOG_ERROR("error"),
         LOG_ERROR_CODE("errorCode"),
         LOG_ERROR_DESCRIPTION("errorDescription"),
+        LOG_ERROR_STACK("errorStack"),
         LOG_ERROR_JOURNEY_RESPONSE("errorJourneyResponse"),
         LOG_FEATURE_SET("featureSet"),
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),

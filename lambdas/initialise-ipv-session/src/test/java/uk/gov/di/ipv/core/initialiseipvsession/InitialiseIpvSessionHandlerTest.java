@@ -46,7 +46,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -180,7 +179,6 @@ class InitialiseIpvSessionHandlerTest {
     @BeforeEach
     void setUp() {
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.INITIAL_JOURNEY_SELECTION);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
@@ -819,67 +817,6 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(PCL200_MIGRATION_VC, capturedArguments.get(1));
 
             verify(mockVerifiableCredentialService, times(0)).persistUserCredentials(any());
-        }
-
-        @Test
-        void shouldValidateAndStoreAnyInheritedIdentityWhenNoInheritedVcExist() throws Exception {
-            // Arrange
-            when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-            when(mockJarValidator.validateRequestJwt(any(), any()))
-                    .thenReturn(
-                            getValidClaimsBuilder()
-                                    .claim(
-                                            CLAIMS,
-                                            Map.of(
-                                                    USER_INFO,
-                                                    Map.of(
-                                                            INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
-                                    .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
-            when(mockVerifiableCredentialValidator.parseAndValidate(
-                            TEST_USER_ID,
-                            HMRC_MIGRATION.getId(),
-                            PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
-                            TEST_COMPONENT_ID,
-                            true))
-                    .thenReturn(PCL200_MIGRATION_VC);
-            when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION.getId()))
-                    .thenReturn(null);
-
-            // Act
-            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
-
-            // Assert
-            verify(mockVerifiableCredentialValidator, times(1))
-                    .parseAndValidate(
-                            eq(TEST_USER_ID),
-                            eq(HMRC_MIGRATION.getId()),
-                            stringArgumentCaptor.capture(),
-                            eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(ECKey.parse(TEST_SIGNING_KEY)),
-                            eq(TEST_COMPONENT_ID),
-                            eq(true));
-            assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
-
-            verify(mockVerifiableCredentialService, times(1))
-                    .persistUserCredentials(verifiableCredentialArgumentCaptor.capture());
-            assertEquals(PCL200_MIGRATION_VC, verifiableCredentialArgumentCaptor.getValue());
-
-            verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
-            assertTrue(ipvSessionItem.isInheritedIdentityReceivedThisSession());
         }
 
         @Test

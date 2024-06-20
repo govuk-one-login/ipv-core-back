@@ -1,12 +1,10 @@
 package uk.gov.di.ipv.core.library.helpers;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,12 +40,7 @@ class ListHelperTest {
 
         var result = ListHelper.getPermutations(listToPermute);
 
-        assertThat(
-                result,
-                containsInAnyOrder(
-                        expectedResults.stream()
-                                .map(Matchers::equalTo)
-                                .collect(Collectors.toList())));
+        assertThat(result, containsInAnyOrder(expectedResults.toArray()));
     }
 
     @ParameterizedTest
@@ -56,11 +49,6 @@ class ListHelperTest {
 
         var result = ListHelper.getBatches(listToPermute, 3);
 
-        assertThat(
-                result,
-                containsInAnyOrder(
-                        expectedResults.stream()
-                                .map(Matchers::equalTo)
-                                .collect(Collectors.toList())));
+        assertThat(result, containsInAnyOrder(expectedResults.toArray()));
     }
 }

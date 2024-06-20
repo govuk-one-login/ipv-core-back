@@ -5,10 +5,6 @@ plugins {
 	id "jacoco"
 }
 
-repositories {
-	mavenCentral()
-}
-
 dependencies {
 	api libs.nimbusdsOauth2OidcSdk
 	implementation platform(libs.awsSdkBom),
@@ -17,6 +13,7 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkLambda,
 			libs.commonsCodec,
+			libs.diVocab,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,

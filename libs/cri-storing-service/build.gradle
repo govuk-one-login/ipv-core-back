@@ -4,10 +4,6 @@ plugins {
 	id "jacoco"
 }
 
-repositories {
-	mavenCentral()
-}
-
 dependencies {
 	implementation libs.powertoolsLogging,
 			project(":libs:audit-service"),

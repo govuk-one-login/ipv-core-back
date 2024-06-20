@@ -105,14 +105,15 @@ class JourneyMapTest {
                             String sourceEventName = entry.getKey();
                             Event sourceEvent = entry.getValue();
 
-                            if (sourceEvent instanceof BasicEvent sourceBasicEvent) {
-                                if (Objects.equals(sourceBasicEvent.getTargetState(), targetKey)) {
-                                    assertTrue(
-                                            expectedEntryEvents.contains(sourceEventName),
-                                            String.format(
-                                                    "%s has unexpected entry event: %s, from %s",
-                                                    targetKey, sourceEventName, sourceKey));
-                                }
+                            if (sourceEvent instanceof BasicEvent sourceBasicEvent
+                                    && Objects.equals(
+                                            sourceBasicEvent.getTargetState(), targetKey)) {
+
+                                assertTrue(
+                                        expectedEntryEvents.contains(sourceEventName),
+                                        String.format(
+                                                "%s has unexpected entry event: %s, from %s",
+                                                targetKey, sourceEventName, sourceKey));
                             }
                         }
                     }
@@ -206,6 +207,9 @@ class JourneyMapTest {
                     }
 
                     var pageEvents = new HashSet<>(basicState.getEvents().keySet());
+                    pageEvents.remove(
+                            "back"); // the back event is a special case that may or may not be
+                    // defined
                     if (basicState.getParent() != null) {
                         pageEvents.addAll(
                                 ((BasicState) stateMachine.get(basicState.getParent()))

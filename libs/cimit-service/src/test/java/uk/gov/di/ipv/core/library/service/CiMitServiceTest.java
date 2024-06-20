@@ -489,21 +489,6 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtWhenAWSLambdaClientInvocationFailed() {
-        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        doThrow(LambdaException.builder().message("AWSLambda client invocation failed").build())
-                .when(lambdaClient)
-                .invoke(any(InvokeRequest.class));
-
-        assertThrows(
-                CiRetrievalException.class,
-                () ->
-                        ciMitService.getContraIndicators(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
-    }
-
-    @Test
     void getContraIndicatorsVCJwtWhenVcValidationFails() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);

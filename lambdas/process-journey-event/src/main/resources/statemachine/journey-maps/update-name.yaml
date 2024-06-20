@@ -94,9 +94,6 @@ states:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: UPDATE_DETAILS_START
 
   GIVEN_ONLY_AFTER_RFC:
     response:
@@ -127,9 +124,6 @@ states:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: UPDATE_DETAILS_START
 
   FAMILY_ONLY_AFTER_RFC:
     response:
@@ -266,9 +260,6 @@ states:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: UPDATE_DETAILS_START
 
   GIVEN_WITH_ADDRESS_AFTER_RFC:
     response:
@@ -299,9 +290,6 @@ states:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REUSE_EXISTING_IDENTITY
-        targetState: UPDATE_DETAILS_START
 
   FAMILY_WITH_ADDRESS_AFTER_RFC:
     response:

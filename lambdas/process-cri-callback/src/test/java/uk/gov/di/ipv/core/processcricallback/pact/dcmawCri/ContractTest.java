@@ -104,7 +104,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             body.stringType("access_token");
                                             body.stringValue("token_type", "Bearer");
                                             body.integerType("expires_in");
@@ -181,7 +181,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns401")
     void fetchAccessToken_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
+            MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -236,7 +236,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -362,7 +362,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -485,7 +485,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -611,7 +611,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -738,7 +738,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -867,7 +867,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -993,7 +993,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1112,7 +1112,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1231,7 +1231,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1352,7 +1352,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1468,7 +1468,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1587,7 +1587,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1710,7 +1710,7 @@ class ContractTest {
                 .status(200)
                 .body(
                         newJsonBody(
-                                        (body) -> {
+                                        body -> {
                                             var jwtBuilder =
                                                     new PactJwtBuilder(
                                                             VALID_VC_HEADER,
@@ -1842,7 +1842,7 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void fetchVerifiableCredential_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, CriApiException {
+            MockServer mockServer) throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
