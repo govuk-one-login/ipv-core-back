@@ -23,6 +23,9 @@ states:
       ipv-gpg45-medium:
         targetJourney: NEW_P2_IDENTITY
         targetState: START
+      ipv-gpg45-low:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: START
       reuse:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: START
