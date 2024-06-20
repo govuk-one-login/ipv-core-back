@@ -9,10 +9,7 @@ states:
   START:
     events:
       next:
-        targetState: CONFIRM_NAME_DOB
-        checkFeatureFlag:
-          coiEnabled:
-            targetState: CONFIRM_DETAILS
+        targetState: CONFIRM_DETAILS
 
   # Parent States
 
@@ -181,26 +178,6 @@ states:
       next:
         targetState: FRAUD_CHECK_RFC
 
-  CONFIRM_NAME_DOB:
-    response:
-      type: page
-      pageId: confirm-name-date-birth
-    events:
-      next:
-        targetState: CONFIRM_ADDRESS
-      end:
-        targetState: UPDATE_NAME_DOB
-
-  CONFIRM_ADDRESS:
-    response:
-      type: page
-      pageId: confirm-address
-    events:
-      address-current:
-        targetState: FRAUD_CHECK_RFC
-      next:
-        targetState: ADDRESS_AND_FRAUD_RFC
-
   UPDATE_NAME_DOB:
     response:
       type: page
@@ -208,12 +185,9 @@ states:
       context: repeatFraudCheck
     events:
       end:
-        targetState: CONFIRM_NAME_DOB
-        checkFeatureFlag:
-          coiEnabled:
-            targetState: CONFIRM_DETAILS
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_ABORTED
+       targetState: CONFIRM_DETAILS
+       auditEvents:
+         - IPV_USER_DETAILS_UPDATE_ABORTED
 
   FRAUD_CHECK_RFC:
     response:
