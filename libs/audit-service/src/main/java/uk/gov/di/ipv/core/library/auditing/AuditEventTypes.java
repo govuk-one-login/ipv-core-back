@@ -35,4 +35,5 @@ public enum AuditEventTypes {
     IPV_VC_RESTORED,
     IPV_VC_REVOKED,
     IPV_VC_REVOKED_FAILURE,
+    IPV_VCS_MIGRATED
 }

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -23,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -74,6 +76,7 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -285,7 +288,6 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             contraIndicators)
                     : buildNoMatchResponse(contraIndicators);
-
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -451,7 +453,6 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
-        String userId = auditEventUser.getUserId();
         String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
@@ -459,7 +460,13 @@ public class CheckExistingIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcs), auditEventUser.getSessionId(), false);
-            migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
+
+            migrateCredentialsToEVCS(
+                    auditEventUser,
+                    deviceInformation,
+                    ipvSessionItem.getVot(),
+                    vcs,
+                    evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -487,15 +494,24 @@ public class CheckExistingIdentityHandler
                 VcHelper.filterVCBasedOnProfileType(vcs, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-        migrateCredentialsToEVCS(userId, vcs, evcsAccessToken);
+
+        migrateCredentialsToEVCS(
+                auditEventUser, deviceInformation, ipvSessionItem.getVot(), vcs, evcsAccessToken);
         return JOURNEY_REUSE;
     }
 
     private void migrateCredentialsToEVCS(
-            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
-            throws EvcsServiceException, VerifiableCredentialException {
+            AuditEventUser auditEventUser,
+            String deviceInformation,
+            Vot vot,
+            List<VerifiableCredential> credentials,
+            String evcsAccessToken)
+            throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED)) {
-            evcsMigrationService.migrateExistingIdentity(userId, credentials, evcsAccessToken);
+            evcsMigrationService.migrateExistingIdentity(
+                    auditEventUser.getUserId(), credentials, evcsAccessToken);
+            sendVCsMigratedAuditEvent(
+                    AuditEventTypes.IPV_VCS_MIGRATED, auditEventUser, vot, deviceInformation);
         }
     }
 
@@ -525,6 +541,23 @@ public class CheckExistingIdentityHandler
                         auditEventTypes,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    @Tracing
+    private void sendVCsMigratedAuditEvent(
+            AuditEventTypes auditEventTypes,
+            AuditEventUser auditEventUser,
+            Vot vot,
+            String deviceInformation)
+            throws SqsException {
+        auditService.sendAuditEvent(
+                AuditEvent.createWithDeviceInformation(
+                        auditEventTypes,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionIdentityType(
+                                IdentityType.UPDATE, vot.equals(P0) ? null : vot),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
