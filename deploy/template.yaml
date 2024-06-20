@@ -461,18 +461,27 @@ Resources:
     Condition: IsTestApiEnv
     Properties:
       DomainName: !If
-        - IsDev01
-        - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
+          - IsDevelopment
+          - !If
             - IsDev01
-            - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-            - !If [IsDev02, !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+            - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
           HostedZoneId: !If
-            - IsDev01
-            - !ImportValue Dev01IdentityHostedZoneId
-            - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !ImportValue Dev01IdentityHostedZoneId
+              - Dev02IdentityHostedZoneId
+            - !ImportValue PublicHostedZoneId
       ValidationMethod: DNS
 
   # api domain entries / mapping
@@ -482,9 +491,12 @@ Resources:
     Condition: IsTestApiEnv
     Properties:
       DomainName: !If
-        - IsDev01
-        - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref IPVCoreInternalTestingApiSSLCert
           EndpointType: REGIONAL
@@ -495,9 +507,12 @@ Resources:
     Condition: IsTestApiEnv
     Properties:
       DomainName: !If
-        - IsDev01
-        - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       ApiId: !Ref IPVCoreInternalTestingApi
       Stage: !Ref IPVCoreInternalTestingApi.Stage
     DependsOn:
@@ -510,13 +525,19 @@ Resources:
     Properties:
       Type: A
       Name: !If
-        - IsDev01
-        - !Sub "internal-api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "internal-api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       HostedZoneId: !If
-        - IsDev01
-        - !ImportValue Dev01IdentityHostedZoneId
-        - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !ImportValue Dev01IdentityHostedZoneId
+          - Dev02IdentityHostedZoneId
+        - !ImportValue PublicHostedZoneId
       AliasTarget:
         DNSName: !GetAtt IPVCoreInternalTestingApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt IPVCoreInternalTestingApiDomain.RegionalHostedZoneId
