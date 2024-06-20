@@ -1,0 +1,7 @@
+{
+  "clientId": "",
+  "request": "",
+  "credentialSubjectJson": "{\"address\":[{\"addressCountry\":\"GB\",\"buildingName\":\"\",\"streetName\":\"HADLEYROAD\",\"postalCode\":\"BA25AA\",\"buildingNumber\":\"8\",\"addressLocality\":\"BATH\",\"validFrom\":\"2000-01-01\"}],\"name\":[{\"nameParts\":[{\"type\":\"GivenName\",\"value\":\"Kenneth\"},{\"type\":\"FamilyName\",\"value\":\"Decerqueira\"}]}],\"birthDate\":[{\"value\":\"1965-07-08\"}]}",
+  "evidenceJson": "{\"identityFraudScore\":2,\"type\":\"IdentityCheck\"}",
+  "resourceId": "something"
+}

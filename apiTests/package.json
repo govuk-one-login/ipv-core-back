@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.8.0",
+    "jose": "^5.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
