@@ -28,7 +28,10 @@ public class JourneyUris {
             "/journey/operational-profile-reuse";
     public static final String JOURNEY_PENDING_PATH = "/journey/pending";
     public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
-    public static final String JOURNEY_REPROVE_IDENTITY_PATH = "/journey/reprove-identity";
+    public static final String JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH =
+            "/journey/reprove-identity";
+    public static final String JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH =
+            "/journey/reprove-identity-gpg45-low";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_REUSE_WITH_STORE_PATH = "/journey/reuse-with-store";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =

@@ -68,3 +68,6 @@ states:
       reprove-identity:
         targetJourney: NEW_P2_IDENTITY
         targetState: REPROVE_IDENTITY
+      reprove-identity-gpg45-low:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: REPROVE_IDENTITY
