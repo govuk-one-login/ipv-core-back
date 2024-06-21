@@ -925,7 +925,6 @@ public interface VcFixtures {
                                 List.of(
                                         TestVc.TestEvidence.builder()
                                                 .txn("some-uuid")
-                                                .type(CRI_STUB_CHECK_EVIDENCE_TYPE)
                                                 .verificationScore(2)
                                                 .build()))
                         .credentialSubject(credentialSubject)
@@ -962,7 +961,6 @@ public interface VcFixtures {
                                 List.of(
                                         TestVc.TestEvidence.builder()
                                                 .txn("some-uuid")
-                                                .type(CRI_STUB_CHECK_EVIDENCE_TYPE)
                                                 .verificationScore(2)
                                                 .build()))
                         .credentialSubject(credentialSubject)
