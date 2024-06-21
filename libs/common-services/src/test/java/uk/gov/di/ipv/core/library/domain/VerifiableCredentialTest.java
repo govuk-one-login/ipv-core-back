@@ -3,7 +3,9 @@ package uk.gov.di.ipv.core.library.domain;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
@@ -12,7 +14,9 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 
@@ -34,6 +38,23 @@ class VerifiableCredentialTest {
                         vcFixture.getUserId(), vcFixture.getCriId(), vcFixture.getSignedJwt());
 
         assertEquals(vcFixture, verifiableCredential);
+    }
+
+    @Test
+    void fromValidJwtShouldThrowCredentialParseExceptionIfVCParserThrowsException() {
+        try (MockedStatic<VerifiableCredentialParser> mockVcParser =
+                mockStatic(VerifiableCredentialParser.class)) {
+            mockVcParser
+                    .when(() -> VerifiableCredentialParser.parseCredential(any()))
+                    .thenThrow(new CredentialParseException("Failed to parse VC"));
+            assertThrows(
+                    CredentialParseException.class,
+                    () ->
+                            VerifiableCredential.fromValidJwt(
+                                    vcFixture.getUserId(),
+                                    vcFixture.getCriId(),
+                                    vcFixture.getSignedJwt()));
+        }
     }
 
     @Test
@@ -68,6 +89,28 @@ class VerifiableCredentialTest {
                 vcFixture.getSignedJwt().serialize(),
                 verifiableCredential.getSignedJwt().serialize());
         assertEquals(now.plusSeconds(1), verifiableCredential.getMigrated());
+    }
+
+    @Test
+    void fromVcStoreItemShouldThrowCredentialParseExceptionIfVCParserThrowsException() {
+        try (MockedStatic<VerifiableCredentialParser> mockVcParser =
+                mockStatic(VerifiableCredentialParser.class)) {
+            mockVcParser
+                    .when(() -> VerifiableCredentialParser.parseCredential(any()))
+                    .thenThrow(new CredentialParseException("Failed to parse VC"));
+            var vcStoreItem =
+                    VcStoreItem.builder()
+                            .userId(USER_ID)
+                            .credentialIssuer(CRI_ID)
+                            .credential("🫠")
+                            .dateCreated(Instant.now())
+                            .expirationTime(Instant.now())
+                            .build();
+
+            assertThrows(
+                    CredentialParseException.class,
+                    () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
+        }
     }
 
     @Test
@@ -119,6 +162,25 @@ class VerifiableCredentialTest {
         assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
         assertEquals(vcFixture.getSignedJwt().serialize(), generatedVc.getSignedJwt().serialize());
         assertEquals(now, generatedVc.getMigrated());
+    }
+
+    @Test
+    void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfVCParserThrowsException() {
+        var now = Instant.now();
+        var sessionCredentialItem =
+                new SessionCredentialItem(SESSION_ID, CRI_ID, vcFixture.getSignedJwt(), true, now);
+        try (MockedStatic<VerifiableCredentialParser> mockVcParser =
+                mockStatic(VerifiableCredentialParser.class)) {
+            mockVcParser
+                    .when(() -> VerifiableCredentialParser.parseCredential(any()))
+                    .thenThrow(new CredentialParseException("Failed to parse VC"));
+
+            assertThrows(
+                    CredentialParseException.class,
+                    () ->
+                            VerifiableCredential.fromSessionCredentialItem(
+                                    sessionCredentialItem, USER_ID));
+        }
     }
 
     @Test
