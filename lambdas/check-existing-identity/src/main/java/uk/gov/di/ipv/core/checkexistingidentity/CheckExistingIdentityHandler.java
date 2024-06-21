@@ -260,8 +260,8 @@ public class CheckExistingIdentityHandler
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity);
 
-            // If we want to prove a full identity from scratch we want to go for the lowest strength
-            // that is acceptable to the caller.
+            // If we want to prove a full identity from scratch we want to go for the lowest
+            // strength that is acceptable to the caller.
             var preferredNewIdentityLevel =
                     clientOAuthSessionItem.getVtr().contains(Vot.P1.name()) ? Vot.P1 : Vot.P2;
 
