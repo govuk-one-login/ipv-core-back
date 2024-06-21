@@ -38,7 +38,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3_BASE_CONTEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PRIVATE_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PRIVATE_KEY;
 
 public class VerifiableCredentialGenerator {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -218,7 +218,7 @@ public class VerifiableCredentialGenerator {
         var kf = KeyFactory.getInstance(KeyType.RSA.getValue());
 
         var privateKeySpec =
-                new PKCS8EncodedKeySpec(Base64.getDecoder().decode(RSA_SIGNING_PRIVATE_JWK));
+                new PKCS8EncodedKeySpec(Base64.getDecoder().decode(RSA_SIGNING_PRIVATE_KEY));
         var signer = new RSASSASigner(kf.generatePrivate(privateKeySpec));
 
         var jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).type(JOSEObjectType.JWT).build();
