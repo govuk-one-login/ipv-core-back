@@ -6,7 +6,7 @@ on:
       - main
     paths-ignore:
       - 'deploy-delete-user-data/**'
-      - '.github/workflows/secure-post-merge-delete-account.yml'
+      - '.github/workflows/secure-post-merge.yml'
       - 'lambdas/delete-user-data/**'
       - '.github/workflows/secure-post-merge-notags.yml'
 
@@ -79,9 +79,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
+        uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
             artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
             working-directory: ./deploy
-            template-file: template.yaml
+            template-file: .aws-sam/build/template.yaml
