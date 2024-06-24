@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -179,6 +180,18 @@ public class BuildClientOauthResponseHandler
                             configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            if (isReproveIdentity != null && isReproveIdentity) {
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithoutDeviceInformation(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser,
+                                AuditExtensionAccountIntervention
+                                        .newReproveIdentityAuditExtensionAccountIntervention(
+                                                ipvSessionItem.getErrorCode() == null)));
+            }
 
             var message =
                     new StringMapMessage()

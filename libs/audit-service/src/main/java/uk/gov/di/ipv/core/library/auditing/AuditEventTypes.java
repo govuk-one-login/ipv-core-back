@@ -4,6 +4,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public enum AuditEventTypes {
+    IPV_ACCOUNT_INTERVENTION_END,
+    IPV_ACCOUNT_INTERVENTION_START,
     IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
     IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
     IPV_CORE_CRI_RESOURCE_RETRIEVED,

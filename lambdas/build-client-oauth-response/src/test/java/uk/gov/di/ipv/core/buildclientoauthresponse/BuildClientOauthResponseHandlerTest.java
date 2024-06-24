@@ -11,6 +11,8 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -19,6 +21,7 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -49,6 +52,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
@@ -84,14 +88,18 @@ class BuildClientOauthResponseHandlerTest {
                         mockAuditService);
     }
 
-    @Test
-    void shouldReturn200OnSuccessfulOauthRequest() throws SqsException, URISyntaxException {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturn200OnSuccessfulOauthRequest(boolean isReproveIdentity)
+            throws SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        var oauthSessionItem = getClientOAuthSessionItem();
+        oauthSessionItem.setReproveIdentity(isReproveIdentity);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
+                .thenReturn(oauthSessionItem);
 
         JourneyRequest event =
                 JourneyRequest.builder()
@@ -107,8 +115,19 @@ class BuildClientOauthResponseHandlerTest {
                 .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
+        verify(mockAuditService, times(isReproveIdentity ? 2 : 1))
+                .sendAuditEvent(auditEventCaptor.capture());
+        var capturedValues = auditEventCaptor.getAllValues();
+        assertEquals(AuditEventTypes.IPV_JOURNEY_END, capturedValues.get(0).getEventName());
+        if (isReproveIdentity) {
+            assertEquals(
+                    AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
+                    capturedValues.get(1).getEventName());
+            AuditExtensionAccountIntervention extensions =
+                    (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
+            assertEquals("reprove_identity", extensions.getType());
+            assertEquals(true, extensions.getSuccess());
+        }
 
         URI expectedRedirectUrl =
                 new URIBuilder("https://example.com")
@@ -264,13 +283,15 @@ class BuildClientOauthResponseHandlerTest {
         }
     }
 
-    @Test
-    void shouldReturn200WithErrorParams() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturn200WithErrorParams(boolean isReproveIdentity) throws Exception {
         IpvSessionItem ipvSessionItemWithError = generateIpvSessionItem();
         ipvSessionItemWithError.setErrorCode(OAuth2Error.SERVER_ERROR_CODE);
         ipvSessionItemWithError.setErrorDescription("Test error description");
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
         ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
+        clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -282,6 +303,21 @@ class BuildClientOauthResponseHandlerTest {
 
         ClientResponse clientResponse =
                 toResponseClass(handler.handleRequest(event, context), ClientResponse.class);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(isReproveIdentity ? 2 : 1))
+                .sendAuditEvent(auditEventCaptor.capture());
+        var capturedValues = auditEventCaptor.getAllValues();
+        assertEquals(AuditEventTypes.IPV_JOURNEY_END, capturedValues.get(0).getEventName());
+        if (isReproveIdentity) {
+            assertEquals(
+                    AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
+                    capturedValues.get(1).getEventName());
+            AuditExtensionAccountIntervention extensions =
+                    (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
+            assertEquals("reprove_identity", extensions.getType());
+            assertEquals(false, extensions.getSuccess());
+        }
 
         URIBuilder uriBuilder = new URIBuilder(clientResponse.getClient().getRedirectUrl());
         assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
