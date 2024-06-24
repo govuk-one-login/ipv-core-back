@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.602.0",
+    "@aws-sdk/client-ssm": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.602.0",
+    "@types/aws-lambda": "^8.10.140",
+    "@types/node": "^20.14.7",
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "jose": "^5.4.1"
+  }
+}
