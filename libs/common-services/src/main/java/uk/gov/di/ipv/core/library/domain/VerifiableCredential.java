@@ -4,11 +4,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -20,8 +16,6 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final String userId;
     private final String criId;
     private final String vcString;
@@ -39,25 +33,10 @@ public class VerifiableCredential {
             this.claimsSet = signedJwt.getJWTClaimsSet();
             this.signedJwt = signedJwt;
             this.migrated = migrated;
-            this.credential = parseCredential(this.claimsSet);
+            this.credential = VerifiableCredentialParser.parseCredential(this.claimsSet);
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
-        }
-    }
-
-    private static uk.gov.di.model.VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
-            throws CredentialParseException {
-        try {
-            return VerifiableCredentialParser.parseCredential(claimsSet);
-        } catch (CredentialParseException e) {
-            if ("production".equals(System.getenv(EnvironmentVariable.ENVIRONMENT.name()))) {
-                // Just warn for now in production - will be an error in future
-                LOGGER.warn(
-                        LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
-                return null;
-            }
-            throw e;
         }
     }
 
