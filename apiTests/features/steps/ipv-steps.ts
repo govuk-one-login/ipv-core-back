@@ -5,7 +5,7 @@ import * as internalClient from '../../src/clients/core-back-internal-client.js'
 import * as externalClient from '../../src/clients/core-back-external-client.js'
 import * as criStubClient from '../../src/clients/cri-stub-client.js'
 import config from "../../src/config.js";
-import {exchangeCodeForToken} from "../../src/clients/core-back-external-client.js";
+import {generateProcessCriCallbackBody} from "../../src/utils/request-body-generators.js";
 
 When('I start a new identity journey', async function (this: World): Promise<void> {
     const sessionInitResponse = await internalClient.initialiseIpvSession();
@@ -27,7 +27,8 @@ Then('I get a(n) {string} CRI response', function(this: World, expectedCri: stri
 })
 
 When('I submit {string} details to the CRI stub', async function(this: World, criStubData: string): Promise<void> {
-    const processCriCallbackRequestBody = await criStubClient.callHeadlessApi(this.lastJourneyEngineResponse.cri.redirectUrl, criStubData);
+    const criStubResponse = await criStubClient.callHeadlessApi(this.lastJourneyEngineResponse.cri.redirectUrl, criStubData);
+    const processCriCallbackRequestBody = generateProcessCriCallbackBody(criStubResponse);
     const journeyResponse = await internalClient.processCriCallback(processCriCallbackRequestBody, this.ipvSessionId);
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(journeyResponse.journey, this.ipvSessionId);
 })

@@ -4,7 +4,7 @@ import {getRandomString} from "../utils/random-string-generator.js";
 import {JourneyEngineResponse} from "../interfaces/journey-engine-response.js";
 import {ProcessCriCallbackRequest} from "../interfaces/process-cri-callback-request.js";
 import {ProcessCriCallbackResponse} from "../interfaces/process-cri-callback-response.js";
-import {generateJar} from "../utils/jar-generator.js";
+import {generateInitialiseIpvSessionBody} from "../utils/request-body-generators.js";
 
 const JOURNEY_PREFIX: string = '/journey/'
 const POST: string = 'POST'
@@ -16,14 +16,7 @@ export const initialiseIpvSession = async (): Promise<SessionInitResponse> => {
         response = await fetch(config.CORE_BACK_INTERNAL_API_URL + '/session/initialise', {
             method: 'POST',
             headers: internalApiHeaders,
-            body: JSON.stringify({
-                responseType: 'code',
-                clientId: 'orchestrator',
-                redirectUri: config.ORCHESTRATOR_REDIRECT_URI,
-                state: 'api-tests-state',
-                scope: 'openid',
-                request: await generateJar(subject),
-            })
+            body: JSON.stringify(await generateInitialiseIpvSessionBody(subject)),
         });
     } catch (error) {
         console.log(error)
@@ -36,7 +29,7 @@ export const initialiseIpvSession = async (): Promise<SessionInitResponse> => {
     const responseBody = await response.json();
 
     return {
-        ipvSessionId: responseBody.ipvSessionId,
+        ipvSessionId: responseBody.ipvSessionId as string,
         userId: subject
     };
 }
@@ -53,7 +46,7 @@ export const sendJourneyEvent = async (event: string, ipvSessionId: string): Pro
         throw new Error("sendJourneyEvent request failed: " + response.statusText)
     }
 
-    return await response.json();
+    return await response.json() as JourneyEngineResponse;
 }
 
 export const processCriCallback = async (requestBody: ProcessCriCallbackRequest, ipvSessionId: string): Promise<ProcessCriCallbackResponse> => {
