@@ -50,6 +50,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -64,6 +65,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
@@ -76,7 +78,8 @@ class EvaluateGpg45ScoresHandlerTest {
     private static JourneyRequest request;
     private static List<VerifiableCredential> VCS_IN_STORE;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B, M2B);
+    private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
+    private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
@@ -138,7 +141,7 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturnJourneyMetIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -165,7 +168,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldReturnJourneyMetIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any())).thenReturn(new Gpg45Scores(1, 1, 1, 1, 1));
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -190,7 +193,7 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturnJourneyUnmetIfScoresDoNotSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
@@ -235,7 +238,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenReturn(VCS_IN_STORE);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -256,7 +259,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(vcHmrcMigrationPCL250NoEvidence()));
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -349,7 +352,7 @@ class EvaluateGpg45ScoresHandlerTest {
                                 M1A_EXPERIAN_FRAUD_VC,
                                 vcVerificationM1a()));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -461,12 +464,90 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturnJourneyMetIfCheckRequiresAdditionalEvidenceResponseFalse() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
+        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
+    }
+
+    @Test
+    void shouldReturnJourneyMetForLowConfidence() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_PROFILES)))
+                .thenReturn(Optional.of(L1A));
+        clientOAuthSessionItem.setVtr(List.of("P1"));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
+        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(Vot.P1);
+        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+        inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P1, ipvSessionItem.getVot());
+        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(AuditEventTypes.IPV_GPG45_PROFILE_MATCHED, auditEvent.getEventName());
+
+        AuditEventUser user = auditEvent.getUser();
+        assertEquals(TEST_USER_ID, user.getUserId());
+        assertEquals(TEST_JOURNEY_ID, user.getGovukSigninJourneyId());
+        assertEquals(TEST_SESSION_ID, user.getSessionId());
+
+        AuditExtensionGpg45ProfileMatched extension =
+                (AuditExtensionGpg45ProfileMatched) auditEvent.getExtensions();
+        assertEquals(L1A, extension.getGpg45Profile());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        assertEquals(Vot.P1, ipvSessionItemArgumentCaptor.getValue().getVot());
+    }
+
+    @Test
+    void shouldReturnJourneyMetForMeetingMediumAndLowConfidences() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), anyList()))
+                .thenReturn(Optional.of(M1A));
+        clientOAuthSessionItem.setVtr(List.of("P1", "P1"));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =

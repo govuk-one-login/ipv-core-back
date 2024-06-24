@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 
@@ -48,6 +49,14 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(
                 Optional.of(M1A),
                 evaluator.getFirstMatchingProfile(m1aScores, Vot.P2.getSupportedGpg45Profiles()));
+    }
+
+    @Test
+    void getFirstMatchingProfileShouldReturnSatisfiedLowConfidenceProfile() {
+        Gpg45Scores l1aScores = new Gpg45Scores(Gpg45Scores.EV_22, 0, 1, 1);
+        assertEquals(
+                Optional.of(L1A),
+                evaluator.getFirstMatchingProfile(l1aScores, Vot.P1.getSupportedGpg45Profiles()));
     }
 
     @Test
