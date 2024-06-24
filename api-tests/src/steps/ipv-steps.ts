@@ -73,7 +73,7 @@ When(
 Then("I get a client Oauth response", function (this: World): void {
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
-    config.ORCHESTRATOR_REDIRECT_URI,
+    config.ORCHESTRATOR_REDIRECT_URL,
     `${url.protocol}//${url.host}${url.pathname}`,
   );
 });

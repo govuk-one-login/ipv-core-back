@@ -31,7 +31,7 @@ export const generateJar = async (
       sub: subject,
       govuk_signin_journey_id: getRandomString(8),
       state: getRandomString(16),
-      redirect_uri: config.ORCHESTRATOR_REDIRECT_URI,
+      redirect_uri: config.ORCHESTRATOR_REDIRECT_URL,
     },
   };
 

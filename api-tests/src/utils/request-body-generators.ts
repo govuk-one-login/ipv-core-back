@@ -21,7 +21,7 @@ export const generateInitialiseIpvSessionBody = async (
   return {
     responseType: "code",
     clientId: "orchestrator",
-    redirectUri: config.ORCHESTRATOR_REDIRECT_URI,
+    redirectUri: config.ORCHESTRATOR_REDIRECT_URL,
     state: "api-tests-state",
     scope: "openid",
     request: await generateJar(subject, journeyType),
@@ -75,7 +75,7 @@ export const generateTokenExchangeBody = async (
   return (
     `grant_type=authorization_code&` +
     `code=${code}&` +
-    `redirect_uri=${encodeURI(config.ORCHESTRATOR_REDIRECT_URI)}&` +
+    `redirect_uri=${encodeURI(config.ORCHESTRATOR_REDIRECT_URL)}&` +
     `client_id=${ORCHESTRATOR_CLIENT_ID}&` +
     `client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&` +
     `client_assertion=${await createSignedJwt({ sub: ORCHESTRATOR_CLIENT_ID, iss: ORCHESTRATOR_CLIENT_ID })}`
