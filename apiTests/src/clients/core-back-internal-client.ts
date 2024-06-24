@@ -44,7 +44,6 @@ export const processCriCallback = async (requestBody: ProcessCriCallbackRequest,
     })
 
     if (!response.ok) {
-        console.log(response)
         throw new Error("sendJourneyEvent request failed: " + response.statusText)
     }
 

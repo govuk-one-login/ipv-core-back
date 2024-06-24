@@ -8,7 +8,9 @@ import {fileURLToPath} from "url";
 import fs from "node:fs";
 import {getRandomString} from "./random-string-generator.js";
 import {CriStubRequest} from "../interfaces/cri-stub-request.js";
+import {createSignedJwt} from "./jwt-signer.js";
 
+const ORCHESTRATOR_CLIENT_ID = 'orchestrator'
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = 'credentialSubject' | 'evidence'
 
@@ -49,6 +51,20 @@ export const generateCriStubBody = (criId: string, scenario: string, redirectUrl
         evidenceJson: readJsonFile(criId, scenario, 'evidence'),
         resourceId: getRandomString(8),
     }
+}
+
+export const generateTokenExchangeBody = async (redirectUrl: string): Promise<string> => {
+    const code = new URL(redirectUrl).searchParams.get("code");
+    if (!code) {
+        throw new Error("code not received in redirect URL")
+    }
+
+    return `grant_type=authorization_code&` +
+        `code=${code}&` +
+        `redirect_uri=${encodeURI(config.ORCHESTRATOR_REDIRECT_URI)}&` +
+        `client_id=${ORCHESTRATOR_CLIENT_ID}&` +
+        `client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&` +
+        `client_assertion=${await createSignedJwt({sub: ORCHESTRATOR_CLIENT_ID, iss: ORCHESTRATOR_CLIENT_ID})}`
 }
 
 const readJsonFile = (criId: string, scenario: string, jsonType: JsonType) => {

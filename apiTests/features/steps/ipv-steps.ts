@@ -8,7 +8,7 @@ import config from "../../src/config.js";
 import {
     generateCriStubBody,
     generateInitialiseIpvSessionBody,
-    generateProcessCriCallbackBody
+    generateProcessCriCallbackBody, generateTokenExchangeBody
 } from "../../src/utils/request-body-generators.js";
 import {getRandomString} from "../../src/utils/random-string-generator.js";
 
@@ -43,7 +43,7 @@ Then('I get a client Oauth response', function(this: World): void {
 })
 
 When('I use the Oauth response to get my identity', async function(this: World): Promise<void> {
-    const tokenResponse = await externalClient.exchangeCodeForToken(this.lastJourneyEngineResponse.client.redirectUrl);
+    const tokenResponse = await externalClient.exchangeCodeForToken(await generateTokenExchangeBody(this.lastJourneyEngineResponse.client.redirectUrl));
     this.identity = await externalClient.getIdentity(tokenResponse);
 })
 
