@@ -55,3 +55,4 @@ local-running/bin/
 secrets.gradle
 
 api-tests/cucumber-report.html
+api-tests/.npmrc
