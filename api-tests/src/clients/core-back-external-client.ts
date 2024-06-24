@@ -1,5 +1,6 @@
 import config from "../config.js";
 import { TokenResponse } from "../interfaces/token-response.js";
+import { UserIdentity } from "../interfaces/user-identity.js";
 
 export const exchangeCodeForToken = async (
   tokenExchangeBody: string,
@@ -23,7 +24,7 @@ export const exchangeCodeForToken = async (
 
 export const getIdentity = async (
   tokenResponse: TokenResponse,
-): Promise<object> => {
+): Promise<UserIdentity> => {
   const response = await fetch(
     config.CORE_BACK_EXTERNAL_API_URL + `/user-identity`,
     {
@@ -38,5 +39,5 @@ export const getIdentity = async (
     throw new Error("getIdentity request failed: " + response.statusText);
   }
 
-  return await response.json();
+  return (await response.json()) as UserIdentity;
 };
