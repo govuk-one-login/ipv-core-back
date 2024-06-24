@@ -10,7 +10,7 @@ import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.jca.JWEJCAContext;
 import com.nimbusds.jose.util.Base64URL;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -38,7 +38,7 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         this.kmsClient =
                 KmsClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                        .httpClientBuilder(AwsCrtHttpClient.builder())
                         .build();
     }
 

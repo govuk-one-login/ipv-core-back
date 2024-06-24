@@ -436,7 +436,8 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtThrowsErrorWhenInvalidCimitKey() throws JsonProcessingException {
+    void getContraIndicatorsVCJwtThrowsErrorWhenInvalidCimitKey()
+            throws JsonProcessingException, VerifiableCredentialException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -449,6 +450,18 @@ class CiMitServiceTest {
                                 .statusCode(200)
                                 .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC))
                                 .build());
+        when(verifiableCredentialValidator.parseAndValidate(
+                        TEST_USER_ID,
+                        null,
+                        SIGNED_CONTRA_INDICATOR_VC,
+                        VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
+                        "INVALID_CIMIT_KEY",
+                        CIMIT_COMPONENT_ID,
+                        false))
+                .thenThrow(
+                        new VerifiableCredentialException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL));
 
         assertThrows(
                 CiRetrievalException.class,

@@ -39,8 +39,10 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -65,7 +67,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -94,6 +96,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
@@ -117,6 +120,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -132,6 +136,8 @@ class CheckExistingIdentityHandlerTest {
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
     private static List<VerifiableCredential> VCS_FROM_STORE;
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
+    private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
+            new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
@@ -242,29 +248,54 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldUseEvcsServiceWhenEnabled() throws Exception {
+            var vc = vcHmrcMigration();
+            vc.setMigrated(Instant.now());
+            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(vc));
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-            when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
-                    .thenReturn(List.of(gpg45Vc, vcHmrcMigration()));
+
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(),
+                            any(),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class)))
+                    .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(gpg45Vc)));
 
             checkExistingIdentityHandler.handleRequest(event, context);
 
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockEvcsService, times(1))
-                    .getVerifiableCredentials(TEST_USER_ID, EVCS_TEST_TOKEN, EvcsVCState.CURRENT);
-            verify(mockVerifiableCredentialService, never()).getVcs(TEST_USER_ID);
+                    .getVerifiableCredentialsByState(
+                            TEST_USER_ID,
+                            EVCS_TEST_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN,
+                            EvcsVCState.PENDING);
         }
 
         @Test
         void shouldUseVcServiceWhenEvcsServiceWhenAndReturnsEmpty() throws Exception {
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-            when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
-                    .thenReturn(new ArrayList<VerifiableCredential>());
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(),
+                            any(),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class)))
+                    .thenReturn(new HashMap<EvcsVCState, List<VerifiableCredential>>());
 
             checkExistingIdentityHandler.handleRequest(event, context);
 
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockEvcsService, times(1))
-                    .getVerifiableCredentials(TEST_USER_ID, EVCS_TEST_TOKEN, EvcsVCState.CURRENT);
+                    .getVerifiableCredentialsByState(
+                            TEST_USER_ID,
+                            EVCS_TEST_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN,
+                            EvcsVCState.PENDING);
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
         }
 
@@ -309,6 +340,38 @@ class CheckExistingIdentityHandlerTest {
             verify(mockEvcsMigrationService)
                     .migrateExistingIdentity(
                             TEST_USER_ID, List.of(gpg45Vc, hmrcMigrationVC), EVCS_TEST_TOKEN);
+        }
+
+        @Test
+        void shouldReturnJourneyReuseUpdateResponseIfVcIsF2fAndHasPendingReturnInEvcs()
+                throws CredentialParseException, EvcsServiceException,
+                        HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
+
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(),
+                            any(),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class),
+                            any(EvcsVCState.class)))
+                    .thenReturn(Map.of(PENDING_RETURN, List.of(vcF2fM1a())));
+
+            when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+            // pending vcs should not be migrated
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any(), any());
         }
 
         @Test
@@ -1058,6 +1121,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
@@ -1103,6 +1167,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
         when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
@@ -1260,6 +1325,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
@@ -1339,6 +1405,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);

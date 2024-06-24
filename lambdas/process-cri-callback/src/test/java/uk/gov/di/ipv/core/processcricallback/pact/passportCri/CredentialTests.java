@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +37,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -129,7 +127,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(EC_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -154,9 +152,7 @@ class CredentialTests {
                                         "824159121", passportNode.get("documentNumber").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -225,7 +221,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(EC_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -255,9 +251,7 @@ class CredentialTests {
                                         "123456789", passportNode.get("documentNumber").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -329,7 +323,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(EC_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -359,9 +353,7 @@ class CredentialTests {
                                         "123456789", passportNode.get("documentNumber").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });

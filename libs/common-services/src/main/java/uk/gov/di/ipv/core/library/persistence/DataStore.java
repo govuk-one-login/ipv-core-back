@@ -12,7 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
@@ -48,7 +48,7 @@ public class DataStore<T extends DynamodbItem> {
         var client =
                 DynamoDbClient.builder()
                         .region(EU_WEST_2)
-                        .httpClient(UrlConnectionHttpClient.create())
+                        .httpClient(AwsCrtHttpClient.create())
                         .build();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();

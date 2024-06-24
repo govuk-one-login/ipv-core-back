@@ -104,8 +104,8 @@ public enum ErrorResponse {
     MISSING_RESET_TYPE(1087, "resetType missing from process request"),
     UNKNOWN_RESET_TYPE(1088, "unknown resetType received"),
     ERROR_CALLING_DCMAW_ASYNC_CRI(1089, "Error calling the DCMAW Async CRI"),
-    FAILED_TO_UPDATE_IDENTITY(1090, "Failed to update identity");
-    ;
+    FAILED_TO_UPDATE_IDENTITY(1090, "Failed to update identity"),
+    INVALID_SIGNING_KEY_TYPE(1091, "Signing key is invalid type. Must be EC or RSA");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

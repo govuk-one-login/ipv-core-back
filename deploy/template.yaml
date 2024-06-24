@@ -484,7 +484,7 @@ Resources:
             - !If
               - IsDev01
               - !ImportValue Dev01IdentityHostedZoneId
-              - Dev02IdentityHostedZoneId
+              - !ImportValue Dev02IdentityHostedZoneId
             - !ImportValue PublicHostedZoneId
       ValidationMethod: DNS
 
@@ -540,7 +540,7 @@ Resources:
         - !If
           - IsDev01
           - !ImportValue Dev01IdentityHostedZoneId
-          - Dev02IdentityHostedZoneId
+          - !ImportValue Dev02IdentityHostedZoneId
         - !ImportValue PublicHostedZoneId
       AliasTarget:
         DNSName: !GetAtt IPVCoreInternalTestingApiDomain.RegionalDomainName

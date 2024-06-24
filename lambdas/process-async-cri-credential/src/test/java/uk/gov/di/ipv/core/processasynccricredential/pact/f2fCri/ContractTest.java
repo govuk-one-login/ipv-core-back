@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriRespon
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -131,7 +130,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                criConfig.getParsedSigningKey(),
+                                criConfig.getSigningKey(),
                                 criConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -176,7 +175,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (VerifiableCredentialException | ParseException | JsonProcessingException e) {
+            } catch (VerifiableCredentialException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -259,7 +258,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -317,7 +316,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -405,7 +404,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -464,7 +463,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -550,7 +549,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -605,7 +604,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -692,7 +691,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -745,7 +744,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -829,7 +828,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
@@ -874,7 +873,7 @@ public class ContractTest {
                                         throw new RuntimeException(e);
                                     }
                                 });
-            } catch (JsonProcessingException | ParseException | VerifiableCredentialException e) {
+            } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -934,7 +933,7 @@ public class ContractTest {
             pactMethod = "f2fMessageContainsValidBrpCredential",
             providerType = ProviderType.ASYNCH)
     void testF2fMessageReturnsIssuedBrpCredential(List<Message> messageList, MockServer mockServer)
-            throws URISyntaxException, ParseException {
+            throws URISyntaxException {
         VerifiableCredentialValidator verifiableCredentialValidator =
                 new VerifiableCredentialValidator(
                         mockConfigService,
@@ -958,7 +957,7 @@ public class ContractTest {
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                credentialIssuerConfig.getParsedSigningKey(),
+                                credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
