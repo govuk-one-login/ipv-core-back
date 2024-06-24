@@ -342,7 +342,7 @@ public class BuildCriOauthRequestHandler
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        Vot.P2.getSupportedGpg45Profiles()); // out of date
+                        Vot.P2.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()

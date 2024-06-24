@@ -203,7 +203,7 @@ public class EvaluateGpg45ScoresHandler
                                 ipAddress,
                                 deviceInformation));
 
-                ipvSessionItem.setVot(Vot.P2); // out of date
+                ipvSessionItem.setVot(Vot.fromProfile(matchedProfile.get()));
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);

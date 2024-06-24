@@ -667,8 +667,7 @@ public class CheckExistingIdentityHandler
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY)
-                    && requestedVot.equals(Vot.P2)) { // out of date
+            if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
 
