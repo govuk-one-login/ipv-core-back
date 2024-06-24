@@ -125,6 +125,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 ClientOAuthSessionItem.builder()
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .state("test-state")
+                        .vtr(List.of("P2"))
                         .responseType("code")
                         .redirectUri("https://example.com/redirect")
                         .govukSigninJourneyId("test-journey-id")
