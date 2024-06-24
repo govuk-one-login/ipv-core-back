@@ -26,7 +26,7 @@ states:
   REUSE_WITH_STORE_IDENTITY:
     events:
       next:
-        targetState: UPDATE_IDENTITY_BEFORE_IDENTITY_REUSE_PAGE
+        targetState: STORE_NEW_IDENTITY
 
   # Journey states
 
