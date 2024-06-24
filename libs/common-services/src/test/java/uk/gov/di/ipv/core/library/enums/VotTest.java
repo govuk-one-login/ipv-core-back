@@ -13,7 +13,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
-public class VotTest {
+class VotTest {
     @ParameterizedTest
     @MethodSource("votProfiles")
     void shouldGetCorrectStrengthVotWithProfile(Gpg45Profile profile, Vot associatedVot) {
