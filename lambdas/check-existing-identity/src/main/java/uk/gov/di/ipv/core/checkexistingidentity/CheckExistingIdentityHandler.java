@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -63,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
@@ -76,6 +78,7 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -331,22 +334,75 @@ public class CheckExistingIdentityHandler
     private VerifiableCredentialBundle getVerifiableCredentials(
             String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
-        if (configService.enabled(EVCS_READ_ENABLED)) {
+
+        var tacticalVcs = verifiableCredentialService.getVcs(userId);
+
+        if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
             var vcs =
                     evcsService.getVerifiableCredentialsByState(
-                            userId, evcsAccessToken, CURRENT, PENDING_RETURN);
-            var pendingReturnVcs = vcs.get(PENDING_RETURN);
-            // use pending return vcs to determine identity if available
-            if (!isNullOrEmpty(pendingReturnVcs)) {
-                return new VerifiableCredentialBundle(pendingReturnVcs, true, true);
-            }
-            var currentVcs = vcs.get(CURRENT);
-            if (!isNullOrEmpty(currentVcs)) {
-                return new VerifiableCredentialBundle(currentVcs, true, false);
+                            userId, evcsAccessToken, CURRENT, PENDING_RETURN, PENDING);
+
+            logIdentityMismatches(tacticalVcs, vcs);
+
+            if (configService.enabled(EVCS_READ_ENABLED)) {
+                var pendingReturnVcs = vcs.get(PENDING_RETURN);
+                // use pending return vcs to determine identity if available
+                if (!isNullOrEmpty(pendingReturnVcs)) {
+                    return new VerifiableCredentialBundle(pendingReturnVcs, true, true);
+                }
+                var currentVcs = vcs.get(CURRENT);
+                if (!isNullOrEmpty(currentVcs)) {
+                    return new VerifiableCredentialBundle(currentVcs, true, false);
+                }
             }
         }
-        return new VerifiableCredentialBundle(
-                verifiableCredentialService.getVcs(userId), false, false);
+        return new VerifiableCredentialBundle(tacticalVcs, false, false);
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private void logIdentityMismatches(
+            List<VerifiableCredential> tacticalVcs,
+            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs) {
+
+        var migratedTacticalVcStrings =
+                tacticalVcs.stream()
+                        .filter(vc -> vc.getMigrated() != null)
+                        .map(VerifiableCredential::getVcString)
+                        .collect(Collectors.toSet());
+
+        // if we have pending vcs just check those
+        var evcsToCheck =
+                Optional.ofNullable(evcsVcs.get(PENDING_RETURN))
+                        .or(() -> Optional.ofNullable(evcsVcs.get(CURRENT)))
+                        .orElse(List.of());
+
+        var allTacticalVcStrings =
+                tacticalVcs.stream()
+                        .map(VerifiableCredential::getVcString)
+                        .collect(Collectors.toSet());
+
+        var evcsVcStrings =
+                evcsToCheck.stream()
+                        .map(VerifiableCredential::getVcString)
+                        .collect(Collectors.toSet());
+
+        var hasUnmigratedVcs = allTacticalVcStrings.size() > migratedTacticalVcStrings.size();
+
+        // check if we have unmigrated credentials alongside migrated ones
+        if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
+            LOGGER.warn("Unmigrated tactical credentials found alongside migrated credentials");
+        }
+
+        // check all the tactical vcs are in the selected evcs vcs
+        if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
+            LOGGER.warn(
+                    "Failed to find corresponding evcs credential for migrated tactical credential");
+        }
+
+        // check all the evcs vcs are in the tactical store
+        if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
+            LOGGER.warn("Failed to find corresponding tactical credential for evcs credential");
+        }
     }
 
     @Tracing

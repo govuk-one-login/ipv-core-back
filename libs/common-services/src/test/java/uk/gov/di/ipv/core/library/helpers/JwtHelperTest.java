@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 class JwtHelperTest {
@@ -66,7 +66,7 @@ class JwtHelperTest {
         SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedClaimsResponse, signer);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
 
-        assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
+        assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK))));
 
         JsonNode claimsSet = objectMapper.readTree(generatedClaims.toString());
         JsonNode namePartsNode = claimsSet.get("name").get(0).get("nameParts").get(0);

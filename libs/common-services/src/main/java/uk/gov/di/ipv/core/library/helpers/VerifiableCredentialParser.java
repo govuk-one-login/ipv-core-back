@@ -26,6 +26,14 @@ public class VerifiableCredentialParser {
     private static final ObjectMapper LAX_OBJECT_MAPPER =
             new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    // Known issues with our schema - changes here should be kept in sync with SPOT
+    private static final List<String> KNOWN_ADDITIONAL_WARNINGS =
+            List.of(
+                    "Unrecognized field \"id\" (class uk.gov.di.model.PostalAddress)",
+                    "Unrecognized field \"poBoxNumber\" (class uk.gov.di.model.PostalAddress)",
+                    "Unrecognized field \"ciReasons\" (class uk.gov.di.model.IdentityCheck)",
+                    "Unrecognized field \"deviceId\" (class uk.gov.di.model.IdentityCheckSubject)");
+
     private VerifiableCredentialParser() {}
 
     public static VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
@@ -65,9 +73,12 @@ public class VerifiableCredentialParser {
         } catch (IllegalArgumentException e) {
             // Try again with more relaxed parsing rules
             var vc = LAX_OBJECT_MAPPER.convertValue(vcClaim, vcType);
-            LOGGER.warn(
-                    LogHelper.buildErrorMessage(
-                            "Credential contained unexpected properties: " + e.getMessage(), e));
+            if (KNOWN_ADDITIONAL_WARNINGS.stream().noneMatch(m -> e.getMessage().startsWith(m))) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage(
+                                "Credential contained unexpected properties: " + e.getMessage(),
+                                e));
+            }
             return vc;
         }
     }

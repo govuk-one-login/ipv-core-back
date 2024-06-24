@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
+import com.nimbusds.jose.jwk.KeyType;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -322,6 +323,20 @@ public interface VcFixtures {
                             .evidence(SUCCESSFUL_EVIDENCE)
                             .build(),
                     Instant.ofEpochSecond(1705986521));
+
+    VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC =
+            generateVerifiableCredential(
+                    TEST_SUBJECT,
+                    Cri.PASSPORT.getId(),
+                    TestVc.builder()
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .passport(PASSPORT_DETAILS)
+                                            .build())
+                            .evidence(SUCCESSFUL_EVIDENCE)
+                            .build(),
+                    Instant.ofEpochSecond(1705986521),
+                    KeyType.RSA);
 
     static VerifiableCredential vcPassportM1aFailed() {
         TestVc.TestCredentialSubject credentialSubject =

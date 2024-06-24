@@ -56,8 +56,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @WireMockTest
@@ -645,7 +645,7 @@ class CriApiServiceTest {
                                         + wmRuntimeInfo.getHttpPort()
                                         + "/authorizeUrl"))
                 .clientId("ipv-core")
-                .signingKey(EC_PUBLIC_JWK)
+                .signingKey(TEST_EC_PUBLIC_JWK)
                 .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId("test-audience")
                 .clientCallbackUrl(

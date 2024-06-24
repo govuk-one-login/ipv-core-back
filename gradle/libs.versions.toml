@@ -16,7 +16,7 @@ awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
 awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
-awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
+awsSdkCrtClient = { module = "software.amazon.awssdk:aws-crt-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
 diVocab = "uk.gov.di.model:di-data-model-jackson:v1.7.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
