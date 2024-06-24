@@ -143,10 +143,15 @@ class JourneyMapTest {
                             var basicEventStateMachineKeys = basicEventStateMachine.keySet();
                             assertTrue(
                                     basicEventStateMachineKeys.contains(
-                                            basicEvent.getTargetState()));
+                                            basicEvent.getTargetState()),
+                                    "Unknown target state %s"
+                                            .formatted(basicEvent.getTargetState()));
 
                         } else if (basicEvent.getTargetState() != null) {
-                            assertTrue(stateMachineKeys.contains(basicEvent.getTargetState()));
+                            assertTrue(
+                                    stateMachineKeys.contains(basicEvent.getTargetState()),
+                                    "Unknown target state %s"
+                                            .formatted(basicEvent.getTargetState()));
                         }
                     }
                 }
