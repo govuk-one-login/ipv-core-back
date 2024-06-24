@@ -43,11 +43,11 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_NO_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -181,7 +181,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID),
                         eq(null),
@@ -251,7 +251,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any(), eq(false)))
                 .thenThrow(
@@ -293,7 +293,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         InvokeResponse.builder()
@@ -321,7 +321,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
@@ -368,7 +368,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
                         any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(
@@ -401,7 +401,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID),
                         eq(null),
@@ -479,7 +479,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         InvokeResponse.builder()
@@ -508,7 +508,7 @@ class CiMitServiceTest {
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(EC_PUBLIC_JWK);
+                .thenReturn(TEST_EC_PUBLIC_JWK);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
                         InvokeResponse.builder()

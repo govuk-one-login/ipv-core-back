@@ -45,7 +45,7 @@ class ConfigServicePublicKeySelectorTest {
     @Test
     void selectPublicKeysShouldReturnKeys() throws Exception {
         when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
-                .thenReturn(TestFixtures.EC_PUBLIC_JWK);
+                .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
         when(configServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
@@ -82,7 +82,8 @@ class ConfigServicePublicKeySelectorTest {
                                 false,
                                 null));
 
-        assertEquals(ECKey.parse(TestFixtures.EC_PUBLIC_JWK).toECPublicKey(), jwkClientPublicKey);
+        assertEquals(
+                ECKey.parse(TestFixtures.TEST_EC_PUBLIC_JWK).toECPublicKey(), jwkClientPublicKey);
         assertEquals(
                 CertificateFactory.getInstance("X.509")
                         .generateCertificate(
@@ -95,7 +96,7 @@ class ConfigServicePublicKeySelectorTest {
     @Test
     void selectPublicKeysShouldThrowIfUnsupportedAlgorithm() {
         when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
-                .thenReturn(TestFixtures.EC_PUBLIC_JWK);
+                .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
 
         InvalidClientException exception =
                 assertThrows(
@@ -119,7 +120,7 @@ class ConfigServicePublicKeySelectorTest {
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
         when(configServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
-                .thenReturn(TestFixtures.EC_PUBLIC_JWK);
+                .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
 
         assertThrows(
                 InvalidClientException.class,

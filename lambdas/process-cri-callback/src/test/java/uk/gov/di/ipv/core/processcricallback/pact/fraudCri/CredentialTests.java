@@ -49,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -135,7 +137,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                CRI_SIGNING_PRIVATE_KEY_JWK,
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -251,7 +253,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                CRI_SIGNING_PRIVATE_KEY_JWK,
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -364,7 +366,7 @@ class CredentialTests {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                CRI_SIGNING_PRIVATE_KEY_JWK,
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -496,8 +498,8 @@ class CredentialTests {
                         new URI("http://localhost:" + mockServer.getPort() + "/credential/issue"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
-                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
-                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .signingKey(EC_PRIVATE_KEY_JWK)
+                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
@@ -516,14 +518,6 @@ class CredentialTests {
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -618,7 +612,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "tv8Dm1d6xzt7NZzc6rNi4vdy8Nolp5_pUuw29HU3TsQqaxBvbTOOU8-RGtx-lE3n2HGXHeCiHQsHRL3f6qofFg";
+            "tv8Dm1d6xzt7NZzc6rNi4vdy8Nolp5_pUuw29HU3TsQqaxBvbTOOU8-RGtx-lE3n2HGXHeCiHQsHRL3f6qofFg"; // pragma: allowlist secret
 
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_BODY =
             """
@@ -705,7 +699,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "yACRsUiWnx8YcXSHSEGScsJmsIfn0ToTnWl0hDYmYaPFa4wdHEUBc1oACfbHZLP5lTzbzen3rh8hLs71avj6Lw";
+            "yACRsUiWnx8YcXSHSEGScsJmsIfn0ToTnWl0hDYmYaPFa4wdHEUBc1oACfbHZLP5lTzbzen3rh8hLs71avj6Lw"; // pragma: allowlist secret
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_BODY =
             """
@@ -792,5 +786,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "U0xZDzMygdiOc9oII4CXYfjb71K15dsGFlMMfnv3cwOb_gn8HFsFaLbV7UMID4IbgLRqjZf12ie8F5IDIvcJkA";
+            "U0xZDzMygdiOc9oII4CXYfjb71K15dsGFlMMfnv3cwOb_gn8HFsFaLbV7UMID4IbgLRqjZf12ie8F5IDIvcJkA"; // pragma: allowlist secret
 }

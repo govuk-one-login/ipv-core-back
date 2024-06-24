@@ -43,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 
 @Disabled("Queue based PACT tests should not be run in build pipelines at this time")
@@ -1018,8 +1020,8 @@ public class ContractTest {
                 .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
-                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
-                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .signingKey(EC_PRIVATE_KEY_JWK)
+                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
@@ -1053,14 +1055,7 @@ public class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-                    {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-                    """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-                    {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-                    """;
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
@@ -1141,7 +1136,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_PASSPORT_SIGNATURE =
-            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw";
+            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw"; // pragma: allowlist secret
 
     private static final String FAILED_F2F_VC_WITH_PASSPORT_BODY =
             """
@@ -1211,7 +1206,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_F2F_VC_PASSPORT_SIGNATURE =
-            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw";
+            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw"; // pragma: allowlist secret
 
     private static final String FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY =
             """
@@ -1282,7 +1277,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
-            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
+            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_DVLA_BODY =
             """
@@ -1359,7 +1354,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_DVLA_SIGNATURE =
-            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg";
+            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_EU_DL_BODY =
             """
@@ -1436,7 +1431,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_EU_DL_SIGNATURE =
-            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w";
+            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_EEA_CARD_BODY =
             """
@@ -1508,7 +1503,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_EEA_SIGNATURE =
-            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw";
+            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_BRP_BODY =
             """
@@ -1580,5 +1575,5 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_BRP_SIGNATURE =
-            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg";
+            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg"; // pragma: allowlist secret
 }

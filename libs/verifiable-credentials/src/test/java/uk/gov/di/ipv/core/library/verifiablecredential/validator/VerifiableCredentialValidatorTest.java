@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
@@ -45,9 +45,9 @@ class VerifiableCredentialValidatorTest {
             Clock.fixed(Instant.parse("2024-04-01T00:00:00.00Z"), ZoneOffset.UTC);
     private static final Clock INVALID_CURRENT_TIME =
             Clock.fixed(Instant.parse("2024-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-    private static final String VALID_EC_SIGNING_KEY = EC_PUBLIC_JWK;
+    private static final String VALID_EC_SIGNING_KEY = TEST_EC_PUBLIC_JWK;
     private static final String INVALID_EC_SIGNING_KEY =
-            "{\"crv\":\"P-256\",\"d\":\"o1orSH_mS3u1zzi4wXa9C-cgY2bPyZWN5DxK78JCN6E\",\"kty\":\"EC\",\"x\":\"LziA3lV476BwPG5glvLLx8-FzMbeX2ti9wYlhwCWNhQ\",\"y\":\"NfvgSlu1TMNjjMRM3um29Tv79C4NL8x6WEY7t4BBneA\"}";
+            "{\"crv\":\"P-256\",\"d\":\"o1orSH_mS3u1zzi4wXa9C-cgY2bPyZWN5DxK78JCN6E\",\"kty\":\"EC\",\"x\":\"LziA3lV476BwPG5glvLLx8-FzMbeX2ti9wYlhwCWNhQ\",\"y\":\"NfvgSlu1TMNjjMRM3um29Tv79C4NL8x6WEY7t4BBneA\"}"; // pragma: allowlist secret
     private static final String VALID_RSA_SIGNING_KEY = RSA_SIGNING_PUBLIC_JWK;
     private static final Map<String, ContraIndicatorConfig> CI_MAP =
             Map.of("test", new ContraIndicatorConfig());
