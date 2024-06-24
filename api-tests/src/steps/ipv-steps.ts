@@ -1,17 +1,17 @@
 import * as assert from "assert";
 import { Then, When } from "@cucumber/cucumber";
-import { World } from "../../src/interfaces/world.js";
-import * as internalClient from "../../src/clients/core-back-internal-client.js";
-import * as externalClient from "../../src/clients/core-back-external-client.js";
-import * as criStubClient from "../../src/clients/cri-stub-client.js";
-import config from "../../src/config.js";
+import { World } from "../interfaces/world.js";
+import * as internalClient from "../clients/core-back-internal-client.js";
+import * as externalClient from "../clients/core-back-external-client.js";
+import * as criStubClient from "../clients/cri-stub-client.js";
+import config from "../config.js";
 import {
   generateCriStubBody,
   generateInitialiseIpvSessionBody,
   generateProcessCriCallbackBody,
   generateTokenExchangeBody,
-} from "../../src/utils/request-body-generators.js";
-import { getRandomString } from "../../src/utils/random-string-generator.js";
+} from "../utils/request-body-generators.js";
+import { getRandomString } from "../utils/random-string-generator.js";
 
 When(
   "I start a new {string} journey",

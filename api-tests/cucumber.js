@@ -4,5 +4,5 @@ export default {
   publish: true,
   retry: 1,
   loader: ["ts-node/esm"],
-  import: ["features/**/*.ts"],
+  import: ["src/steps/**/*.ts", "src/config/**/*.ts"],
 };
