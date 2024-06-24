@@ -1,8 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.validator;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -24,12 +21,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -41,16 +37,9 @@ import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
 import static com.nimbusds.jose.jwk.KeyType.RSA;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class VerifiableCredentialValidator {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final CollectionType CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE =
-            OBJECT_MAPPER
-                    .getTypeFactory()
-                    .constructCollectionType(List.class, CredentialEvidenceItem.class);
-    private static final String VC_CLAIM_NAME = "vc";
     private final ConfigService configService;
 
     public interface IClaimsVerifierFactory {
@@ -72,17 +61,11 @@ public class VerifiableCredentialValidator {
     }
 
     public List<VerifiableCredential> parseAndValidate(
-            String userId,
-            String criId,
-            List<String> vcs,
-            String vcType,
-            String signingKey,
-            String componentId)
+            String userId, String criId, List<String> vcs, String signingKey, String componentId)
             throws VerifiableCredentialException {
         var validVcs = new ArrayList<VerifiableCredential>();
         for (String vc : vcs) {
-            validVcs.add(
-                    parseAndValidate(userId, criId, vc, vcType, signingKey, componentId, false));
+            validVcs.add(parseAndValidate(userId, criId, vc, signingKey, componentId, false));
         }
         return validVcs;
     }
@@ -92,7 +75,6 @@ public class VerifiableCredentialValidator {
             String userId,
             String criId,
             String vcString,
-            String vcType,
             String signingKey,
             String componentId,
             boolean skipSubjectCheck)
@@ -104,8 +86,8 @@ public class VerifiableCredentialValidator {
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
 
-            if (VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE.equals(vcType)) {
-                validateCiCodes(vc);
+            if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+                validateCiCodes(identityCheckCredential);
             }
 
             LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
@@ -204,7 +186,7 @@ public class VerifiableCredentialValidator {
         if (!skipSubjectCheck) {
             exactMatchClaimsBuilder.subject(userId);
         }
-        var requiredClaims = new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME));
+        var requiredClaims = new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM));
 
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
                 claimsVerifierFactory.createVerifier(
@@ -221,34 +203,13 @@ public class VerifiableCredentialValidator {
         }
     }
 
-    private void validateCiCodes(VerifiableCredential vc) throws VerifiableCredentialException {
-        try {
-            var evidenceArray =
-                    OBJECT_MAPPER
-                            .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                            .path(VC_EVIDENCE);
-            if (evidenceArray.isArray()) {
-                List<CredentialEvidenceItem> credentialEvidenceList =
-                        OBJECT_MAPPER.treeToValue(
-                                evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
-                boolean anyUnrecognisedCiCodes = false;
-                for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
-                    List<String> cis = evidenceItem.getCi();
-                    if (cis != null) {
-                        anyUnrecognisedCiCodes =
-                                cis.stream()
-                                        .anyMatch(
-                                                ciCode ->
-                                                        !configService
-                                                                .getContraIndicatorConfigMap()
-                                                                .containsKey(ciCode));
-                        if (anyUnrecognisedCiCodes) {
-                            break;
-                        }
-                    }
-                }
+    private void validateCiCodes(IdentityCheckCredential identityCheckCredential)
+            throws VerifiableCredentialException {
+        var ciConfig = configService.getContraIndicatorConfigMap();
 
-                if (anyUnrecognisedCiCodes) {
+        for (var evidence : identityCheckCredential.getEvidence()) {
+            for (var ci : evidence.getCi()) {
+                if (!ciConfig.containsKey(ci)) {
                     LOGGER.error(
                             LogHelper.buildLogMessage(
                                     "Verifiable credential contains unrecognised CI codes"));
@@ -257,13 +218,6 @@ public class VerifiableCredentialValidator {
                             ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
                 }
             }
-        } catch (VerifiableCredentialException | JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Failed to parse verifiable credential claims set", e));
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
         }
     }
 }
