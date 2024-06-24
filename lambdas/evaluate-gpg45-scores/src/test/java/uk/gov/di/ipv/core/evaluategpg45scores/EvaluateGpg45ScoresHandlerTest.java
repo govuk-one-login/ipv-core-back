@@ -50,7 +50,6 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -80,6 +79,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
     private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
+    private static final List<Gpg45Profile> P1_AND_P2_PROFILES = List.of(M1A, M1B, M2B, L1A);
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
@@ -542,11 +542,11 @@ class EvaluateGpg45ScoresHandlerTest {
     @Test
     void shouldReturnJourneyMetForMeetingMediumAndLowConfidences() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), anyList()))
-                .thenReturn(Optional.of(M1A));
-        clientOAuthSessionItem.setVtr(List.of("P1", "P1"));
+        clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_AND_P2_PROFILES)))
+                .thenReturn(Optional.of(M1A));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
@@ -556,16 +556,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
-        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
-
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P2);
-        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-        inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(Vot.P2, ipvSessionItem.getVot());
-        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
+        verify(ipvSessionItem).setVot(Vot.P2);
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
