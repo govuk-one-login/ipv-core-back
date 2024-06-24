@@ -33,21 +33,20 @@ public class VerifiableCredential {
     private VerifiableCredential(String userId, String criId, SignedJWT signedJwt, Instant migrated)
             throws CredentialParseException {
         try {
-            var claimsSet = signedJwt.getJWTClaimsSet();
             this.userId = userId;
             this.criId = criId;
             this.vcString = signedJwt.serialize();
-            this.claimsSet = claimsSet;
+            this.claimsSet = signedJwt.getJWTClaimsSet();
             this.signedJwt = signedJwt;
             this.migrated = migrated;
-            this.credential = parseCredential(claimsSet);
+            this.credential = parseCredential(this.claimsSet);
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
         }
     }
 
-    private uk.gov.di.model.VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
+    private static uk.gov.di.model.VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
             throws CredentialParseException {
         try {
             return VerifiableCredentialParser.parseCredential(claimsSet);
