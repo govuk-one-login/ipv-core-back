@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigration;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -78,7 +77,6 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -488,12 +486,7 @@ public class CheckExistingIdentityHandler
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
 
-            migrateCredentialsToEVCS(
-                    auditEventUser,
-                    deviceInformation,
-                    ipvSessionItem.getVot(),
-                    vcBundle,
-                    evcsAccessToken);
+            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -522,12 +515,8 @@ public class CheckExistingIdentityHandler
                         vcBundle.credentials, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-        migrateCredentialsToEVCS(
-                auditEventUser,
-                deviceInformation,
-                ipvSessionItem.getVot(),
-                vcBundle,
-                evcsAccessToken);
+
+        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
 
         return vcBundle.isPendingEvcsIdentity ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
@@ -535,15 +524,17 @@ public class CheckExistingIdentityHandler
     private void migrateCredentialsToEVCS(
             AuditEventUser auditEventUser,
             String deviceInformation,
-            Vot vot,
             VerifiableCredentialBundle vcBundle,
             String evcsAccessToken)
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
-        if (configService.enabled(EVCS_WRITE_ENABLED)) {
+        if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.isEvcsIdentity) {
             evcsMigrationService.migrateExistingIdentity(
                     auditEventUser.getUserId(), vcBundle.credentials, evcsAccessToken);
             sendVCsMigratedAuditEvent(
-                    AuditEventTypes.IPV_VCS_MIGRATED, auditEventUser, vot, deviceInformation);
+                    AuditEventTypes.IPV_VCS_MIGRATED,
+                    auditEventUser,
+                    vcBundle.credentials,
+                    deviceInformation);
         }
     }
 
@@ -580,7 +571,7 @@ public class CheckExistingIdentityHandler
     private void sendVCsMigratedAuditEvent(
             AuditEventTypes auditEventTypes,
             AuditEventUser auditEventUser,
-            Vot vot,
+            List<VerifiableCredential> credentials,
             String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
@@ -588,9 +579,13 @@ public class CheckExistingIdentityHandler
                         auditEventTypes,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionIdentityType(
-                                IdentityType.UPDATE, vot.equals(P0) ? null : vot),
+                        new AuditExtensionsEvcsMigration(
+                                extractSignaturesFromCredentials(credentials)),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private List<String> extractSignaturesFromCredentials(List<VerifiableCredential> credentials) {
+        return credentials.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {

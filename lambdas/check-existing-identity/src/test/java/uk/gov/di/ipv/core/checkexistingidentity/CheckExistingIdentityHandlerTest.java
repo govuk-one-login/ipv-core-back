@@ -266,7 +266,8 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldUseVcServiceWhenEvcsServiceWhenAndReturnsEmpty() throws Exception {
+        void shouldUseVcServiceWhenEvcsServiceWhenEvcsReadEnabledAndReturnsEmpty()
+                throws Exception {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
@@ -354,6 +355,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
             // pending vcs should not be migrated
             verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any(), any());
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
         }
 
         @Test

@@ -43,10 +43,10 @@ public class EvcsService {
     public void storeCompletedIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
-        persistEvcsUserVCs(
+        persistUserVCs(
                 userId,
                 credentials,
-                getEvcsGetUserVCDtos(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
+                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
                 false);
     }
 
@@ -54,10 +54,10 @@ public class EvcsService {
     public void storePendingIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
-        persistEvcsUserVCs(
+        persistUserVCs(
                 userId,
                 credentials,
-                getEvcsGetUserVCDtos(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
+                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
                 true);
     }
 
@@ -75,7 +75,7 @@ public class EvcsService {
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
         Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
-        for (var vc : getEvcsGetUserVCDtos(userId, evcsAccessToken, states)) {
+        for (var vc : getUserVCs(userId, evcsAccessToken, states)) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
@@ -104,15 +104,13 @@ public class EvcsService {
                                 credential.getVcString(), PENDING_RETURN, null, null)));
     }
 
-    @Tracing
-    private List<EvcsGetUserVCDto> getEvcsGetUserVCDtos(
+    private List<EvcsGetUserVCDto> getUserVCs(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws EvcsServiceException {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
-    @Tracing
-    private void persistEvcsUserVCs(
+    private void persistUserVCs(
             String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
@@ -143,7 +141,6 @@ public class EvcsService {
         if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
     }
 
-    @Tracing
     private void updateExistingUserVCs(
             String userId,
             List<VerifiableCredential> credentials,
