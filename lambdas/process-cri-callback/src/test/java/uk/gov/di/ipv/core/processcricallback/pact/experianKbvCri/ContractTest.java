@@ -86,7 +86,7 @@ class ContractTest {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlFeHBlcmlhbktidkNvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "aJOEpvnBRpaptv_2T7L5aCzhTdvlNaGNh3uwuK1f5cC9he9izuIr60s2_Y6-DIPEWLE0_L6ckgdIsy9G7yj8jA";
+            "aJOEpvnBRpaptv_2T7L5aCzhTdvlNaGNh3uwuK1f5cC9he9izuIr60s2_Y6-DIPEWLE0_L6ckgdIsy9G7yj8jA"; // pragma: allowlist secret
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
     private static final String VALID_VC_HEADER =
@@ -323,13 +323,13 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "ar6tKitq-mO854GDVKKXMfNFaYUOeMY2SZeqgByDRFGhno2dae4VR3AE2yFx798y6vUbTeFfcZ9jsRs37lZ65A";
+            "ar6tKitq-mO854GDVKKXMfNFaYUOeMY2SZeqgByDRFGhno2dae4VR3AE2yFx798y6vUbTeFfcZ9jsRs37lZ65A"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "GIJxbgGgu57fydU-7Qnu7-9PN7QdOK4Lg_TvP7vSHvhhSA16k8dvbfiQpT45fZ-Hs9CrOzGCe3jCgaQAlAnOQA";
+            "GIJxbgGgu57fydU-7Qnu7-9PN7QdOK4Lg_TvP7vSHvhhSA16k8dvbfiQpT45fZ-Hs9CrOzGCe3jCgaQAlAnOQA"; // pragma: allowlist secret
 
     private static final String FAILED_VC_SIGNATURE =
-            "7sZ4VzYx1Sa-dtopqcEWptXoH2YVdbsyO41bujquBmujbovRI6F9QJAEt5eYOGTyJ-sro_6yfpEWR14uxLAycg";
+            "7sZ4VzYx1Sa-dtopqcEWptXoH2YVdbsyO41bujquBmujbovRI6F9QJAEt5eYOGTyJ-sro_6yfpEWR14uxLAycg"; // pragma: allowlist secret
 
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;

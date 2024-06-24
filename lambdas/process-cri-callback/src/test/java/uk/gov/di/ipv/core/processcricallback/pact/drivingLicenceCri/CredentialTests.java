@@ -716,7 +716,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "sCeBi6_FUnX3XGFxvAaqXoI6BKSHfBrOa4y-4j5iQ_--JJ4A4_PRbgnPNAFtR6-IN-JD7gxhcY-4yDN38W856Q";
+            "sCeBi6_FUnX3XGFxvAaqXoI6BKSHfBrOa4y-4j5iQ_--JJ4A4_PRbgnPNAFtR6-IN-JD7gxhcY-4yDN38W856Q"; // pragma: allowlist secret
 
     private static final String FAILED_DVLA_VC_BODY =
             """
@@ -796,7 +796,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_SIGNATURE =
-            "4l-CAl_X8XvPJku1zv_JnXfnTfow1KKeQsa7AUIVSe1pUdIlyugoIybrJp5SMu7Sxp1R02ACUkH361m1FSQwkg";
+            "4l-CAl_X8XvPJku1zv_JnXfnTfow1KKeQsa7AUIVSe1pUdIlyugoIybrJp5SMu7Sxp1R02ACUkH361m1FSQwkg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_DVA_VC_BODY =
@@ -873,7 +873,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "3PckWPMtOyJ5YttPZlWZw0xXTUNuD4ogIyIzQiTmUuBZqaH_OOU6tvPDJXVtU9PvfDr8C3YDEhDOWnFFTG6P6g";
+            "3PckWPMtOyJ5YttPZlWZw0xXTUNuD4ogIyIzQiTmUuBZqaH_OOU6tvPDJXVtU9PvfDr8C3YDEhDOWnFFTG6P6g"; // pragma: allowlist secret
 
     private static final String FAILED_DVA_VC_BODY =
             """
@@ -952,5 +952,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_SIGNATURE =
-            "hTrCCVEc7eFZX2wniTw1pu1Pzi07cRysXV5PHxUo87K8b3EDR7a756t5ipjFY9hmNf1xo-6Tdd3UerXkVPmOnw";
+            "hTrCCVEc7eFZX2wniTw1pu1Pzi07cRysXV5PHxUo87K8b3EDR7a756t5ipjFY9hmNf1xo-6Tdd3UerXkVPmOnw"; // pragma: allowlist secret
 }

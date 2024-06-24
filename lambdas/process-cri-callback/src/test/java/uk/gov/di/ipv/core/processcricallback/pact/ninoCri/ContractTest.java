@@ -781,7 +781,7 @@ class ContractTest {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlOaW5vQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "ZHj3_BoW2CJEsWA7i_Eq0tfi3HsmoHonHVmBaY7OAzOn-ZA_MYcIaRuMOCipK4_Ar1hCT1LMYveJrD0aYs1y0Q";
+            "ZHj3_BoW2CJEsWA7i_Eq0tfi3HsmoHonHVmBaY7OAzOn-ZA_MYcIaRuMOCipK4_Ar1hCT1LMYveJrD0aYs1y0Q"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -853,7 +853,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "WHEg4EooDiCdT676GPVE4l4z5YY-Tvl3FTY4bYI_nCzx8mqrg2rTYJUM4SG8azbyBjdSG8UQFyfAuLPeYlMTwg";
+            "WHEg4EooDiCdT676GPVE4l4z5YY-Tvl3FTY4bYI_nCzx8mqrg2rTYJUM4SG8azbyBjdSG8UQFyfAuLPeYlMTwg"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
@@ -917,7 +917,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "GdAM1VaIj5fPZD-8mosORKfbqazER2xNzS2wJ-3ksq2HsCLujvK6kTSjER1OxMHTXH4T8wEROVbGIVeaK9vY9A";
+            "GdAM1VaIj5fPZD-8mosORKfbqazER2xNzS2wJ-3ksq2HsCLujvK6kTSjER1OxMHTXH4T8wEROVbGIVeaK9vY9A"; // pragma: allowlist secret
 
     private static final String VALID_NINO_VC_BODY =
             """
@@ -976,7 +976,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "WjlFHK3oFx1Wbi1aQ380OJs3Br-aZWCjUsa-BXOg-LnTzdhExZnS2OQ-fckweGzfvZFnuZcC0R8IML6axALGpg";
+            "WjlFHK3oFx1Wbi1aQ380OJs3Br-aZWCjUsa-BXOg-LnTzdhExZnS2OQ-fckweGzfvZFnuZcC0R8IML6axALGpg"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_VC_BODY =
             """
@@ -1038,5 +1038,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw";
+            "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw"; // pragma: allowlist secret
 }

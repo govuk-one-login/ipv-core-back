@@ -220,7 +220,7 @@ class BuildUserIdentityHandlerTest {
             """;
 
     private final String CIMIT_VC_NO_CIS_SIGNATURE =
-            "q9bLcKWe9K13QJoJL-f8Lz4UdhUGfzQgXPtsmu5TK5W2mP4mr7oXJjqKBAUPypnZdWza1zdKZiQpAmmVy1BW3A";
+            "q9bLcKWe9K13QJoJL-f8Lz4UdhUGfzQgXPtsmu5TK5W2mP4mr7oXJjqKBAUPypnZdWza1zdKZiQpAmmVy1BW3A"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
@@ -303,7 +303,7 @@ class BuildUserIdentityHandlerTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "dnXc3avCGKj6XdKpGnNTgjH3lpRZotBSyzx4ttFksnaheiHExklxqGHc8ZNRdIJu0cpFyP-Dw6Bl5xO46nZCVA";
+            "dnXc3avCGKj6XdKpGnNTgjH3lpRZotBSyzx4ttFksnaheiHExklxqGHc8ZNRdIJu0cpFyP-Dw6Bl5xO46nZCVA"; // pragma: allowlist secret
 
     private static final String VALID_ADDRESS_VC_BODY =
             """

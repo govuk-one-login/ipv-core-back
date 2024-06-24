@@ -1137,7 +1137,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_PASSPORT_SIGNATURE =
-            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw";
+            "CAMtOsXoWJiNWG5JPOqRoP8Ry-3hyCRqR1VodFVSbNzsXXTn2xjQXK1J3PIxfc8ZOd9IV-TZC3gZvGty-I9CKw"; // pragma: allowlist secret
 
     private static final String FAILED_F2F_VC_WITH_PASSPORT_BODY =
             """
@@ -1207,7 +1207,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_F2F_VC_PASSPORT_SIGNATURE =
-            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw";
+            "ugRXqbY74OWMzfbg_ShPSzY7HTOU8FoWfuxIY5fBSvnVRsgmdt_TC5ut5qLA_ZKl_lVXK7cY8-fidkOdvXZkPw"; // pragma: allowlist secret
 
     private static final String FAILED_F2F_WITH_CIS_VC_WITH_PASSPORT_BODY =
             """
@@ -1278,7 +1278,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_F2F_WITH_CIS_VC_PASSPORT_SIGNATURE =
-            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw";
+            "MtebBKK3vJrjwPGAqVCctBVmVDNY_4zegZ7M7VCRdEbb4njBW5Y1KNvtAh0VWPu-_Km_pnyLns0N0S5OtUB8Iw"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_DVLA_BODY =
             """
@@ -1355,7 +1355,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_DVLA_SIGNATURE =
-            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg";
+            "mGzhvuAmWet6HDAd-09iOxlXm8Zy2EbEOa-9zzklTdCxUkt3hdS4gXEMBDzhpCmZkPWSU4iknQ_O9xhBYBAVTg"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_EU_DL_BODY =
             """
@@ -1432,7 +1432,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_EU_DL_SIGNATURE =
-            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w";
+            "zIvcoq6mDP6kBapT3O4tY3GKD40Kh7mOyQvzMZuLYHoYzdifXPgSuooZpbaJ8nrPmq8oLXm6oH10QA7Pz3pt6w"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_EEA_CARD_BODY =
             """
@@ -1504,7 +1504,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_EEA_SIGNATURE =
-            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw";
+            "UDdqVolY0NN0Vi6dlAzuIvELLHXECjcNxlWUkhBa4etEQN_2jiVJnS5lk_QPlQ_XGyH2Vf-xObGwUTUtCKcWzw"; // pragma: allowlist secret
 
     private static final String VALID_F2F_VC_WITH_BRP_BODY =
             """
@@ -1576,5 +1576,5 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_F2F_VC_BRP_SIGNATURE =
-            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg";
+            "v4JoFixil7YHheTshqdLMCoXCElCuduQ4MREvkWhq3_QrsQ8QimmZ3MsGayrKt_nhPYjUUNixWJYpyWRTqGyLg"; // pragma: allowlist secret
 }

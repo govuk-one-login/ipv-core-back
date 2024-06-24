@@ -599,7 +599,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
+            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q"; // pragma: allowlist secret
 
     private static final String VALID_ADDRESS_BODY =
             """

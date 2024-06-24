@@ -252,5 +252,5 @@ class TokenTests {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlGcmF1ZENvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "LV74cQ6gFe5BjOmA8Xm43y1GIK7gQja66Ei355gpfPPJqsdUX1TvnyIhC3U3S1nW5bqV-kxqRuAbmfQb9N0R4w";
+            "LV74cQ6gFe5BjOmA8Xm43y1GIK7gQja66Ei355gpfPPJqsdUX1TvnyIhC3U3S1nW5bqV-kxqRuAbmfQb9N0R4w"; // pragma: allowlist secret
 }
