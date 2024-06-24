@@ -1,3 +1,3 @@
-import {setDefaultTimeout} from "@cucumber/cucumber";
+import { setDefaultTimeout } from "@cucumber/cucumber";
 
-setDefaultTimeout(15 * 1000) // 15 seconds
+setDefaultTimeout(15 * 1000); // 15 seconds

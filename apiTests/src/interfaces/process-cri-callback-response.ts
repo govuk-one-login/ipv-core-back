@@ -1,3 +1,3 @@
 export interface ProcessCriCallbackResponse {
-    journey: string
+  journey: string;
 }

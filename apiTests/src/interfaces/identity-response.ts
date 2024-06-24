@@ -1,3 +1,3 @@
 export interface IdentityResponse {
-    vot: string
+  vot: string;
 }

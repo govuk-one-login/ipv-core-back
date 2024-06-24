@@ -7,9 +7,7 @@
   "aud": "",
   "nbf": 1,
   "email_address": "dev-platform-testing@digital.cabinet-office.gov.uk",
-  "vtr": [
-    "P2"
-  ],
+  "vtr": ["P2"],
   "scope": "openid phone email",
   "claims": {
     "userinfo": {
@@ -29,9 +27,7 @@
         "essential": true
       },
       "https://vocab.account.gov.uk/v1/storageAccessToken": {
-        "values": [
-          ""
-        ]
+        "values": [""]
       }
     }
   },

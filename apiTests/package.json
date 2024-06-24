@@ -4,14 +4,18 @@
   "description": "API tests for core-back",
   "type": "module",
   "scripts": {
-    "test": "cucumber-js"
+    "test": "cucumber-js",
+    "lint": "eslint . && prettier . --check",
+    "lint-fix": "eslint --fix . && prettier . --write"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.8.0",
     "@govuk-one-login/data-vocab": "^1.7.2",
     "@types/eslint__js": "^8.42.3",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
     "jose": "^5.4.1",
+    "prettier": "3.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.13.1"

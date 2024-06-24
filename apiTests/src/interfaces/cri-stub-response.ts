@@ -1,3 +1,3 @@
 export interface CriStubResponse {
-    redirectUri: string
+  redirectUri: string;
 }

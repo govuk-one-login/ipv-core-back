@@ -1,4 +1,4 @@
 export interface RedirectParams {
-    clientId: string | null,
-    request: string | null,
+  clientId: string | null;
+  request: string | null;
 }
