@@ -4,8 +4,8 @@ import {ProcessCriCallbackRequest} from "../interfaces/process-cri-callback-requ
 import {ProcessCriCallbackResponse} from "../interfaces/process-cri-callback-response.js";
 import {AuthRequestBody} from "../interfaces/auth-request-body.js";
 
-const JOURNEY_PREFIX: string = '/journey/'
-const POST: string = 'POST'
+const JOURNEY_PREFIX = '/journey/'
+const POST = 'POST'
 
 export const initialiseIpvSession = async (requestBody: AuthRequestBody): Promise<string> => {
     const response = await fetch(config.CORE_BACK_INTERNAL_API_URL + '/session/initialise', {

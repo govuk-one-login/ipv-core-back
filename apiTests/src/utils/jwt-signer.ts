@@ -3,7 +3,7 @@ import config from "../config.js";
 import {getRandomString} from "./random-string-generator.js";
 import {JWTPayload} from "jose";
 
-const sigAlg: string = 'ES256';
+const sigAlg = 'ES256';
 const sigKey = await jose.importJWK(JSON.parse(config.JAR_SIGNING_KEY) as jose.JWK, sigAlg);
 
 export const createSignedJwt = async (payload?: JWTPayload): Promise<string> => {

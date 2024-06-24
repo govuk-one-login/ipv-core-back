@@ -48,5 +48,5 @@ When('I use the Oauth response to get my identity', async function(this: World):
 })
 
 Then('I get a {string} identity', function(this: World, vot: string): void {
-    assert.equal('P2', this.identity.vot)
+    assert.equal(vot, this.identity.vot)
 })

@@ -1,4 +1,3 @@
-import { StringValueObject } from "./interfaces/string-value-object.js";
 import {
     BUILD_CORE_BACK_COMPONENT_ID,
     BUILD_CORE_BACK_EXTERNAL_API_URL,
@@ -6,7 +5,7 @@ import {
     BUILD_CORE_BACK_PUBLIC_ENCRYPTION_KEY, BUILD_ENVIRONMENT, BUILD_JAR_SIGNING_KEY, ORCHESTRATOR_REDIRECT_URI
 } from "./constants.js";
 
-const config: StringValueObject = {
+const config: Record<string, string> = {
     ENVIRONMENT: process.env.ENVIRONMENT || BUILD_ENVIRONMENT,
     CORE_BACK_COMPONENT_ID: process.env.CORE_BACK_COMPONENT_ID || BUILD_CORE_BACK_COMPONENT_ID,
     CORE_BACK_INTERNAL_API_URL: process.env.CORE_BACK_INTERNAL_API_URL || BUILD_CORE_BACK_INTERNAL_API_URL,

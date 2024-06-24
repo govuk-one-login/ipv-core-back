@@ -6,8 +6,8 @@ import {fileURLToPath} from 'url';
 import {getRandomString} from "./random-string-generator.js";
 import {createSignedJwt} from "./jwt-signer.js";
 
-const encAlg: string = 'RSA-OAEP-256';
-const encMethod: string = 'A256GCM';
+const encAlg = 'RSA-OAEP-256';
+const encMethod = 'A256GCM';
 const encKey = await jose.importJWK(JSON.parse(config.CORE_BACK_PUBLIC_ENCRYPTION_KEY) as jose.JWK, encAlg);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
