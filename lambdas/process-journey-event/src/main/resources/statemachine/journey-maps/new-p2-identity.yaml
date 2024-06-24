@@ -507,15 +507,21 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_NINO_J6
+        targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
-        targetState: CRI_NINO_J6
+        targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # Driving licence journey (J3)
   CRI_DRIVING_LICENCE_J3:
@@ -569,10 +575,13 @@ states:
         scoreThreshold: 2
     events:
       met:
-        targetState: CRI_NINO_J6
+        targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       unmet:
         targetJourney: FAILED
         targetState: FAILED
@@ -651,6 +660,31 @@ states:
         targetState: EVALUATE_GPG45_SCORES
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+
+  # DWP KBV journey (J7)
+  CRI_DWP_KBV_J7:
+    response:
+      type: cri
+      criId: dwpKbv
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: EVALUATE_GPG45_SCORES
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
