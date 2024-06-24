@@ -123,8 +123,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
-    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -449,10 +447,10 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
                     CredentialParseException, VerifiableCredentialException, EvcsServiceException {
-        // Check for attained vot from vtr
+        // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
-                        clientOAuthSessionItem.getVtr(),
+                        clientOAuthSessionItem.getRequestedVotsByStrength(),
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
@@ -622,19 +620,13 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private Optional<Vot> getStrongestAttainedVotForVtr(
-            List<String> vtr,
+            List<Vot> requestedVotsByStrength,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
             boolean areGpg45VcsCorrelated)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
-
-        var requestedVotsByStrength =
-                SUPPORTED_VOTS_BY_STRENGTH.stream()
-                        .filter(vot -> vtr.contains(vot.name()))
-                        .toList();
-
         for (var requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
@@ -675,7 +667,8 @@ public class CheckExistingIdentityHandler
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
+            if (configService.enabled(INHERITED_IDENTITY)
+                    && requestedVot.equals(Vot.P2)) { // out of date
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
 
