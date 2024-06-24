@@ -10,7 +10,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     EVCS_WRITE_ENABLED("evcsWriteEnabled"),
     EVCS_READ_ENABLED("evcsReadEnabled"),
     MFA_RESET("mfaResetEnabled"),
-    PARSE_VC_CLASSES("parseVcClasses");
+    PARSE_VC_CLASSES("parseVcClasses"),
+    P1_JOURNEYS_ENABLED("p1JourneysEnabled");
 
     private final String name;
 

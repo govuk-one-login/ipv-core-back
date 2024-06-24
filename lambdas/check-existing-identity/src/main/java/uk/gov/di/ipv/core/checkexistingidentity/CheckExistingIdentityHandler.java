@@ -67,6 +67,7 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -262,8 +263,10 @@ public class CheckExistingIdentityHandler
 
             // If we want to prove a full identity from scratch we want to go for the lowest
             // strength that is acceptable to the caller.
-            var preferredNewIdentityLevel =
-                    clientOAuthSessionItem.getVtr().contains(Vot.P1.name()) ? Vot.P1 : Vot.P2;
+            var preferredNewIdentityLevel = Vot.P2;
+            if (configService.enabled(P1_JOURNEYS_ENABLED) && clientOAuthSessionItem.getVtr().contains(Vot.P1.name())) {
+                preferredNewIdentityLevel = Vot.P1;
+            }
 
             var contraIndicators =
                     ciMitService.getContraIndicators(
