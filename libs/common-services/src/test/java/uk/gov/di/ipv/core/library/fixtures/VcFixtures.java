@@ -21,7 +21,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.CRI_STUB_CHECK_EVIDENCE_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
@@ -104,7 +104,7 @@ public interface VcFixtures {
             List.of(
                     TestVc.TestEvidence.builder()
                             .checkDetails(null)
-                            .type(CRI_STUB_CHECK_EVIDENCE_TYPE)
+                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
                             .txn("some-uuid")
                             .identityFraudScore(1)
                             .build());
@@ -825,7 +825,6 @@ public interface VcFixtures {
                                                     .txn("bcd2346")
                                                     .strengthScore(3)
                                                     .validityScore(2)
-                                                    .verificationScore(2)
                                                     .activityHistoryScore(1)
                                                     .checkDetails(
                                                             List.of(
@@ -840,7 +839,7 @@ public interface VcFixtures {
                                                                             "checkMethod",
                                                                             "bvr",
                                                                             "biometricVerificationProcessLevel",
-                                                                            3)))
+                                                                            2)))
                                                     .build()))
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()

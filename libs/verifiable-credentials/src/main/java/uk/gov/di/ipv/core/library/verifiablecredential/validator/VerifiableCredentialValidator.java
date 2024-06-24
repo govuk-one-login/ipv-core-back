@@ -22,7 +22,6 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
@@ -30,7 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
@@ -106,15 +104,10 @@ public class VerifiableCredentialValidator {
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
 
-            if (configService.enabled(CoreFeatureFlag.PARSE_VC_CLASSES)) {
-                // This only checks newly received VCs (behind a feature flag)
-                // but once comfortable we will move this into the VerifiableCredential class itself
-                tryParseVc(vc);
-            }
-
             if (VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE.equals(vcType)) {
                 validateCiCodes(vc);
             }
+
             LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
 
             return vc;
@@ -122,16 +115,6 @@ public class VerifiableCredentialValidator {
             LOGGER.error(LogHelper.buildErrorMessage("Error parsing credentials", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-        }
-    }
-
-    private void tryParseVc(VerifiableCredential vc) {
-        try {
-            VerifiableCredentialParser.parseCredential(vc.getClaimsSet());
-        } catch (CredentialParseException e) {
-            // For now, we just log a warning here that we can fix
-            // In future this should return a CredentialParseException instead
-            LOGGER.warn(LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
         }
     }
 

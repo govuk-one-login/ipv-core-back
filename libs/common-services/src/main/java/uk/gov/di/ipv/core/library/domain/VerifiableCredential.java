@@ -4,7 +4,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -16,13 +20,15 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final String userId;
     private final String criId;
     private final String vcString;
     private final JWTClaimsSet claimsSet;
     private final SignedJWT signedJwt;
     private Instant migrated;
-    private final uk.gov.di.model.VerifiableCredential parsedClaimsSet;
+    private final uk.gov.di.model.VerifiableCredential credential;
 
     private VerifiableCredential(String userId, String criId, SignedJWT signedJwt, Instant migrated)
             throws CredentialParseException {
@@ -34,13 +40,25 @@ public class VerifiableCredential {
             this.claimsSet = claimsSet;
             this.signedJwt = signedJwt;
             this.migrated = migrated;
-            this.parsedClaimsSet =
-                    claimsSet != null
-                            ? VerifiableCredentialParser.parseCredential(claimsSet)
-                            : null;
+            this.credential = parseCredential(claimsSet);
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
+        }
+    }
+
+    private uk.gov.di.model.VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
+            throws CredentialParseException {
+        try {
+            return VerifiableCredentialParser.parseCredential(claimsSet);
+        } catch (CredentialParseException e) {
+            if ("production".equals(System.getenv(EnvironmentVariable.ENVIRONMENT.name()))) {
+                // Just warn for now in production - will be an error in future
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Failed to parse verifiable credential", e));
+                return null;
+            }
+            throw e;
         }
     }
 

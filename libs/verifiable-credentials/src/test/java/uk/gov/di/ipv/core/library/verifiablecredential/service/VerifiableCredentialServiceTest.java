@@ -1,10 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,18 +15,11 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,7 +32,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -72,34 +59,6 @@ class VerifiableCredentialServiceTest {
         assertEquals(
                 PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId(), vcStoreItem.getCredentialIssuer());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vcStoreItem.getCredential());
-    }
-
-    @Test
-    void expectedSuccessWithoutExpWhenSaveCredentials() throws Exception {
-        String credentialIssuerId = "cred_issuer_id_1";
-        String userId = USER_ID;
-        SignedJWT signedJwt =
-                new SignedJWT(
-                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
-                        new JWTClaimsSet.Builder()
-                                .subject("testSubject")
-                                .issuer(credentialIssuerId)
-                                .build());
-        signedJwt.sign(new ECDSASigner(getPrivateKey()));
-        var vc = VerifiableCredential.fromValidJwt(userId, credentialIssuerId, signedJwt);
-
-        ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
-                ArgumentCaptor.forClass(VcStoreItem.class);
-
-        verifiableCredentialService.persistUserCredentials(vc);
-
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
-        VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
-
-        assertNull(vcStoreItem.getExpirationTime());
-        assertEquals(userId, vcStoreItem.getUserId());
-        assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(signedJwt.serialize(), vcStoreItem.getCredential());
     }
 
     @Test
@@ -296,13 +255,5 @@ class VerifiableCredentialServiceTest {
 
         assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
         assertEquals(FAILED_TO_STORE_IDENTITY, verifiableCredentialException.getErrorResponse());
-    }
-
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (ECPrivateKey)
-                KeyFactory.getInstance("EC")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
     }
 }
