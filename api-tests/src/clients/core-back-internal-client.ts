@@ -1,4 +1,4 @@
-import config from "../config.js";
+import config from "../config/config.js";
 import { JourneyEngineResponse } from "../interfaces/journey-engine-response.js";
 import { ProcessCriCallbackRequest } from "../interfaces/process-cri-callback-request.js";
 import { ProcessCriCallbackResponse } from "../interfaces/process-cri-callback-response.js";

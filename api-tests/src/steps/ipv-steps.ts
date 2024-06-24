@@ -4,7 +4,7 @@ import { World } from "../interfaces/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
-import config from "../config.js";
+import config from "../config/config.js";
 import {
   generateCriStubBody,
   generateInitialiseIpvSessionBody,

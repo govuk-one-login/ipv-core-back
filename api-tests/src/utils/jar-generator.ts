@@ -1,5 +1,5 @@
 import * as jose from "jose";
-import config from "../config.js";
+import config from "../config/config.js";
 import fs from "node:fs";
 import * as path from "path";
 import { fileURLToPath } from "url";

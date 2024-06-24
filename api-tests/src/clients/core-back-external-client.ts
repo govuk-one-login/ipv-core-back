@@ -1,4 +1,4 @@
-import config from "../config.js";
+import config from "../config/config.js";
 import { TokenResponse } from "../interfaces/token-response.js";
 import { UserIdentity } from "../interfaces/user-identity.js";
 

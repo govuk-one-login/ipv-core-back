@@ -1,5 +1,5 @@
 import * as jose from "jose";
-import config from "../config.js";
+import config from "../config/config.js";
 import { getRandomString } from "./random-string-generator.js";
 import { JWTPayload } from "jose";
 

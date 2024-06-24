@@ -1,7 +1,7 @@
 import { ProcessCriCallbackRequest } from "../interfaces/process-cri-callback-request.js";
 import { CriStubResponse } from "../interfaces/cri-stub-response.js";
 import { AuthRequestBody } from "../interfaces/auth-request-body.js";
-import config from "../config.js";
+import config from "../config/config.js";
 import { generateJar } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
