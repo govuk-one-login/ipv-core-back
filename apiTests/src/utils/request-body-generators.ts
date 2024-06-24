@@ -12,14 +12,14 @@ import {CriStubRequest} from "../interfaces/cri-stub-request.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = 'credentialSubject' | 'evidence'
 
-export const generateInitialiseIpvSessionBody = async (subject: string): Promise<AuthRequestBody> => {
+export const generateInitialiseIpvSessionBody = async (subject: string, journeyType: string): Promise<AuthRequestBody> => {
    return {
        responseType: 'code',
        clientId: 'orchestrator',
        redirectUri: config.ORCHESTRATOR_REDIRECT_URI,
        state: 'api-tests-state',
        scope: 'openid',
-       request: await generateJar(subject),
+       request: await generateJar(subject, journeyType),
    }
 }
 

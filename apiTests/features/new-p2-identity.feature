@@ -1,7 +1,7 @@
 Feature: App journey
 
   Scenario: Successful P2 identity
-    Given I start a new identity journey
+    Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response

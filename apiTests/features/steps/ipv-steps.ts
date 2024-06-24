@@ -5,12 +5,16 @@ import * as internalClient from '../../src/clients/core-back-internal-client.js'
 import * as externalClient from '../../src/clients/core-back-external-client.js'
 import * as criStubClient from '../../src/clients/cri-stub-client.js'
 import config from "../../src/config.js";
-import {generateCriStubBody, generateProcessCriCallbackBody} from "../../src/utils/request-body-generators.js";
+import {
+    generateCriStubBody,
+    generateInitialiseIpvSessionBody,
+    generateProcessCriCallbackBody
+} from "../../src/utils/request-body-generators.js";
+import {getRandomString} from "../../src/utils/random-string-generator.js";
 
-When('I start a new identity journey', async function (this: World): Promise<void> {
-    const sessionInitResponse = await internalClient.initialiseIpvSession();
-    this.userId = sessionInitResponse.userId;
-    this.ipvSessionId = sessionInitResponse.ipvSessionId;
+When('I start a new {string} journey', async function (this: World, journeyType: string): Promise<void> {
+    this.userId = getRandomString(16);
+    this.ipvSessionId = await internalClient.initialiseIpvSession(await generateInitialiseIpvSessionBody(this.userId, journeyType));
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent('/journey/next', this.ipvSessionId);
 });
 

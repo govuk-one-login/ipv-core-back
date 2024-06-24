@@ -12,8 +12,8 @@ const encKey = await jose.importJWK(JSON.parse(config.CORE_BACK_PUBLIC_ENCRYPTIO
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const generateJar = async (subject: string): Promise<string> => {
-   const payloadData = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/jar-requests/p2.json'), 'utf8'));
+export const generateJar = async (subject: string, journeyType: string): Promise<string> => {
+   const payloadData = JSON.parse(fs.readFileSync(path.join(__dirname, `../../data/jar-requests/${journeyType}.json`), 'utf8'));
    const payload = {
       ...payloadData, ...{
          "sub": subject,
