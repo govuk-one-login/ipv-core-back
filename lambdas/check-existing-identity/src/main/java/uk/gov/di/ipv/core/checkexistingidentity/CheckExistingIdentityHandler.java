@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigration;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -304,7 +305,6 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             contraIndicators)
                     : buildNoMatchResponse(contraIndicators);
-
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -532,7 +532,6 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
-        String userId = auditEventUser.getUserId();
         String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
@@ -540,7 +539,8 @@ public class CheckExistingIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
-            migrateCredentialsToEVCS(userId, vcBundle, evcsAccessToken);
+
+            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -569,17 +569,26 @@ public class CheckExistingIdentityHandler
                         vcBundle.credentials, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-        migrateCredentialsToEVCS(userId, vcBundle, evcsAccessToken);
+
+        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
 
         return vcBundle.isPendingEvcsIdentity ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private void migrateCredentialsToEVCS(
-            String userId, VerifiableCredentialBundle vcBundle, String evcsAccessToken)
-            throws EvcsServiceException, VerifiableCredentialException {
+            AuditEventUser auditEventUser,
+            String deviceInformation,
+            VerifiableCredentialBundle vcBundle,
+            String evcsAccessToken)
+            throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.isEvcsIdentity) {
             evcsMigrationService.migrateExistingIdentity(
-                    userId, vcBundle.credentials, evcsAccessToken);
+                    auditEventUser.getUserId(), vcBundle.credentials, evcsAccessToken);
+            sendVCsMigratedAuditEvent(
+                    AuditEventTypes.IPV_VCS_MIGRATED,
+                    auditEventUser,
+                    vcBundle.credentials,
+                    deviceInformation);
         }
     }
 
@@ -610,6 +619,27 @@ public class CheckExistingIdentityHandler
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    @Tracing
+    private void sendVCsMigratedAuditEvent(
+            AuditEventTypes auditEventTypes,
+            AuditEventUser auditEventUser,
+            List<VerifiableCredential> credentials,
+            String deviceInformation)
+            throws SqsException {
+        auditService.sendAuditEvent(
+                AuditEvent.createWithDeviceInformation(
+                        auditEventTypes,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionsEvcsMigration(
+                                extractSignaturesFromCredentials(credentials)),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private List<String> extractSignaturesFromCredentials(List<VerifiableCredential> credentials) {
+        return credentials.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {

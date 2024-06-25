@@ -9,7 +9,6 @@ public class VerifiableCredentialConstants {
     }
 
     public static final String CLAIMS_CLAIM = "claims";
-    public static final String CRI_STUB_CHECK_EVIDENCE_TYPE = "CriStubCheck";
     public static final String DI_CONTEXT =
             "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld";
     public static final String IDENTITY_CHECK_CREDENTIAL_TYPE = "IdentityCheckCredential";
