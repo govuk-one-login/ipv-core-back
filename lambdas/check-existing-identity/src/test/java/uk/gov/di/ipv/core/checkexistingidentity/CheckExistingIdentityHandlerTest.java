@@ -275,7 +275,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldUseVcServiceWhenEvcsServiceWhenAndReturnsEmpty() throws Exception {
+        void shouldUseVcServiceWhenEvcsServiceEnabledAndReturnsEmpty() throws Exception {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
@@ -319,13 +319,16 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            verify(auditService, times(3)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                     auditEventArgumentCaptor.getAllValues().get(0).getEventName());
             assertEquals(
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                     auditEventArgumentCaptor.getAllValues().get(1).getEventName());
+            assertEquals(
+                    AuditEventTypes.IPV_VCS_MIGRATED,
+                    auditEventArgumentCaptor.getAllValues().get(2).getEventName());
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
 
@@ -346,7 +349,6 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnJourneyReuseUpdateResponseIfVcIsF2fAndHasPendingReturnInEvcs()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
-
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
@@ -372,6 +374,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
             // pending vcs should not be migrated
             verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any(), any());
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
         }
 
         @Test
@@ -1383,6 +1386,14 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
         assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_VCS_MIGRATED,
+                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
 
         var expectedStoredVc =
                 vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
