@@ -657,7 +657,7 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
-        for (var requestedVot : requestedVotsByStrength) {
+        for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
                 if (areGpg45VcsCorrelated) {

@@ -49,6 +49,6 @@ public enum Vot {
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
                 .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
-                .collect(CollectionHelper.toSingletonOrNullIfEmpty());
+                .collect(CollectionHelper.toSingleton());
     }
 }
