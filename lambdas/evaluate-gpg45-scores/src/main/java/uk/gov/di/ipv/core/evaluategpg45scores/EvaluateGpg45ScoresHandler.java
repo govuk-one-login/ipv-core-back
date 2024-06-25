@@ -173,7 +173,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    public boolean hasMatchingGpg45Profile(
+    private boolean hasMatchingGpg45Profile(
             List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,

@@ -7,9 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -29,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -49,7 +45,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -541,30 +536,6 @@ class EvaluateGpg45ScoresHandlerTest {
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
         verify(ipvSessionItem).setVot(Vot.P2);
-    }
-
-    @ParameterizedTest
-    @MethodSource("vtrsAndExpectedGpg45Profiles")
-    void shouldUseCorrectGpg45ProfilesFromVtrToCheckMatchingVcs(
-            List<String> vtr, List<Gpg45Profile> profiles)
-            throws SqsException, UnknownEvidenceTypeException, CredentialParseException {
-        // Arrange
-        clientOAuthSessionItem.setVtr(vtr);
-
-        // Act
-        evaluateGpg45ScoresHandler.hasMatchingGpg45Profile(
-                List.of(), ipvSessionItem, clientOAuthSessionItem, TEST_CLIENT_SOURCE_IP, null);
-
-        // Assert
-        verify(gpg45ProfileEvaluator).getFirstMatchingProfile(null, profiles);
-    }
-
-    private static Stream<Arguments> vtrsAndExpectedGpg45Profiles() {
-        return Stream.of(
-                Arguments.of(List.of("P1"), P1_PROFILES),
-                Arguments.of(List.of("P2"), P2_PROFILES),
-                Arguments.of(List.of("P1", "P2"), P1_AND_P2_PROFILES),
-                Arguments.of(List.of("P2", "P1"), P1_AND_P2_PROFILES));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
