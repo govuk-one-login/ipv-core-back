@@ -239,7 +239,10 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
+    @SuppressWarnings({
+        "java:S3776", // Cognitive Complexity of methods should not be too high
+        "java:S6541" // "Brain method" PYIC-6901 should refactor this method
+    })
     @Tracing
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
