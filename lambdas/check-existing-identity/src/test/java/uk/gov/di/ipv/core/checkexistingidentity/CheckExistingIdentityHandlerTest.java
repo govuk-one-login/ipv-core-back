@@ -92,6 +92,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHEC
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -248,6 +249,9 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyNewGpg45LowIdentityForP1Vtr() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -1154,6 +1158,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1196,6 +1201,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1214,8 +1220,10 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
+        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1373,6 +1381,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1418,6 +1427,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1461,6 +1471,7 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this
