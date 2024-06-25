@@ -124,6 +124,43 @@ class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource
+    void basicEventTargetStatesShouldExist(IpvJourneyTypes journeyType) throws IOException {
+        var stateMachine = new StateMachineInitializer(journeyType).initialize();
+        var stateMachineKeys = stateMachine.keySet();
+
+        for (var targetKey : stateMachineKeys) {
+            var targetState = stateMachine.get(targetKey);
+            if (targetState instanceof BasicState basicState) {
+                var events = basicState.getEvents();
+                for (var event : events.values()) {
+                    if (event instanceof BasicEvent basicEvent) {
+                        if (basicEvent.getTargetJourney() != null) {
+                            var basicEventStateMachine =
+                                    new StateMachineInitializer(
+                                                    IpvJourneyTypes.valueOf(
+                                                            basicEvent.getTargetJourney()))
+                                            .initialize();
+                            var basicEventStateMachineKeys = basicEventStateMachine.keySet();
+                            assertTrue(
+                                    basicEventStateMachineKeys.contains(
+                                            basicEvent.getTargetState()),
+                                    "Unknown target state %s"
+                                            .formatted(basicEvent.getTargetState()));
+
+                        } else if (basicEvent.getTargetState() != null) {
+                            assertTrue(
+                                    stateMachineKeys.contains(basicEvent.getTargetState()),
+                                    "Unknown target state %s"
+                                            .formatted(basicEvent.getTargetState()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource
     void shouldMatchNestedJourneyExitEvents(IpvJourneyTypes journeyType) throws IOException {
         var stateMachineInitialiser = new StateMachineInitializer(journeyType);
 
