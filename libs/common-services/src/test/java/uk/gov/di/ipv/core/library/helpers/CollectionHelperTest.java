@@ -25,6 +25,8 @@ class CollectionHelperTest {
 
     @ParameterizedTest
     @MethodSource("nonSingletonStreams")
+    @SuppressWarnings(
+            "java:S5778") // Only one method invocation is expected when testing runtime exceptions
     void shouldThrowForStreamOfMultiple(Stream<String> nonSingletonStream) {
         // Act
         var exception =
