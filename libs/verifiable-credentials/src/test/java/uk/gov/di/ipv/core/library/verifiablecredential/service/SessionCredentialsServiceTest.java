@@ -13,13 +13,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,6 +44,8 @@ import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
 class SessionCredentialsServiceTest {
@@ -226,11 +227,10 @@ class SessionCredentialsServiceTest {
         void deleteSessionCredentialsForResetTypeShouldPersistAddressVcForNameChange()
                 throws Exception {
             var addressVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS.getId(), new HashMap<>() {});
+                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
             var fraudVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -249,19 +249,15 @@ class SessionCredentialsServiceTest {
         void deleteSessionCredentialsForResetTypeShouldDeleteAddressAndFraudForAddressChange()
                 throws Exception {
             var addressVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS.getId(), new HashMap<>() {});
+                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
             var fraudVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
 
-            var dcmawVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW.getId(), new HashMap<>() {});
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW.getId(), vcClaim(Map.of()));
 
             var hmrcKbvVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
+                    generateVerifiableCredential("userId", HMRC_KBV.getId(), vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -287,19 +283,15 @@ class SessionCredentialsServiceTest {
         @Test
         void deleteSessionCredentialsForResetTypeShouldDeleteAllVcsForAll() throws Exception {
             var addressVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", ADDRESS.getId(), new HashMap<>() {});
+                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
             var fraudVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), new HashMap<>() {});
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
 
-            var dcmawVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", DCMAW.getId(), new HashMap<>() {});
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW.getId(), vcClaim(Map.of()));
 
             var hmrcKbvVc =
-                    VerifiableCredentialGenerator.generateVerifiableCredential(
-                            "userId", HMRC_KBV.getId(), new HashMap<>() {});
+                    generateVerifiableCredential("userId", HMRC_KBV.getId(), vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);

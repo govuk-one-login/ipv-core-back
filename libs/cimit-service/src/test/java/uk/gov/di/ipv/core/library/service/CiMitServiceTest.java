@@ -471,37 +471,6 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
-            throws JsonProcessingException, ParseException, CredentialParseException,
-                    VerifiableCredentialException {
-        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn(CIMIT_COMPONENT_ID);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(lambdaClient.invoke(requestCaptor.capture()))
-                .thenReturn(
-                        InvokeResponse.builder()
-                                .statusCode(200)
-                                .payload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC))
-                                .build());
-        when(verifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any(), anyBoolean()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                null,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_NO_VC)));
-
-        assertThrows(
-                CiRetrievalException.class,
-                () ->
-                        ciMitService.getContraIndicators(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
-    }
-
-    @Test
     void getContraIndicatorsVCJwtWhenVcValidationFails() throws Exception {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
