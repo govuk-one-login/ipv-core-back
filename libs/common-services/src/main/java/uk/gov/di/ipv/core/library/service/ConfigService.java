@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
@@ -114,11 +115,13 @@ public class ConfigService {
         return System.getenv(environmentVariable.name());
     }
 
+    @Tracing
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
     }
 
+    @Tracing
     private String getSsmParameterWithOverride(String templatePath, String... pathProperties) {
         if (this.featureSet != null) {
             for (String fs : this.featureSet) {
