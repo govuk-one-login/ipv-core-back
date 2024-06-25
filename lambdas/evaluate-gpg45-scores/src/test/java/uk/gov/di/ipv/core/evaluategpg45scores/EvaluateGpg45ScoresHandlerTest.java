@@ -545,7 +545,8 @@ class EvaluateGpg45ScoresHandlerTest {
 
     @ParameterizedTest
     @MethodSource("vcsMatchingVtr")
-    void shouldReturnTrueForMatchingGpg45Profile(List<String> vtr, List<Gpg45Profile> profiles)
+    void shouldReturnTrueForHasMatchingProfileGivenProfilesMatchVtr(
+            List<String> vtr, List<Gpg45Profile> profiles)
             throws SqsException, UnknownEvidenceTypeException, CredentialParseException {
         // Arrange
         clientOAuthSessionItem.setVtr(vtr);

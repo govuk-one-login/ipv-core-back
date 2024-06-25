@@ -13,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ClientOauthSessionItemTest {
     @ParameterizedTest
     @MethodSource("vtrRequestedVotsByStrength")
-    void getRequestedVotsByStrengthShould(List<String> vtr, List<Vot> expectedRequestedVots) {
+    void getRequestedVotsByStrengthShouldReturnCorrectVots(
+            List<String> vtr, List<Vot> expectedRequestedVots) {
         // Arrange
         var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
 

@@ -17,7 +17,7 @@ public enum Vot {
     PCL250(null, List.of(OperationalProfile.PCL250), OPERATIONAL_HMRC),
     PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200), OPERATIONAL_HMRC);
     public static final List<Vot> SUPPORTED_VOTS_BY_DESCENDING_STRENGTH =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1, Vot.P0);
+            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
 
     private final List<Gpg45Profile> supportedGpg45Profiles;
     private final List<OperationalProfile> supportedOperationalProfiles;
@@ -49,6 +49,6 @@ public enum Vot {
                 .filter(vot -> GPG45.equals(vot.profileType))
                 .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
                 .findFirst()
-                .orElseThrow();
+                .orElse(null);
     }
 }
