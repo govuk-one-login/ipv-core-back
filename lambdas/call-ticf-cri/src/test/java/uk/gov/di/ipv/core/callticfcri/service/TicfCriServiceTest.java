@@ -48,7 +48,7 @@ import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.callticfcri.service.TicfCriService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 
@@ -94,7 +94,7 @@ class TicfCriServiceTest {
         ticfCriConfig =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
-                        .signingKey(EC_PUBLIC_JWK)
+                        .signingKey(TEST_EC_PUBLIC_JWK)
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(false)
                         .build();
@@ -105,7 +105,7 @@ class TicfCriServiceTest {
         RestCriConfig ticfConfigWithApiKeyRequired =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
-                        .signingKey(EC_PUBLIC_JWK)
+                        .signingKey(TEST_EC_PUBLIC_JWK)
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(true)
                         .build();

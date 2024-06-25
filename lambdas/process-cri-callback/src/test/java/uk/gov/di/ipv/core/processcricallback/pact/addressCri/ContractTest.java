@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -42,7 +41,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -59,6 +57,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +83,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw") // pragma: allowlist secret
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -120,10 +121,9 @@ class ContractTest {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate())
-                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -155,7 +155,7 @@ class ContractTest {
                 .path("/token")
                 .method("POST")
                 .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")
+                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ.hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw") // pragma: allowlist secret
                 .headers(
                         "x-api-key",
                         PRIVATE_API_KEY,
@@ -185,10 +185,9 @@ class ContractTest {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"));
+                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate())
-                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -290,7 +289,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -319,9 +318,7 @@ class ContractTest {
                                 assertEquals("2000-01-01", addressNode.get("validFrom").asText());
 
                                 assertEquals("1965-07-08", birthDateNode.get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -402,7 +399,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -430,9 +427,7 @@ class ContractTest {
                                 assertEquals("1887-01-01", addressNode.get("validFrom").asText());
 
                                 assertEquals("1932-02-25", birthDateNode.get("value").asText());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -515,8 +510,8 @@ class ContractTest {
                         new URI("http://localhost:" + mockServer.getPort() + "/credential/issue"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
-                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
-                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .signingKey(EC_PRIVATE_KEY_JWK)
+                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
@@ -535,14 +530,6 @@ class ContractTest {
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -606,7 +593,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q";
+            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q"; // pragma: allowlist secret
 
     private static final String VALID_ADDRESS_BODY =
             """
@@ -658,5 +645,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw";
+            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw"; // pragma: allowlist secret
 }

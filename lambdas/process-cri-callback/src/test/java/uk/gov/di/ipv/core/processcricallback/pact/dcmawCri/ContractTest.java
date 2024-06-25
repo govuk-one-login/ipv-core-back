@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -47,7 +46,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -67,6 +65,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -130,8 +131,7 @@ class ContractTest {
         when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate())
-                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -195,8 +195,7 @@ class ContractTest {
         when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate())
-                .thenReturn("ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY");
+        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
@@ -297,7 +296,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -338,9 +337,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -423,7 +420,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -461,9 +458,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -546,7 +541,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -587,9 +582,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
                                 assertEquals(0, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -672,7 +665,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -715,9 +708,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
                                 assertEquals(0, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -799,7 +790,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -843,9 +834,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -928,7 +917,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -970,9 +959,7 @@ class ContractTest {
                                 assertEquals(3, evidence.get("strengthScore").asInt());
                                 assertEquals(2, evidence.get("validityScore").asInt());
                                 assertEquals(1, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1054,7 +1041,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1088,9 +1075,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1173,7 +1158,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1207,9 +1192,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1292,7 +1275,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1329,9 +1312,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1413,7 +1394,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1445,9 +1426,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1529,7 +1508,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1564,9 +1543,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1648,7 +1625,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1687,9 +1664,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(3, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1771,7 +1746,7 @@ class ContractTest {
                                                 credential,
                                                 VerifiableCredentialConstants
                                                         .IDENTITY_CHECK_CREDENTIAL_TYPE,
-                                                ECKey.parse(CRI_SIGNING_PRIVATE_KEY_JWK),
+                                                EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
 
@@ -1813,9 +1788,7 @@ class ContractTest {
 
                                 assertEquals(4, evidence.get("strengthScore").asInt());
                                 assertEquals(0, evidence.get("validityScore").asInt());
-                            } catch (VerifiableCredentialException
-                                    | ParseException
-                                    | JsonProcessingException e) {
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
                         });
@@ -1921,8 +1894,8 @@ class ContractTest {
                 .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/userinfo/v2"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
-                .signingKey(CRI_SIGNING_PRIVATE_KEY_JWK)
-                .encryptionKey(CRI_RSA_ENCRYPTION_PUBLIC_JWK)
+                .signingKey(EC_PRIVATE_KEY_JWK)
+                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(URI.create("https://mock-redirect-uri.gov.uk"))
                 .requiresApiKey(true)
@@ -1939,21 +1912,13 @@ class ContractTest {
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
-    private static final String CRI_SIGNING_PRIVATE_KEY_JWK =
-            """
-            {"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}
-            """;
-    private static final String CRI_RSA_ENCRYPTION_PUBLIC_JWK =
-            """
-            {"kty":"RSA","e":"AQAB","n":"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q"}
-            """;
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEY21hd0NvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0";
+            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEY21hd0NvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "42XAVWAIET_BI7FpFQHVIaoW3yRx9yt8HGgMRFMJdxjBey6tQLDRM_04cddot-pNCqYk8x6TueAOdHFsy6N9_A";
+            "42XAVWAIET_BI7FpFQHVIaoW3yRx9yt8HGgMRFMJdxjBey6tQLDRM_04cddot-pNCqYk8x6TueAOdHFsy6N9_A"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
@@ -2069,7 +2034,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw";
+            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
@@ -2167,7 +2132,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
-            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q";
+            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -2272,7 +2237,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
-            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw";
+            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1045-AC1
@@ -2379,7 +2344,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_NO_CI_SIGNATURE =
-            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg";
+            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1559-AC2
@@ -2485,7 +2450,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA";
+            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-4733-AC1
@@ -2591,7 +2556,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
-            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw";
+            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
@@ -2677,7 +2642,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_UK_PASSPORT_VC_SIGNATURE =
-            "hhP8sfn4tvMUwKA79ywi1zG4ZEGJ1ojwoZf8mEaGMvbju1NL3VpjDeqxzRNj8FLIUeOyq9h7lqQuyTybrrWRPw";
+            "hhP8sfn4tvMUwKA79ywi1zG4ZEGJ1ojwoZf8mEaGMvbju1NL3VpjDeqxzRNj8FLIUeOyq9h7lqQuyTybrrWRPw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3146-AC1
@@ -2763,7 +2728,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NLD_PASSPORT_VC_SIGNATURE =
-            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ";
+            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3171-AC2
@@ -2852,7 +2817,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_WITH_CI_SIGNATURE =
-            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A";
+            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRP DCMAW-5176-AC1 (there is also a BRC version!)
@@ -2935,7 +2900,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g";
+            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
@@ -3021,7 +2986,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRP_VC_SIGNATURE =
-            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg";
+            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRC DCMAW-5176-AC1 (there is also a BRP version!)
@@ -3104,7 +3069,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRC_VC_SIGNATURE =
-            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ";
+            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC2
@@ -3188,5 +3153,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRC_VC_SIGNATURE =
-            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA";
+            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA"; // pragma: allowlist secret
 }

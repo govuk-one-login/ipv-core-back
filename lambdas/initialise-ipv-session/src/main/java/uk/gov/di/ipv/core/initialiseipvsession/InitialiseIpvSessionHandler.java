@@ -399,7 +399,7 @@ public class InitialiseIpvSessionHandler
 
     private VerifiableCredential validateHmrcInheritedIdentity(
             String userId, StringListClaim inheritedIdentityJwtClaim)
-            throws JarValidationException, ParseException, VerifiableCredentialException {
+            throws JarValidationException, VerifiableCredentialException {
         // Validate JAR claims structure is valid
         var inheritedIdentityJwtList =
                 Optional.ofNullable(inheritedIdentityJwtClaim.values())
@@ -428,7 +428,7 @@ public class InitialiseIpvSessionHandler
                         HMRC_MIGRATION.getId(),
                         inheritedIdentityJwtList.get(0),
                         VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                        inheritedIdentityCriConfig.getParsedSigningKey(),
+                        inheritedIdentityCriConfig.getSigningKey(),
                         inheritedIdentityCriConfig.getComponentId(),
                         true);
         LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));

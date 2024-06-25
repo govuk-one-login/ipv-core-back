@@ -12,7 +12,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.RSAEncrypter;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -114,7 +113,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 class InitialiseIpvSessionHandlerTest {
     public static final String TEST_COMPONENT_ID = "test-component-id";
     public static final String TEST_SIGNING_KEY =
-            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}";
+            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"; // pragma: allowlist secret
     public static final String TEST_USER_ID = "test-user-id";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final CriConfig TEST_CRI_CONFIG =
@@ -581,7 +580,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL250_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL250_MIGRATION_VC);
@@ -601,7 +600,7 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(ECKey.parse(TEST_SIGNING_KEY)),
+                            eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
             assertEquals(PCL250_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
@@ -645,7 +644,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
@@ -662,7 +661,7 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(ECKey.parse(TEST_SIGNING_KEY)),
+                            eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
             assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
@@ -706,7 +705,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
@@ -782,7 +781,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
@@ -802,7 +801,7 @@ class InitialiseIpvSessionHandlerTest {
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
                             eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
-                            eq(ECKey.parse(TEST_SIGNING_KEY)),
+                            eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
             assertEquals(PCL200_MIGRATION_VC.getVcString(), stringArgumentCaptor.getValue());
@@ -849,7 +848,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
@@ -1087,7 +1086,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             "🌭",
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            TEST_CRI_CONFIG.getParsedSigningKey(),
+                            TEST_CRI_CONFIG.getSigningKey(),
                             TEST_CRI_CONFIG.getComponentId(),
                             true))
                     .thenThrow(
@@ -1157,7 +1156,7 @@ class InitialiseIpvSessionHandlerTest {
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
                             IDENTITY_CHECK_CREDENTIAL_TYPE,
-                            ECKey.parse(TEST_SIGNING_KEY),
+                            TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);

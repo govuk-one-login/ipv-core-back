@@ -102,7 +102,9 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
-                        OauthCriConfig.builder().signingKey(TestFixtures.EC_PUBLIC_JWK).build());
+                        OauthCriConfig.builder()
+                                .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .build());
 
         // Act
         var result = processCriCallbackHandler.getJourneyResponse(callbackRequest);
@@ -208,7 +210,9 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(vcResponse);
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
-                        OauthCriConfig.builder().signingKey(TestFixtures.EC_PUBLIC_JWK).build());
+                        OauthCriConfig.builder()
+                                .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .build());
         when(mockCriCheckingService.checkVcResponse(
                         any(),
                         eq(callbackRequest),

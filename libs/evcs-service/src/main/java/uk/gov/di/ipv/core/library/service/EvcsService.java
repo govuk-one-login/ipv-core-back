@@ -43,24 +43,22 @@ public class EvcsService {
     public void storeCompletedIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
-        List<EvcsGetUserVCDto> existingEvcsUserVCs =
-                evcsClient
-                        .getUserVcs(userId, evcsAccessToken, List.of(CURRENT, PENDING_RETURN))
-                        .vcs();
-
-        persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, false);
+        persistUserVCs(
+                userId,
+                credentials,
+                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
+                false);
     }
 
     @Tracing
     public void storePendingIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
-        List<EvcsGetUserVCDto> existingEvcsUserVCs =
-                evcsClient
-                        .getUserVcs(userId, evcsAccessToken, List.of(CURRENT, PENDING_RETURN))
-                        .vcs();
-
-        persistEvcsUserVCs(userId, credentials, existingEvcsUserVCs, true);
+        persistUserVCs(
+                userId,
+                credentials,
+                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
+                true);
     }
 
     @Tracing
@@ -76,11 +74,8 @@ public class EvcsService {
     public Map<EvcsVCState, List<VerifiableCredential>> getVerifiableCredentialsByState(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
-        List<EvcsGetUserVCDto> vcs =
-                evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
-
         Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
-        for (var vc : vcs) {
+        for (var vc : getUserVCs(userId, evcsAccessToken, states)) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
@@ -109,8 +104,13 @@ public class EvcsService {
                                 credential.getVcString(), PENDING_RETURN, null, null)));
     }
 
-    @Tracing
-    private void persistEvcsUserVCs(
+    private List<EvcsGetUserVCDto> getUserVCs(
+            String userId, String evcsAccessToken, EvcsVCState... states)
+            throws EvcsServiceException {
+        return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
+    }
+
+    private void persistUserVCs(
             String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,

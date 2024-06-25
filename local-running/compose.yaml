@@ -5,7 +5,7 @@ x-aws_creds: &aws_creds
   AWS_SESSION_TOKEN:
 x-generic-cri-config: &cri-config
   <<: *aws_creds
-  VC_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+  VC_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D # pragma: allowlist secret
   VC_TTL_SECONDS: 300
 
 services:
@@ -16,21 +16,21 @@ services:
       context: ../../ipv-stubs/di-ipv-orchestrator-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      INHERITED_IDENTITY_JWT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO
+      INHERITED_IDENTITY_JWT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO # pragma: allowlist secret
       IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:3002/
       IPV_BACKCHANNEL_TOKEN_PATH: token
       IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity
       IPV_CORE_AUDIENCE: https://${ENVIRONMENT}.${DEV_ACCOUNT_NUM}.dev.identity.account.gov.uk
       IPV_ENDPOINT: http://localhost:3001/
-      ORCHESTRATOR_CLIENT_ID: orchestrator
+      ORCHESTRATOR_CLIENT_ID: orchestrator # pragma: allowlist secret
       ORCHESTRATOR_CLIENT_JWT_TTL: 900
-      ORCHESTRATOR_CLIENT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO
+      ORCHESTRATOR_CLIENT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO # pragma: allowlist secret
       ORCHESTRATOR_DEFAULT_JAR_ENCRYPTION_PUBLIC_KEY: ${ORCHESTRATOR_DEFAULT_JAR_ENCRYPTION_PUBLIC_KEY}
       ORCHESTRATOR_PORT: 3000
       ORCHESTRATOR_REDIRECT_URL: http://localhost:3000/callback
       EVCS_ACCESS_TOKEN_ENDPOINT: https://mock.credential-store.build.account.gov.uk/generate
       EVCS_ACCESS_TOKEN_TTL: 60
-      EVCS_ACCESS_TOKEN_SIGNING_KEY_JWK: '{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}'
+      EVCS_ACCESS_TOKEN_SIGNING_KEY_JWK: '{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
     ports:
       - "3000:3000"
@@ -46,7 +46,7 @@ services:
       <<: *aws_creds
       API_BASE_URL: http://host.docker.internal:3002
       SESSION_TABLE_NAME: core-front-sessions-${ENVIRONMENT}
-      SESSION_SECRET: no-secret
+      SESSION_SECRET: no-secret # pragma: allowlist secret
       NODE_ENV: development
       EXTERNAL_WEBSITE_HOST: http://localhost:3001
       PORT: 3001

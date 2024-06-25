@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -121,9 +120,9 @@ public class TicfCriService {
                     TICF.getId(),
                     ticfCriResponse.credentials(),
                     VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
-                    ticfCriConfig.getParsedSigningKey(),
+                    ticfCriConfig.getSigningKey(),
                     ticfCriConfig.getComponentId());
-        } catch (ParseException | VerifiableCredentialException | JsonProcessingException e) {
+        } catch (VerifiableCredentialException | JsonProcessingException e) {
             throw new TicfCriServiceException(e);
         } catch (IOException
                 | InterruptedException
