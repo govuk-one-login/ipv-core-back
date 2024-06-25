@@ -544,8 +544,8 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @ParameterizedTest
-    @MethodSource("vcsMatchingVtr")
-    void shouldReturnTrueForHasMatchingProfileGivenProfilesMatchVtr(
+    @MethodSource("vtrsAndExpectedGpg45Profiles")
+    void shouldUseCorrectGpg45ProfilesFromVtrToCheckMatchingVcs(
             List<String> vtr, List<Gpg45Profile> profiles)
             throws SqsException, UnknownEvidenceTypeException, CredentialParseException {
         // Arrange
@@ -559,7 +559,7 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(gpg45ProfileEvaluator).getFirstMatchingProfile(null, profiles);
     }
 
-    private static Stream<Arguments> vcsMatchingVtr() {
+    private static Stream<Arguments> vtrsAndExpectedGpg45Profiles() {
         return Stream.of(
                 Arguments.of(List.of("P1"), P1_PROFILES),
                 Arguments.of(List.of("P2"), P2_PROFILES),

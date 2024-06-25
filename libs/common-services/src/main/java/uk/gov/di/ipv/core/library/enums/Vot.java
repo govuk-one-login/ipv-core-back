@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.enums;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.helpers.CollectionHelper;
 
 import java.util.List;
 
@@ -48,7 +49,6 @@ public enum Vot {
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
                 .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
-                .findFirst()
-                .orElse(null);
+                .collect(CollectionHelper.toSingletonOrNullIfEmpty());
     }
 }
