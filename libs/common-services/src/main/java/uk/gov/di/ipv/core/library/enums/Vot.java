@@ -44,7 +44,7 @@ public enum Vot {
         return this.profileType;
     }
 
-    public static Vot fromProfile(Gpg45Profile profile) {
+    public static Vot fromGpg45Profile(Gpg45Profile profile) {
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
                 .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))

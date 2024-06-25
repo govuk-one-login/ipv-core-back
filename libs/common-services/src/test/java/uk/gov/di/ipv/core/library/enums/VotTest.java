@@ -17,7 +17,7 @@ class VotTest {
     @ParameterizedTest
     @MethodSource("votProfiles")
     void shouldGetCorrectStrengthVotWithProfile(Gpg45Profile profile, Vot associatedVot) {
-        var result = Vot.fromProfile(profile);
+        var result = Vot.fromGpg45Profile(profile);
         assertEquals(associatedVot, result);
     }
 
