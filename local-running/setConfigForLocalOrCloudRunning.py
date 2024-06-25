@@ -14,6 +14,12 @@ DevAccount = namedtuple("DevAccount", "account_id number")
 
 
 def get_local_running_params(environment, client_id_suffix):
+    ecKey = f'{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}' # pragma: allowlist secret
+    rsaKey = f'{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}' # pragma: allowlist secret
+
+    # This is extracted as it is being flagged as a secret by detect-secrets so we extract it out so we can use an inline exclusion.
+    requiresApiKeyProperty = 'requiresApiKey' # pragma: allowlist secret
+
     return [
         Param(f"/{environment}/core/clients/orchestrator/validRedirectUrls", "http://localhost:3000/callback"),
         Param(f"/{environment}/core/clients/stubAuth/validRedirectUrls", "http://localhost:3000/callback"),
@@ -38,11 +44,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3003/token",
             "credentialUrl":"http://host.docker.internal:3003/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://dcmaw-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/dcmaw",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -51,11 +57,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3004/token",
             "credentialUrl":"http://host.docker.internal:3004/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://address-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/address",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -64,11 +70,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3005/token",
             "credentialUrl":"http://host.docker.internal:3005/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://fraud-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/fraud",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -77,11 +83,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3008/token",
             "credentialUrl":"http://host.docker.internal:3008/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://kbv-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/kbv",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -90,11 +96,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3007/token",
             "credentialUrl":"http://host.docker.internal:3007/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://passport-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/ukPassport",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -103,11 +109,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3006/token",
             "credentialUrl":"http://host.docker.internal:3006/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://driving-licence-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/drivingLicence",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -117,10 +123,10 @@ def get_local_running_params(environment, client_id_suffix):
             "credentialUrl":"http://host.docker.internal:3009/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
             "componentId":"https://claimed-identity-cri.stubs.account.gov.uk",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/claimedIdentity",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -129,11 +135,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3010/token",
             "credentialUrl":"http://host.docker.internal:3010/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://f2f-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/f2f",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -142,11 +148,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3011/token",
             "credentialUrl":"http://host.docker.internal:3011/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://nino-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/nino",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -155,11 +161,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3012/token",
             "credentialUrl":"http://host.docker.internal:3012/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://hmrcKbv-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/hmrcKbv",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -168,11 +174,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3013/token",
             "credentialUrl":"http://host.docker.internal:3013/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"EC\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\\",\\"y\\":\\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{ecKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://bav-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/bav",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
 
@@ -181,11 +187,11 @@ def get_local_running_params(environment, client_id_suffix):
             "tokenUrl":"http://host.docker.internal:3015/token",
             "credentialUrl":"http://host.docker.internal:3015/credentials/issue",
             "clientId":"ipv-core-dev{client_id_suffix}",
-            "signingKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
-            "encryptionKey":"{{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}}",
+            "signingKey":"{rsaKey}",
+            "encryptionKey":"{rsaKey}",
             "componentId":"https://dwpKbv-cri.stubs.account.gov.uk",
             "clientCallbackUrl":"http://localhost:3001/credential-issuer/callback/dwpKbv",
-            "requiresApiKey":"false",
+            "{requiresApiKeyProperty}":"false",
             "requiresAdditionalEvidence":"false"
         }}'''),
     ]
