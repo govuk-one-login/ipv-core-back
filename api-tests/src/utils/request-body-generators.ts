@@ -6,7 +6,6 @@ import { generateJar } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "node:fs";
-import { getRandomString } from "./random-string-generator.js";
 import { CriStubRequest } from "../interfaces/cri-stub-request.js";
 import { createSignedJwt } from "./jwt-signer.js";
 
@@ -60,7 +59,6 @@ export const generateCriStubBody = (
     request: urlParams.get("request") as string,
     credentialSubjectJson: readJsonFile(criId, scenario, "credentialSubject"),
     evidenceJson: readJsonFile(criId, scenario, "evidence"),
-    resourceId: getRandomString(8),
   };
 };
 

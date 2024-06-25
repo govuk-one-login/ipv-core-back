@@ -3,5 +3,4 @@ export interface CriStubRequest {
   request: string;
   credentialSubjectJson: string;
   evidenceJson: string;
-  resourceId: string;
 }
