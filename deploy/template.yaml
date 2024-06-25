@@ -832,6 +832,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - S3ReadPolicy:

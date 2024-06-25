@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.core.ResponseBytes;
-import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -22,6 +21,8 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
+import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
@@ -79,6 +81,8 @@ public class ConfigService {
     private final SecretsProvider secretsProvider;
     private S3Client s3Client;
     private JsonNode coreConfig;
+    private SsmClient ssmClient;
+    private Map<String, String> multipleGetMap;
 
     private List<String> featureSet;
 
@@ -101,9 +105,10 @@ public class ConfigService {
                         : Integer.parseInt(
                                 getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES));
 
+        this.ssmClient = SsmClient.builder().httpClient(AwsCrtHttpClient.create()).build();
         this.ssmProvider =
                 ParamManager.getSsmProvider(
-                                SsmClient.builder().httpClient(AwsCrtHttpClient.create()).build())
+                                ssmClient)
                         .defaultMaxAge(cacheDuration, MINUTES);
 
         this.secretsProvider =
@@ -132,8 +137,24 @@ public class ConfigService {
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
 
-        return spikeGetAllFromS3(configurationVariable, pathProperties);
+        return spikeGetMultiple(configurationVariable, pathProperties);
+//        return spikeGetAllFromS3(configurationVariable, pathProperties);
 //        return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
+    }
+
+    @Tracing
+    private String spikeGetMultiple(ConfigurationVariable configurationVariable, String... pathProperties) {
+        multipleGetMap = multipleGetMap == null ? loadAllParamsFromSsmUsingByPath() : multipleGetMap;
+        return multipleGetMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
+    }
+
+    @Tracing
+    private Map<String, String> loadAllParamsFromSsmUsingByPath() {
+        var request = GetParametersByPathRequest.builder().recursive(true).path("/dev-chrisw/core").build();
+        var parametersByPathPaginator = ssmClient.getParametersByPathPaginator(request);
+        return parametersByPathPaginator.stream()
+                .flatMap(page -> page.parameters().stream())
+                .collect(Collectors.toMap(Parameter::name, Parameter::value));
     }
 
     @Tracing
