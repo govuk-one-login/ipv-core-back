@@ -15,6 +15,7 @@ awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
 awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
+awsSdkS3 = { module = "software.amazon.awssdk:s3" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkCrtClient = { module = "software.amazon.awssdk:aws-crt-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"

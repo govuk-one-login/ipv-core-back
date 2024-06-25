@@ -2,11 +2,19 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
@@ -36,6 +44,7 @@ import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +68,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_I
 
 public class ConfigService {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
@@ -68,6 +77,8 @@ public class ConfigService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
+    private S3Client s3Client;
+    private JsonNode coreConfig;
 
     private List<String> featureSet;
 
@@ -101,6 +112,8 @@ public class ConfigService {
                                         .httpClient(AwsCrtHttpClient.create())
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
+
+        this.s3Client = S3Client.builder().region(Region.EU_WEST_2).httpClient(AwsCrtHttpClient.create()).build();
     }
 
     public List<String> getFeatureSet() {
@@ -118,7 +131,50 @@ public class ConfigService {
     @Tracing
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
-        return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
+
+        return spikeGetAllFromS3(configurationVariable, pathProperties);
+//        return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
+    }
+
+    @Tracing
+    private String spikeGetAllFromS3(ConfigurationVariable configurationVariable, String... pathProperties) {
+        coreConfig = coreConfig == null ? getCoreConfig() : coreConfig;
+        var templatedPath = String.format(configurationVariable.getPath(), (Object[]) pathProperties);
+        var pathParts = new ArrayList<>(Arrays.asList(templatedPath.split("/")));
+        var foundNode = coreConfig.path(pathParts.remove(0));
+        if (!pathParts.isEmpty()) {
+            for (var part : pathParts) {
+                foundNode = foundNode.path(part);
+            }
+        }
+        if (foundNode.isMissingNode()) {
+            throw new RuntimeException(String.format("Param not found: '%s'", configurationVariable.getPath()));
+        }
+        return foundNode.asText();
+    }
+
+    @Tracing
+    private JsonNode getCoreConfig() {
+        var configYaml = getConfigFromS3();
+        JsonNode yamlConfig = parseConfig(configYaml);
+        LOGGER.info("Successfully read config yaml");
+        return yamlConfig.path("managed").path("ssm").path("dev-chrisw").path("core");
+    }
+
+    @Tracing
+    private ResponseBytes<GetObjectResponse> getConfigFromS3() {
+        var configRequest = GetObjectRequest.builder().bucket("ipv-core-config-mgmt-dev01").key("configs/params/core.dev-chrisw-params.yaml").build();
+        return s3Client.getObjectAsBytes(configRequest);
+    }
+
+    @Tracing
+    private JsonNode parseConfig(ResponseBytes<GetObjectResponse> configBytes) {
+        try {
+            return OBJECT_MAPPER.readTree(configBytes.asByteArray());
+        } catch (IOException e) {
+            LOGGER.error("Error parsing config yaml", e);
+            throw new RuntimeException();
+        }
     }
 
     @Tracing
@@ -146,14 +202,17 @@ public class ConfigService {
         return ssmProvider.get(resolvePath(templatePath, pathProperties));
     }
 
+    @Tracing
     private String resolveBasePath() {
         return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT));
     }
 
+    @Tracing
     protected String resolvePath(String path, String... pathProperties) {
         return resolveBasePath() + String.format(path, (Object[]) pathProperties);
     }
 
+    @Tracing
     private String resolveFeatureSetPath(String featureSet, String path, String... pathProperties) {
         return resolveBasePath()
                 + String.format("features/%s/", featureSet)

@@ -14,11 +14,13 @@ dependencies {
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkLambda,
+			libs.awsSdkS3,
 			libs.commonsCodec,
 			libs.diVocab,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
+			libs.jacksonDataformatYaml,
 			project(":libs:journey-uris")
 
 	compileOnly libs.lombok

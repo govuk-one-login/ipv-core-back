@@ -834,6 +834,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - S3ReadPolicy:
+            BucketName: ipv-core-config-mgmt-dev01
         - Statement:
             - Sid: jarKmsEncryptionKeyPermission
               Effect: Allow
